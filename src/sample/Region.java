@@ -1,6 +1,5 @@
 package sample;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,11 +8,12 @@ public class Region {
     private final int rows;
     private final int cols;
     private final Patch[][] region;
-    private final List<double[][]> gradients;
-    private final List<Patch> goals;
+    private final List<List<double[][]>> gradients;
+    private final List<List<Patch>> goals;
     private final double diffusionPercentage;
     private final int diffusionPasses;
     private Patch start;
+    private Patch exit;
 
     public Region(int rows, int cols, double diffusionPercentage, int diffusionPasses) {
         this.rows = rows;
@@ -77,12 +77,20 @@ public class Region {
         return start;
     }
 
+    public Patch getExit() {
+        return exit;
+    }
+
+    public void setExit(int row, int col) {
+        this.exit = region[row][col];
+    }
+
     public Patch getPatch(int row, int col) {
         return region[row][col];
     }
 
-    public double getAttraction(int layer, int row, int col) {
-        return gradients.get(layer)[row][col];
+    public double getAttraction(int sequence, int index, int row, int col) {
+        return gradients.get(sequence).get(index)[row][col];
     }
 
     public int getNumGoals() {
@@ -104,41 +112,47 @@ public class Region {
         this.start = null;
     }
 
-    public void setStatus(int row, int col, Patch.Status status) {
-        Patch patch = region[row][col];
-
-        // Check if the patch to be modified is a start patch
-        if (patch.equals(this.start)) {
-            // If it is, remove the start
-            removeStart();
-        } else {
-            // Check if the patch to be modified is a goal patch
-            // If it is, remove it
-            this.goals.remove(patch);
+    public void removeExit() {
+        // Reset exit patch state, if it already existed as a start state
+        if (this.exit != null) {
+            this.exit.setStatus(Patch.Status.CLEAR);
         }
 
-        // Set the patch to its new status
-        if (status == Patch.Status.CLEAR) {
-            // Change the status
-            patch.setStatus(Patch.Status.CLEAR);
-        } else if (status == Patch.Status.START) {
-            // Remove the region's start patch
-            removeStart();
+        // Forget exit patch
+        this.exit = null;
+    }
 
-            // Set the new start patch
-            setStart(row, col);
+    public void setStatus(int row, int col, Patch.Status status, int sequence) {
+        Patch patch = region[row][col];
+
+        // Only allow placement on clear patches
+        if (patch.getStatus() == Patch.Status.CLEAR) {
+            // Set the patch to its new status
+            if (status == Patch.Status.START) {
+                // Remove the old start patch
+                removeStart();
+
+                // Set the new start patch
+                setStart(row, col);
+            } else if (status == Patch.Status.WAYPOINT || status == Patch.Status.GATE || status == Patch.Status.EXIT) {
+                if (status == Patch.Status.EXIT) {
+                    // Remove the old exit patch
+                    removeExit();
+
+                    // Set the new exit patch
+                    setExit(row, col);
+                }
+
+                // Add to the goals list
+                if (sequence == this.goals.size()) {
+                    this.goals.add(new ArrayList<>());
+                }
+
+                this.goals.get(sequence).add(patch);
+            }
 
             // Change the status
-            patch.setStatus(Patch.Status.START);
-        } else if (status == Patch.Status.GOAL) {
-            // Add to the goals list
-            this.goals.add(patch);
-
-            // Change the status
-            patch.setStatus(Patch.Status.GOAL);
-        } else if (status == Patch.Status.OBSTACLE) {
-            // Change the status
-            patch.setStatus(Patch.Status.OBSTACLE);
+            patch.setStatus(status);
         }
     }
 
@@ -150,8 +164,16 @@ public class Region {
 //        this.goals.add(goal);
 
         // Add a layer for the goal patch
-        for (Patch goal : this.goals) {
-            this.gradients.add(diffuseN(goal.getMatrixPosition().getRow(), goal.getMatrixPosition().getCol(), this.diffusionPasses));
+        int index = 0;
+
+        for (List<Patch> sequence : this.goals) {
+            this.gradients.add(new ArrayList<>());
+
+            for (Patch goal : sequence) {
+                this.gradients.get(index).add(diffuseN(goal.getMatrixPosition().getRow(), goal.getMatrixPosition().getCol(), this.diffusionPasses));
+            }
+
+            index++;
         }
     }
 
@@ -273,58 +295,62 @@ public class Region {
 
     public boolean checkGoal(Passenger passenger) {
         // Get its goal
-        Patch goal = this.goals.get(passenger.getGoalsReached());
+        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
 
         // Check if passenger is in its goal
         return (int) passenger.getX() == goal.getMatrixPosition().getCol()
                 && (int) passenger.getY() == goal.getMatrixPosition().getRow();
     }
 
-    public void printRegion(boolean showAttraction, int layer) {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                if (!showAttraction) {
-                    if (region[row][col].getPassenger() != null) {
-                        stringBuilder.append("o");
-                    } else {
-                        switch (region[row][col].getStatus()) {
-                            case CLEAR:
-                                stringBuilder.append(".");
-                                break;
-                            case OBSTACLE:
-                                stringBuilder.append("#");
-                                break;
-                            case START:
-                                stringBuilder.append("*");
-                                break;
-                            case GOAL:
-                                stringBuilder.append("+");
-                                break;
-                        }
-                    }
-
-                    stringBuilder.append(" ");
-                } else {
-//                    if (row == end.getRow() && col == end.getCol()) {
-//                        System.out.print("         ");
+//    public void printRegion(boolean showAttraction, int layer) {
+//        StringBuilder stringBuilder = new StringBuilder();
+//
+//        for (int row = 0; row < rows; row++) {
+//            for (int col = 0; col < cols; col++) {
+//                if (!showAttraction) {
+//                    if (region[row][col].getPassenger() != null) {
+//                        stringBuilder.append("o");
 //                    } else {
-//                    System.out.print(new DecimalFormat("0.0000000").format(region[row][col].getAttraction()));
-                    stringBuilder.append(new DecimalFormat("0.0000000").format(gradients.get(layer)[row][col]));
+//                        switch (region[row][col].getStatus()) {
+//                            case CLEAR:
+//                                stringBuilder.append(".");
+//                                break;
+//                            case OBSTACLE:
+//                                stringBuilder.append("#");
+//                                break;
+//                            case START:
+//                                stringBuilder.append("*");
+//                                break;
+//                            case GOAL:
+//                                stringBuilder.append("+");
+//                                break;
+//                        }
 //                    }
-                }
+//
+//                    stringBuilder.append(" ");
+//                } else {
+////                    if (row == end.getRow() && col == end.getCol()) {
+////                        System.out.print("         ");
+////                    } else {
+////                    System.out.print(new DecimalFormat("0.0000000").format(region[row][col].getAttraction()));
+//                    stringBuilder.append(new DecimalFormat("0.0000000").format(gradients.get(layer)[row][col]));
+////                    }
+//                }
+//
+//                stringBuilder.append(" ");
+//            }
+//
+//            stringBuilder.append("\n");
+//        }
+//
+//        System.out.println(stringBuilder.toString());
+//    }
 
-                stringBuilder.append(" ");
-            }
-
-            stringBuilder.append("\n");
-        }
-
-        System.out.println(stringBuilder.toString());
+    public List<Patch> getGoalsAtSequence(int sequence) {
+        return goals.get(sequence);
     }
 
-    public List<Patch> getGoals() {
+    public List<List<Patch>> getGoals() {
         return goals;
     }
 }

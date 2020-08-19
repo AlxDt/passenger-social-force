@@ -21,10 +21,11 @@
                   <Font name="System Bold" size="12.0" />
                </font>
             </Text>
-            <Label text="Type" />
-            <ChoiceBox fx:id="drawChoiceBox" prefWidth="150.0" />
-            <Button fx:id="nextButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#play" prefHeight="25.0" prefWidth="120.0" text="Next" />
-            <Button fx:id="startButton" defaultButton="true" disable="true" layoutX="470.0" layoutY="13.0" mnemonicParsing="false" onAction="#play" prefHeight="25.0" prefWidth="120.0" text="Start" />
+            <Label prefWidth="37.0" text="Type" />
+            <ChoiceBox fx:id="drawChoiceBox" prefHeight="25.0" prefWidth="146.0" />
+            <Button fx:id="stepButton" defaultButton="true" disable="true" layoutX="407.0" layoutY="13.0" mnemonicParsing="false" onAction="#step" prefHeight="25.0" prefWidth="68.0" text="Next step" />
+            <Button fx:id="nextButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#next" prefHeight="25.0" prefWidth="83.0" text="Next mode" />
+            <Button fx:id="startButton" defaultButton="true" disable="true" layoutX="470.0" layoutY="13.0" mnemonicParsing="false" onAction="#play" prefHeight="25.0" prefWidth="43.0" text="Start" />
          </children>
          <BorderPane.margin>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

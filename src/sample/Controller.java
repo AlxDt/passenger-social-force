@@ -20,10 +20,20 @@ import java.util.List;
 import java.util.Random;
 
 public class Controller {
-    private final Rectangle[][] rectangles = new Rectangle[Main.region.getRows()][Main.region.getCols()];
     private final List<Passenger> passengers = new ArrayList<>();
+
+    private final DrawState[] stateSequences = new DrawState[]{
+            DrawState.START,
+            DrawState.CHECKPOINT,
+            DrawState.GOAL,
+            DrawState.OBSTACLE
+    };
+
     private boolean hasStarted;
     private DrawState drawState;
+    private int sequence;
+    private int index;
+    private int modeIndex;
 
     @FXML
     private Canvas canvas;
@@ -35,6 +45,12 @@ public class Controller {
     private Button startButton;
 
     @FXML
+    private Button nextButton;
+
+    @FXML
+    private Button stepButton;
+
+    @FXML
     private Pane overlay;
 
     @FXML
@@ -42,6 +58,7 @@ public class Controller {
 
     private double tileSize;
     private GraphicsContext graphicsContext;
+    private List<String[]> stringChoices;
 
     public Controller() {
         this.hasStarted = false;
@@ -53,14 +70,28 @@ public class Controller {
         graphicsContext = canvas.getGraphicsContext2D();
 
         // Set choice box goals
-        final String[] goals = {"Clear", "Start", "Goal", "Obstacle"};
-//        final String[] startItems = {"Start", "Clear"};
-//        final String[] goalItems = {"Waypoint", "Queue", "Exit", "Clear"};
-//        final String[] obstacleItems = {"Obstacle", "Clear"};
+//        final String[] goals = {"Clear", "Start", "Goal", "Obstacle"};
+        final String[] startItems = {"Start"};
+        final String[] checkpointItems = {"Waypoint", "Gate"};
+        final String[] goalItems = {"Exit"};
+        final String[] obstacleItems = {"Obstacle"};
 
-//        drawChoiceBox.setItems(FXCollections.observableArrayList(startItems));
-        drawChoiceBox.setItems(FXCollections.observableArrayList(goals));
-        drawChoiceBox.getSelectionModel().select(1);
+        stringChoices = new ArrayList<>();
+
+        stringChoices.add(startItems);
+        stringChoices.add(checkpointItems);
+        stringChoices.add(goalItems);
+        stringChoices.add(obstacleItems);
+
+        this.sequence = -1;
+        this.index = -1;
+        this.modeIndex = 0;
+
+        this.drawState = stateSequences[modeIndex];
+
+        drawChoiceBox.setItems(FXCollections.observableArrayList(stringChoices.get(modeIndex)));
+//        drawChoiceBox.setItems(FXCollections.observableArrayList(goals));
+        drawChoiceBox.getSelectionModel().select(0);
 
         // Draw visible grid
 //        graphicsContext.setFill(Color.TURQUOISE);
@@ -70,25 +101,27 @@ public class Controller {
 
         // Draw listeners
 //        drawListeners(goalItems, tileSize);
-        drawListeners(goals, tileSize);
+        drawListeners(startItems, tileSize);
+    }
 
-//        for (int col = 0; col < Main.region.getCols(); col++) {
-//            graphicsContext.strokeLine(
-//                    col * tileSize,
-//                    0,
-//                    col * tileSize,
-//                    canvas.getHeight()
-//            );
-//        }
-//
-//        for (int row = 0; row < Main.region.getRows(); row++) {
-//            graphicsContext.strokeLine(
-//                    0,
-//                    row * tileSize,
-//                    canvas.getWidth(),
-//                    row * tileSize
-//            );
-//        }
+    @FXML
+    private void step() {
+        nextStep();
+
+        drawGrid(graphicsContext, tileSize);
+    }
+
+    @FXML
+    private void next() {
+        nextMode();
+
+        this.drawState = stateSequences[modeIndex];
+
+        drawChoiceBox.setItems(FXCollections.observableArrayList(stringChoices.get(modeIndex)));
+//        drawChoiceBox.setItems(FXCollections.observableArrayList(goals));
+        drawChoiceBox.getSelectionModel().select(0);
+
+        drawGrid(graphicsContext, tileSize);
     }
 
     @FXML
@@ -251,49 +284,34 @@ public class Controller {
 
                     String choice = drawChoiceBox.getSelectionModel().getSelectedItem();
 
-//                    switch (drawState) {
-//                        case START:
-//                            switch (choice) {
-//                                case "Start":
-//                                    Main.region.setStatus(patchRow, patchCol, Patch.Status.START);
-//
-//                                    break;
-//                                case "Clear":
-//                                    Main.region.setStatus(patchRow, patchCol, Patch.Status.CLEAR);
-//
-//                                    break;
-//                            }
-//
-//                            break;
-//                        case GOAL:
-//                            switch (choice) {
-//                                case "Waypoint":
-//                                    Main.region.setStatus(patchRow, patchCol, Patch.Status.START);
-//
-//                                    break;
-//                                case "Clear":
-//                                    Main.region.setStatus(patchRow, patchCol, Patch.Status.CLEAR);
-//
-//                                    break;
-//                            }
-//
-//                            break;
-//                        case OBSTACLE:
-//                            break;
-//                    }
+                    switch (drawState) {
+                        case START:
+                            if (choice.equals("Start")) {
+                                Main.region.setStatus(patchRow, patchCol, Patch.Status.START, this.sequence);
+                            }
 
-                    // Clear
-                    if (choice.equals(items[0])) {
-                        Main.region.setStatus(patchRow, patchCol, Patch.Status.CLEAR);
-                    } else if (choice.equals(items[1])) {
-                        // Start
-                        Main.region.setStatus(patchRow, patchCol, Patch.Status.START);
-                    } else if (choice.equals(items[2])) {
-                        // Goal
-                        Main.region.setStatus(patchRow, patchCol, Patch.Status.GOAL);
-                    } else if (choice.equals(items[3])) {
-                        // Obstacle
-                        Main.region.setStatus(patchRow, patchCol, Patch.Status.OBSTACLE);
+                            break;
+                        case CHECKPOINT:
+                            switch (choice) {
+                                case "Waypoint":
+                                    Main.region.setStatus(patchRow, patchCol, Patch.Status.WAYPOINT, this.sequence);
+
+                                    break;
+                                case "Gate":
+                                    Main.region.setStatus(patchRow, patchCol, Patch.Status.GATE, this.sequence);
+
+                                    break;
+                            }
+
+                            break;
+                        case GOAL:
+                            if (choice.equals("Exit")) {
+                                Main.region.setStatus(patchRow, patchCol, Patch.Status.EXIT, this.sequence);
+                            }
+                        case OBSTACLE:
+                            if (choice.equals("Obstacle")) {
+                                Main.region.setStatus(patchRow, patchCol, Patch.Status.OBSTACLE, this.sequence);
+                            }
                     }
 
                     // Redraw grid
@@ -323,7 +341,15 @@ public class Controller {
                         graphicsContext.setFill(Color.BLUE);
 
                         break;
-                    case GOAL:
+                    case WAYPOINT:
+                        graphicsContext.setFill(Color.GRAY);
+
+                        break;
+                    case GATE:
+                        graphicsContext.setFill(Color.GREEN);
+
+                        break;
+                    case EXIT:
                         graphicsContext.setFill(Color.YELLOW);
 
                         break;
@@ -350,12 +376,39 @@ public class Controller {
 //            System.out.println(passenger.getX() + ", " + passenger.getY());
         }
 
+        // Check whether it is ready to go to the next step or mode
+        if (modeIndex == 0) {
+            stepButton.setDisable(true);
+            nextButton.setDisable(Main.region.getStart() == null);
+        } else if (modeIndex == 1) {
+            stepButton.setDisable(Main.region.getGoals().size() == 0);
+            nextButton.setDisable(Main.region.getGoals().size() == 0);
+        } else if (modeIndex == 2) {
+            stepButton.setDisable(true);
+            nextButton.setDisable(Main.region.getExit() == null);
+        } else {
+            stepButton.setDisable(true);
+            nextButton.setDisable(true);
+        }
+
         // Check whether it is ready to start
-        startButton.setDisable(Main.region.getStart() == null || Main.region.getNumGoals() <= 0 || hasStarted);
+        startButton.setDisable(Main.region.getExit() == null || hasStarted);
+    }
+
+    private void nextMode() {
+        nextStep();
+
+        this.modeIndex++;
+    }
+
+    private void nextStep() {
+        this.sequence++;
+        this.index = 0;
     }
 
     public enum DrawState {
         START,
+        CHECKPOINT,
         GOAL,
         OBSTACLE
     }

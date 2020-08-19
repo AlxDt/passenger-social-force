@@ -27,9 +27,4 @@ public class Main extends Application {
         primaryStage.setScene(new Scene(root, ROWS * 20, COLS * 20));
         primaryStage.show();
     }
-
-    public enum Direction {
-        U, D, L, R,
-        UL, UR, DL, DR
-    }
 }

@@ -48,9 +48,15 @@ public class Patch {
     }
 
     public enum Status {
-        OBSTACLE,
+//        OBSTACLE,
+//        CLEAR,
+//        START,
+//        GOAL
         CLEAR,
         START,
-        GOAL
+        WAYPOINT,
+        GATE,
+        EXIT,
+        OBSTACLE
     }
 }
