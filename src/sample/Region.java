@@ -9,11 +9,10 @@ public class Region {
     private final int cols;
     private final Patch[][] region;
     private final List<List<double[][]>> gradients;
+    private final List<Patch> starts;
     private final List<List<Patch>> goals;
     private final double diffusionPercentage;
     private final int diffusionPasses;
-    private Patch start;
-    private Patch exit;
 
     public Region(int rows, int cols, double diffusionPercentage, int diffusionPasses) {
         this.rows = rows;
@@ -30,7 +29,7 @@ public class Region {
         this.gradients = new ArrayList<>();
 
         // Initialize empty start and end patches
-        this.start = null;
+        this.starts = new ArrayList<>();
         this.goals = new ArrayList<>();
     }
 
@@ -73,16 +72,8 @@ public class Region {
         return diffusionPasses;
     }
 
-    public Patch getStart() {
-        return start;
-    }
-
-    public Patch getExit() {
-        return exit;
-    }
-
-    public void setExit(int row, int col) {
-        this.exit = region[row][col];
+    public List<Patch> getStarts() {
+        return starts;
     }
 
     public Patch getPatch(int row, int col) {
@@ -97,31 +88,6 @@ public class Region {
         return this.goals.size();
     }
 
-    public void setStart(int row, int col) {
-        // Add start patch
-        this.start = region[row][col];
-    }
-
-    public void removeStart() {
-        // Reset start patch state, if it already existed as a start state
-        if (this.start != null) {
-            this.start.setStatus(Patch.Status.CLEAR);
-        }
-
-        // Forget start patch
-        this.start = null;
-    }
-
-    public void removeExit() {
-        // Reset exit patch state, if it already existed as a start state
-        if (this.exit != null) {
-            this.exit.setStatus(Patch.Status.CLEAR);
-        }
-
-        // Forget exit patch
-        this.exit = null;
-    }
-
     public void setStatus(int row, int col, Patch.Status status, int sequence) {
         Patch patch = region[row][col];
 
@@ -129,18 +95,11 @@ public class Region {
         if (patch.getStatus() == Patch.Status.CLEAR) {
             // Set the patch to its new status
             if (status == Patch.Status.START) {
-                // Remove the old start patch
-                removeStart();
-
-                // Set the new start patch
-                setStart(row, col);
+                // Add to the starts list
+                this.starts.add(patch);
             } else if (status == Patch.Status.WAYPOINT || status == Patch.Status.GATE || status == Patch.Status.EXIT) {
-                if (status == Patch.Status.EXIT) {
-                    // Remove the old exit patch
-                    removeExit();
-
-                    // Set the new exit patch
-                    setExit(row, col);
+                if (status == Patch.Status.GATE) {
+                    patch.setWaitingTime(Patch.ENTRY_WAITING_TIME);
                 }
 
                 // Add to the goals list
@@ -157,12 +116,6 @@ public class Region {
     }
 
     public void diffuseGoals() {
-//        // Add goal patch
-//        Patch goal = region[row][col];
-//        goal.setStatus(Patch.Status.GOAL);
-//
-//        this.goals.add(goal);
-
         // Add a layer for the goal patch
         int index = 0;
 
@@ -300,6 +253,25 @@ public class Region {
         // Check if passenger is in its goal
         return (int) passenger.getX() == goal.getMatrixPosition().getCol()
                 && (int) passenger.getY() == goal.getMatrixPosition().getRow();
+    }
+
+    public boolean checkPass(Passenger passenger) {
+        // Get its goal
+        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
+
+        if (goal.getStatus() == Patch.Status.GATE) {
+            if (goal.getWaitingTime() == 0) {
+                goal.setWaitingTime(Patch.ENTRY_WAITING_TIME);
+
+                return true;
+            } else {
+                goal.setWaitingTime(goal.getWaitingTime() - 1);
+
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 
 //    public void printRegion(boolean showAttraction, int layer) {

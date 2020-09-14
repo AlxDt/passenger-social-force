@@ -8,11 +8,13 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
@@ -51,14 +53,22 @@ public class Controller {
     private Button stepButton;
 
     @FXML
+    private Text numAgentsText;
+
+    @FXML
     private Pane overlay;
 
     @FXML
     private StackPane stackPane;
 
+    @FXML
+    private ToggleButton spawnButton;
+
     private double tileSize;
     private GraphicsContext graphicsContext;
     private List<String[]> stringChoices;
+
+    private int numAgents;
 
     public Controller() {
         this.hasStarted = false;
@@ -69,8 +79,6 @@ public class Controller {
         tileSize = canvas.getWidth() / Main.region.getCols();
         graphicsContext = canvas.getGraphicsContext2D();
 
-        // Set choice box goals
-//        final String[] goals = {"Clear", "Start", "Goal", "Obstacle"};
         final String[] startItems = {"Start"};
         final String[] checkpointItems = {"Waypoint", "Gate"};
         final String[] goalItems = {"Exit"};
@@ -90,17 +98,13 @@ public class Controller {
         this.drawState = stateSequences[modeIndex];
 
         drawChoiceBox.setItems(FXCollections.observableArrayList(stringChoices.get(modeIndex)));
-//        drawChoiceBox.setItems(FXCollections.observableArrayList(goals));
         drawChoiceBox.getSelectionModel().select(0);
 
         // Draw visible grid
 //        graphicsContext.setFill(Color.TURQUOISE);
 //        graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
-        drawGrid(graphicsContext, tileSize);
-
-        // Draw listeners
-//        drawListeners(goalItems, tileSize);
+        drawInterface(graphicsContext, tileSize);
         drawListeners(startItems, tileSize);
     }
 
@@ -108,7 +112,7 @@ public class Controller {
     private void step() {
         nextStep();
 
-        drawGrid(graphicsContext, tileSize);
+        drawInterface(graphicsContext, tileSize);
     }
 
     @FXML
@@ -118,10 +122,9 @@ public class Controller {
         this.drawState = stateSequences[modeIndex];
 
         drawChoiceBox.setItems(FXCollections.observableArrayList(stringChoices.get(modeIndex)));
-//        drawChoiceBox.setItems(FXCollections.observableArrayList(goals));
         drawChoiceBox.getSelectionModel().select(0);
 
-        drawGrid(graphicsContext, tileSize);
+        drawInterface(graphicsContext, tileSize);
     }
 
     @FXML
@@ -132,96 +135,104 @@ public class Controller {
         // Diffuse goals
         Main.region.diffuseGoals();
 
-        // Start running
         List<Passenger> passengersRemoved = new ArrayList<>();
 
+        // Start running
         Random rng = new Random();
 
         final double CHANCE_PER_TICK = 0.1;
 
         Platform.runLater(() -> {
             new Thread(() -> {
-                // Get start rows and cols
-                int startRow = Main.region.getStart().getMatrixPosition().getRow();
-                int startCol = Main.region.getStart().getMatrixPosition().getCol();
-
                 while (true) {
                     // Make the starting patches randomly generate passengers
                     // But only do it when there is no passenger at the start patch
-                    if (rng.nextDouble() < CHANCE_PER_TICK/* && passengers.size() == 0*/
-                            && Main.region.getPatch(startRow, startCol).getPassenger() == null) {
-                        Passenger passenger = new Passenger(startCol, startRow, Main.region.getNumGoals());
-//                        passenger.prepareToNextGoal(startRow, startCol);
+                    for (Patch start : Main.region.getStarts()) {
+                        int startRow = start.getMatrixPosition().getRow();
+                        int startCol = start.getMatrixPosition().getCol();
 
-                        Main.region.positionPassenger(passenger, startRow, startCol);
-                        passengers.add(passenger);
+                        if (spawnButton.isSelected() && rng.nextDouble() < CHANCE_PER_TICK/* && passengers.size() == 0*/
+                                && Main.region.getPatch(startRow, startCol).getPassenger() == null) {
+                            Passenger passenger = new Passenger(startCol, startRow, Main.region.getNumGoals());
+
+                            Main.region.positionPassenger(passenger, startRow, startCol);
+                            passengers.add(passenger);
+
+                            this.numAgents++;
+                        }
                     }
+
+                    updateNumAgents();
 
                     // Make each passenger move towards the higher gradient
                     for (Passenger passenger : passengers) {
-                        Patch chosenPatch = passenger.choosePatch(Main.region.getRows(), Main.region.getCols(),
-                                false);
+                        // Only move if the passenger is not waiting
+                        if (!passenger.isWaiting()) {
+                            Patch chosenPatch = passenger.choosePatch(Main.region.getRows(), Main.region.getCols(),
+                                    false);
 
-                        // If there are available patches to move to
-                        if (chosenPatch != null) {
-                            // If the next patch has a passenger on it, choose another patch randomly
-                            // But only do this within a limited amount of attempts
-                            int attempts = 3;
+                            // If there are available patches to move to
+                            if (chosenPatch != null) {
+                                // If the next patch has a passenger on it, choose another patch randomly
+                                // But only do this within a limited amount of attempts
+                                int attempts = 2;
 
-                            while (attempts > 0) {
-                                // Check whether there is an available patch to move to
-                                if (chosenPatch != null) {
-                                    // Check whether there are passengers on that patch
-                                    if (chosenPatch.getPassenger() != null) {
-                                        // If there are, choose another patch and try again
+                                while (attempts > 0) {
+                                    // Check whether there is an available patch to move to
+                                    if (chosenPatch != null) {
+                                        // Check whether there are passengers on that patch
+                                        if (chosenPatch.getPassenger() != null) {
+                                            // If there are, choose another patch and try again
+                                            chosenPatch = passenger.choosePatch(Main.region.getRows(), Main.region.getCols(),
+                                                    true);
+                                        } else {
+                                            // If the patch is free, then use go to that patch
+                                            break;
+                                        }
+                                    } else {
+                                        // If there isn't any, try another patch
                                         chosenPatch = passenger.choosePatch(Main.region.getRows(), Main.region.getCols(),
                                                 true);
-                                    } else {
-                                        // If the patch is free, then use go to that patch
-                                        break;
                                     }
-                                } else {
-                                    // If there isn't any, try another patch
-                                    chosenPatch = passenger.choosePatch(Main.region.getRows(), Main.region.getCols(),
-                                            true);
+
+                                    attempts--;
                                 }
 
-                                attempts--;
+                                // If all attempts are used to no avail, just don't move at all
+                                if (attempts == 0) {
+                                    continue;
+                                }
+
+//                            if (chosenPatch == null) {
+//                                System.out.println(attempts);
+//                            }
+
+                                // Move to chosen patch
+                                Main.region.movePassenger(
+                                        passenger,
+                                        chosenPatch.getMatrixPosition().getRow(),
+                                        chosenPatch.getMatrixPosition().getCol()
+                                );
                             }
+                        }
 
-                            // If all attempts are used to no avail, just don't move at all
-                            if (attempts == 0) {
-                                continue;
-                            }
-
-//                        Patch chosenPatch = passenger.choosePatch();
-
-                            if (chosenPatch == null) {
-                                System.out.println(attempts);
-                            }
-
-                            // Move to chosen patch
-                            Main.region.movePassenger(
-                                    passenger,
-                                    chosenPatch.getMatrixPosition().getRow(),
-                                    chosenPatch.getMatrixPosition().getCol()
-                            );
-
-                            // Check if the passenger is at its goal
-                            if (Main.region.checkGoal(passenger)) {
+                        // Check if the passenger is at its goal
+                        if (Main.region.checkGoal(passenger)) {
+                            // Check if the goal the passenger is on allows this passenger to pass
+                            if (Main.region.checkPass(passenger)) {
                                 // If it is, increment its goals reached counter
                                 passenger.reachGoal();
 
                                 // If it has no more goals left, remove the passenger
                                 if (passenger.getGoalsLeft() == 0) {
                                     passengersRemoved.add(passenger);
-                                }/* else {
-                                // If there still are goals, plan towards it again
-                                passenger.prepareToNextGoal(
-                                        chosenPatch.getMatrixPosition().getRow(),
-                                        chosenPatch.getMatrixPosition().getCol()
-                                );
-                            }*/
+                                }
+
+                                // Allow the passenger to move again
+                                passenger.setWaiting(false);
+                            } else {
+                                // Do not allow the passenger to move
+                                passenger.setWaiting(true);
                             }
                         }
                     }
@@ -233,13 +244,17 @@ public class Controller {
 
                         // Remove the passenger from the passengers list
                         passengers.remove(passenger);
+
+                        this.numAgents--;
                     }
 
                     passengersRemoved.clear();
 
+                    updateNumAgents();
+
                     // Print the region
 //                    Main.region.printRegion(true, 0);
-                    drawGrid(graphicsContext, tileSize);
+                    drawInterface(graphicsContext, tileSize);
 
                     try {
                         Thread.sleep(50);
@@ -251,6 +266,10 @@ public class Controller {
                 }
             }).start();
         });
+    }
+
+    private void updateNumAgents() {
+        Platform.runLater(() -> this.numAgentsText.setText(this.numAgents + " agents"));
     }
 
     private void drawListeners(String[] items, double tileSize) {
@@ -315,7 +334,7 @@ public class Controller {
                     }
 
                     // Redraw grid
-                    drawGrid(graphicsContext, tileSize);
+                    drawInterface(graphicsContext, tileSize);
                 });
 
                 overlay.getChildren().add(rectangle);
@@ -323,18 +342,14 @@ public class Controller {
         }
     }
 
-    private void drawGrid(GraphicsContext graphicsContext, double tileSize) {
+    private void drawInterface(GraphicsContext graphicsContext, double tileSize) {
         graphicsContext.setFill(Color.WHITE);
 
         for (int row = 0; row < Main.region.getRows(); row++) {
             for (int col = 0; col < Main.region.getCols(); col++) {
                 switch (Main.region.getPatch(row, col).getStatus()) {
                     case CLEAR:
-//                        if ((row + col) % 2 == 0) {
                         graphicsContext.setFill(Color.WHITE);
-//                        } else {
-//                            graphicsContext.setFill(Color.GRAY);
-//                        }
 
                         break;
                     case START:
@@ -379,20 +394,27 @@ public class Controller {
         // Check whether it is ready to go to the next step or mode
         if (modeIndex == 0) {
             stepButton.setDisable(true);
-            nextButton.setDisable(Main.region.getStart() == null);
+            nextButton.setDisable(Main.region.getStarts().size() == 0);
         } else if (modeIndex == 1) {
-            stepButton.setDisable(Main.region.getGoals().size() == 0);
-            nextButton.setDisable(Main.region.getGoals().size() == 0);
+            stepButton.setDisable(Main.region.getGoals().size() == 0/* || Main.region.getGoals().get(Main.region.getGoals().size() - 1).size() == 0*/);
+            nextButton.setDisable(Main.region.getGoals().size() == 0/* || Main.region.getGoals().get(Main.region.getGoals().size() - 1).size() == 0*/);
         } else if (modeIndex == 2) {
             stepButton.setDisable(true);
-            nextButton.setDisable(Main.region.getExit() == null);
+            nextButton.setDisable(Main.region.getGoals().get(Main.region.getGoals().size() - 1).size() == 0 || hasStarted);
         } else {
             stepButton.setDisable(true);
             nextButton.setDisable(true);
         }
 
         // Check whether it is ready to start
-        startButton.setDisable(Main.region.getExit() == null || hasStarted);
+        if (Main.region.getGoals().size() == 0) {
+            startButton.setDisable(true);
+        } else {
+            startButton.setDisable(Main.region.getGoals().get(Main.region.getGoals().size() - 1).size() == 0 || hasStarted);
+        }
+
+        spawnButton.setDisable(!hasStarted);
+        drawChoiceBox.setDisable(hasStarted);
     }
 
     private void nextMode() {

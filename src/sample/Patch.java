@@ -3,14 +3,19 @@ package sample;
 import java.util.Objects;
 
 public class Patch {
+    public static final int ENTRY_WAITING_TIME = 10;
+
     private final MatrixPosition matrixPosition;
     private Status status;
     private Passenger passenger;
+    private int waitingTime;
 
     public Patch(MatrixPosition matrixPosition, Status status) {
         this.matrixPosition = matrixPosition;
         this.status = status;
         this.passenger = null;
+
+        this.waitingTime = 0;
     }
 
     public MatrixPosition getMatrixPosition() {
@@ -33,6 +38,14 @@ public class Patch {
         this.passenger = passenger;
     }
 
+    public int getWaitingTime() {
+        return waitingTime;
+    }
+
+    public void setWaitingTime(int waitingTime) {
+        this.waitingTime = waitingTime;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -48,7 +61,7 @@ public class Patch {
     }
 
     public enum Status {
-//        OBSTACLE,
+        //        OBSTACLE,
 //        CLEAR,
 //        START,
 //        GOAL
