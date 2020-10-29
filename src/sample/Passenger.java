@@ -8,7 +8,6 @@ import java.util.Random;
 
 public class Passenger {
     private final Color color;
-    //    private final List<Main.Direction> directions;
     private double x;
     private double y;
     private int goalsReached;

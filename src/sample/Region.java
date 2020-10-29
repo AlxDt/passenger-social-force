@@ -1,5 +1,6 @@
 package sample;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +14,7 @@ public class Region {
     private final List<List<Patch>> goals;
     private final double diffusionPercentage;
     private final int diffusionPasses;
-
+    
     public Region(int rows, int cols, double diffusionPercentage, int diffusionPasses) {
         this.rows = rows;
         this.cols = cols;
@@ -51,6 +52,7 @@ public class Region {
 //                } else {
 //                    region[row][col] = new Patch(position, Patch.Status.CLEAR, new double[]{0.0, 0.0});
 //                }
+
                 region[row][col] = new Patch(matrixPosition, Patch.Status.CLEAR);
             }
         }
@@ -180,6 +182,7 @@ public class Region {
                 } else {
                     numShares = 8;
                 }
+//                numShares = 8;
 
                 // Update the attraction value
                 solution[row][col] += attraction - (1.0 / 8.0) * numShares * distributed;
@@ -274,49 +277,49 @@ public class Region {
         }
     }
 
-//    public void printRegion(boolean showAttraction, int layer) {
-//        StringBuilder stringBuilder = new StringBuilder();
-//
-//        for (int row = 0; row < rows; row++) {
-//            for (int col = 0; col < cols; col++) {
-//                if (!showAttraction) {
-//                    if (region[row][col].getPassenger() != null) {
-//                        stringBuilder.append("o");
-//                    } else {
-//                        switch (region[row][col].getStatus()) {
-//                            case CLEAR:
-//                                stringBuilder.append(".");
-//                                break;
-//                            case OBSTACLE:
-//                                stringBuilder.append("#");
-//                                break;
-//                            case START:
-//                                stringBuilder.append("*");
-//                                break;
+    public void printRegion(boolean showAttraction, int layer) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                if (!showAttraction) {
+                    if (region[row][col].getPassenger() != null) {
+                        stringBuilder.append("o");
+                    } else {
+                        switch (region[row][col].getStatus()) {
+                            case CLEAR:
+                                stringBuilder.append(".");
+                                break;
+                            case OBSTACLE:
+                                stringBuilder.append("#");
+                                break;
+                            case START:
+                                stringBuilder.append("*");
+                                break;
 //                            case GOAL:
 //                                stringBuilder.append("+");
 //                                break;
-//                        }
+                        }
+                    }
+
+                    stringBuilder.append(" ");
+                } else {
+//                    if (row == end.getRow() && col == end.getCol()) {
+//                        System.out.print("         ");
+//                    } else {
+//                    System.out.print(new DecimalFormat("0.0000000").format(region[row][col].getAttraction()));
+                    stringBuilder.append(new DecimalFormat("0.0000000").format(gradients.get(layer).get(0)[row][col]));
 //                    }
-//
-//                    stringBuilder.append(" ");
-//                } else {
-////                    if (row == end.getRow() && col == end.getCol()) {
-////                        System.out.print("         ");
-////                    } else {
-////                    System.out.print(new DecimalFormat("0.0000000").format(region[row][col].getAttraction()));
-//                    stringBuilder.append(new DecimalFormat("0.0000000").format(gradients.get(layer)[row][col]));
-////                    }
-//                }
-//
-//                stringBuilder.append(" ");
-//            }
-//
-//            stringBuilder.append("\n");
-//        }
-//
-//        System.out.println(stringBuilder.toString());
-//    }
+                }
+
+                stringBuilder.append(",");
+            }
+
+            stringBuilder.append("\n");
+        }
+
+        System.out.println(stringBuilder.toString());
+    }
 
     public List<Patch> getGoalsAtSequence(int sequence) {
         return goals.get(sequence);
