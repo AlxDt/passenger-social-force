@@ -4,19 +4,19 @@ import java.util.Objects;
 
 public class MatrixPosition {
     private final int row;
-    private final int col;
+    private final int column;
 
-    public MatrixPosition(int row, int col) {
+    public MatrixPosition(int row, int column) {
         this.row = row;
-        this.col = col;
+        this.column = column;
     }
 
     public int getRow() {
         return row;
     }
 
-    public int getCol() {
-        return col;
+    public int getColumn() {
+        return column;
     }
 
     @Override
@@ -25,11 +25,11 @@ public class MatrixPosition {
         if (o == null || getClass() != o.getClass()) return false;
         MatrixPosition that = (MatrixPosition) o;
         return row == that.row &&
-                col == that.col;
+                column == that.column;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(row, col);
+        return Objects.hash(row, column);
     }
 }

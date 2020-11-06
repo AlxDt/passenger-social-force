@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <bottom>
       <HBox alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="780.0" spacing="20.0" BorderPane.alignment="CENTER">
          <children>
@@ -36,10 +36,11 @@
       </StackPane>
    </center>
    <top>
-      <HBox alignment="CENTER" prefHeight="50.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+      <HBox alignment="CENTER" prefHeight="50.0" prefWidth="600.0" spacing="20.0" BorderPane.alignment="CENTER">
          <children>
             <Text fx:id="numAgentsText" strokeType="OUTSIDE" strokeWidth="0.0" text="Drawing..." textAlignment="CENTER" wrappingWidth="86.13671875" />
             <ToggleButton fx:id="spawnButton" disable="true" mnemonicParsing="false" text="Spawn passengers" />
+            <ToggleButton fx:id="trainDoorsOpenButton" disable="true" mnemonicParsing="false" text="Train doors open" />
          </children>
       </HBox>
    </top>

@@ -1,25 +1,34 @@
 package sample;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Patch {
-    public static final int ENTRY_WAITING_TIME = 5;
+    public static final int ENTRY_WAITING_TIME = 20;
 
     private final MatrixPosition matrixPosition;
+    private final Coordinate patchCenterCoordinates;
     private Status status;
-    private Passenger passenger;
+    private final List<Passenger> passengers;
     private int waitingTime;
 
     public Patch(MatrixPosition matrixPosition, Status status) {
         this.matrixPosition = matrixPosition;
         this.status = status;
-        this.passenger = null;
+        this.passengers = new ArrayList<>();
 
         this.waitingTime = 0;
+
+        this.patchCenterCoordinates = Coordinate.patchCenterCoordinates(this);
     }
 
     public MatrixPosition getMatrixPosition() {
         return matrixPosition;
+    }
+
+    public Coordinate getPatchCenterCoordinates() {
+        return patchCenterCoordinates;
     }
 
     public Status getStatus() {
@@ -30,12 +39,8 @@ public class Patch {
         this.status = status;
     }
 
-    public Passenger getPassenger() {
-        return passenger;
-    }
-
-    public void setPassenger(Passenger passenger) {
-        this.passenger = passenger;
+    public List<Passenger> getPassengers() {
+        return passengers;
     }
 
     public int getWaitingTime() {
