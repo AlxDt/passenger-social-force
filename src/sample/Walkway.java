@@ -86,6 +86,10 @@ public class Walkway {
         return starts;
     }
 
+    public Patch getPatch(Coordinates coordinates) {
+        return getPatch((int) coordinates.getY(), (int) coordinates.getX());
+    }
+
     public Patch getPatch(int row, int column) {
         return region[row][column];
     }
@@ -284,17 +288,17 @@ public class Walkway {
     public boolean checkGoal(Passenger passenger) {
         // Get its goal
 //        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
-        Patch goal = passenger.getGoal();
+        Patch goal = passenger.getPassengerMovement().getGoal();
 
         // Check if passenger is in its goal
-        return (int) passenger.getPosition().getX() == goal.getMatrixPosition().getColumn()
-                && (int) passenger.getPosition().getY() == goal.getMatrixPosition().getRow();
+        return (int) passenger.getPassengerMovement().getPosition().getX() == goal.getMatrixPosition().getColumn()
+                && (int) passenger.getPassengerMovement().getPosition().getY() == goal.getMatrixPosition().getRow();
     }
 
     public boolean checkPass(Passenger passenger, boolean trainDoorsOpen) {
         // Get its goal
 //        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
-        Patch goal = passenger.getGoal();
+        Patch goal = passenger.getPassengerMovement().getGoal();
 
         if (goal.getStatus() == Patch.Status.GATE) {
             if (goal.getWaitingTime() == 0) {

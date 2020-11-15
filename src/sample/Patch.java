@@ -8,7 +8,7 @@ public class Patch {
     public static final int ENTRY_WAITING_TIME = 20;
 
     private final MatrixPosition matrixPosition;
-    private final Coordinate patchCenterCoordinates;
+    private final Coordinates patchCenterCoordinates;
     private Status status;
     private final List<Passenger> passengers;
     private int waitingTime;
@@ -20,14 +20,14 @@ public class Patch {
 
         this.waitingTime = 0;
 
-        this.patchCenterCoordinates = Coordinate.patchCenterCoordinates(this);
+        this.patchCenterCoordinates = Coordinates.patchCenterCoordinates(this);
     }
 
     public MatrixPosition getMatrixPosition() {
         return matrixPosition;
     }
 
-    public Coordinate getPatchCenterCoordinates() {
+    public Coordinates getPatchCenterCoordinates() {
         return patchCenterCoordinates;
     }
 

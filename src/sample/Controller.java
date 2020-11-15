@@ -156,21 +156,7 @@ public class Controller {
                 // But only do it when there is no passenger at the start patch
                 for (Patch start : Main.WALKWAY.getStarts()) {
                     if (spawnButton.isSelected() && rng.nextDouble() < CHANCE_PER_TICK) {
-                        // Generate a passenger
-                        Passenger passenger = new Passenger(
-                                start.getPatchCenterCoordinates().getX(),
-                                start.getPatchCenterCoordinates().getY(),
-                                Main.WALKWAY.getNumGoals()
-                        );
-
-//                            // Position the newly created passenger in the coordinates of the start row and column
-//                            Main.WALKWAY.positionPassenger(passenger, startRow, startColumn);
-
-                        // Add the newly created passenger to the list of passengers
-                        Main.WALKWAY.getPassengers().add(passenger);
-
-                        // Increment the current number of passengers
-                        this.numAgents++;
+                        generatePassenger(start);
                     }
                 }
 
@@ -180,64 +166,42 @@ public class Controller {
                 // Make each passenger move towards the higher gradient
                 for (Passenger passenger : Main.WALKWAY.getPassengers()) {
                     // Only move if the passenger is not waiting
-                    if (!passenger.isWaiting()) {
+                    if (!passenger.getPassengerMovement().isWaiting()) {
                         double headingGoal;
 
                         // Set the nearest goal to this passenger
                         // This internally computes for the nearest goal to it
-                        passenger.setNearestGoal();
+                        passenger.getPassengerMovement().setNearestGoal();
 
                         // Take note of the heading towards the goal patch
                         // Get the x and y coordinates of the patch in question
                         // These coordinates should be in the center of the patch
-                        double patchX = passenger.getGoal().getPatchCenterCoordinates().getX();
-                        double patchY = passenger.getGoal().getPatchCenterCoordinates().getY();
-
-                        headingGoal = passenger.headingTowards(patchX, patchY);
+                        headingGoal = passenger.getPassengerMovement().headingTowards(
+                                passenger.getPassengerMovement().getGoal().getPatchCenterCoordinates()
+                        );
 
                         // Try to choose a leader if this passenger doesn't already have one
-                        if (passenger.getLeader() == null) {
+                        if (passenger.getPassengerMovement().getLeader() == null) {
                             // Try to choose a leader
-                            boolean leaderChosen = passenger.setLeader();
+                            boolean leaderChosen = passenger.getPassengerMovement().setLeader();
 
                             // If a leader has been chosen, take note of the heading to that leader
                             if (leaderChosen) {
-                                Passenger leader = passenger.getLeader();
+                                Passenger leader = passenger.getPassengerMovement().getLeader();
 
-                                double headingLeader = passenger.headingTowards(
-                                        leader.getPosition().getX(),
-                                        leader.getPosition().getY()
-                                );
-
-                                // Set this passenger's final heading to the angular mean of the two headings
-                                double meanHeading = Passenger.meanHeading(headingGoal, headingLeader);
-
-                                // Add random perturbations for realistic movement
-                                meanHeading += new Random().nextGaussian() * Math.toRadians(10);
-
-                                passenger.setHeading(meanHeading);
+                                // Face towards the angular mean of the headings toward the leader and the goal
+                                face(passenger, leader, headingGoal);
                             } else {
-                                // Add random perturbations for realistic movement
-                                headingGoal += new Random().nextGaussian() * Math.toRadians(10);
-
-                                // If a leader has not been chosen, continue moving solo
-                                passenger.setHeading(headingGoal);
+                                // No leader has been chosen, continue with the passenger's own knowledge of the
+                                // position of the goal
+                                face(passenger, null, headingGoal);
                             }
                         } else {
-                            Passenger leader = passenger.getLeader();
+                            // If the passenger already has a leader, continue with the passenger's knowledge of the
+                            // positions of the goal and its leader
+                            Passenger leader = passenger.getPassengerMovement().getLeader();
 
-                            double headingLeader = passenger.headingTowards(
-                                    leader.getPosition().getX(),
-                                    leader.getPosition().getY()
-                            );
-
-                            // Set this passenger's final heading to the angular mean of the two headings
-                            double meanHeading = Passenger.meanHeading(headingGoal, headingLeader);
-
-                            // Add random perturbations for realistic movement
-                            meanHeading += new Random().nextGaussian() * Math.toRadians(10);
-
-                            passenger.setHeading(meanHeading);
+                            face(passenger, leader, headingGoal);
                         }
 
 //                            // Choose the patch with the highest gradient
@@ -258,18 +222,23 @@ public class Controller {
                         //
 
                         // Make this passenger move, if allowable
-                        if (passenger.shouldMove(1.5)) {
-                            passenger.move();
+                        if (passenger.getPassengerMovement().shouldMove(1.5)) {
+                            passenger.getPassengerMovement().move();
                         } else {
-                            passenger.setHeading(passenger.getHeading() + new Random().nextGaussian() * Math.toRadians(70));
+                            passenger.getPassengerMovement().setHeading(
+                                    passenger.getPassengerMovement().getHeading()
+                                            + new Random().nextGaussian() * Math.toRadians(70)
+                            );
                         }
                     }
 
-                    // Every movement, check if the leader, if any, is still ahead
-                    if (passenger.getLeader() != null
-                            && !passenger.isWithinFieldOfView(passenger.getLeader(), Math.toRadians(20.0))) {
+                    // Every movement, check if the leader, if it still exists, is still ahead
+                    if (passenger.getPassengerMovement().getLeader() != null
+                            && !passenger.getPassengerMovement().isWithinFieldOfView(
+                            passenger.getPassengerMovement().getLeader(), Math.toRadians(20.0)
+                    )) {
                         // If not, remove it as a leader
-                        passenger.clearLeader();
+                        passenger.getPassengerMovement().clearLeader();
                     }
 
                     // Check if the passenger is at its goal
@@ -277,18 +246,18 @@ public class Controller {
                         // Check if the goal the passenger is on allows this passenger to pass
                         if (Main.WALKWAY.checkPass(passenger, trainDoorsOpenButton.isSelected())) {
                             // If it is, increment its goals reached counter
-                            passenger.reachGoal();
+                            passenger.getPassengerMovement().reachGoal();
 
                             // If it has no more goals left, this passenger should be removed
-                            if (passenger.getGoalsLeft() == 0) {
+                            if (passenger.getPassengerMovement().getGoalsLeft() == 0) {
                                 passengersRemoved.add(passenger);
                             }
 
                             // Allow the passenger to move again
-                            passenger.setWaiting(false);
+                            passenger.getPassengerMovement().setWaiting(false);
                         } else {
                             // Do not allow the passenger to move
-                            passenger.setWaiting(true);
+                            passenger.getPassengerMovement().setWaiting(true);
                         }
                     }
                 }
@@ -299,7 +268,7 @@ public class Controller {
 //                        Main.WALKWAY.removePassenger(passenger);
 
                     // Remove the passenger from its current patch
-                    removedPassenger.getCurrentPatch().getPassengers().remove(removedPassenger);
+                    removedPassenger.getPassengerMovement().getCurrentPatch().getPassengers().remove(removedPassenger);
 
                     // Remove the passenger from the passengers list
                     Main.WALKWAY.getPassengers().remove(removedPassenger);
@@ -307,8 +276,8 @@ public class Controller {
                     // Passengers whose leader is this removed passenger should also have their references to that
                     // leader cleared
                     for (Passenger passenger : Main.WALKWAY.getPassengers()) {
-                        if (passenger.getLeader() == removedPassenger) {
-                            passenger.clearLeader();
+                        if (passenger.getPassengerMovement().getLeader() == removedPassenger) {
+                            passenger.getPassengerMovement().clearLeader();
                         }
                     }
 
@@ -334,6 +303,49 @@ public class Controller {
 //                    System.out.println("clear");
             }
         }).start();
+    }
+
+    private void generatePassenger(Patch start) {
+        // Generate a passenger
+        Passenger passenger = new Passenger(
+                start.getPatchCenterCoordinates().getX(),
+                start.getPatchCenterCoordinates().getY(),
+                Main.WALKWAY.getNumGoals()
+        );
+
+//                            // Position the newly created passenger in the coordinates of the start row and column
+//                            Main.WALKWAY.positionPassenger(passenger, startRow, startColumn);
+
+        // Add the newly created passenger to the list of passengers
+        Main.WALKWAY.getPassengers().add(passenger);
+
+        // Increment the current number of passengers
+        this.numAgents++;
+    }
+
+    private void face(Passenger currentPassenger, Passenger leader, double headingGoal) {
+        // If a leader was chosen, face towards the angular mean of the headings toward the leader and the goal
+        if (leader != null) {
+            double headingLeader = currentPassenger.getPassengerMovement().headingTowards(
+                    leader.getPassengerMovement().getPosition()
+            );
+
+            // Set this passenger's final heading to the angular mean of the two headings
+            double meanHeading = PassengerMovement.meanHeading(headingGoal, headingLeader);
+
+            // Add random perturbations for realistic movement
+            meanHeading += new Random().nextGaussian() * Math.toRadians(10);
+
+            currentPassenger.getPassengerMovement().setHeading(meanHeading);
+        } else {
+            // No leader has been chosen, continue with the passenger's own knowledge of the
+            // position of the goal
+            // Add random perturbations for realistic movement
+            headingGoal += new Random().nextGaussian() * Math.toRadians(10);
+
+            // If a leader has not been chosen, continue moving solo
+            currentPassenger.getPassengerMovement().setHeading(headingGoal);
+        }
     }
 
     private void updateNumAgents() {
@@ -454,9 +466,9 @@ public class Controller {
                 graphicsContext.setFill(passenger.getColor());
 
                 graphicsContext.fillOval(
-                        passenger.getPosition().getX() * tileSize - passengerRadius / 2.0
+                        passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerRadius / 2.0
                         /*- passengerRadius / 2.0*/,
-                        passenger.getPosition().getY() * tileSize - passengerRadius / 2.0
+                        passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerRadius / 2.0
                         /*- passengerRadius / 2.0*/, 10, 10
                 );
 //            System.out.println(passenger.getX() + ", " + passenger.getY());

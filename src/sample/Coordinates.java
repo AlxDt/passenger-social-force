@@ -3,17 +3,17 @@ package sample;
 import java.util.Objects;
 
 // Represents a pair of 2D Cartesian coordinates
-public class Coordinate {
+public class Coordinates {
     private double x;
     private double y;
 
-    public Coordinate(double x, double y) {
+    public Coordinates(double x, double y) {
         this.x = x;
         this.y = y;
     }
 
     // Get the central coordinates of the given patch
-    public static Coordinate patchCenterCoordinates(Patch patch) {
+    public static Coordinates patchCenterCoordinates(Patch patch) {
         // Retrieve the row and column positions of the patch
         double column = patch.getMatrixPosition().getColumn();
         double row = patch.getMatrixPosition().getRow();
@@ -22,7 +22,7 @@ public class Coordinate {
         double centeredX = column + 0.5;
         double centeredY = row + 0.5;
 
-        return new Coordinate(centeredX, centeredY);
+        return new Coordinates(centeredX, centeredY);
     }
 
     public double getX() {
@@ -45,7 +45,7 @@ public class Coordinate {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Coordinate that = (Coordinate) o;
+        Coordinates that = (Coordinates) o;
         return Double.compare(that.x, x) == 0 &&
                 Double.compare(that.y, y) == 0;
     }
