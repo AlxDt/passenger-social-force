@@ -15,6 +15,7 @@ public class PassengerMovement {
     private int goalsLeft;
     private boolean isWaiting;
     private Passenger leader;
+    private Status status;
 
     public PassengerMovement(Passenger parent, double x, double y, int numGoals) {
         this.parent = parent;
@@ -35,7 +36,7 @@ public class PassengerMovement {
 
         // TODO: Walking speed should depend on the passenger's age
         // The walking speed values shall be in m/s
-        this.walkingDistance = 0.6 + (new Random().nextDouble() - 0.5);
+        this.walkingDistance = 0.6 /*+ (new Random().nextDouble() - 0.5)*/;
 
         // Add this passenger to the start patch
         this.currentPatch = Main.WALKWAY.getPatch((int) y, (int) x);
@@ -364,10 +365,7 @@ public class PassengerMovement {
         Patch nearestGoal = null;
 
         for (Patch goal : Main.WALKWAY.getGoalsAtSequence(goalsReached)) {
-            double distance = distanceTo(
-                    goal.getPatchCenterCoordinates().getX(),
-                    goal.getPatchCenterCoordinates().getY()
-            );
+            double distance = distanceTo(goal.getPatchCenterCoordinates());
 
             if (distance < minDistance) {
                 minDistance = distance;
@@ -521,7 +519,7 @@ public class PassengerMovement {
         double adjacentLength = dx;
 
         // The length of the hypotenuse is the distance between this passenger and the given position
-        double hypotenuseLength = distanceTo(x, y);
+        double hypotenuseLength = distanceTo(coordinates);
 
         // The included angle between the adjacent and the hypotenuse is given by the arccosine of the ratio of the
         // length of the adjacent and the length of the hypotenuse
@@ -538,10 +536,7 @@ public class PassengerMovement {
 
     private Coordinates getFuturePosition() {
         // Check if the distance between this passenger and its goal
-        double distanceToGoal = this.distanceTo(
-                this.goal.getPatchCenterCoordinates().getX(),
-                this.goal.getPatchCenterCoordinates().getY()
-        );
+        double distanceToGoal = this.distanceTo(this.goal.getPatchCenterCoordinates());
 
         // If the distance between this passenger and the goal is less than the distance this passenger covers every
         // time it walks, "snap" the position of the passenger to the center of the goal immediately, to avoid
@@ -567,7 +562,7 @@ public class PassengerMovement {
             if (newY < 0) {
                 newY = 0.0;
             } else if (newY > Main.WALKWAY.getRows() - 1) {
-                newY = Main.WALKWAY.getCols() - 0.99;
+                newY = Main.WALKWAY.getRows() - 0.99;
             }
 
             // Then set the position of this passenger to the new coordinates
@@ -581,7 +576,10 @@ public class PassengerMovement {
     }
 
     // Compute the distance between the coordinates of this passenger and some other object with coordinates
-    private double distanceTo(double x, double y) {
+    private double distanceTo(Coordinates coordinates) {
+        double x = coordinates.getX();
+        double y = coordinates.getY();
+
         return Math.sqrt(
                 Math.pow(x - this.position.getX(), 2)
                         + Math.pow(y - this.position.getY(), 2)
@@ -609,23 +607,30 @@ public class PassengerMovement {
     // See if this passenger should move
     // That is, check if a movement considering its current heading would not violate distancing
     public boolean shouldMove(double distance) {
+//        // Get this passenger's current patch
+//        Patch currentPatch = Main.WALKWAY.getPatch(this.getCurrentPatch().getPatchCenterCoordinates());
+//
 //        // Get this passenger's future patch
 //        Patch futurePatch = Main.WALKWAY.getPatch(this.getFuturePosition());
 //
-//        // If the future patch has passengers on them, do not move
-//        // If there are no passengers there, the passenger may safely move
-//        return futurePatch.getPassengers().isEmpty();
+//        // If there are other passengers on  this patch
+//        if (currentPatch.getPassengers().size() > 1) {
+//            return false;
+//        } else {
+//            // If the future patch has passengers on them, do not move
+//            // If there are no passengers there, the passenger may safely move
+//            return futurePatch.getPassengers().isEmpty();
+//        }
 
         // First, check this patch if there are fellow passengers within it
-        if (!this.currentPatch.getPassengers().isEmpty()) {
+        if (this.currentPatch.getPassengers().size() >= 1) {
             // Check if any of the passengers in the passenger list are within this passenger's field of view
             for (Passenger passenger : this.currentPatch.getPassengers()) {
                 // If this passenger is within this passenger's field of view, check if the distance to this passenger
                 // is less than the allowable distance
                 // If it is, don't move - too close for comfort
                 if (isWithinFieldOfView(passenger, Math.toRadians(45.0))
-                        && passenger.getPassengerMovement()
-                        .distanceTo(this.getPosition().getX(), this.position.getY()) < distance) {
+                        && passenger.getPassengerMovement().distanceTo(this.getPosition()) < distance) {
                     return false;
                 }
             }
@@ -692,14 +697,34 @@ public class PassengerMovement {
                 // is less than the allowable distance
                 // If it is, don't move - too close for comfort
                 if (isWithinFieldOfView(passenger, Math.toRadians(45.0))
-                        && passenger.getPassengerMovement()
-                        .distanceTo(this.getPosition().getX(), this.position.getY()) < distance) {
+                        && passenger.getPassengerMovement().distanceTo(this.getPosition()) < distance) {
                     return false;
                 }
             }
         }
 
-        // If it reaches this point, the passenger may move safely
+        // Finally, check if the future patch has passengers on them
+        Patch futurePatch = Main.WALKWAY.getPatch(this.getFuturePosition());
+
+        // If there are passengers in the future patch, and the future patch is different from the current patch,
+        // don't move
+//        return futurePatch.getPassengers().isEmpty();
+//        System.out.println(futurePatch.getPassengers().isEmpty());
+        if (futurePatch != this.currentPatch && !futurePatch.getPassengers().isEmpty()) {
+            for (Passenger passenger : futurePatch.getPassengers()) {
+                if (isWithinFieldOfView(passenger, Math.toRadians(90.0))
+                        && passenger.getPassengerMovement().distanceTo(this.getPosition()) < distance) {
+                    return false;
+                }
+            }
+        }
+
         return true;
+    }
+
+    public enum Status {
+        WILL_QUEUE,
+        QUEUEING;
+//        IN_TRAIN;
     }
 }

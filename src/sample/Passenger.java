@@ -35,6 +35,10 @@ public class Passenger {
         return this.passengerMovement;
     }
 
+    public int getIdentifier() {
+        return this.identifier;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
