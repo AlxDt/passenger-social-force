@@ -17,10 +17,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Controller {
 
@@ -97,16 +94,16 @@ public class Controller {
 
         List<String> floorFieldChoicesList = new ArrayList<>();
 
-        for (PassengerMovement.Status status : PassengerMovement.Status.values()) {
-            floorFieldChoicesList.add(status.name());
+        for (PassengerMovement.State state : PassengerMovement.State.values()) {
+            floorFieldChoicesList.add(state.name());
         }
 
-        // Remove will queue status
+        // Remove will queue state
         floorFieldChoicesList.remove("WILL_QUEUE");
 
-        List<String> statusList = new ArrayList<>(floorFieldChoicesList);
+        List<String> stateList = new ArrayList<>(floorFieldChoicesList);
 
-        Object[] statusListArray = statusList.toArray();
+        Object[] stateListArray = stateList.toArray();
 
         floorFieldChoicesList.add(0, "None");
 
@@ -127,7 +124,7 @@ public class Controller {
 //        final String[] checkpointItems = {"Waypoint", "Gate"};
         final String[] checkpointItems = {"Gate"};
         final String[] goalItems = {"Exit"};
-        final String[] floorFieldItems = Arrays.copyOf(statusListArray, statusListArray.length, String[].class);
+        final String[] floorFieldItems = Arrays.copyOf(stateListArray, stateListArray.length, String[].class);
         final String[] obstacleItems = {"Obstacle"};
 
         stringChoices = new ArrayList<>();
@@ -189,12 +186,12 @@ public class Controller {
 //        // Diffuse goals
 //        Main.WALKWAY.diffuseGoals();
 
-        // For each status, normalize the floor field values
-        PassengerMovement.Status[] statusArray = PassengerMovement.Status.values();
+        // For each state, normalize the floor field values
+        PassengerMovement.State[] stateArray = PassengerMovement.State.values();
 
-        for (PassengerMovement.Status status : statusArray) {
-            if (status != PassengerMovement.Status.WILL_QUEUE) {
-                Main.WALKWAY.normalizeFloorFields(status);
+        for (PassengerMovement.State state : stateArray) {
+            if (state != PassengerMovement.State.WILL_QUEUE) {
+                Main.WALKWAY.normalizeFloorFields(state);
             }
         }
 
@@ -221,7 +218,7 @@ public class Controller {
                 // Update the number of agents displayed in the interface
                 updateNumAgents();
 
-                // Make each passenger move towards the higher gradient
+                // Make each passenger move
                 for (Passenger passenger : Main.WALKWAY.getPassengers()) {
                     // Only move if the passenger is not waiting
                     if (!passenger.getPassengerMovement().isWaiting()) {
@@ -238,7 +235,85 @@ public class Controller {
                                 passenger.getPassengerMovement().getGoal().getPatchCenterCoordinates()
                         );
 
-                        face(passenger, null, headingGoal);
+                        PassengerMovement.State state = passenger.getPassengerMovement().getState();
+
+                        // If the passenger isn't currently queueing, check if it may now be queueing
+                        if (state == PassengerMovement.State.WILL_QUEUE) {
+                            // Check the floor field of this patch and use it to determine if the passenger
+                            // will transition into a queueing state
+                            double floorField = passenger.getPassengerMovement().getCurrentPatch().getFloorFields().get(
+                                    PassengerMovement.State.QUEUEING);
+
+                            // Use the floor field value for the probability generation
+                            if (new Random().nextDouble() < floorField) {
+                                // If the likelihood is met, the passenger will now be queueing, instead of waiting to
+                                // queue
+                                passenger.getPassengerMovement().setState(PassengerMovement.State.QUEUEING);
+                            }
+                        }
+
+                        // If the passenger is not queueing, just follow its current goal
+                        // If the passenger is queueing, also take the heading towards the passenger at the tail of the
+                        // queue into account, as well as the floor fields
+                        if (state == PassengerMovement.State.WILL_QUEUE) {
+                            // Face the goal
+                            face(passenger, null, headingGoal);
+                        } else {
+                            Patch goal = passenger.getPassengerMovement().getGoal();
+
+                            // Use the highest neighboring patch with the highest floor field to influence the
+                            // heading of this passenger
+                            Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
+                                    Main.WALKWAY.getPatch(passenger.getPassengerMovement().getFuturePosition(
+                                            goal, headingGoal
+                                    )),
+                                    headingGoal,
+                                    state
+                            );
+
+                            // Get the heading toward the best patch
+                            double headingBestPatch = passenger.getPassengerMovement().headingTowards(
+                                    bestPatch.getPatchCenterCoordinates()
+                            );
+
+                            Queue<Passenger> queueAtGoal = goal.getPassengersQueueing();
+
+                            // Check if there is someone queueing for this passenger's chosen goal
+                            // If the queue is not empty, but contains this passenger, and that passenger is the head
+                            // of the queue, then be the leader of the queue
+                            if (queueAtGoal.isEmpty()
+                                    || queueAtGoal.contains(passenger) && queueAtGoal.peek() == passenger) {
+                                // Leader role: use the floor fields ahead to find the way to the goal
+                                // Face towards the best patch
+                                face(passenger, null, headingBestPatch);
+
+                                // If the queue was empty, add this passenger to the queue
+                                if (queueAtGoal.isEmpty()) {
+                                    queueAtGoal.add(passenger);
+                                }
+                            } else {
+                                // If the queue is not empty, and this passenger is not yet in that queue, join the
+                                // queue as a follower
+                                // Follower role: use the floor fields behind the passenger at the tail of the queue of
+                                // the pursued goal
+                                // Get the passenger at the tail of the queue
+                                Passenger passengerAtTail = goal.getPassengersQueueing().peekFirst();
+
+                                assert passengerAtTail != null;
+//
+//                                if (Double.isNaN(passengerAtTail.getPassengerMovement().getPosition().getX())) {
+//                                    System.out.println("oops");
+//                                }
+
+                                // Get the heading towards that passenger
+                                double headingTail = passenger.getPassengerMovement().headingTowards(
+                                        passengerAtTail.getPassengerMovement().getPosition()
+                                );
+
+                                // Face towards the heading towards the tail of the queue
+                                face(passenger, null, headingTail);
+                            }
+                        }
 
 //                        // Try to choose a leader if this passenger doesn't already have one
 //                        if (passenger.getPassengerMovement().getLeader() == null) {
@@ -267,7 +342,7 @@ public class Controller {
 //                            // Choose the patch with the highest gradient
 //                            Patch chosenPatch = passenger.choosePatch(
 //                                    Main.WALKWAY.getRows(),
-//                                    Main.WALKWAY.getCols(),
+//                                    Main.WALKWAY.getColumns(),
 //                                    false
 //                            );
 //
@@ -282,7 +357,7 @@ public class Controller {
                         //
 
                         // Make this passenger move, if allowable
-                        if (passenger.getPassengerMovement().shouldMove(30.0)) {
+                        if (passenger.getPassengerMovement().shouldMove(10.0)) {
                             passenger.getPassengerMovement().move();
                         } else {
                             passenger.getPassengerMovement().setHeading(
@@ -307,6 +382,14 @@ public class Controller {
                         if (Main.WALKWAY.checkPass(passenger, trainDoorsOpenButton.isSelected())) {
                             // If it is, increment its goals reached counter
                             passenger.getPassengerMovement().reachGoal();
+
+                            // Remove the passenger from the queue of its goal, if that goal has a queue
+                            if (passenger.getPassengerMovement().getGoal().getPassengersQueueing() != null) {
+                                passenger.getPassengerMovement().getGoal().getPassengersQueueing().remove();
+                            }
+
+                            // Restore the status of the passenger to will queue
+                            passenger.getPassengerMovement().setState(PassengerMovement.State.WILL_QUEUE);
 
                             // If it has no more goals left, this passenger should be removed
                             if (passenger.getPassengerMovement().getGoalsLeft() == 0) {
@@ -333,13 +416,14 @@ public class Controller {
                     // Remove the passenger from the passengers list
                     Main.WALKWAY.getPassengers().remove(removedPassenger);
 
+                    // TODO: Optimize
                     // Passengers whose leader is this removed passenger should also have their references to that
                     // leader cleared
-                    for (Passenger passenger : Main.WALKWAY.getPassengers()) {
-                        if (passenger.getPassengerMovement().getLeader() == removedPassenger) {
-                            passenger.getPassengerMovement().clearLeader();
-                        }
-                    }
+//                    for (Passenger passenger : Main.WALKWAY.getPassengers()) {
+//                        if (passenger.getPassengerMovement().getLeader() == removedPassenger) {
+//                            passenger.getPassengerMovement().clearLeader();
+//                        }
+//                    }
 
                     this.numAgents--;
                 }
@@ -414,7 +498,7 @@ public class Controller {
 
     private void drawListeners(String[] items, double tileSize) {
         for (int row = 0; row < Main.WALKWAY.getRows(); row++) {
-            for (int column = 0; column < Main.WALKWAY.getCols(); column++) {
+            for (int column = 0; column < Main.WALKWAY.getColumns(); column++) {
                 Rectangle rectangle = new Rectangle(column * tileSize, row * tileSize, tileSize, tileSize);
                 rectangle.setFill(Color.DARKGRAY);
                 rectangle.setOpacity(0.0);
@@ -470,7 +554,7 @@ public class Controller {
 
                             break;
                         case FLOOR_FIELDS:
-                            Main.WALKWAY.setFloorField(patchRow, patchColumn, PassengerMovement.Status.valueOf(
+                            Main.WALKWAY.setFloorField(patchRow, patchColumn, PassengerMovement.State.valueOf(
                                     drawChoiceBox.getSelectionModel().getSelectedItem()
                             ));
 
@@ -494,16 +578,16 @@ public class Controller {
             graphicsContext.setFill(Color.WHITE);
 
             for (int row = 0; row < Main.WALKWAY.getRows(); row++) {
-                for (int column = 0; column < Main.WALKWAY.getCols(); column++) {
+                for (int column = 0; column < Main.WALKWAY.getColumns(); column++) {
                     switch (Main.WALKWAY.getPatch(row, column).getType()) {
                         case CLEAR:
-                            PassengerMovement.Status status = null;
+                            PassengerMovement.State state = null;
 
-                            // Get the selected status
+                            // Get the selected state
                             String selectedItemName = floorFieldChoiceBox.getSelectionModel().getSelectedItem();
 
                             if (!selectedItemName.equals("None")) {
-                                status = PassengerMovement.Status.valueOf(
+                                state = PassengerMovement.State.valueOf(
                                         selectedItemName
                                 );
                             }
@@ -511,17 +595,18 @@ public class Controller {
                             // Get the patch referenced
                             Patch patch = Main.WALKWAY.getPatch(row, column);
 
-                            if (status == PassengerMovement.Status.QUEUEING) {
+                            if (state == PassengerMovement.State.QUEUEING) {
                                 Color color;
 
                                 // Show floor field value
-                                double floorField = patch.getFloorFields().get(PassengerMovement.Status.QUEUEING);
+                                double floorField = patch.getFloorFields().get(PassengerMovement.State.QUEUEING);
 
                                 if (floorField == 0.0) {
                                     color = Color.WHITE;
                                 } else {
-                                    color = Color.hsb(0.0, 1.0,
-                                            floorField / Main.WALKWAY.getMaximumFloorFieldValue(status)
+                                    color = Color.hsb(120.0,
+                                            floorField / Main.WALKWAY.getMaximumFloorFieldValue(state),
+                                            1.0
                                     );
                                 }
 
@@ -561,7 +646,17 @@ public class Controller {
             final double passengerRadius = tileSize / 2.0;
 
             for (Passenger passenger : Main.WALKWAY.getPassengers()) {
-                graphicsContext.setFill(passenger.getColor());
+//                graphicsContext.setFill(passenger.getColor());
+                switch (passenger.getPassengerMovement().getState()) {
+                    case WILL_QUEUE:
+                        graphicsContext.setFill(Color.BLACK);
+
+                        break;
+                    case QUEUEING:
+                        graphicsContext.setFill(Color.ORANGE);
+
+                        break;
+                }
 
                 graphicsContext.fillOval(
                         passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerRadius / 2.0

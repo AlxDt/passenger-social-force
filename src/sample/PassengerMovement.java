@@ -15,7 +15,7 @@ public class PassengerMovement {
     private int goalsLeft;
     private boolean isWaiting;
     private Passenger leader;
-    private Status status;
+    private State state;
 
     public PassengerMovement(Passenger parent, double x, double y, int numGoals) {
         this.parent = parent;
@@ -41,6 +41,8 @@ public class PassengerMovement {
         // Add this passenger to the start patch
         this.currentPatch = Main.WALKWAY.getPatch((int) y, (int) x);
         currentPatch.getPassengers().add(parent);
+
+        this.state = State.WILL_QUEUE;
     }
 
     // Compute for the angular mean of two headings
@@ -124,240 +126,18 @@ public class PassengerMovement {
         return walkingDistance;
     }
 
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
+
     public void reachGoal() {
         this.goalsReached++;
         this.goalsLeft--;
     }
-
-//    public Patch choosePatch(int rowNumber, int colNumber, boolean random) {
-//        Patch candidate;
-//
-//        double maximumGradient = -Double.MAX_VALUE;
-//        Patch chosen = null;
-//        double attraction;
-//
-//        // Get the next set of goals
-//        List<Patch> nextGoals = Main.WALKWAY.getGoalsAtSequence(goalsReached);
-//
-//        // Take note of the index of the goal chosen
-//        int indexNearestGoal = nextGoals.indexOf(this.goal);
-//
-//        // Normally, the patch with the highest gradient is chosen
-//        double x = this.position.getX();
-//        double y = this.position.getY();
-//
-//        if (!random) {
-//            // Left
-//            if ((int) x > 0) {
-//                candidate = Main.WALKWAY.getPatch((int) y, (int) x - 1);
-//
-//                if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                    attraction = Main.WALKWAY.getAttraction(goalsReached, indexNearestGoal, (int) y, (int) x - 1);
-//
-//                    if (attraction > maximumGradient) {
-//                        maximumGradient = attraction;
-//
-//                        chosen = Main.WALKWAY.getPatch((int) y, (int) x - 1);
-//                    }
-//                }
-//            }
-//
-//            // Right
-//            if ((int) x < colNumber - 1) {
-//                candidate = Main.WALKWAY.getPatch((int) y, (int) x + 1);
-//
-//                if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                    attraction = Main.WALKWAY.getAttraction(goalsReached, indexNearestGoal, (int) y, (int) x + 1);
-//
-//                    if (attraction > maximumGradient) {
-//                        maximumGradient = attraction;
-//
-//                        chosen = Main.WALKWAY.getPatch((int) y, (int) x + 1);
-//                    }
-//                }
-//            }
-//
-//            // Up
-//            if ((int) y > 0) {
-//                candidate = Main.WALKWAY.getPatch((int) y - 1, (int) x);
-//
-//                if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                    attraction = Main.WALKWAY.getAttraction(goalsReached, indexNearestGoal, (int) y - 1, (int) x);
-//
-//                    if (attraction > maximumGradient) {
-//                        maximumGradient = attraction;
-//
-//                        chosen = Main.WALKWAY.getPatch((int) y - 1, (int) x);
-//                    }
-//                }
-//            }
-//
-//            // Down
-//            if ((int) y < rowNumber - 1) {
-//                candidate = Main.WALKWAY.getPatch((int) y + 1, (int) x);
-//
-//                if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                    attraction = Main.WALKWAY.getAttraction(goalsReached, indexNearestGoal, (int) y + 1, (int) x);
-//
-//                    if (attraction > maximumGradient) {
-//                        maximumGradient = attraction;
-//
-//                        chosen = Main.WALKWAY.getPatch((int) y + 1, (int) x);
-//                    }
-//                }
-//            }
-//
-//            // Upper left
-//            if ((int) x > 0 && (int) y > 0) {
-//                candidate = Main.WALKWAY.getPatch((int) y - 1, (int) x - 1);
-//
-//                if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                    attraction = Main.WALKWAY.getAttraction(goalsReached, indexNearestGoal, (int) y - 1, (int) x - 1);
-//
-//                    if (attraction > maximumGradient) {
-//                        maximumGradient = attraction;
-//
-//                        chosen = Main.WALKWAY.getPatch((int) y - 1, (int) x - 1);
-//                    }
-//                }
-//            }
-//
-//            // Lower left
-//            if ((int) x > 0 && (int) y < rowNumber - 1) {
-//                candidate = Main.WALKWAY.getPatch((int) y + 1, (int) x - 1);
-//
-//                if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                    attraction = Main.WALKWAY.getAttraction(goalsReached, indexNearestGoal, (int) y + 1, (int) x - 1);
-//
-//                    if (attraction > maximumGradient) {
-//                        maximumGradient = attraction;
-//
-//                        chosen = Main.WALKWAY.getPatch((int) y + 1, (int) x - 1);
-//                    }
-//                }
-//            }
-//
-//            // Upper right
-//            if ((int) x < colNumber - 1 && (int) y > 0) {
-//                candidate = Main.WALKWAY.getPatch((int) y - 1, (int) x + 1);
-//
-//                if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                    attraction = Main.WALKWAY.getAttraction(goalsReached, indexNearestGoal, (int) y - 1, (int) x + 1);
-//
-//                    if (attraction > maximumGradient) {
-//                        maximumGradient = attraction;
-//
-//                        chosen = Main.WALKWAY.getPatch((int) y - 1, (int) x + 1);
-//                    }
-//                }
-//            }
-//
-//            // Lower right
-//            if ((int) x < colNumber - 1 && (int) y < rowNumber - 1) {
-//                candidate = Main.WALKWAY.getPatch((int) y + 1, (int) x + 1);
-//
-//                if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                    attraction = Main.WALKWAY.getAttraction(goalsReached, indexNearestGoal, (int) y + 1, (int) x + 1);
-//
-//                    if (attraction > maximumGradient) {
-//                        maximumGradient = attraction;
-//
-//                        chosen = Main.WALKWAY.getPatch((int) y + 1, (int) x + 1);
-//                    }
-//                }
-//            }
-//        } else {
-//            // If it was decided that a random choice was to be made, pick one patch randomly
-//            switch (new Random().nextInt(8)) {
-//                case 0:
-//                    if ((int) x > 0) {
-//                        candidate = Main.WALKWAY.getPatch((int) y, (int) x - 1);
-//
-//                        if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                            chosen = Main.WALKWAY.getPatch((int) y, (int) x - 1);
-//                        }
-//                    }
-//
-//                    break;
-//                case 1:
-//                    if ((int) x < colNumber - 1) {
-//                        candidate = Main.WALKWAY.getPatch((int) y, (int) x + 1);
-//
-//                        if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                            chosen = Main.WALKWAY.getPatch((int) y, (int) x + 1);
-//                        }
-//                    }
-//
-//                    break;
-//                case 2:
-//                    if ((int) y > 0) {
-//                        candidate = Main.WALKWAY.getPatch((int) y - 1, (int) x);
-//
-//                        if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                            chosen = Main.WALKWAY.getPatch((int) y - 1, (int) x);
-//                        }
-//                    }
-//
-//                    break;
-//                case 3:
-//                    if ((int) y < rowNumber - 1) {
-//                        candidate = Main.WALKWAY.getPatch((int) y + 1, (int) x);
-//
-//                        if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                            chosen = Main.WALKWAY.getPatch((int) y + 1, (int) x);
-//                        }
-//                    }
-//
-//                    break;
-//                case 4:
-//                    if ((int) x > 0 && (int) y > 0) {
-//                        candidate = Main.WALKWAY.getPatch((int) y - 1, (int) x - 1);
-//
-//                        if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                            chosen = Main.WALKWAY.getPatch((int) y - 1, (int) x - 1);
-//                        }
-//                    }
-//
-//                    break;
-//                case 5:
-//                    if ((int) x > 0 && (int) y < rowNumber - 1) {
-//                        candidate = Main.WALKWAY.getPatch((int) y + 1, (int) x - 1);
-//
-//                        if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                            chosen = Main.WALKWAY.getPatch((int) y + 1, (int) x - 1);
-//                        }
-//                    }
-//
-//                    break;
-//                case 6:
-//                    if ((int) x < colNumber - 1 && (int) y > 0) {
-//                        candidate = Main.WALKWAY.getPatch((int) y - 1, (int) x + 1);
-//
-//                        if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                            chosen = Main.WALKWAY.getPatch((int) y - 1, (int) x + 1);
-//                        }
-//                    }
-//
-//                    break;
-//                case 7:
-//                    if ((int) x < colNumber - 1 && (int) y < rowNumber - 1) {
-//                        candidate = Main.WALKWAY.getPatch((int) y + 1, (int) x + 1);
-//
-//                        if (candidate.getStatus() != Patch.Status.OBSTACLE) {
-//                            chosen = Main.WALKWAY.getPatch((int) y + 1, (int) x + 1);
-//                        }
-//                    }
-//
-//                    break;
-//            }
-//        }
-//
-//        if (chosen == null) {
-//            System.out.println("oops");
-//        }
-//
-//        return chosen;
-//    }
 
     // Set the nearest goal to this passenger
     public void setNearestGoal() {
@@ -436,12 +216,12 @@ public class PassengerMovement {
             // Right
             if (currentHeadingDegrees >= 337.5 && currentHeadingDegrees <= 360.0
                     || currentHeadingDegrees >= 0 && currentHeadingDegrees < 22.5) {
-                if (truncatedX + 1 < Main.WALKWAY.getCols()) {
+                if (truncatedX + 1 < Main.WALKWAY.getColumns()) {
                     chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
                 }
             } else if (currentHeadingDegrees >= 22.5 && currentHeadingDegrees < 67.5) {
                 // Upper right
-                if (truncatedX + 1 < Main.WALKWAY.getCols() && truncatedY > 0) {
+                if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0) {
                     chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
                 }
             } else if (currentHeadingDegrees >= 67.5 && currentHeadingDegrees < 112.5) {
@@ -471,7 +251,7 @@ public class PassengerMovement {
                 }
             } else {
                 // Lower right
-                if (truncatedX + 1 < Main.WALKWAY.getCols() && truncatedY + 1 < Main.WALKWAY.getRows()) {
+                if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
                     chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
                 }
             }
@@ -534,29 +314,35 @@ public class PassengerMovement {
         return angle;
     }
 
+    // Get the future position of this passenger given the current goal and the current heading
     private Coordinates getFuturePosition() {
+        return getFuturePosition(this.goal, this.heading);
+    }
+
+    // Get the future position of this passenger given a goal and a heading
+    public Coordinates getFuturePosition(Patch goal, double heading) {
         // Check if the distance between this passenger and its goal
-        double distanceToGoal = this.distanceTo(this.goal.getPatchCenterCoordinates());
+        double distanceToGoal = this.distanceTo(goal.getPatchCenterCoordinates());
 
         // If the distance between this passenger and the goal is less than the distance this passenger covers every
         // time it walks, "snap" the position of the passenger to the center of the goal immediately, to avoid
         // overshooting its target
         // If not, compute the next coordinates normally
         if (distanceToGoal < this.walkingDistance) {
-            return new Coordinates(this.goal.getPatchCenterCoordinates().getX(), this.goal.getPatchCenterCoordinates().getY());
+            return new Coordinates(goal.getPatchCenterCoordinates().getX(), goal.getPatchCenterCoordinates().getY());
         } else {
             // Given the current position, the current heading, and the walking speed, the coordinates for the new
             // position of the passenger are
             // (x_current + cos(heading) * walking speed, y_current - sin(heading) * walking speed)
-            double newX = this.position.getX() + Math.cos(this.heading) * walkingDistance;
-            double newY = this.position.getY() - Math.sin(this.heading) * walkingDistance;
+            double newX = this.position.getX() + Math.cos(heading) * this.walkingDistance;
+            double newY = this.position.getY() - Math.sin(heading) * this.walkingDistance;
 
             // Check if the new coordinates are out of bounds
             // If they are, adjust them such that they stay within bounds
             if (newX < 0) {
                 newX = 0.0;
-            } else if (newX > Main.WALKWAY.getCols() - 1) {
-                newX = Main.WALKWAY.getCols() - 0.99;
+            } else if (newX > Main.WALKWAY.getColumns() - 1) {
+                newX = Main.WALKWAY.getColumns() - 0.99;
             }
 
             if (newY < 0) {
@@ -648,12 +434,12 @@ public class PassengerMovement {
         // Right
         if (currentHeadingDegrees >= 337.5 && currentHeadingDegrees <= 360.0
                 || currentHeadingDegrees >= 0 && currentHeadingDegrees < 22.5) {
-            if (truncatedX + 1 < Main.WALKWAY.getCols()) {
+            if (truncatedX + 1 < Main.WALKWAY.getColumns()) {
                 chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
             }
         } else if (currentHeadingDegrees >= 22.5 && currentHeadingDegrees < 67.5) {
             // Upper right
-            if (truncatedX + 1 < Main.WALKWAY.getCols() && truncatedY > 0) {
+            if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0) {
                 chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
             }
         } else if (currentHeadingDegrees >= 67.5 && currentHeadingDegrees < 112.5) {
@@ -683,7 +469,7 @@ public class PassengerMovement {
             }
         } else {
             // Lower right
-            if (truncatedX + 1 < Main.WALKWAY.getCols() && truncatedY + 1 < Main.WALKWAY.getRows()) {
+            if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
                 chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
             }
         }
@@ -722,7 +508,7 @@ public class PassengerMovement {
         return true;
     }
 
-    public enum Status {
+    public enum State {
         WILL_QUEUE,
         QUEUEING;
 //        IN_TRAIN;

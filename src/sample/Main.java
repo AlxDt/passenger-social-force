@@ -11,9 +11,9 @@ public class Main extends Application {
     public static final int DELAY_IN_MS = 50;
 
     private static final int ROWS = 60;
-    private static final int COLS = 106;
+    private static final int COLUMNS = 106;
 
-    public static final Walkway WALKWAY = new Walkway(ROWS, COLS);
+    public static final Walkway WALKWAY = new Walkway(ROWS, COLUMNS);
 
     public static void main(String[] args) {
         launch(args);

@@ -8,7 +8,8 @@ public class Patch {
     private final MatrixPosition matrixPosition;
     private final Coordinates patchCenterCoordinates;
     private final List<Passenger> passengers;
-    private final Map<PassengerMovement.Status, Double> floorFields;
+    private final Map<PassengerMovement.State, Double> floorFields;
+    private ArrayDeque<Passenger> passengersQueueing;
     private Type type;
     private int waitingTime;
 
@@ -16,9 +17,10 @@ public class Patch {
         this.matrixPosition = matrixPosition;
         this.type = type;
         this.passengers = new ArrayList<>();
+        this.passengersQueueing = (type == Type.GATE || type == Type.EXIT) ? new ArrayDeque<>() : null;
 
         this.floorFields = new HashMap<>();
-        this.floorFields.put(PassengerMovement.Status.QUEUEING, 0.0);
+        this.floorFields.put(PassengerMovement.State.QUEUEING, 0.0);
 
         this.waitingTime = 0;
 
@@ -39,10 +41,18 @@ public class Patch {
 
     public void setType(Type type) {
         this.type = type;
+
+        if (type == Type.GATE || type == Type.EXIT) {
+            this.passengersQueueing = new ArrayDeque<>();
+        }
     }
 
     public List<Passenger> getPassengers() {
         return passengers;
+    }
+
+    public ArrayDeque<Passenger> getPassengersQueueing() {
+        return passengersQueueing;
     }
 
     public int getWaitingTime() {
@@ -53,7 +63,7 @@ public class Patch {
         this.waitingTime = waitingTime;
     }
 
-    public Map<PassengerMovement.Status, Double> getFloorFields() {
+    public Map<PassengerMovement.State, Double> getFloorFields() {
         return floorFields;
     }
 
