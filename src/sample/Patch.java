@@ -8,8 +8,10 @@ public class Patch {
     private final MatrixPosition matrixPosition;
     private final Coordinates patchCenterCoordinates;
     private final List<Passenger> passengers;
-    private final Map<PassengerMovement.State, Double> floorFields;
+    private final Map<PassengerMovement.State, FloorField> floorFieldValues;
     private ArrayDeque<Passenger> passengersQueueing;
+    private List<Patch> associatedPatches;
+    private String goalId;
     private Type type;
     private int waitingTime;
 
@@ -17,10 +19,16 @@ public class Patch {
         this.matrixPosition = matrixPosition;
         this.type = type;
         this.passengers = new ArrayList<>();
-        this.passengersQueueing = (type == Type.GATE || type == Type.EXIT) ? new ArrayDeque<>() : null;
+//        this.passengersQueueing = (type == Type.GATE || type == Type.EXIT) ? new ArrayDeque<>() : null;
 
-        this.floorFields = new HashMap<>();
-        this.floorFields.put(PassengerMovement.State.QUEUEING, 0.0);
+        this.passengersQueueing = null;
+        this.associatedPatches = null;
+        this.goalId = null;
+
+        this.floorFieldValues = new HashMap<>();
+
+        // TODO: Add all available statuses to all floor fields, not just queueing
+        this.floorFieldValues.put(PassengerMovement.State.QUEUEING, new FloorField());
 
         this.waitingTime = 0;
 
@@ -39,11 +47,15 @@ public class Patch {
         return type;
     }
 
-    public void setType(Type type) {
+    public void setType(Type type, int sequence, int index) {
         this.type = type;
 
         if (type == Type.GATE || type == Type.EXIT) {
+            assert index != -1;
+
             this.passengersQueueing = new ArrayDeque<>();
+            this.associatedPatches = new ArrayList<>();
+            this.goalId = (type == Type.GATE ? "G" : "E") + sequence + "-" + index;
         }
     }
 
@@ -63,8 +75,16 @@ public class Patch {
         this.waitingTime = waitingTime;
     }
 
-    public Map<PassengerMovement.State, Double> getFloorFields() {
-        return floorFields;
+    public String getGoalId() {
+        return goalId;
+    }
+
+    public Map<PassengerMovement.State, FloorField> getFloorFieldValues() {
+        return floorFieldValues;
+    }
+
+    public List<Patch> getAssociatedPatches() {
+        return associatedPatches;
     }
 
     @Override
@@ -84,7 +104,7 @@ public class Patch {
     public enum Type {
         CLEAR,
         START,
-        WAYPOINT,
+        //        WAYPOINT,
         GATE,
         EXIT,
         OBSTACLE

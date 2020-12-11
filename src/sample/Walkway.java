@@ -1,5 +1,6 @@
 package sample;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -131,22 +132,28 @@ public class Walkway {
 
     private Patch chooseNegativeDiagonal(Patch patch, PassengerMovement.State state, int truncatedX, int truncatedY) {
         Patch chosenPatch;
-        if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0
-                && truncatedX > 0 && truncatedY + 1 < Main.WALKWAY.getRows()) {
+
+        final boolean upperRightCondition = truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0;
+        final boolean lowerLeftCondition = truncatedX > 0 && truncatedY + 1 < Main.WALKWAY.getRows();
+
+        if (upperRightCondition && lowerLeftCondition) {
             Patch upperRight = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
             Patch lowerLeft = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
 
             chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upperRight, lowerLeft);
         } else {
             // One of the required patches are out of bounds
-            if (!(truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0)) {
+            if (!upperRightCondition && lowerLeftCondition) {
                 // Upper right not available, choose lower left
                 Patch lowerLeft = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, lowerLeft);
-            } else {
+            } else if (upperRightCondition && !lowerLeftCondition) {
                 // Lower left not available, choose upper right
                 Patch upperRight = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upperRight);
+            } else {
+                // Neither are available
+                chosenPatch = patch;
             }
         }
 
@@ -155,22 +162,28 @@ public class Walkway {
 
     private Patch choosePositiveDiagonal(Patch patch, PassengerMovement.State state, int truncatedX, int truncatedY) {
         Patch chosenPatch;
-        if (truncatedX > 0 && truncatedY > 0
-                && truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
+
+        final boolean upperLeftCondition = truncatedX > 0 && truncatedY > 0;
+        final boolean lowerRightCondition = truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows();
+
+        if (upperLeftCondition && lowerRightCondition) {
             Patch upperLeft = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
             Patch lowerRight = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
 
             chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upperLeft, lowerRight);
         } else {
             // One of the required patches are out of bounds
-            if (!(truncatedX > 0 && truncatedY > 0)) {
+            if (!upperLeftCondition && lowerRightCondition) {
                 // Upper left not available, choose lower right
                 Patch lowerRight = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, lowerRight);
-            } else {
+            } else if (upperLeftCondition && !lowerRightCondition) {
                 // Lower right not available, choose upper left
                 Patch upperLeft = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upperLeft);
+            } else {
+                // Neither are available
+                chosenPatch = patch;
             }
         }
 
@@ -179,14 +192,18 @@ public class Walkway {
 
     private Patch chooseVertical(Patch patch, PassengerMovement.State state, int truncatedX, int truncatedY) {
         Patch chosenPatch;
-        if (truncatedX > 0 && truncatedX + 1 < Main.WALKWAY.getColumns()) {
+
+        final boolean leftCondition = truncatedX > 0;
+        final boolean rightCondition = truncatedX + 1 < Main.WALKWAY.getColumns();
+
+        if (leftCondition && rightCondition) {
             Patch left = Main.WALKWAY.getPatch(truncatedY, truncatedX - 1);
             Patch right = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
 
             chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, left, right);
         } else {
             // One of the required patches are out of bounds
-            if (!(truncatedX > 0)) {
+            if (!leftCondition) {
                 // Left not available, choose right
                 Patch right = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, right);
@@ -202,14 +219,18 @@ public class Walkway {
 
     private Patch chooseHorizontal(Patch patch, PassengerMovement.State state, int truncatedX, int truncatedY) {
         Patch chosenPatch;
-        if (truncatedY > 0 && truncatedY - 1 < Main.WALKWAY.getRows()) {
+
+        final boolean upperCondition = truncatedY > 0;
+        final boolean lowerCondition = truncatedY + 1 < Main.WALKWAY.getRows();
+
+        if (upperCondition && lowerCondition) {
             Patch upper = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX);
             Patch lower = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
 
             chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upper, lower);
         } else {
             // One of the required patches are out of bounds
-            if (!(truncatedY > 0)) {
+            if (!upperCondition) {
                 // Upper not available, choose lower
                 Patch lower = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, lower);
@@ -232,7 +253,7 @@ public class Walkway {
         double highestFloorFieldValue = -Double.MAX_VALUE;
 
         for (Patch patch : patches) {
-            double floorFieldValue = patch.getFloorFields().get(state);
+            double floorFieldValue = patch.getFloorFieldValues().get(state).getValue();
 
             if (floorFieldValue > highestFloorFieldValue) {
                 highestFloorFieldValue = floorFieldValue;
@@ -250,13 +271,15 @@ public class Walkway {
     public void setType(int row, int column, Patch.Type type, int sequence) {
         Patch patch = region[row][column];
 
+        int index = -1;
+
         // Only allow placement on clear patches
         if (patch.getType() == Patch.Type.CLEAR) {
             // Set the patch to its new state
             if (type == Patch.Type.START) {
                 // Add to the starts list
                 this.starts.add(patch);
-            } else if (type == Patch.Type.WAYPOINT || type == Patch.Type.GATE || type == Patch.Type.EXIT) {
+            } else if (type == Patch.Type.GATE || type == Patch.Type.EXIT) {
                 if (type == Patch.Type.GATE) {
                     patch.setWaitingTime(Patch.ENTRY_WAITING_TIME);
                 }
@@ -267,13 +290,14 @@ public class Walkway {
                 }
 
                 this.goals.get(sequence).add(patch);
+                index = this.goals.get(sequence).size() - 1;
             } else if (type == Patch.Type.OBSTACLE) {
                 // Add to the obstacles list
                 this.obstacles.add(patch);
             }
 
             // Change the state
-            patch.setType(type);
+            patch.setType(type, sequence, index);
         }
     }
 
@@ -281,11 +305,27 @@ public class Walkway {
         return passengers;
     }
 
-    public void setFloorField(int row, int column, PassengerMovement.State state) {
+    public void setFloorField(int row, int column, PassengerMovement.State state, Patch associatedGoal) {
         Patch patch = region[row][column];
 
         // Increment the current value in that position
-        patch.getFloorFields().put(state, patch.getFloorFields().get(state) + 1.0);
+        FloorField floorField = patch.getFloorFieldValues().get(state);
+
+        floorField.setValue(floorField.getValue() + 1);
+
+        // Set the goal this patch is associated to
+        floorField.setAssociation(associatedGoal);
+
+        // Tell that associated goal patch to add this patch to the list of its associated patches, if it's not yet
+        // already there
+        if (!associatedGoal.getAssociatedPatches().contains(patch)) {
+            associatedGoal.getAssociatedPatches().add(patch);
+        }
+
+//        FloorField newFloorField
+//                = new FloorField(patch.getFloorFields().get(state).getValue() + 1.0, association);
+//
+//        patch.getFloorFields().put(state, newFloorField);
     }
 
     public double getMaximumFloorFieldValue(PassengerMovement.State state) {
@@ -294,7 +334,7 @@ public class Walkway {
 
         for (int row = 0; row < Main.WALKWAY.region.length; row++) {
             for (int column = 0; column < Main.WALKWAY.region[0].length; column++) {
-                double currentFloorField = Main.WALKWAY.getPatch(row, column).getFloorFields().get(state);
+                double currentFloorField = Main.WALKWAY.getPatch(row, column).getFloorFieldValues().get(state).getValue();
 
                 if (currentFloorField > maximumFloorField) {
                     maximumFloorField = currentFloorField;
@@ -317,8 +357,10 @@ public class Walkway {
                 for (int column = 0; column < Main.WALKWAY.region[0].length; column++) {
                     Patch patch = Main.WALKWAY.getPatch(row, column);
 
-                    double currentFloorField = patch.getFloorFields().get(state);
-                    patch.getFloorFields().put(state, currentFloorField / maximumFloorField);
+                    FloorField floorField = patch.getFloorFieldValues().get(state);
+                    floorField.setValue(floorField.getValue() / maximumFloorField);
+
+//                    patch.getFloorFields().put(state, currentFloorField / maximumFloorField);
                 }
             }
         }
@@ -478,8 +520,12 @@ public class Walkway {
 //        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
         Patch goal = passenger.getPassengerMovement().getGoal();
 
-        // Check if passenger is in its goal
-        return (int) passenger.getPassengerMovement().getPosition().getX() == goal.getMatrixPosition().getColumn()
+        // Check if passenger is in the head of this goal's queue and in its goal
+        ArrayDeque<Passenger> passengersQueueing = goal.getPassengersQueueing();
+
+        return !goal.getPassengersQueueing().isEmpty()
+                && goal.getPassengersQueueing().getFirst() == passenger
+                && (int) passenger.getPassengerMovement().getPosition().getX() == goal.getMatrixPosition().getColumn()
                 && (int) passenger.getPassengerMovement().getPosition().getY() == goal.getMatrixPosition().getRow();
     }
 
@@ -532,5 +578,24 @@ public class Walkway {
 
     public List<List<Patch>> getGoals() {
         return goals;
+    }
+
+    public List<Patch> getGoalsFlattened() {
+        List<Patch> flattened = new ArrayList<>();
+
+        for (List<Patch> patches : this.goals) {
+            flattened.addAll(patches);
+        }
+
+        return flattened;
+    }
+
+    public Patch getGoalFromGoalId(String goalId) {
+        String[] split = goalId.split("-");
+
+        int sequence = Integer.parseInt(split[0].substring(1));
+        int index = Integer.parseInt(split[1]);
+
+        return this.goals.get(sequence).get(index);
     }
 }

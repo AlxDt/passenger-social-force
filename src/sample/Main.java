@@ -23,7 +23,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         // Setup GUI
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setTitle("Passenger social force");
+        primaryStage.setTitle("Crowd dynamics");
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
     }
