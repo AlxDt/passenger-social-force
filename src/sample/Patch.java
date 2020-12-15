@@ -50,12 +50,12 @@ public class Patch {
     public void setType(Type type, int sequence, int index) {
         this.type = type;
 
-        if (type == Type.GATE || type == Type.EXIT) {
+        if (type == Type.TRANSACTION_AREA || type == Type.DESPAWN) {
             assert index != -1;
 
             this.passengersQueueing = new ArrayDeque<>();
             this.associatedPatches = new ArrayList<>();
-            this.goalId = (type == Type.GATE ? "G" : "E") + sequence + "-" + index;
+            this.goalId = (type == Type.TRANSACTION_AREA ? "G" : "E") + sequence + "-" + index;
         }
     }
 
@@ -103,10 +103,12 @@ public class Patch {
 
     public enum Type {
         CLEAR,
-        START,
-        //        WAYPOINT,
-        GATE,
-        EXIT,
-        OBSTACLE
+        SPAWN,
+        SECURITY_ENTRANCE,
+        TICKET_BOOTH,
+        TURNSTILE,
+        TRANSACTION_AREA,
+        DESPAWN,
+        OBSTACLE;
     }
 }

@@ -276,11 +276,11 @@ public class Walkway {
         // Only allow placement on clear patches
         if (patch.getType() == Patch.Type.CLEAR) {
             // Set the patch to its new state
-            if (type == Patch.Type.START) {
+            if (type == Patch.Type.SPAWN) {
                 // Add to the starts list
                 this.starts.add(patch);
-            } else if (type == Patch.Type.GATE || type == Patch.Type.EXIT) {
-                if (type == Patch.Type.GATE) {
+            } else if (type == Patch.Type.TRANSACTION_AREA || type == Patch.Type.DESPAWN) {
+                if (type == Patch.Type.TRANSACTION_AREA) {
                     patch.setWaitingTime(Patch.ENTRY_WAITING_TIME);
                 }
 
@@ -291,7 +291,7 @@ public class Walkway {
 
                 this.goals.get(sequence).add(patch);
                 index = this.goals.get(sequence).size() - 1;
-            } else if (type == Patch.Type.OBSTACLE) {
+            } else if (type == Patch.Type.OBSTACLE || type == Patch.Type.TICKET_BOOTH) {
                 // Add to the obstacles list
                 this.obstacles.add(patch);
             }
@@ -534,7 +534,7 @@ public class Walkway {
 //        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
         Patch goal = passenger.getPassengerMovement().getGoal();
 
-        if (goal.getType() == Patch.Type.GATE) {
+        if (goal.getType() == Patch.Type.TRANSACTION_AREA) {
             if (goal.getWaitingTime() == 0) {
                 goal.setWaitingTime(Patch.ENTRY_WAITING_TIME);
 
@@ -544,7 +544,7 @@ public class Walkway {
 
                 return false;
             }
-        } else if (goal.getType() == Patch.Type.EXIT) {
+        } else if (goal.getType() == Patch.Type.DESPAWN) {
             return trainDoorsOpen;
         }
 

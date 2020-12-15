@@ -400,23 +400,6 @@ public class PassengerMovement {
         return headingDifference <= maximumHeadingChange;
     }
 
-    public boolean isWithinFieldOfViewObstacle(Patch patch, double maximumHeadingChange) {
-        // A passenger is within a field of view if the heading change required to face that passenger is within the
-        // given maximum heading change
-        double headingTowardsPassenger = headingTowards(patch.getPatchCenterCoordinates());
-
-        // Compute the difference between the two headings
-        double headingDifference = Math.abs(headingTowardsPassenger - this.heading) % Math.toRadians(360.0);
-
-        if (headingDifference > Math.toRadians(180)) {
-            headingDifference = Math.toRadians(360) - headingDifference;
-        }
-
-        // If the heading difference is within the specified parameter, return true
-        // If not, the passenger is outside this passenger's field of view, so return false
-        return headingDifference <= maximumHeadingChange;
-    }
-
     // See if this passenger should move
     // That is, check if a movement considering its current heading would not violate distancing
     public boolean shouldMove(double minimumDistance, double maximumHeading) {
@@ -604,75 +587,6 @@ public class PassengerMovement {
         return true;
     }
 
-    public boolean shouldMoveObstacle(double minimumDistance, double maximumHeading) {
-        double currentHeadingDegrees = Math.toDegrees(this.heading);
-
-        // Compile a list of patches which would be explored by this passenger
-        List<Patch> patchesToExplore = new ArrayList<>();
-        Patch chosenPatch;
-
-        int truncatedX = (int) this.position.getX();
-        int truncatedY = (int) this.position.getY();
-
-        // Right
-        if (truncatedX + 1 < Main.WALKWAY.getColumns()) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Upper right
-        if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Up
-        if (truncatedY > 0) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Upper left
-        if (truncatedX > 0 && truncatedY > 0) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Left
-        if (truncatedX > 0) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX - 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Lower left
-        if (truncatedX > 0 && truncatedY + 1 < Main.WALKWAY.getRows()) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Down
-        if (truncatedY + 1 < Main.WALKWAY.getRows()) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Lower right
-        if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // For each of these compiled patches, see if there is another passenger within this passenger's field of view
-        for (Patch patch : patchesToExplore) {
-            if (patch.getType() == Patch.Type.OBSTACLE && isWithinFieldOfViewObstacle(patch, maximumHeading)
-                    && distanceTo(patch.getPatchCenterCoordinates()) < minimumDistance) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     // From a set of patches associated with a goal, get the nearest patch with a floor field value greater than a
     // certain threshold
     public Patch nearestPatchAboveThreshold(double threshold) {
@@ -700,8 +614,12 @@ public class PassengerMovement {
 
     public enum State {
         WILL_QUEUE,
+        ASSEMBLING,
         QUEUEING,
-        TRANSACTING;
-//        IN_TRAIN;
+        TRANSACTING,
+        WAITING_FOR_TRAIN,
+        BOARDING,
+        IN_TRAIN,
+        LEAVING
     }
 }

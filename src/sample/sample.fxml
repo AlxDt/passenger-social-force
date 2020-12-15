@@ -16,7 +16,7 @@
    <bottom>
       <HBox alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="780.0" spacing="20.0" BorderPane.alignment="CENTER">
          <children>
-            <Label fx:id="stateLabel" text="State: " />
+            <Label fx:id="stateLabel" text="View floor field:" />
             <ChoiceBox fx:id="floorFieldChoiceBox" prefWidth="150.0">
                <HBox.margin>
                   <Insets />
@@ -52,7 +52,7 @@
                   <Insets />
                </HBox.margin>
             </Button>
-            <Text fx:id="numAgentsText" strokeType="OUTSIDE" strokeWidth="0.0" text="Drawing..." textAlignment="CENTER" wrappingWidth="86.13671875" />
+            <Text fx:id="promptText" strokeType="OUTSIDE" strokeWidth="0.0" text="Drawing..." textAlignment="CENTER" wrappingWidth="86.13671875" />
             <ToggleButton fx:id="spawnButton" disable="true" mnemonicParsing="false" text="Spawn passengers" />
             <ToggleButton fx:id="trainDoorsOpenButton" disable="true" mnemonicParsing="false" text="Train doors open" />
          </children>

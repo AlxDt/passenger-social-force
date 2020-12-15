@@ -1,6 +1,5 @@
 package sample;
 
-import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -17,21 +16,16 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.util.Duration;
 
 import java.util.*;
 
 public class Controller {
-
-
     private final DrawState[] stateSequences = new DrawState[]{
-            DrawState.START,
+            DrawState.SPAWN,
             DrawState.CHECKPOINT,
-            DrawState.GOAL,
+            DrawState.DESPAWN,
             DrawState.OBSTACLE,
             DrawState.FLOOR_FIELDS
-//            DrawState.QUEUE_PATH,
-//            DrawState.QUEUE_ENTRANCE
     };
 
     private boolean hasStarted;
@@ -40,6 +34,11 @@ public class Controller {
     private int sequence;
     private int index;
     private int modeIndex;
+
+    private Orientation orientation;
+    private Rectangle currentExtraRectangle;
+    private Rectangle previousExtraRectangle;
+    private boolean isValidDraw;
 
     @FXML
     private Canvas canvas;
@@ -54,7 +53,7 @@ public class Controller {
     private Button stepButton;
 
     @FXML
-    private Text numAgentsText;
+    private Text promptText;
 
     @FXML
     private Pane overlay;
@@ -101,6 +100,11 @@ public class Controller {
     public Controller() {
         this.hasStarted = false;
         this.isDrawingFloorFields = false;
+
+        this.orientation = Orientation.UP;
+        this.previousExtraRectangle = null;
+        this.currentExtraRectangle = null;
+        this.isValidDraw = true;
     }
 
     @FXML
@@ -110,12 +114,8 @@ public class Controller {
 
         List<String> floorFieldChoicesList = new ArrayList<>();
 
-        for (PassengerMovement.State state : PassengerMovement.State.values()) {
-            floorFieldChoicesList.add(state.name());
-        }
-
-        // Remove will queue state
-        floorFieldChoicesList.remove("WILL_QUEUE");
+        floorFieldChoicesList.add("Queueing area");
+        floorFieldChoicesList.add("Train waiting area");
 
         List<String> stateList = new ArrayList<>(floorFieldChoicesList);
 
@@ -136,10 +136,9 @@ public class Controller {
                 (observableValue, number, number2) -> drawInterface(graphicsContext, tileSize)
         );
 
-        final String[] startItems = {"Start"};
-//        final String[] checkpointItems = {"Waypoint", "Gate"};
-        final String[] checkpointItems = {"Gate"};
-        final String[] goalItems = {"Exit"};
+        final String[] startItems = {"Spawn point"};
+        final String[] checkpointItems = {"Security entrance", "Ticket booth", "Turnstile"};
+        final String[] goalItems = {"Despawn point"};
         final String[] floorFieldItems = Arrays.copyOf(stateListArray, stateListArray.length, String[].class);
         final String[] obstacleItems = {"Obstacle"};
 
@@ -211,7 +210,7 @@ public class Controller {
         PassengerMovement.State[] stateArray = PassengerMovement.State.values();
 
         for (PassengerMovement.State state : stateArray) {
-            if (state != PassengerMovement.State.WILL_QUEUE && state != PassengerMovement.State.TRANSACTING) {
+            if (state == PassengerMovement.State.QUEUEING) {
                 Main.WALKWAY.normalizeFloorFields(state);
             }
         }
@@ -408,18 +407,8 @@ public class Controller {
                         // If the tries are exhausted, don't move at all
                         final int totalTries = 1;
 
-                        if (passengerMovement.shouldMove(2.0, Math.toRadians(30.0))) {
-                            if (passengerMovement.shouldMoveObstacle(passengerMovement.getWalkingDistance(), Math.toRadians(30.0))) {
-                                passengerMovement.move();
-                            } else {
-                                passengerMovement.setHeading(
-                                        (passengerMovement.getHeading() + Math.toRadians(90.0))
-                                );
-
-                                System.out.println("hey");
-
-                                passengerMovement.move();
-                            }
+                        if (passengerMovement.shouldMove(1.5, Math.toRadians(30.0))) {
+                            passengerMovement.move();
                         }
 
 //                        for (int tries = 0; tries < totalTries; tries++) {
@@ -562,61 +551,167 @@ public class Controller {
     }
 
     private void updateNumAgents() {
-        Platform.runLater(() -> this.numAgentsText.setText(this.numAgents + " agents"));
+        Platform.runLater(() -> this.promptText.setText(this.numAgents + " agents"));
     }
 
     private void drawListeners(String[] items, double tileSize) {
         Platform.runLater(() -> {
+            // Draw listeners for the canvas (used for the detection of the orientation)
+            canvas.getScene().setOnKeyPressed(e -> {
+                switch (e.getCode()) {
+                    case W:
+                        this.orientation = Orientation.UP;
+//                        drawInterface(graphicsContext, tileSize);
+
+                        break;
+                    case D:
+                        this.orientation = Orientation.RIGHT;
+//                        drawInterface(graphicsContext, tileSize);
+
+                        break;
+                    case S:
+                        this.orientation = Orientation.DOWN;
+//                        drawInterface(graphicsContext, tileSize);
+
+                        break;
+                    case A:
+                        this.orientation = Orientation.LEFT;
+//                        drawInterface(graphicsContext, tileSize);
+
+                        break;
+                }
+            });
+
+            Rectangle[][] rectangles = new Rectangle[Main.WALKWAY.getRows()][Main.WALKWAY.getColumns()];
+
+            // Draw listeners for each patch
             for (int row = 0; row < Main.WALKWAY.getRows(); row++) {
                 for (int column = 0; column < Main.WALKWAY.getColumns(); column++) {
-                    Rectangle rectangle = new Rectangle(column * tileSize, row * tileSize, tileSize, tileSize);
+                    rectangles[row][column]
+                            = new Rectangle(column * tileSize, row * tileSize, tileSize, tileSize);
+
+                    Rectangle rectangle = rectangles[row][column];
+
                     rectangle.setFill(Color.DARKGRAY);
                     rectangle.setOpacity(0.0);
                     rectangle.setStyle("-fx-cursor: hand;");
-
                     rectangle.getProperties().put("row", row);
                     rectangle.getProperties().put("column", column);
 
+                    final int columnCopy = column;
+                    final int rowCopy = row;
+
                     rectangle.addEventFilter(MouseEvent.MOUSE_ENTERED, e -> {
-                        FadeTransition fadeTransition = new FadeTransition(Duration.millis(100), rectangle);
-                        fadeTransition.setFromValue(0.0);
-                        fadeTransition.setToValue(0.5);
-                        fadeTransition.play();
+                        rectangle.setOpacity(1.0);
+
+                        if (drawState == DrawState.CHECKPOINT) {
+                            Rectangle extraRectangle;
+
+                            switch (this.orientation) {
+                                case UP:
+                                    if (rowCopy - 1 >= 0) {
+                                        extraRectangle = rectangles[rowCopy - 1][columnCopy];
+                                        extraRectangle.setOpacity(1.0);
+                                        extraRectangle.setFill(Color.LIGHTGRAY);
+
+                                        this.previousExtraRectangle = extraRectangle;
+                                        this.isValidDraw = true;
+                                    } else {
+                                        this.isValidDraw = false;
+                                    }
+
+                                    break;
+                                case RIGHT:
+                                    if (columnCopy + 1 < Main.WALKWAY.getColumns()) {
+                                        extraRectangle = rectangles[rowCopy][columnCopy + 1];
+                                        extraRectangle.setOpacity(1.0);
+                                        extraRectangle.setFill(Color.LIGHTGRAY);
+
+                                        this.previousExtraRectangle = extraRectangle;
+                                        this.isValidDraw = true;
+                                    } else {
+                                        this.isValidDraw = false;
+                                    }
+
+                                    break;
+                                case DOWN:
+                                    if (rowCopy + 1 < Main.WALKWAY.getRows()) {
+                                        extraRectangle = rectangles[rowCopy + 1][columnCopy];
+                                        extraRectangle.setOpacity(1.0);
+                                        extraRectangle.setFill(Color.LIGHTGRAY);
+
+                                        this.previousExtraRectangle = extraRectangle;
+                                        this.isValidDraw = true;
+                                    } else {
+                                        this.isValidDraw = false;
+                                    }
+
+                                    break;
+                                case LEFT:
+                                    if (columnCopy - 1 >= 0) {
+                                        extraRectangle = rectangles[rowCopy][columnCopy - 1];
+                                        extraRectangle.setOpacity(1.0);
+                                        extraRectangle.setFill(Color.LIGHTGRAY);
+
+                                        this.previousExtraRectangle = extraRectangle;
+                                        this.isValidDraw = true;
+                                    } else {
+                                        this.isValidDraw = false;
+                                    }
+
+                                    break;
+                            }
+                        }
                     });
 
                     rectangle.addEventFilter(MouseEvent.MOUSE_EXITED, e -> {
-                        FadeTransition fadeTransition = new FadeTransition(Duration.millis(100), rectangle);
-                        fadeTransition.setFromValue(0.5);
-                        fadeTransition.setToValue(0.0);
-                        fadeTransition.play();
+                        rectangle.setOpacity(0.0);
+
+                        if (drawState == DrawState.CHECKPOINT) {
+                            previousExtraRectangle.setOpacity(0.0);
+                            previousExtraRectangle.setFill(Color.DARKGRAY);
+                        }
                     });
 
                     rectangle.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-                        int patchRow = (int) rectangle.getProperties().get("row");
-                        int patchColumn = (int) rectangle.getProperties().get("column");
+                        int patchRow;
+                        int patchColumn;
 
-//                    String choice = drawChoiceBox.getSelectionModel().getSelectedItem();
+                        int extraPatchRow;
+                        int extraPatchColumn;
+
+                        patchRow = (int) rectangle.getProperties().get("row");
+                        patchColumn = (int) rectangle.getProperties().get("column");
 
                         switch (drawState) {
-                            case START:
-                                Main.WALKWAY.setType(patchRow, patchColumn, Patch.Type.START, this.sequence);
+                            case SPAWN:
+                                Main.WALKWAY.setType(patchRow, patchColumn, Patch.Type.SPAWN, this.sequence);
 
                                 break;
                             case CHECKPOINT:
-//                            switch (choice) {
-//                                case "Waypoint":
-//                                    Main.WALKWAY.setType(patchRow, patchColumn, Patch.Type.WAYPOINT, this.sequence);
-//
-//                                    break;
-//                                case "Gate":
-                                Main.WALKWAY.setType(patchRow, patchColumn, Patch.Type.GATE, this.sequence);
-//
-//                                    break;
-//                            }
+                                if (isValidDraw) {
+                                    extraPatchRow = (int) previousExtraRectangle.getProperties().get("row");
+                                    extraPatchColumn = (int) previousExtraRectangle.getProperties().get("column");
+
+                                    // TODO: There are more types that ticket booths
+                                    Main.WALKWAY.setType(
+                                            patchRow,
+                                            patchColumn,
+                                            Patch.Type.TICKET_BOOTH,
+                                            this.sequence
+                                    );
+
+                                    Main.WALKWAY.setType(
+                                            extraPatchRow,
+                                            extraPatchColumn,
+                                            Patch.Type.TRANSACTION_AREA,
+                                            this.sequence
+                                    );
+                                }
 
                                 break;
-                            case GOAL:
-                                Main.WALKWAY.setType(patchRow, patchColumn, Patch.Type.EXIT, this.sequence);
+                            case DESPAWN:
+                                Main.WALKWAY.setType(patchRow, patchColumn, Patch.Type.DESPAWN, this.sequence);
 
                                 break;
                             case OBSTACLE:
@@ -626,10 +721,16 @@ public class Controller {
                             case FLOOR_FIELDS:
                                 Main.WALKWAY.setType(patchRow, patchColumn, Patch.Type.CLEAR, this.sequence);
 
+                                PassengerMovement.State state = null;
+
+                                state = matchState(drawChoiceBox.getSelectionModel().getSelectedItem());
+
+                                assert state != null;
+
                                 Main.WALKWAY.setFloorField(
-                                        patchRow, patchColumn, PassengerMovement.State.valueOf(
-                                                drawChoiceBox.getSelectionModel().getSelectedItem()
-                                        ),
+                                        patchRow,
+                                        patchColumn,
+                                        state,
                                         Main.WALKWAY.getGoalFromGoalId(
                                                 targetChoiceBox.getSelectionModel().getSelectedItem()
                                         )
@@ -648,10 +749,20 @@ public class Controller {
         });
     }
 
-    private void drawInterface(GraphicsContext graphicsContext, double tileSize) {
-//        System.out.println(canvas.getWidth() + "x" + canvas.getHeight());
-//        System.out.println(((BorderPane) canvas.getParent().getParent()).getPrefWidth() + "x" + ((BorderPane) canvas.getParent().getParent()).getPrefHeight());
+    private PassengerMovement.State matchState(String selectedItem) {
+        // Match the selected value at the checkbox with the appropriate state
+        // TODO: Incorporate assembling state
+        switch (selectedItem) {
+            case "Queueing area":
+                return PassengerMovement.State.QUEUEING;
+            case "Train waiting area":
+                return PassengerMovement.State.WAITING_FOR_TRAIN;
+        }
 
+        return null;
+    }
+
+    private void drawInterface(GraphicsContext graphicsContext, double tileSize) {
         Platform.runLater(() -> {
             graphicsContext.setFill(Color.WHITE);
             graphicsContext.setFont(Font.font(7.0));
@@ -672,9 +783,7 @@ public class Controller {
                             String selectedItemName = floorFieldChoiceBox.getSelectionModel().getSelectedItem();
 
                             if (!selectedItemName.equals("None")) {
-                                state = PassengerMovement.State.valueOf(
-                                        selectedItemName
-                                );
+                                state = matchState(selectedItemName);
                             }
 
                             if (state == PassengerMovement.State.QUEUEING) {
@@ -699,23 +808,25 @@ public class Controller {
                             }
 
                             break;
-                        case START:
+                        case SPAWN:
                             graphicsContext.setFill(Color.BLUE);
 
                             isGateOrExit = false;
 
                             break;
-//                        case WAYPOINT:
-//                            graphicsContext.setFill(Color.GRAY);
-//
-//                            break;
-                        case GATE:
-                            graphicsContext.setFill(Color.GREEN);
+                        case TRANSACTION_AREA:
+                            graphicsContext.setFill(Color.LIMEGREEN);
 
                             isGateOrExit = true;
 
                             break;
-                        case EXIT:
+                        case TICKET_BOOTH:
+                            graphicsContext.setFill(Color.DARKGREEN);
+
+                            isGateOrExit = false;
+
+                            break;
+                        case DESPAWN:
                             graphicsContext.setFill(Color.YELLOW);
 
                             isGateOrExit = true;
@@ -732,7 +843,7 @@ public class Controller {
                     graphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
 
                     if (isGateOrExit && !hasStarted) {
-                        if (patch.getType() == Patch.Type.GATE) {
+                        if (patch.getType() == Patch.Type.TRANSACTION_AREA) {
                             graphicsContext.setFill(Color.WHITE);
                         } else {
                             graphicsContext.setFill(Color.BLACK);
@@ -868,11 +979,18 @@ public class Controller {
         this.index = 0;
     }
 
+    public enum Orientation {
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT;
+    }
+
     public enum DrawState {
-        START,
+        SPAWN,
         CHECKPOINT,
-        GOAL,
+        DESPAWN,
         OBSTACLE,
-        FLOOR_FIELDS
+        FLOOR_FIELDS;
     }
 }
