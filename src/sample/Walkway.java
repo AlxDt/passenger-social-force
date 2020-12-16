@@ -520,11 +520,7 @@ public class Walkway {
 //        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
         Patch goal = passenger.getPassengerMovement().getGoal();
 
-        // Check if passenger is in the head of this goal's queue and in its goal
-        ArrayDeque<Passenger> passengersQueueing = goal.getPassengersQueueing();
-
-        return !goal.getPassengersQueueing().isEmpty()
-                && goal.getPassengersQueueing().getFirst() == passenger
+        return passenger.getPassengerMovement().getAction() == PassengerMovement.Action.TRANSACTING
                 && (int) passenger.getPassengerMovement().getPosition().getX() == goal.getMatrixPosition().getColumn()
                 && (int) passenger.getPassengerMovement().getPosition().getY() == goal.getMatrixPosition().getRow();
     }

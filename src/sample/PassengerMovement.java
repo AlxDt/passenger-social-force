@@ -49,6 +49,10 @@ public class PassengerMovement {
         this.action = Action.WILL_QUEUE;
     }
 
+    public Passenger getParent() {
+        return parent;
+    }
+
     // Compute for the angular mean of two headings
     public static double meanHeading(double heading1, double heading2) {
         return Math.atan2(
@@ -142,11 +146,13 @@ public class PassengerMovement {
         return state;
     }
 
+    public void setState(State state) {
+        this.state = state;
+    }
+
     public Action getAction() {
         return action;
     }
-
-    public void setState(State state) { this.state = state; }
 
     public void setAction(Action action) {
         this.action = action;
@@ -392,7 +398,7 @@ public class PassengerMovement {
 
     // See if the given passenger is within the passenger's field of view
     // TODO: Switch to coordinates
-    public boolean isWithinFieldOfView(Passenger passenger, double maximumHeadingChange) {
+    private boolean isWithinFieldOfView(Passenger passenger, double maximumHeadingChange) {
         // A passenger is within a field of view if the heading change required to face that passenger is within the
         // given maximum heading change
         double headingTowardsPassenger = headingTowards(passenger.getPassengerMovement().getPosition());
@@ -411,7 +417,7 @@ public class PassengerMovement {
 
     // See if this passenger should move
     // That is, check if a movement considering its current heading would not violate distancing
-    public boolean shouldMove(double minimumDistance, double maximumHeading) {
+    public Passenger shouldMove(double minimumDistance, double maximumHeading) {
 /*//        // Get this passenger's current patch
 //        Patch currentPatch = Main.WALKWAY.getPatch(this.getCurrentPatch().getPatchCenterCoordinates());
 //
@@ -525,8 +531,6 @@ public class PassengerMovement {
         }
 
         return true;*/
-        double currentHeadingDegrees = Math.toDegrees(this.heading);
-
         // Compile a list of patches which would be explored by this passenger
         List<Patch> patchesToExplore = new ArrayList<>();
         Patch chosenPatch;
@@ -583,17 +587,32 @@ public class PassengerMovement {
         }
 
         // For each of these compiled patches, see if there is another passenger within this passenger's field of view
+        List<Passenger> passengersWithinFieldOfView = new ArrayList<>();
+
         for (Patch patch : patchesToExplore) {
             for (Passenger passenger : patch.getPassengers()) {
                 // Check if this passenger is within the field of view and within the minimum distance
                 if (isWithinFieldOfView(passenger, maximumHeading)
                         && distanceTo(passenger.getPassengerMovement().getPosition()) < minimumDistance) {
-                    return false;
+                    passengersWithinFieldOfView.add(passenger);
                 }
             }
         }
 
-        return true;
+        // For each passenger found to violate the space, return the nearest one to this passenger
+        Passenger closestPassenger = null;
+        double minimumDistanceToPassenger = Double.MAX_VALUE;
+
+        for (Passenger passenger : passengersWithinFieldOfView) {
+            double distanceToPassenger = distanceTo(passenger.getPassengerMovement().getPosition());
+
+            if (distanceToPassenger < minimumDistanceToPassenger) {
+                closestPassenger = passenger;
+                minimumDistanceToPassenger = distanceToPassenger;
+            }
+        }
+
+        return closestPassenger;
     }
 
     // From a set of patches associated with a goal, get the nearest patch with a floor field value greater than a

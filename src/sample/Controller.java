@@ -289,69 +289,272 @@ public class Controller {
                             if (floorFieldValue > 0.0
                                     && currentPatch.getFloorFieldValues().get(PassengerMovement.State.IN_QUEUE)
                                     .getAssociation() == passengerMovement.getGoal()) {
+                                // The passenger is now in a queue, begin assembling
                                 passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
-                                passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
+                                passengerMovement.setAction(PassengerMovement.Action.ASSEMBLING);
                             }
                         }
 
-                        // Queueing behavior
+                        // Queueing state
                         if (state == PassengerMovement.State.IN_QUEUE) {
-                            // If the passenger is queueing, also take the heading towards the passenger at the tail of the
-                            // queue into account, as well as the floor fields
-                            Patch goal = passengerMovement.getGoal();
+                            // Assembling action
+                            if (action == PassengerMovement.Action.ASSEMBLING) {
+                                boolean isReadyToQueue = false;
 
-                            // Use the highest neighboring patch with the highest floor field to influence the
-                            // heading of this passenger
-                            Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
-                                    Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
-                                            goal, headingGoal
-                                    )),
-                                    headingGoal,
-                                    state
-                            );
+                                Patch goal = passengerMovement.getGoal();
 
-                            // Get the heading toward the best patch
-                            double headingBestPatch = passengerMovement.headingTowards(
-                                    bestPatch.getPatchCenterCoordinates()
-                            );
+                                // Check if this passenger is already at the apex patch - the only patch with a floor
+                                // field with value 1.0, the highest in the floor field
+                                // If it is, this passenger is ready to queue
+                                if (passenger.getPassengerMovement().getCurrentPatch().getFloorFieldValues().get(state)
+                                        .getValue() == 1.0) {
+                                    isReadyToQueue = true;
+                                } else {
+                                    // If the passenger is assembling, also take the heading towards the passenger at
+                                    // the tail of the queue into account, as well as the floor fields
 
-                            Queue<Passenger> queueAtGoal = goal.getPassengersQueueing();
+                                    // Use the highest neighboring patch with the highest floor field to influence the
+                                    // heading of this passenger
+                                    Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
+                                            Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
+                                                    goal, headingGoal
+                                            )),
+                                            headingGoal,
+                                            state
+                                    );
 
-                            // Check if there is someone queueing for this passenger's chosen goal
-                            // If the queue is not empty, but contains this passenger, and that passenger is the head
-                            // of the queue, then be the leader of the queue
-                            if (queueAtGoal.isEmpty()
-                                    || queueAtGoal.contains(passenger) && queueAtGoal.peek() == passenger) {
-                                // Leader role: use the floor fields ahead to find the way to the goal
-                                // Face towards the best patch
-                                face(passenger, null, headingBestPatch);
+                                    // Get the heading toward the best patch
+                                    double headingBestPatch = passengerMovement.headingTowards(
+                                            bestPatch.getPatchCenterCoordinates()
+                                    );
 
-                                // If the queue was empty, add this passenger to the queue
-                                if (queueAtGoal.isEmpty()) {
+                                    // Set the passenger's heading to it
+                                    face(passenger, null, headingBestPatch);
+
+                                    // Move towards that heading
+                                    Passenger nearestViolatingPassenger
+                                            = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+
+                                    if (nearestViolatingPassenger == null) {
+                                        passengerMovement.move();
+                                    } else {
+                                        // If moving is not possible because there another passenger on the way, check
+                                        // if that someone is queueing
+                                        // If that passenger is already queueing, it's time to queue as well, so
+                                        // transition into the queueing action
+                                        // If not, then just don't move in the meantime
+                                        if (nearestViolatingPassenger.getPassengerMovement().getAction()
+                                                == PassengerMovement.Action.QUEUEING) {
+                                            isReadyToQueue = true;
+                                        }
+                                    }
+                                }
+
+                                // If the passenger is ready to queue, transition into the queueing action
+                                if (isReadyToQueue) {
+                                    // Transition to the queueing action
+                                    passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
+
+                                    // Register this patch with the queue at the goal
+                                    ArrayDeque<Passenger> queueAtGoal = goal.getPassengersQueueing();
                                     queueAtGoal.add(passenger);
                                 }
-                            } else {
-                                // If the queue is not empty, and this passenger is not yet in that queue, join the
-                                // queue as a follower
-                                // Follower role: use the floor fields behind the passenger at the tail of the queue of
-                                // the pursued goal
-                                // Get the passenger at the tail of the queue, if it hasn't gotten it yet already
-                                Passenger passengerAtTail = passengerMovement.getFollowed();
+                            } else if (action == PassengerMovement.Action.QUEUEING) {
+                                // Queueing action
+                                Patch goal = passengerMovement.getGoal();
+                                ArrayDeque<Passenger> queueAtGoal = goal.getPassengersQueueing();
 
-                                if (passengerAtTail == null) {
-                                    passengerAtTail = goal.getPassengersQueueing().peekFirst();
+                                // If this passenger is not the head of this queue, face the passenger in front, then
+                                // just keep trying to move forward
+                                if (queueAtGoal.peek() != passenger) {
+//                                    // Create a list version of the queue
+//                                    List<Passenger> listOfQueueAtGoal = new LinkedList<>(queueAtGoal);
+//
+//                                    // The index of the passenger in front of this passenger is the index of this
+//                                    // passenger minus one (where the head of the queue is at index 0)
+//                                    int indexNextPassenger = listOfQueueAtGoal.indexOf(passenger) - 1;
+//
+//                                    if (indexNextPassenger < 0) {
+//                                        System.out.println("oops");
+//                                    }
+//
+//                                    Passenger nextPassenger = listOfQueueAtGoal.get(indexNextPassenger);
+//
+//                                    double headingTowardsNextPassenger = passengerMovement.headingTowards(
+//                                            nextPassenger.getPassengerMovement().getPosition()
+//                                    );
+//
+//                                    // Face the next passenger
+//                                    face(passenger, null, headingTowardsNextPassenger);
+
+                                    // Use the highest neighboring patch with the highest floor field to influence the
+                                    // heading of this passenger
+                                    Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
+                                            Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
+                                                    goal, headingGoal
+                                            )),
+                                            headingGoal,
+                                            state
+                                    );
+
+                                    // Get the heading toward the best patch
+                                    double headingBestPatch = passengerMovement.headingTowards(
+                                            bestPatch.getPatchCenterCoordinates()
+                                    );
+
+                                    // Set the passenger's heading to it
+                                    face(passenger, null, headingBestPatch);
+
+                                    // Move towards that heading
+                                    Passenger nearestViolatingPassenger
+                                            = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+
+                                    if (nearestViolatingPassenger == null) {
+                                        passengerMovement.move();
+                                    }
+                                } else {
+                                    // If this passenger is the head of this queue, check if the current patch is the
+                                    // apex patch
+                                    Patch currentPatch = passengerMovement.getCurrentPatch();
+
+                                    if (currentPatch.getFloorFieldValues().get(state).getValue() == 1.0) {
+                                        if (currentPatch.getPassengers().size() == 1) {
+                                            // Then check if the transaction area, its
+                                            // actual goal, is clear
+                                            // If the transaction area is clear, unregister this passenger from the queue,
+                                            // then move to the transaction area
+                                            if (goal.getPassengers().isEmpty()) {
+                                                // Use the highest neighboring patch with the highest floor field to influence the
+                                                // heading of this passenger
+                                                Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
+                                                        Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
+                                                                goal, headingGoal
+                                                        )),
+                                                        headingGoal,
+                                                        state
+                                                );
+
+                                                // Get the heading toward the best patch
+                                                double headingBestPatch = passengerMovement.headingTowards(
+                                                        bestPatch.getPatchCenterCoordinates()
+                                                );
+
+                                                // Set the passenger's heading to it
+                                                face(passenger, null, headingBestPatch);
+
+                                                // Move towards that heading
+                                                Passenger nearestViolatingPassenger
+                                                        = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+
+                                                if (nearestViolatingPassenger == null) {
+                                                    passengerMovement.move();
+
+                                                    // If the movement to the transaction area is possible, unregister from
+                                                    // the queue, then transition to the transacting action
+                                                    queueAtGoal.remove();
+
+                                                    passengerMovement.setAction(PassengerMovement.Action.TRANSACTING);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        // If not, keep trying to move forward
+                                        // Use the highest neighboring patch with the highest floor field to influence the
+                                        // heading of this passenger
+                                        Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
+                                                Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
+                                                        goal, headingGoal
+                                                )),
+                                                headingGoal,
+                                                state
+                                        );
+
+                                        // Get the heading toward the best patch
+                                        double headingBestPatch = passengerMovement.headingTowards(
+                                                bestPatch.getPatchCenterCoordinates()
+                                        );
+
+                                        // Set the passenger's heading to it
+                                        face(passenger, null, headingBestPatch);
+
+                                        // Move towards that heading
+                                        Passenger nearestViolatingPassenger
+                                                = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+
+                                        if (nearestViolatingPassenger == null) {
+                                            passengerMovement.move();
+                                        }
+                                    }
                                 }
+                            } else if (action == PassengerMovement.Action.TRANSACTING) {
+                                Patch goal = passengerMovement.getGoal();
 
-                                assert passengerAtTail != null;
-
-                                // Get the heading towards that passenger
-                                double headingTail = passengerMovement.headingTowards(
-                                        passengerAtTail.getPassengerMovement().getPosition()
+                                // If the passenger is transacting, just keep moving forward until it ends up on the
+                                // transaction area
+                                // Use the highest neighboring patch with the highest floor field to influence the
+                                // heading of this passenger
+                                Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
+                                        Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
+                                                goal, headingGoal
+                                        )),
+                                        headingGoal,
+                                        state
                                 );
 
-                                // Face towards the heading towards the tail of the queue
-                                face(passenger, null, headingTail);
+                                // Get the heading toward the best patch
+                                double headingBestPatch = passengerMovement.headingTowards(
+                                        bestPatch.getPatchCenterCoordinates()
+                                );
+
+                                // Set the passenger's heading to it
+                                face(passenger, null, headingBestPatch);
+
+                                // Move towards that heading
+                                Passenger nearestViolatingPassenger
+                                        = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+
+                                if (nearestViolatingPassenger == null) {
+                                    passengerMovement.move();
+                                }
                             }
+
+//                            // Check if there is someone queueing for this passenger's chosen goal
+//                            // If the queue is not empty, but contains this passenger, and that passenger is the head
+//                            // of the queue, then be the leader of the queue
+//                            Queue<Passenger> queueAtGoal = goal.getPassengersQueueing();
+//
+//                            if (queueAtGoal.isEmpty()
+//                                    || queueAtGoal.contains(passenger) && queueAtGoal.peek() == passenger) {
+//                                // Leader role: use the floor fields ahead to find the way to the goal
+//                                // Face towards the best patch
+//                                face(passenger, null, headingBestPatch);
+//
+//                                // If the queue was empty, add this passenger to the queue
+//                                if (queueAtGoal.isEmpty()) {
+//                                    queueAtGoal.add(passenger);
+//                                }
+//                            } else {
+//                                // If the queue is not empty, and this passenger is not yet in that queue, join the
+//                                // queue as a follower
+//                                // Follower role: use the floor fields behind the passenger at the tail of the queue of
+//                                // the pursued goal
+//                                // Get the passenger at the tail of the queue, if it hasn't gotten it yet already
+//                                Passenger passengerAtTail = passengerMovement.getFollowed();
+//
+//                                if (passengerAtTail == null) {
+//                                    passengerAtTail = goal.getPassengersQueueing().peekFirst();
+//                                }
+//
+//                                assert passengerAtTail != null;
+//
+//                                // Get the heading towards that passenger
+//                                double headingTail = passengerMovement.headingTowards(
+//                                        passengerAtTail.getPassengerMovement().getPosition()
+//                                );
+//
+//                                // Face towards the heading towards the tail of the queue
+//                                face(passenger, null, headingTail);
+//                            }
 
                             /*                        // Try to choose a leader if this passenger doesn't already have one
                         if (passenger.getPassengerMovement().getLeader() == null) {
@@ -384,14 +587,20 @@ public class Controller {
                             double meanHeading = Passenger.meanHeading(headingGoal, headingBestPatch);
 
                             passenger.setHeading(headingGoal);*/
-
-
                         } else if (state == PassengerMovement.State.AT_PLATFORM) {
-                            // TODO: Train platform behavior
+                            // TODO: Train platform state
                         } else {
-                            // Walking behavior
+                            // Walking state
                             // Just face the goal
                             face(passenger, null, headingQueueArea);
+
+                            // Move towards the goal
+                            Passenger nearestViolatingPassenger
+                                    = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+
+                            if (nearestViolatingPassenger == null) {
+                                passengerMovement.move();
+                            }
                         }
 
                         // Make this passenger move, if allowable
@@ -412,9 +621,9 @@ public class Controller {
                                 }
                             }*/
 
-                        if (passengerMovement.shouldMove(1.5, Math.toRadians(30.0))) {
-                            passengerMovement.move();
-                        }
+//                        if (passengerMovement.shouldMove(1.5, Math.toRadians(30.0))) {
+//                            passengerMovement.move();
+//                        }
 
 //                            // Every movement, check if the leader, if it still exists, is still ahead
 //                            if (passengerMovement.getLeader() != null
@@ -432,11 +641,6 @@ public class Controller {
                         if (Main.WALKWAY.checkPass(passenger, trainDoorsOpenButton.isSelected())) {
                             // If it is, increment its goals reached counter
                             passengerMovement.reachGoal();
-
-                            // Remove the passenger from the queue of its goal, if that goal has a queue
-                            if (passengerMovement.getGoal().getPassengersQueueing() != null) {
-                                passengerMovement.getGoal().getPassengersQueueing().remove();
-                            }
 
                             // Restore the status and action of the passenger
                             passengerMovement.setState(PassengerMovement.State.WALKING);

@@ -14,6 +14,8 @@ public class Patch {
     private String goalId;
     private Type type;
     private int waitingTime;
+    private Integer sequence;
+    private Integer index;
 
     public Patch(MatrixPosition matrixPosition, Type type) {
         this.matrixPosition = matrixPosition;
@@ -32,6 +34,9 @@ public class Patch {
         this.waitingTime = 0;
 
         this.patchCenterCoordinates = Coordinates.patchCenterCoordinates(this);
+
+        this.sequence = null;
+        this.index = null;
     }
 
     public MatrixPosition getMatrixPosition() {
@@ -84,6 +89,14 @@ public class Patch {
 
     public List<Patch> getAssociatedPatches() {
         return associatedPatches;
+    }
+
+    public Integer getSequence() {
+        return sequence;
+    }
+
+    public Integer getIndex() {
+        return index;
     }
 
     @Override
