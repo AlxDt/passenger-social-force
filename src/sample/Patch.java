@@ -19,7 +19,6 @@ public class Patch {
         this.matrixPosition = matrixPosition;
         this.type = type;
         this.passengers = new ArrayList<>();
-//        this.passengersQueueing = (type == Type.GATE || type == Type.EXIT) ? new ArrayDeque<>() : null;
 
         this.passengersQueueing = null;
         this.associatedPatches = null;
@@ -28,7 +27,7 @@ public class Patch {
         this.floorFieldValues = new HashMap<>();
 
         // TODO: Add all available statuses to all floor fields, not just queueing
-        this.floorFieldValues.put(PassengerMovement.State.QUEUEING, new FloorField());
+        this.floorFieldValues.put(PassengerMovement.State.IN_QUEUE, new FloorField());
 
         this.waitingTime = 0;
 

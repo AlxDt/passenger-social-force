@@ -199,7 +199,7 @@ public class Controller {
     }
 
     @FXML
-    private void play() throws InterruptedException {
+    private void play() {
         this.hasStarted = true;
         stackPane.getChildren().remove(overlay);
 
@@ -209,8 +209,9 @@ public class Controller {
         // For each state, normalize the floor field values
         PassengerMovement.State[] stateArray = PassengerMovement.State.values();
 
+        // TODO: Normalize other states
         for (PassengerMovement.State state : stateArray) {
-            if (state == PassengerMovement.State.QUEUEING) {
+            if (state == PassengerMovement.State.IN_QUEUE) {
                 Main.WALKWAY.normalizeFloorFields(state);
             }
         }
@@ -258,7 +259,7 @@ public class Controller {
                         );
 
                         // Get the nearest patch with a floor field value greater than a certain threshold
-                        final double threshold = 0.5;
+                        final double threshold = 0.0;
 
                         Patch nearestPatchAboveThreshold = passengerMovement.nearestPatchAboveThreshold(threshold);
 
@@ -267,46 +268,36 @@ public class Controller {
                                 nearestPatchAboveThreshold.getPatchCenterCoordinates()
                         );
 
+                        // Retrieve the state and action of the current passenger
                         PassengerMovement.State state = passengerMovement.getState();
+                        PassengerMovement.Action action = passengerMovement.getAction();
 
-                        // If the passenger thinks that it is still out of the queueing area, check if it has entered
-                        // the queueing area
-                        if (state == PassengerMovement.State.WILL_QUEUE) {
+                        // If the passenger is walking, check if it has entered
+                        // a queueing area
+                        // TODO: Check if the passenger has entered other states
+                        //  Also make sure that the state to be entered is consistent with the part of the passenger's
+                        //  journey (e.g., the passenger in a platform should already have gotten its ticket)
+                        if (state == PassengerMovement.State.WALKING) {
                             Patch currentPatch = passengerMovement.getCurrentPatch();
 
                             // Check if the passenger has stepped on a floor field associated with its goal
-                            // If yes, transition into a queueing state
-                            double floorField = currentPatch.getFloorFieldValues().get(
-                                    PassengerMovement.State.QUEUEING
+                            // If yes, check for the state of the floor field, then enter that state
+                            double floorFieldValue = currentPatch.getFloorFieldValues().get(
+                                    PassengerMovement.State.IN_QUEUE
                             ).getValue();
 
-                            if (floorField > 0.0
-                                    && currentPatch.getFloorFieldValues().get(PassengerMovement.State.QUEUEING)
+                            if (floorFieldValue > 0.0
+                                    && currentPatch.getFloorFieldValues().get(PassengerMovement.State.IN_QUEUE)
                                     .getAssociation() == passengerMovement.getGoal()) {
-                                passengerMovement.setState(PassengerMovement.State.QUEUEING);
+                                passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
+                                passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
                             }
-
-//                            // Check the floor field of this patch and use it to determine if the passenger
-//                            // will transition into a queueing state
-//                            double floorField = passengerMovement.getCurrentPatch().getFloorFieldValues().get(
-//                                    PassengerMovement.State.QUEUEING
-//                            ).getValue();
-
-//                            // Use the floor field value for the probability generation
-//                            if (new Random().nextDouble() < floorField) {
-//                                // If the likelihood is met, the passenger will now be queueing, instead of waiting to
-//                                // queue
-//                                passengerMovement.setState(PassengerMovement.State.QUEUEING);
-//                            }
                         }
 
-                        // If the passenger is not queueing, just follow its current goal
-                        // If the passenger is queueing, also take the heading towards the passenger at the tail of the
-                        // queue into account, as well as the floor fields
-                        if (state == PassengerMovement.State.WILL_QUEUE) {
-                            // Face the goal
-                            face(passenger, null, headingQueueArea);
-                        } else {
+                        // Queueing behavior
+                        if (state == PassengerMovement.State.IN_QUEUE) {
+                            // If the passenger is queueing, also take the heading towards the passenger at the tail of the
+                            // queue into account, as well as the floor fields
                             Patch goal = passengerMovement.getGoal();
 
                             // Use the highest neighboring patch with the highest floor field to influence the
@@ -361,77 +352,78 @@ public class Controller {
                                 // Face towards the heading towards the tail of the queue
                                 face(passenger, null, headingTail);
                             }
+
+                            /*                        // Try to choose a leader if this passenger doesn't already have one
+                        if (passenger.getPassengerMovement().getLeader() == null) {
+                            // Try to choose a leader
+                            boolean leaderChosen = passenger.getPassengerMovement().setLeader();
+
+                            // If a leader has been chosen, take note of the heading to that leader
+                            if (leaderChosen) {
+                                Passenger leader = passenger.getPassengerMovement().getLeader();
+
+                                // Face towards the angular mean of the headings toward the leader and the goal
+                                face(passenger, leader, headingGoal);
+                            } else {
+                                // No leader has been chosen, continue with the passenger's own knowledge of the
+                                // position of the goal
+                                face(passenger, null, headingGoal);
+                            }
+                        } else {
+                            // If the passenger already has a leader, continue with the passenger's knowledge of the
+                            // positions of the goal and its leader
+                            Passenger leader = passenger.getPassengerMovement().getLeader();
+
+                            face(passenger, leader, headingGoal);
                         }
 
-//                        // Try to choose a leader if this passenger doesn't already have one
-//                        if (passenger.getPassengerMovement().getLeader() == null) {
-//                            // Try to choose a leader
-//                            boolean leaderChosen = passenger.getPassengerMovement().setLeader();
-//
-//                            // If a leader has been chosen, take note of the heading to that leader
-//                            if (leaderChosen) {
-//                                Passenger leader = passenger.getPassengerMovement().getLeader();
-//
-//                                // Face towards the angular mean of the headings toward the leader and the goal
-//                                face(passenger, leader, headingGoal);
-//                            } else {
-//                                // No leader has been chosen, continue with the passenger's own knowledge of the
-//                                // position of the goal
-//                                face(passenger, null, headingGoal);
-//                            }
-//                        } else {
-//                            // If the passenger already has a leader, continue with the passenger's knowledge of the
-//                            // positions of the goal and its leader
-//                            Passenger leader = passenger.getPassengerMovement().getLeader();
-//
-//                            face(passenger, leader, headingGoal);
-//                        }
+                            // Take note of the heading towards the patch with the highest gradient
+                            headingBestPatch = passenger.headingTowards(chosenPatch);
 
-//                            // Choose the patch with the highest gradient
-//                            Patch chosenPatch = passenger.choosePatch(
-//                                    Main.WALKWAY.getRows(),
-//                                    Main.WALKWAY.getColumns(),
-//                                    false
-//                            );
-//
-//                            // Take note of the heading towards the patch with the highest gradient
-//                            headingBestPatch = passenger.headingTowards(chosenPatch);
+                         Set the heading to the mean of the above headings
+                            double meanHeading = Passenger.meanHeading(headingGoal, headingBestPatch);
 
-                        // Set the heading to the mean of the above headings
-//                            double meanHeading = Passenger.meanHeading(headingGoal, headingBestPatch);
+                            passenger.setHeading(headingGoal);*/
 
-//                            passenger.setHeading(headingGoal);
+
+                        } else if (state == PassengerMovement.State.AT_PLATFORM) {
+                            // TODO: Train platform behavior
+                        } else {
+                            // Walking behavior
+                            // Just face the goal
+                            face(passenger, null, headingQueueArea);
+                        }
 
                         // Make this passenger move, if allowable
                         // Within a certain number of tries, randomly perturb the heading, then try moving again
                         // If the tries are exhausted, don't move at all
                         final int totalTries = 1;
 
+                            /*                            for (int tries = 0; tries < totalTries; tries++) {
+                                if (passengerMovement.shouldMove(2.0, Math.toRadians(30.0))) {
+                                    passengerMovement.move();
+
+                                    break;
+                                } else {
+                                    passengerMovement.setHeading(
+                                            (passengerMovement.getHeading()
+                                                    + new Random().nextGaussian() * Math.toRadians(20.0))
+                                    );
+                                }
+                            }*/
+
                         if (passengerMovement.shouldMove(1.5, Math.toRadians(30.0))) {
                             passengerMovement.move();
                         }
 
-//                        for (int tries = 0; tries < totalTries; tries++) {
-//                            if (passengerMovement.shouldMove(2.0, Math.toRadians(30.0))) {
-//                                passengerMovement.move();
-//
-//                                break;
-//                            } else {
-//                                passengerMovement.setHeading(
-//                                        (passengerMovement.getHeading()
-//                                                + new Random().nextGaussian() * Math.toRadians(20.0))
-//                                );
+//                            // Every movement, check if the leader, if it still exists, is still ahead
+//                            if (passengerMovement.getLeader() != null
+//                                    && !passengerMovement.isWithinFieldOfView(
+//                                    passengerMovement.getLeader(), Math.toRadians(20.0)
+//                            )) {
+//                                // If not, remove it as a leader
+//                                passengerMovement.clearLeader();
 //                            }
-//                        }
-                    }
-
-                    // Every movement, check if the leader, if it still exists, is still ahead
-                    if (passengerMovement.getLeader() != null
-                            && !passengerMovement.isWithinFieldOfView(
-                            passengerMovement.getLeader(), Math.toRadians(20.0)
-                    )) {
-                        // If not, remove it as a leader
-                        passengerMovement.clearLeader();
                     }
 
                     // Check if the passenger is at its goal
@@ -446,8 +438,9 @@ public class Controller {
                                 passengerMovement.getGoal().getPassengersQueueing().remove();
                             }
 
-                            // Restore the status of the passenger to will queue
-                            passengerMovement.setState(PassengerMovement.State.WILL_QUEUE);
+                            // Restore the status and action of the passenger
+                            passengerMovement.setState(PassengerMovement.State.WALKING);
+                            passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
 
                             // If it has no more goals left, this passenger should be removed
                             if (passengerMovement.getGoalsLeft() == 0) {
@@ -719,9 +712,10 @@ public class Controller {
 
                                 break;
                             case FLOOR_FIELDS:
+                                // TODO: Consider other floor fields
                                 Main.WALKWAY.setType(patchRow, patchColumn, Patch.Type.CLEAR, this.sequence);
 
-                                PassengerMovement.State state = null;
+                                PassengerMovement.State state;
 
                                 state = matchState(drawChoiceBox.getSelectionModel().getSelectedItem());
 
@@ -751,12 +745,12 @@ public class Controller {
 
     private PassengerMovement.State matchState(String selectedItem) {
         // Match the selected value at the checkbox with the appropriate state
-        // TODO: Incorporate assembling state
+        // TODO: Add more states
         switch (selectedItem) {
             case "Queueing area":
-                return PassengerMovement.State.QUEUEING;
+                return PassengerMovement.State.IN_QUEUE;
             case "Train waiting area":
-                return PassengerMovement.State.WAITING_FOR_TRAIN;
+                return PassengerMovement.State.AT_PLATFORM;
         }
 
         return null;
@@ -786,11 +780,11 @@ public class Controller {
                                 state = matchState(selectedItemName);
                             }
 
-                            if (state == PassengerMovement.State.QUEUEING) {
+                            if (state == PassengerMovement.State.IN_QUEUE) {
                                 Color color;
 
                                 // Show floor field value
-                                double floorField = patch.getFloorFieldValues().get(PassengerMovement.State.QUEUEING)
+                                double floorField = patch.getFloorFieldValues().get(PassengerMovement.State.IN_QUEUE)
                                         .getValue();
 
                                 if (floorField == 0.0) {
@@ -815,7 +809,7 @@ public class Controller {
 
                             break;
                         case TRANSACTION_AREA:
-                            graphicsContext.setFill(Color.LIMEGREEN);
+                            graphicsContext.setFill(Color.ORANGE);
 
                             isGateOrExit = true;
 
@@ -862,14 +856,21 @@ public class Controller {
             final double passengerRadius = tileSize / 2.0;
 
             for (Passenger passenger : Main.WALKWAY.getPassengers()) {
-//                graphicsContext.setFill(passenger.getColor());
-                switch (passenger.getPassengerMovement().getState()) {
+                switch (passenger.getPassengerMovement().getAction()) {
                     case WILL_QUEUE:
                         graphicsContext.setFill(Color.BLACK);
 
                         break;
+                    case ASSEMBLING:
+                        graphicsContext.setFill(Color.YELLOW);
+
+                        break;
                     case QUEUEING:
                         graphicsContext.setFill(Color.ORANGE);
+
+                        break;
+                    case TRANSACTING:
+                        graphicsContext.setFill(Color.RED);
 
                         break;
                 }
@@ -955,12 +956,18 @@ public class Controller {
                 }
             }
 
-//            // Check whether it is ready to start
-//            if (Main.WALKWAY.getGoals().size() == 0) {
-//                startButton.setDisable(true);
-//            } else {
-//                startButton.setDisable(Main.WALKWAY.getGoals().get(Main.WALKWAY.getGoals().size() - 1).size() == 0 || hasStarted);
-//            }
+            boolean enableStart = true;
+
+            // Check whether all goals have floor fields attached to them
+            for (Patch goal : Main.WALKWAY.getGoalsFlattened()) {
+                if (goal.getAssociatedPatches().isEmpty()) {
+                    enableStart = false;
+
+                    break;
+                }
+            }
+
+            startButton.setDisable(!enableStart);
 
             spawnButton.setDisable(!hasStarted);
             trainDoorsOpenButton.setDisable(!hasStarted);

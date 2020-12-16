@@ -16,6 +16,7 @@ public class PassengerMovement {
     private Passenger followed;
     private Passenger leader;
     private State state;
+    private Action action;
 
     public PassengerMovement(Passenger parent, double x, double y, int numGoals) {
         this.parent = parent;
@@ -43,7 +44,9 @@ public class PassengerMovement {
         this.currentPatch = Main.WALKWAY.getPatch((int) y, (int) x);
         currentPatch.getPassengers().add(parent);
 
-        this.state = State.WILL_QUEUE;
+        // Assign the initial state and action of this passenger
+        this.state = State.WALKING;
+        this.action = Action.WILL_QUEUE;
     }
 
     // Compute for the angular mean of two headings
@@ -139,8 +142,14 @@ public class PassengerMovement {
         return state;
     }
 
-    public void setState(State state) {
-        this.state = state;
+    public Action getAction() {
+        return action;
+    }
+
+    public void setState(State state) { this.state = state; }
+
+    public void setAction(Action action) {
+        this.action = action;
     }
 
     public void reachGoal() {
@@ -598,7 +607,7 @@ public class PassengerMovement {
 
         // Look for the nearest patch with a floor field value greater than the threshold
         for (Patch patch : associatedPatches) {
-            if (patch.getFloorFieldValues().get(State.QUEUEING).getValue() > threshold) {
+            if (patch.getFloorFieldValues().get(State.IN_QUEUE).getValue() > threshold) {
                 // Get the distance of that patch from this passenger
                 double distanceFromPassenger = distanceTo(patch.getPatchCenterCoordinates());
 
@@ -613,13 +622,20 @@ public class PassengerMovement {
     }
 
     public enum State {
+        WALKING,
+        IN_QUEUE,
+        AT_PLATFORM,
+        IN_TRAIN,
+    }
+
+    public enum Action {
         WILL_QUEUE,
         ASSEMBLING,
         QUEUEING,
         TRANSACTING,
         WAITING_FOR_TRAIN,
         BOARDING,
-        IN_TRAIN,
+        RIDING_TRAIN,
         LEAVING
     }
 }
