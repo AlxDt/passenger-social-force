@@ -17,6 +17,7 @@ public class PassengerMovement {
     private Passenger leader;
     private State state;
     private Action action;
+    private boolean isHead;
 
     public PassengerMovement(Passenger parent, double x, double y, int numGoals) {
         this.parent = parent;
@@ -47,10 +48,20 @@ public class PassengerMovement {
         // Assign the initial state and action of this passenger
         this.state = State.WALKING;
         this.action = Action.WILL_QUEUE;
+
+        this.isHead = false;
     }
 
     public Passenger getParent() {
         return parent;
+    }
+
+    public boolean isHead() {
+        return isHead;
+    }
+
+    public void setHead(boolean head) {
+        isHead = head;
     }
 
     // Compute for the angular mean of two headings
@@ -339,7 +350,7 @@ public class PassengerMovement {
     }
 
     // Get the future position of this passenger given the current goal and the current heading
-    private Coordinates getFuturePosition() {
+    public Coordinates getFuturePosition() {
         return getFuturePosition(this.goal, this.heading);
     }
 

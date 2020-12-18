@@ -10,12 +10,13 @@ public class Patch {
     private final List<Passenger> passengers;
     private final Map<PassengerMovement.State, FloorField> floorFieldValues;
     private ArrayDeque<Passenger> passengersQueueing;
+    private Passenger passengerTransacting;
     private List<Patch> associatedPatches;
     private String goalId;
     private Type type;
     private int waitingTime;
-    private Integer sequence;
-    private Integer index;
+    private final Integer sequence;
+    private final Integer index;
 
     public Patch(MatrixPosition matrixPosition, Type type) {
         this.matrixPosition = matrixPosition;
@@ -23,6 +24,7 @@ public class Patch {
         this.passengers = new ArrayList<>();
 
         this.passengersQueueing = null;
+        this.passengerTransacting = null;
         this.associatedPatches = null;
         this.goalId = null;
 
@@ -59,7 +61,7 @@ public class Patch {
 
             this.passengersQueueing = new ArrayDeque<>();
             this.associatedPatches = new ArrayList<>();
-            this.goalId = (type == Type.TRANSACTION_AREA ? "G" : "E") + sequence + "-" + index;
+            this.goalId = (type == Type.TRANSACTION_AREA ? "T" : "E") + sequence + "-" + index;
         }
     }
 
@@ -77,6 +79,14 @@ public class Patch {
 
     public void setWaitingTime(int waitingTime) {
         this.waitingTime = waitingTime;
+    }
+
+    public Passenger getPassengerTransacting() {
+        return passengerTransacting;
+    }
+
+    public void setPassengerTransacting(Passenger passengerTransacting) {
+        this.passengerTransacting = passengerTransacting;
     }
 
     public String getGoalId() {

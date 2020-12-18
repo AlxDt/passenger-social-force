@@ -520,6 +520,7 @@ public class Walkway {
 //        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
         Patch goal = passenger.getPassengerMovement().getGoal();
 
+        // TODO: Take into account states other than transacting
         return passenger.getPassengerMovement().getAction() == PassengerMovement.Action.TRANSACTING
                 && (int) passenger.getPassengerMovement().getPosition().getX() == goal.getMatrixPosition().getColumn()
                 && (int) passenger.getPassengerMovement().getPosition().getY() == goal.getMatrixPosition().getRow();

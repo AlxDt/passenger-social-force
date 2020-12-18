@@ -387,74 +387,94 @@ public class Controller {
 //                                    // Face the next passenger
 //                                    face(passenger, null, headingTowardsNextPassenger);
 
-                                    // Use the highest neighboring patch with the highest floor field to influence the
-                                    // heading of this passenger
-                                    Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
-                                            Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
-                                                    goal, headingGoal
-                                            )),
-                                            headingGoal,
-                                            state
-                                    );
+                                    // If the next patch is an apex patch, only move when it is clear
+                                    boolean moveForward = false;
 
-                                    // Get the heading toward the best patch
-                                    double headingBestPatch = passengerMovement.headingTowards(
-                                            bestPatch.getPatchCenterCoordinates()
-                                    );
+                                    Patch futurePatch = Main.WALKWAY.getPatch(passengerMovement.getFuturePosition());
 
-                                    // Set the passenger's heading to it
-                                    face(passenger, null, headingBestPatch);
+                                    if (futurePatch.getFloorFieldValues().get(state).getValue() == 1.0) {
+                                        if (futurePatch.getPassengers().isEmpty()) {
+                                            moveForward = true;
+                                        }
+                                    } else {
+                                        moveForward = true;
+                                    }
 
-                                    // Move towards that heading
-                                    Passenger nearestViolatingPassenger
-                                            = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+                                    if (moveForward) {
+                                        // Face the passenger to the front
+                                        List<Passenger> listAtGoal = new LinkedList<>(queueAtGoal);
 
-                                    if (nearestViolatingPassenger == null) {
-                                        passengerMovement.move();
+                                        int currentIndex = listAtGoal.indexOf(passenger);
+                                        int indexOfFront = currentIndex - 1;
+
+                                        Passenger passengerAtFront = listAtGoal.get(indexOfFront);
+
+                                        double headingToPassengerAtFront = passengerMovement.headingTowards(
+                                                passengerAtFront.getPassengerMovement().getPosition()
+                                        );
+
+                                        face(passenger, null, headingToPassengerAtFront);
+
+                                        ////
+
+//                                        // Use the highest neighboring patch with the highest floor field to influence the
+//                                        // heading of this passenger
+//                                        Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
+//                                                Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
+//                                                        goal, headingGoal
+//                                                )),
+//                                                headingGoal,
+//                                                state
+//                                        );
+//
+//                                        // Get the heading toward the best patch
+//                                        double headingBestPatch = passengerMovement.headingTowards(
+//                                                bestPatch.getPatchCenterCoordinates()
+//                                        );
+//
+//                                        // Set the passenger's heading to it
+//                                        face(passenger, null, headingBestPatch);
+
+                                        // Move towards that heading
+                                        Passenger nearestViolatingPassenger
+                                                = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+
+                                        if (nearestViolatingPassenger == null) {
+                                            passengerMovement.move();
+                                        }
                                     }
                                 } else {
+                                    passengerMovement.setHead(true);
+
                                     // If this passenger is the head of this queue, check if the current patch is the
                                     // apex patch
                                     Patch currentPatch = passengerMovement.getCurrentPatch();
 
                                     if (currentPatch.getFloorFieldValues().get(state).getValue() == 1.0) {
-                                        if (currentPatch.getPassengers().size() == 1) {
-                                            // Then check if the transaction area, its
-                                            // actual goal, is clear
-                                            // If the transaction area is clear, unregister this passenger from the queue,
-                                            // then move to the transaction area
-                                            if (goal.getPassengers().isEmpty()) {
-                                                // Use the highest neighboring patch with the highest floor field to influence the
-                                                // heading of this passenger
-                                                Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
-                                                        Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
-                                                                goal, headingGoal
-                                                        )),
-                                                        headingGoal,
-                                                        state
-                                                );
+                                        // Then check if the transaction area, its
+                                        // actual goal, is clear
+                                        // If the transaction area is clear, unregister this passenger from the
+                                        // queue, then move to the transaction area
+                                        if (goal.getPassengerTransacting() == null) {
+                                            // Set the passenger's heading to it
+                                            face(passenger, null, headingGoal);
 
-                                                // Get the heading toward the best patch
-                                                double headingBestPatch = passengerMovement.headingTowards(
-                                                        bestPatch.getPatchCenterCoordinates()
-                                                );
+                                            // Move towards that heading
+                                            Passenger nearestViolatingPassenger
+                                                    = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
 
-                                                // Set the passenger's heading to it
-                                                face(passenger, null, headingBestPatch);
+                                            if (nearestViolatingPassenger == null) {
+                                                passengerMovement.move();
 
-                                                // Move towards that heading
-                                                Passenger nearestViolatingPassenger
-                                                        = passengerMovement.shouldMove(1.5, Math.toRadians(30.0));
+                                                // If the movement to the transaction area is possible, unregister from
+                                                // the queue, then transition to the transacting action
+                                                queueAtGoal.remove();
+                                                passengerMovement.setAction(PassengerMovement.Action.TRANSACTING);
 
-                                                if (nearestViolatingPassenger == null) {
-                                                    passengerMovement.move();
+                                                passengerMovement.setHead(false);
 
-                                                    // If the movement to the transaction area is possible, unregister from
-                                                    // the queue, then transition to the transacting action
-                                                    queueAtGoal.remove();
-
-                                                    passengerMovement.setAction(PassengerMovement.Action.TRANSACTING);
-                                                }
+                                                // This passenger is now the one transacting
+                                                goal.setPassengerTransacting(passenger);
                                             }
                                         }
                                     } else {
@@ -487,27 +507,8 @@ public class Controller {
                                     }
                                 }
                             } else if (action == PassengerMovement.Action.TRANSACTING) {
-                                Patch goal = passengerMovement.getGoal();
-
-                                // If the passenger is transacting, just keep moving forward until it ends up on the
-                                // transaction area
-                                // Use the highest neighboring patch with the highest floor field to influence the
-                                // heading of this passenger
-                                Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
-                                        Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
-                                                goal, headingGoal
-                                        )),
-                                        headingGoal,
-                                        state
-                                );
-
-                                // Get the heading toward the best patch
-                                double headingBestPatch = passengerMovement.headingTowards(
-                                        bestPatch.getPatchCenterCoordinates()
-                                );
-
                                 // Set the passenger's heading to it
-                                face(passenger, null, headingBestPatch);
+                                face(passenger, null, headingGoal);
 
                                 // Move towards that heading
                                 Passenger nearestViolatingPassenger
@@ -628,7 +629,7 @@ public class Controller {
 //                            // Every movement, check if the leader, if it still exists, is still ahead
 //                            if (passengerMovement.getLeader() != null
 //                                    && !passengerMovement.isWithinFieldOfView(
-//                                    passengerMovement.getLeader(), Math.toRadians(20.0)
+//                                    passengerMovement.getLeader(), Math.toRadians(30.0)
 //                            )) {
 //                                // If not, remove it as a leader
 //                                passengerMovement.clearLeader();
@@ -639,12 +640,16 @@ public class Controller {
                     if (Main.WALKWAY.checkGoal(passenger)) {
                         // Check if the goal the passenger is on allows this passenger to pass
                         if (Main.WALKWAY.checkPass(passenger, trainDoorsOpenButton.isSelected())) {
-                            // If it is, increment its goals reached counter
-                            passengerMovement.reachGoal();
-
+                            // TODO: Take into account other states other than transacting
                             // Restore the status and action of the passenger
                             passengerMovement.setState(PassengerMovement.State.WALKING);
                             passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
+
+                            // The passenger is now done transacting
+                            passengerMovement.getGoal().setPassengerTransacting(null);
+
+                            // If it is, increment its goals reached counter
+                            passengerMovement.reachGoal();
 
                             // If it has no more goals left, this passenger should be removed
                             if (passengerMovement.getGoalsLeft() == 0) {
@@ -1013,7 +1018,7 @@ public class Controller {
 
                             break;
                         case TRANSACTION_AREA:
-                            graphicsContext.setFill(Color.ORANGE);
+                            graphicsContext.setFill(Color.GRAY);
 
                             isGateOrExit = true;
 
@@ -1085,6 +1090,17 @@ public class Controller {
                         passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerRadius / 2.0
                         /*- passengerRadius / 2.0*/, passengerRadius, passengerRadius
                 );
+
+                if (passenger.getPassengerMovement().isHead()) {
+                    graphicsContext.setStroke(Color.BLACK);
+
+                    graphicsContext.strokeOval(
+                            passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerRadius / 2.0
+                            /*- passengerRadius / 2.0*/,
+                            passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerRadius / 2.0
+                            /*- passengerRadius / 2.0*/, passengerRadius, passengerRadius
+                    );
+                }
 //            System.out.println(passenger.getX() + ", " + passenger.getY());
             }
 
