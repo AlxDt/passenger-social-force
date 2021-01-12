@@ -41,6 +41,67 @@ public class Coordinates {
         this.y = y;
     }
 
+    // Compute the distance between this coordinates and some other coordinates
+    public static double distanceTo(Coordinates sourceCoordinates, Coordinates coordinates) {
+        double x = coordinates.getX();
+        double y = coordinates.getY();
+
+        return Math.sqrt(
+                Math.pow(x - sourceCoordinates.getX(), 2) + Math.pow(y - sourceCoordinates.getY(), 2)
+        );
+    }
+
+
+    // Retrieve the heading (in radians) when it faces towards a given position
+    public static double headingTowards(Coordinates sourceCoordinates, Coordinates coordinates) {
+        double x = coordinates.getX();
+        double y = coordinates.getY();
+
+        // Get the differences in the x and y values of the two positions
+        double dx = x - sourceCoordinates.getX();
+        double dy = y - sourceCoordinates.getY();
+
+        // The length of the adjacent side is the difference between the x values of the target position and the
+        // passenger
+        double adjacentLength = dx;
+
+        // The length of the hypotenuse is the distance between this passenger and the given position
+        double hypotenuseLength = distanceTo(sourceCoordinates, coordinates);
+
+        // The included angle between the adjacent and the hypotenuse is given by the arccosine of the ratio of the
+        // length of the adjacent and the length of the hypotenuse
+        double angle = Math.acos(adjacentLength / hypotenuseLength);
+
+        // If the difference between the y values of the target position and this passenger is positive (meaning the
+        // target patch is below the passenger), get the supplement of the angle
+        if (dy > 0) {
+            angle = 2.0 * Math.PI - angle;
+        }
+
+        return angle;
+    }
+
+    // See if the given coordinate is within the passenger's field of view
+    public static boolean isWithinFieldOfView(Coordinates sourceCoordinates,
+                                              Coordinates coordinates,
+                                              double heading,
+                                              double maximumHeadingChange) {
+        // A coordinate is within a field of view if the heading change required to face that coordinate is within the
+        // specified maximum heading change
+        double headingTowardsCoordinate = headingTowards(sourceCoordinates, coordinates);
+
+        // Compute the absolute difference between the two headings
+        double headingDifference = Math.abs(headingTowardsCoordinate - heading);
+
+        if (headingDifference > Math.toRadians(180)) {
+            headingDifference = Math.toRadians(360) - headingDifference;
+        }
+
+        // If the heading difference is within the specified parameter, return true
+        // If not, the passenger is outside this passenger's field of view, so return false
+        return headingDifference <= maximumHeadingChange;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

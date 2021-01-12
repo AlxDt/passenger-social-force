@@ -1,7 +1,6 @@
 package sample;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class PassengerMovement {
     private final Passenger parent;
@@ -180,7 +179,7 @@ public class PassengerMovement {
         Patch nearestGoal = null;
 
         for (Patch goal : Main.WALKWAY.getGoalsAtSequence(goalsReached)) {
-            double distance = distanceTo(goal.getPatchCenterCoordinates());
+            double distance = Coordinates.distanceTo(this.position, goal.getPatchCenterCoordinates());
 
             if (distance < minDistance) {
                 minDistance = distance;
@@ -320,35 +319,6 @@ public class PassengerMovement {
         }
     }*/
 
-    // Retrieve the heading of this passenger (in radians) when it faces towards a given position
-    public double headingTowards(Coordinates coordinates) {
-        double x = coordinates.getX();
-        double y = coordinates.getY();
-
-        // Get the differences in the x and y values of the two positions
-        double dx = x - this.position.getX();
-        double dy = y - this.position.getY();
-
-        // The length of the adjacent side is the difference between the x values of the target position and the
-        // passenger
-        double adjacentLength = dx;
-
-        // The length of the hypotenuse is the distance between this passenger and the given position
-        double hypotenuseLength = distanceTo(coordinates);
-
-        // The included angle between the adjacent and the hypotenuse is given by the arccosine of the ratio of the
-        // length of the adjacent and the length of the hypotenuse
-        double angle = Math.acos(adjacentLength / hypotenuseLength);
-
-        // If the difference between the y values of the target position and this passenger is positive (meaning the
-        // target patch is below the passenger), get the supplement of the angle
-        if (dy > 0) {
-            angle = 2.0 * Math.PI - angle;
-        }
-
-        return angle;
-    }
-
     // Get the future position of this passenger given the current goal and the current heading
     public Coordinates getFuturePosition() {
         return getFuturePosition(this.goal, this.heading);
@@ -357,7 +327,7 @@ public class PassengerMovement {
     // Get the future position of this passenger given a goal and a heading
     public Coordinates getFuturePosition(Patch goal, double heading) {
         // Check if the distance between this passenger and its goal
-        double distanceToGoal = this.distanceTo(goal.getPatchCenterCoordinates());
+        double distanceToGoal = Coordinates.distanceTo(this.position, goal.getPatchCenterCoordinates());
 
         // If the distance between this passenger and the goal is less than the distance this passenger covers every
         // time it walks, "snap" the position of the passenger to the center of the goal immediately, to avoid
@@ -396,234 +366,40 @@ public class PassengerMovement {
         this.setPosition(this.getFuturePosition());
     }
 
-    // Compute the distance between the coordinates of this passenger and some other object with coordinates
-    private double distanceTo(Coordinates coordinates) {
-        double x = coordinates.getX();
-        double y = coordinates.getY();
-
-        return Math.sqrt(
-                Math.pow(x - this.position.getX(), 2)
-                        + Math.pow(y - this.position.getY(), 2)
-        );
-    }
-
-    // See if the given passenger is within the passenger's field of view
-    // TODO: Switch to coordinates
-    private boolean isWithinFieldOfView(Passenger passenger, double maximumHeadingChange) {
-        // A passenger is within a field of view if the heading change required to face that passenger is within the
-        // given maximum heading change
-        double headingTowardsPassenger = headingTowards(passenger.getPassengerMovement().getPosition());
-
-        // Compute the difference between the two headings
-        double headingDifference = Math.abs(headingTowardsPassenger - this.heading) % Math.toRadians(360.0);
-
-        if (headingDifference > Math.toRadians(180)) {
-            headingDifference = Math.toRadians(360) - headingDifference;
-        }
-
-        // If the heading difference is within the specified parameter, return true
-        // If not, the passenger is outside this passenger's field of view, so return false
-        return headingDifference <= maximumHeadingChange;
-    }
-
     // See if this passenger should move
     // That is, check if a movement considering its current heading would not violate distancing
-    public Passenger shouldMove(double minimumDistance, double maximumHeading) {
-/*//        // Get this passenger's current patch
-//        Patch currentPatch = Main.WALKWAY.getPatch(this.getCurrentPatch().getPatchCenterCoordinates());
-//
-//        // Get this passenger's future patch
-//        Patch futurePatch = Main.WALKWAY.getPatch(this.getFuturePosition());
-//
-//        // If there are other passengers on  this patch
-//        if (currentPatch.getPassengers().size() > 1) {
-//            return false;
-//        } else {
-//            // If the future patch has passengers on them, do not move
-//            // If there are no passengers there, the passenger may safely move
-//            return futurePatch.getPassengers().isEmpty();
-//        }
-
-        // First, check this patch if there are fellow passengers within it
-        if (this.currentPatch.getPassengers().size() >= 1) {
-            // Check if any of the passengers in the passenger list are within this passenger's field of view
-            for (Passenger passenger : this.currentPatch.getPassengers()) {
-                // If this passenger is within this passenger's field of view, check if the distance to this passenger
-                // is less than the allowable distance
-                // If it is, don't move - too close for comfort
-                if (isWithinFieldOfView(passenger, Math.toRadians(45.0))
-                        && passenger.getPassengerMovement().distanceTo(this.getPosition()) < distance) {
-                    return false;
-                }
-            }
-        }
-
-        // If there are no passengers in the current patch, or if the passengers in the current patch are far enough,
-        // start checking in the neighboring patches
-        double currentHeadingDegrees = Math.toDegrees(this.heading);
-
-        Patch chosenPatch = null;
-
-        int truncatedX = (int) this.position.getX();
-        int truncatedY = (int) this.position.getY();
-
-        // Right
-        if (currentHeadingDegrees >= 337.5 && currentHeadingDegrees <= 360.0
-                || currentHeadingDegrees >= 0 && currentHeadingDegrees < 22.5) {
-            if (truncatedX + 1 < Main.WALKWAY.getColumns()) {
-                chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
-            }
-        } else if (currentHeadingDegrees >= 22.5 && currentHeadingDegrees < 67.5) {
-            // Upper right
-            if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0) {
-                chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
-            }
-        } else if (currentHeadingDegrees >= 67.5 && currentHeadingDegrees < 112.5) {
-            // Up
-            if (truncatedY > 0) {
-                chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX);
-            }
-        } else if (currentHeadingDegrees >= 112.5 && currentHeadingDegrees < 157.5) {
-            // Upper left
-            if (truncatedX > 0 && truncatedY > 0) {
-                chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
-            }
-        } else if (currentHeadingDegrees >= 157.5 && currentHeadingDegrees < 202.5) {
-            // Left
-            if (truncatedX > 0) {
-                chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX - 1);
-            }
-        } else if (currentHeadingDegrees >= 202.5 && currentHeadingDegrees < 247.5) {
-            // Lower left
-            if (truncatedX > 0 && truncatedY + 1 < Main.WALKWAY.getRows()) {
-                chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
-            }
-        } else if (currentHeadingDegrees >= 247.5 && currentHeadingDegrees < 292.5) {
-            // Down
-            if (truncatedY + 1 < Main.WALKWAY.getRows()) {
-                chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
-            }
-        } else {
-            // Lower right
-            if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
-                chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
-            }
-        }
-
-        // Check the chosen patch to see whether there are passengers that are candidates for being leaders for this
-        // passenger
-        if (chosenPatch != null && !chosenPatch.getPassengers().isEmpty()) {
-            // Check if any of the passengers in the passenger list are within this passenger's field of view
-            for (Passenger passenger : this.currentPatch.getPassengers()) {
-                // If this passenger is within this passenger's field of view, check if the distance to this passenger
-                // is less than the allowable distance
-                // If it is, don't move - too close for comfort
-                if (isWithinFieldOfView(passenger, Math.toRadians(45.0))
-                        && passenger.getPassengerMovement().distanceTo(this.getPosition()) < distance) {
-                    return false;
-                }
-            }
-        }
-
-        // Finally, check if the future patch has passengers on them
-        Patch futurePatch = Main.WALKWAY.getPatch(this.getFuturePosition());
-
-        // If there are passengers in the future patch, and the future patch is different from the current patch,
-        // don't move
-//        return futurePatch.getPassengers().isEmpty();
-//        System.out.println(futurePatch.getPassengers().isEmpty());
-        if (futurePatch != this.currentPatch && !futurePatch.getPassengers().isEmpty()) {
-            for (Passenger passenger : futurePatch.getPassengers()) {
-                if (isWithinFieldOfView(passenger, Math.toRadians(90.0))
-                        && passenger.getPassengerMovement().distanceTo(this.getPosition()) < distance) {
-                    return false;
-                }
-            }
-        }
-
-        return true;*/
+    public Passenger shouldMove(double minimumDistance, double maximumHeadingChange) {
         // Compile a list of patches which would be explored by this passenger
-        List<Patch> patchesToExplore = new ArrayList<>();
-        Patch chosenPatch;
-
-        int truncatedX = (int) this.position.getX();
-        int truncatedY = (int) this.position.getY();
-
-        // Right
-        if (truncatedX + 1 < Main.WALKWAY.getColumns()) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Upper right
-        if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Up
-        if (truncatedY > 0) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Upper left
-        if (truncatedX > 0 && truncatedY > 0) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Left
-        if (truncatedX > 0) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX - 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Lower left
-        if (truncatedX > 0 && truncatedY + 1 < Main.WALKWAY.getRows()) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Down
-        if (truncatedY + 1 < Main.WALKWAY.getRows()) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
-            patchesToExplore.add(chosenPatch);
-        }
-
-        // Lower right
-        if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
-            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
-            patchesToExplore.add(chosenPatch);
-        }
+        List<Patch> patchesToExplore = Walkway.get5x5Field(this.getCurrentPatch(), this.getHeading());
 
         // For each of these compiled patches, see if there is another passenger within this passenger's field of view
-        List<Passenger> passengersWithinFieldOfView = new ArrayList<>();
+        TreeMap<Double, Passenger> passengersWithinFieldOfView = new TreeMap<>();
 
         for (Patch patch : patchesToExplore) {
             for (Passenger passenger : patch.getPassengers()) {
                 // Check if this passenger is within the field of view and within the minimum distance
-                if (isWithinFieldOfView(passenger, maximumHeading)
-                        && distanceTo(passenger.getPassengerMovement().getPosition()) < minimumDistance) {
-                    passengersWithinFieldOfView.add(passenger);
+                double distanceToPassenger = Coordinates.distanceTo(this.position,
+                        passenger.getPassengerMovement().getPosition());
+
+                if (Coordinates.isWithinFieldOfView(
+                        this.getPosition(),
+                        passenger.getPassengerMovement().getPosition(),
+                        this.getHeading(),
+                        maximumHeadingChange)
+                        && distanceToPassenger < minimumDistance) {
+                    passengersWithinFieldOfView.put(distanceToPassenger, passenger);
                 }
             }
         }
 
         // For each passenger found to violate the space, return the nearest one to this passenger
-        Passenger closestPassenger = null;
-        double minimumDistanceToPassenger = Double.MAX_VALUE;
+        Map.Entry<Double, Passenger> firstEntry = passengersWithinFieldOfView.firstEntry();
 
-        for (Passenger passenger : passengersWithinFieldOfView) {
-            double distanceToPassenger = distanceTo(passenger.getPassengerMovement().getPosition());
-
-            if (distanceToPassenger < minimumDistanceToPassenger) {
-                closestPassenger = passenger;
-                minimumDistanceToPassenger = distanceToPassenger;
-            }
+        if (firstEntry == null) {
+            return null;
+        } else {
+            return firstEntry.getValue();
         }
-
-        return closestPassenger;
     }
 
     // From a set of patches associated with a goal, get the nearest patch with a floor field value greater than a
@@ -639,7 +415,7 @@ public class PassengerMovement {
         for (Patch patch : associatedPatches) {
             if (patch.getFloorFieldValues().get(State.IN_QUEUE).getValue() > threshold) {
                 // Get the distance of that patch from this passenger
-                double distanceFromPassenger = distanceTo(patch.getPatchCenterCoordinates());
+                double distanceFromPassenger = Coordinates.distanceTo(this.position, patch.getPatchCenterCoordinates());
 
                 if (distanceFromPassenger < minimumDistance) {
                     minimumDistance = distanceFromPassenger;
@@ -649,6 +425,172 @@ public class PassengerMovement {
         }
 
         return nearestPatch;
+    }
+
+    public Patch nextQueueingPatch(PassengerMovement.State state) {
+/*       // R
+        if (truncatedX + 1 < Main.WALKWAY.getColumns()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // UR
+        if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // U
+        if (truncatedY > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // UL
+        if (truncatedX > 0 && truncatedY > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // L
+        if (truncatedX > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX - 1);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // DL
+        if (truncatedX > 0 && truncatedY + 1 < Main.WALKWAY.getRows()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // D
+        if (truncatedY + 1 < Main.WALKWAY.getRows()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // DR
+        if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2R
+        if (truncatedX + 2 < Main.WALKWAY.getColumns()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX + 2);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // U2R
+        if (truncatedX + 2 < Main.WALKWAY.getColumns() && truncatedY - 1 > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 2);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2U2R
+        if (truncatedX + 2 < Main.WALKWAY.getColumns() && truncatedY - 2 > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 2, truncatedX + 2);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2UR
+        if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY - 2 > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 2, truncatedX + 1);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2U
+        if (truncatedY - 2 > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 2, truncatedX);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2UL
+        if (truncatedX - 1 < Main.WALKWAY.getColumns() && truncatedY - 2 > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 2, truncatedX - 1);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2U2L
+        if (truncatedX - 2 < Main.WALKWAY.getColumns() && truncatedY - 2 > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 2, truncatedX - 2);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // U2L
+        if (truncatedX - 2 < Main.WALKWAY.getColumns() && truncatedY - 1 > 0) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 2);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2L
+        if (truncatedX - 2 < Main.WALKWAY.getColumns()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX - 2);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // D2L
+        if (truncatedX - 2 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 2);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2D2L
+        if (truncatedX - 2 < Main.WALKWAY.getColumns() && truncatedY + 2 < Main.WALKWAY.getRows()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 2, truncatedX - 2);
+            patchesToExplore.add(chosenPatch);
+        }
+
+        // 2DL
+        if (truncatedX - 1 < Main.WALKWAY.getColumns() && truncatedY + 2 < Main.WALKWAY.getRows()) {
+            chosenPatch = Main.WALKWAY.getPatch(truncatedY + 2, truncatedX - 1);
+            patchesToExplore.add(chosenPatch);
+        }*/
+        // Get the patches to explore
+        List<Patch> patchesToExplore = Walkway.get5x5Field(this.currentPatch, this.heading);
+
+        // Collect the patches with the highest floor field values
+        List<Patch> highestPatches = new ArrayList<>();
+
+        double maximumFloorFieldValue = -Double.MAX_VALUE;
+        Patch bestPatch = null;
+
+        int maximumFloorFieldFoundCounter = 0;
+
+        for (Patch patch : patchesToExplore) {
+            double floorFieldValue = patch.getFloorFieldValues().get(state).getValue();
+
+            if (floorFieldValue >= maximumFloorFieldValue) {
+                if (floorFieldValue > maximumFloorFieldValue) {
+                    maximumFloorFieldValue = floorFieldValue;
+                    bestPatch = patch;
+
+                    maximumFloorFieldFoundCounter = 1;
+                } else {
+                    maximumFloorFieldFoundCounter++;
+                }
+            }
+        }
+
+        for (int counter = 1; counter <= maximumFloorFieldFoundCounter; counter++) {
+            highestPatches.add(bestPatch);
+        }
+
+        // If there are more than one highest valued-patches, choose the one that is nearest to the passenger
+        double minimumDistance = Double.MAX_VALUE;
+        Patch chosenPatch = highestPatches.get(0);
+
+        for (Patch patch : highestPatches) {
+            double distanceToPatch = Coordinates.distanceTo(this.position, patch.getPatchCenterCoordinates());
+
+            if (distanceToPatch < minimumDistance) {
+                minimumDistance = distanceToPatch;
+                chosenPatch = patch;
+            }
+        }
+
+        return chosenPatch;
     }
 
     public enum State {

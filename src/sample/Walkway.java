@@ -263,6 +263,57 @@ public class Walkway {
 
         return patchWithHighestFloorFieldValue;
     }
+    
+    public static List<Patch> get5x5Field(Patch centerPatch, double heading) {
+        int truncatedX = (int) centerPatch.getPatchCenterCoordinates().getX();
+        int truncatedY = (int) centerPatch.getPatchCenterCoordinates().getY();
+
+        Patch chosenPatch;
+        List<Patch> patchesToExplore = new ArrayList<>();
+
+        for (int rowOffset = -2; rowOffset <= 2; rowOffset++) {
+            for (int columnOffset = -2; columnOffset <= 2; columnOffset++) {
+                boolean xCondition;
+                boolean yCondition;
+
+                // Separate upper and lower rows
+                if (rowOffset < 0) {
+                    yCondition = truncatedY + rowOffset > 0;
+                } else if (rowOffset > 0) {
+                    yCondition = truncatedY + rowOffset < Main.WALKWAY.getRows();
+                } else {
+                    yCondition = true;
+                }
+
+                // Separate left and right columns
+                if (columnOffset < 0) {
+                    xCondition = truncatedX + columnOffset > 0;
+                } else if (columnOffset > 0) {
+                    xCondition = truncatedX + columnOffset < Main.WALKWAY.getColumns();
+                } else {
+                    xCondition = true;
+                }
+
+                // Insert the patch to the list of patches to be explored if the patches are within the bounds of the
+                // walkway
+                if (xCondition && yCondition) {
+                    chosenPatch = Main.WALKWAY.getPatch(truncatedY + rowOffset, truncatedX + columnOffset);
+
+                    // Make sure that the patch to be added is within the field of view of the passenger which invoked
+                    // this method
+                    if (Coordinates.isWithinFieldOfView(
+                            centerPatch.getPatchCenterCoordinates(),
+                            chosenPatch.getPatchCenterCoordinates(),
+                            heading,
+                            Math.toRadians(90.0))) {
+                        patchesToExplore.add(chosenPatch);
+                    }
+                }
+            }
+        }
+
+        return patchesToExplore;
+    }
 
     public int getNumGoals() {
         return this.goals.size();

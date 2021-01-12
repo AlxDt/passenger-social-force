@@ -254,19 +254,40 @@ public class Controller {
 //                        // Take note of the heading towards the goal patch
 //                        // Get the x and y coordinates of the patch in question
 //                        // These coordinates should be in the center of the patch
-                        headingGoal = passenger.getPassengerMovement().headingTowards(
+                        headingGoal = Coordinates.headingTowards(
+                                passenger.getPassengerMovement().getPosition(),
                                 passenger.getPassengerMovement().getGoal().getPatchCenterCoordinates()
                         );
 
                         // Get the nearest patch with a floor field value greater than a certain threshold
                         final double threshold = 0.0;
 
-                        Patch nearestPatchAboveThreshold = passengerMovement.nearestPatchAboveThreshold(threshold);
+                        // Also get the passenger at the tail of the queue at the passenger's goal
+                        // TODO: Consider other scenarios when the goal does not have a queueing area
+                        Deque<Passenger> passengerQueue = passengerMovement.getGoal().getPassengersQueueing();
 
-                        // Then take note of the heading towards that patch
-                        double headingQueueArea = passengerMovement.headingTowards(
-                                nearestPatchAboveThreshold.getPatchCenterCoordinates()
-                        );
+                        Double headingTailOfQueue = null;
+                        Double headingQueueArea = null;
+
+                        // Choose whether to use the heading towards the tail of the queue (if the queue is not empty),
+                        // or to use the heading towards the nearest queueing floor field (if the queue is empty)
+                        if (!passengerQueue.isEmpty()) {
+                            Passenger passengerAtTail = passengerMovement.getGoal().getPassengersQueueing().getLast();
+
+                            // Take note of the heading towards that passenger
+                            headingTailOfQueue = Coordinates.headingTowards(
+                                    passenger.getPassengerMovement().getPosition(),
+                                    passengerAtTail.getPassengerMovement().getPosition()
+                            );
+                        } else {
+                            Patch nearestPatchAboveThreshold = passengerMovement.nearestPatchAboveThreshold(threshold);
+
+                            // Then take note of the heading towards that patch
+                            headingQueueArea = Coordinates.headingTowards(
+                                    passenger.getPassengerMovement().getPosition(),
+                                    nearestPatchAboveThreshold.getPatchCenterCoordinates()
+                            );
+                        }
 
                         // Retrieve the state and action of the current passenger
                         PassengerMovement.State state = passengerMovement.getState();
@@ -315,16 +336,18 @@ public class Controller {
 
                                     // Use the highest neighboring patch with the highest floor field to influence the
                                     // heading of this passenger
-                                    Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
+/*                                    Patch bestPatch = Main.WALKWAY.chooseBestNeighboringPatch(
                                             Main.WALKWAY.getPatch(passengerMovement.getFuturePosition(
                                                     goal, headingGoal
                                             )),
-                                            headingGoal,
+                                            *//*(headingGoal == null) ? headingTailOfQueue : headingGoal*//*headingGoal,
                                             state
-                                    );
+                                    );*/
+                                    Patch bestPatch = passenger.getPassengerMovement().nextQueueingPatch(state);
 
                                     // Get the heading toward the best patch
-                                    double headingBestPatch = passengerMovement.headingTowards(
+                                    double headingBestPatch = Coordinates.headingTowards(
+                                            passenger.getPassengerMovement().getPosition(),
                                             bestPatch.getPatchCenterCoordinates()
                                     );
 
@@ -367,26 +390,6 @@ public class Controller {
                                 // If this passenger is not the head of this queue, face the passenger in front, then
                                 // just keep trying to move forward
                                 if (queueAtGoal.peek() != passenger) {
-//                                    // Create a list version of the queue
-//                                    List<Passenger> listOfQueueAtGoal = new LinkedList<>(queueAtGoal);
-//
-//                                    // The index of the passenger in front of this passenger is the index of this
-//                                    // passenger minus one (where the head of the queue is at index 0)
-//                                    int indexNextPassenger = listOfQueueAtGoal.indexOf(passenger) - 1;
-//
-//                                    if (indexNextPassenger < 0) {
-//                                        System.out.println("oops");
-//                                    }
-//
-//                                    Passenger nextPassenger = listOfQueueAtGoal.get(indexNextPassenger);
-//
-//                                    double headingTowardsNextPassenger = passengerMovement.headingTowards(
-//                                            nextPassenger.getPassengerMovement().getPosition()
-//                                    );
-//
-//                                    // Face the next passenger
-//                                    face(passenger, null, headingTowardsNextPassenger);
-
                                     // If the next patch is an apex patch, only move when it is clear
                                     boolean moveForward = false;
 
@@ -409,7 +412,8 @@ public class Controller {
 
                                         Passenger passengerAtFront = listAtGoal.get(indexOfFront);
 
-                                        double headingToPassengerAtFront = passengerMovement.headingTowards(
+                                        double headingToPassengerAtFront = Coordinates.headingTowards(
+                                                passenger.getPassengerMovement().getPosition(),
                                                 passengerAtFront.getPassengerMovement().getPosition()
                                         );
 
@@ -490,7 +494,8 @@ public class Controller {
                                         );
 
                                         // Get the heading toward the best patch
-                                        double headingBestPatch = passengerMovement.headingTowards(
+                                        double headingBestPatch = Coordinates.headingTowards(
+                                                passenger.getPassengerMovement().getPosition(),
                                                 bestPatch.getPatchCenterCoordinates()
                                         );
 
@@ -592,8 +597,9 @@ public class Controller {
                             // TODO: Train platform state
                         } else {
                             // Walking state
-                            // Just face the goal
-                            face(passenger, null, headingQueueArea);
+                            // Just face either the queueing area or the passenger at the tail of the queue
+                            face(passenger, null, (headingTailOfQueue == null) ?
+                                    headingQueueArea : headingTailOfQueue);
 
                             // Move towards the goal
                             Passenger nearestViolatingPassenger
@@ -730,7 +736,8 @@ public class Controller {
     private void face(Passenger currentPassenger, Passenger leader, double headingGoal) {
         // If a leader was chosen, face towards the angular mean of the headings toward the leader and the goal
         if (leader != null) {
-            double headingLeader = currentPassenger.getPassengerMovement().headingTowards(
+            double headingLeader = Coordinates.headingTowards(
+                    currentPassenger.getPassengerMovement().getPosition(),
                     leader.getPassengerMovement().getPosition()
             );
 
@@ -749,6 +756,8 @@ public class Controller {
 
             // If a leader has not been chosen, continue moving solo
             currentPassenger.getPassengerMovement().setHeading(headingGoal);
+
+            System.out.println(headingGoal);
         }
     }
 
@@ -1058,13 +1067,19 @@ public class Controller {
                                 tileSize
                         );
                     }
+
+                    if (!hasStarted) {
+                        graphicsContext.setStroke(Color.GRAY);
+                        graphicsContext.strokeRect(column * tileSize, row * tileSize, tileSize, tileSize);
+                    }
                 }
             }
 
             // Draw passengers, if any
-            final double passengerRadius = tileSize / 2.0;
+            final double passengerRadius = tileSize * 0.7;
 
             for (Passenger passenger : Main.WALKWAY.getPassengers()) {
+                // TODO: Add switch to enable random colors
                 switch (passenger.getPassengerMovement().getAction()) {
                     case WILL_QUEUE:
                         graphicsContext.setFill(Color.BLACK);
@@ -1084,10 +1099,12 @@ public class Controller {
                         break;
                 }
 
+//                graphicsContext.setFill(passenger.getColor());
+
                 graphicsContext.fillOval(
-                        passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerRadius / 2.0
+                        passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerRadius * 0.5
                         /*- passengerRadius / 2.0*/,
-                        passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerRadius / 2.0
+                        passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerRadius * 0.5
                         /*- passengerRadius / 2.0*/, passengerRadius, passengerRadius
                 );
 
@@ -1095,9 +1112,9 @@ public class Controller {
                     graphicsContext.setStroke(Color.BLACK);
 
                     graphicsContext.strokeOval(
-                            passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerRadius / 2.0
+                            passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerRadius * 0.5
                             /*- passengerRadius / 2.0*/,
-                            passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerRadius / 2.0
+                            passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerRadius * 0.5
                             /*- passengerRadius / 2.0*/, passengerRadius, passengerRadius
                     );
                 }
@@ -1179,15 +1196,25 @@ public class Controller {
             boolean enableStart = true;
 
             // Check whether all goals have floor fields attached to them
-            for (Patch goal : Main.WALKWAY.getGoalsFlattened()) {
-                if (goal.getAssociatedPatches().isEmpty()) {
-                    enableStart = false;
+            if (!Main.WALKWAY.getGoalsFlattened().isEmpty()) {
+                for (Patch goal : Main.WALKWAY.getGoalsFlattened()) {
+                    if (goal.getAssociatedPatches().isEmpty()) {
+                        enableStart = false;
 
-                    break;
+                        break;
+                    }
                 }
+            } else {
+                enableStart = false;
             }
 
-            startButton.setDisable(!enableStart);
+            if (enableStart) {
+                startButton.setDisable(hasStarted);
+            } else {
+                startButton.setDisable(true);
+            }
+
+//            startButton.setDisable(!enableStart);
 
             spawnButton.setDisable(!hasStarted);
             trainDoorsOpenButton.setDisable(!hasStarted);
