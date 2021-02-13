@@ -1,6 +1,5 @@
 package sample;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -263,8 +262,10 @@ public class Walkway {
 
         return patchWithHighestFloorFieldValue;
     }
-    
-    public static List<Patch> get5x5Field(Patch centerPatch, double heading) {
+
+    public static List<Patch> get5x5Field(Patch centerPatch, double heading, boolean includeCenterPatch) {
+        final double fieldOfViewAngleDegrees = 135.0;
+
         int truncatedX = (int) centerPatch.getPatchCenterCoordinates().getX();
         int truncatedY = (int) centerPatch.getPatchCenterCoordinates().getY();
 
@@ -275,6 +276,15 @@ public class Walkway {
             for (int columnOffset = -2; columnOffset <= 2; columnOffset++) {
                 boolean xCondition;
                 boolean yCondition;
+
+                // Exclude the center patch, unless explicitly specified
+                boolean isCenterPatch = rowOffset == 0 && columnOffset == 0;
+
+                if (!includeCenterPatch) {
+                    if (isCenterPatch) {
+                        continue;
+                    }
+                }
 
                 // Separate upper and lower rows
                 if (rowOffset < 0) {
@@ -301,11 +311,11 @@ public class Walkway {
 
                     // Make sure that the patch to be added is within the field of view of the passenger which invoked
                     // this method
-                    if (Coordinates.isWithinFieldOfView(
+                    if ((includeCenterPatch && isCenterPatch) || Coordinates.isWithinFieldOfView(
                             centerPatch.getPatchCenterCoordinates(),
                             chosenPatch.getPatchCenterCoordinates(),
                             heading,
-                            Math.toRadians(90.0))) {
+                            Math.toRadians(fieldOfViewAngleDegrees))) {
                         patchesToExplore.add(chosenPatch);
                     }
                 }
@@ -356,21 +366,36 @@ public class Walkway {
         return passengers;
     }
 
-    public void setFloorField(int row, int column, PassengerMovement.State state, Patch associatedGoal) {
-        Patch patch = region[row][column];
+    public void setFloorField(
+            Patch patch,
+            PassengerMovement.State state,
+            Patch associatedGoal,
+            double floorFieldValue) {
+        // A fix for when the JavaFX slider gives the maximum value as 0.999 and not 1.0
+        if (floorFieldValue >= 0.99) {
+            floorFieldValue = 1.0;
+        }
 
-        // Increment the current value in that position
         FloorField floorField = patch.getFloorFieldValues().get(state);
 
-        floorField.setValue(floorField.getValue() + 1);
+//        floorField.setValue(floorField.getValue() + 1);
+        floorField.setValue(floorFieldValue);
 
         // Set the goal this patch is associated to
-        floorField.setAssociation(associatedGoal);
+        floorField.setGoal(associatedGoal);
 
         // Tell that associated goal patch to add this patch to the list of its associated patches, if it's not yet
         // already there
         if (!associatedGoal.getAssociatedPatches().contains(patch)) {
             associatedGoal.getAssociatedPatches().add(patch);
+        }
+
+        // If the floor field value is 1, this is the apex patch of the floor field
+        if (floorFieldValue == 1.0) {
+            // Make sure that the apex doesn't exist yet
+//            assert floorField.getApex() == null;
+
+            floorField.setApex(patch);
         }
 
 //        FloorField newFloorField

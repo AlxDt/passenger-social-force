@@ -42,7 +42,7 @@ public class Coordinates {
     }
 
     // Compute the distance between this coordinates and some other coordinates
-    public static double distanceTo(Coordinates sourceCoordinates, Coordinates coordinates) {
+    public static double distance(Coordinates sourceCoordinates, Coordinates coordinates) {
         double x = coordinates.getX();
         double y = coordinates.getY();
 
@@ -66,7 +66,7 @@ public class Coordinates {
         double adjacentLength = dx;
 
         // The length of the hypotenuse is the distance between this passenger and the given position
-        double hypotenuseLength = distanceTo(sourceCoordinates, coordinates);
+        double hypotenuseLength = distance(sourceCoordinates, coordinates);
 
         // The included angle between the adjacent and the hypotenuse is given by the arccosine of the ratio of the
         // length of the adjacent and the length of the hypotenuse
@@ -91,15 +91,30 @@ public class Coordinates {
         double headingTowardsCoordinate = headingTowards(sourceCoordinates, coordinates);
 
         // Compute the absolute difference between the two headings
-        double headingDifference = Math.abs(headingTowardsCoordinate - heading);
+        double headingDifference = Coordinates.headingDifference(headingTowardsCoordinate, heading);
+
+        // If the heading difference is within the specified parameter, return true
+        // If not, the passenger is outside this passenger's field of view, so return false
+        return headingDifference <= maximumHeadingChange;
+    }
+
+    // Compute the angular difference between two headings
+    public static double headingDifference(double heading1, double heading2) {
+        double headingDifference = Math.abs(heading1 - heading2);
 
         if (headingDifference > Math.toRadians(180)) {
             headingDifference = Math.toRadians(360) - headingDifference;
         }
 
-        // If the heading difference is within the specified parameter, return true
-        // If not, the passenger is outside this passenger's field of view, so return false
-        return headingDifference <= maximumHeadingChange;
+        return headingDifference;
+    }
+
+    // Compute for the angular mean of two headings
+    public static double meanHeading(double heading1, double heading2) {
+        return Math.atan2(
+                (Math.sin(heading1) + Math.sin(heading2)) / 2.0,
+                (Math.cos(heading1) + Math.cos(heading2)) / 2.0
+        );
     }
 
     @Override

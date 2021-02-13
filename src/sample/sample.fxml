@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -12,23 +13,25 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1160.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1160.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <bottom>
-      <HBox alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="780.0" spacing="20.0" BorderPane.alignment="CENTER">
+      <HBox alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="780.0" spacing="15.0" BorderPane.alignment="CENTER">
          <children>
+            <Label fx:id="floorFieldValueLabel" prefHeight="17.0" prefWidth="111.0" text="Floor field value: " />
+            <Slider fx:id="floorFieldValueSlider" blockIncrement="0.01" majorTickUnit="0.3" max="1.0" min="0.1" minorTickCount="2" prefHeight="38.0" prefWidth="140.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
             <Label fx:id="stateLabel" text="View floor field:" />
-            <ChoiceBox fx:id="floorFieldChoiceBox" prefWidth="150.0">
+            <ChoiceBox fx:id="floorFieldChoiceBox" prefHeight="25.0" prefWidth="99.0">
                <HBox.margin>
                   <Insets />
                </HBox.margin>
             </ChoiceBox>
             <Label fx:id="targetLabel" text="Target goal:" />
-            <ChoiceBox fx:id="targetChoiceBox" prefWidth="150.0" />
+            <ChoiceBox fx:id="targetChoiceBox" prefHeight="25.0" prefWidth="100.0" />
             <Label fx:id="drawLabel" prefHeight="17.0" prefWidth="38.0" text="Draw:" />
-            <ChoiceBox fx:id="drawChoiceBox" prefHeight="25.0" prefWidth="133.0" />
+            <ChoiceBox fx:id="drawChoiceBox" prefHeight="25.0" prefWidth="100.0" />
             <Button fx:id="stepButton" defaultButton="true" disable="true" layoutX="407.0" layoutY="13.0" mnemonicParsing="false" onAction="#step" prefHeight="25.0" prefWidth="68.0" text="Next step" />
             <Button fx:id="nextButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#next" prefHeight="25.0" prefWidth="83.0" text="Next mode" />
-            <Button fx:id="startButton" defaultButton="true" disable="true" layoutX="470.0" layoutY="13.0" mnemonicParsing="false" onAction="#play" prefHeight="25.0" prefWidth="166.0" text="Start" />
+            <Button fx:id="startButton" defaultButton="true" disable="true" layoutX="470.0" layoutY="13.0" mnemonicParsing="false" onAction="#play" prefHeight="25.0" prefWidth="97.0" text="Start" />
          </children>
          <BorderPane.margin>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

@@ -3,7 +3,7 @@ package sample;
 import java.util.*;
 
 public class Patch {
-    public static final int ENTRY_WAITING_TIME = 20;
+    public static final int ENTRY_WAITING_TIME = 10;
 
     private final MatrixPosition matrixPosition;
     private final Coordinates patchCenterCoordinates;

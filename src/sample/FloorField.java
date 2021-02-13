@@ -4,16 +4,19 @@ import java.util.Objects;
 
 public class FloorField {
     private double value;
-    private Patch association;
+    private Patch goal;
+    private Patch apex;
 
     public FloorField() {
         this.value = 0.0;
-        this.association = null;
+        this.goal = null;
+        this.apex = null;
     }
 
-    public FloorField(double value, Patch association) {
+    public FloorField(double value, Patch goal) {
         this.value = value;
-        this.association = association;
+        this.goal = goal;
+        this.apex = null;
     }
 
     public double getValue() {
@@ -24,12 +27,20 @@ public class FloorField {
         this.value = value;
     }
 
-    public Patch getAssociation() {
-        return association;
+    public Patch getGoal() {
+        return goal;
     }
 
-    public void setAssociation(Patch association) {
-        this.association = association;
+    public void setGoal(Patch goal) {
+        this.goal = goal;
+    }
+
+    public Patch getApex() {
+        return apex;
+    }
+
+    public void setApex(Patch apex) {
+        this.apex = apex;
     }
 
     @Override
@@ -38,11 +49,11 @@ public class FloorField {
         if (o == null || getClass() != o.getClass()) return false;
         FloorField that = (FloorField) o;
         return Double.compare(that.value, value) == 0 &&
-                Objects.equals(association, that.association);
+                Objects.equals(goal, that.goal);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, association);
+        return Objects.hash(value, goal);
     }
 }
