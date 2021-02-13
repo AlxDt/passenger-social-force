@@ -12,11 +12,9 @@ public class PassengerMovement {
     private int goalsReached;
     private int goalsLeft;
     private boolean isWaiting;
-    private Passenger followed;
-    private Passenger leader;
     private State state;
     private Action action;
-    private boolean isHead;
+    private boolean stateChanged;
 
     public PassengerMovement(Passenger parent, double x, double y, int numGoals) {
         this.parent = parent;
@@ -25,8 +23,6 @@ public class PassengerMovement {
         this.goalsLeft = numGoals;
         this.isWaiting = false;
         this.goal = null;
-        this.followed = null;
-        this.leader = null;
 
         // All newly generated passengers will face the north by default
         // The heading values shall be in degrees, but have to be converted to radians for the math libraries to process
@@ -48,19 +44,7 @@ public class PassengerMovement {
         this.state = State.WALKING;
         this.action = Action.WILL_QUEUE;
 
-        this.isHead = false;
-    }
-
-    public Passenger getParent() {
-        return parent;
-    }
-
-    public boolean isHead() {
-        return isHead;
-    }
-
-    public void setHead(boolean head) {
-        isHead = head;
+        this.stateChanged = true;
     }
 
     public Coordinates getPosition() {
@@ -92,28 +76,12 @@ public class PassengerMovement {
         this.position.setY(y);
     }
 
-    public Passenger getFollowed() {
-        return followed;
-    }
-
-    public void setFollowed(Passenger followed) {
-        this.followed = followed;
-    }
-
     public Patch getGoal() {
         return goal;
     }
 
-    public void setGoal(Patch goal) {
-        this.goal = goal;
-    }
-
     public Patch getCurrentPatch() {
         return currentPatch;
-    }
-
-    public int getGoalsReached() {
-        return goalsReached;
     }
 
     public int getGoalsLeft() {
@@ -128,20 +96,12 @@ public class PassengerMovement {
         isWaiting = waiting;
     }
 
-    public Passenger getLeader() {
-        return leader;
-    }
-
     public double getHeading() {
         return heading;
     }
 
     public void setHeading(double heading) {
         this.heading = heading;
-    }
-
-    public double getWalkingDistance() {
-        return walkingDistance;
     }
 
     public State getState() {
@@ -160,156 +120,46 @@ public class PassengerMovement {
         this.action = action;
     }
 
+    public boolean isStateChanged() {
+        return stateChanged;
+    }
+
+    public void setStateChanged(boolean stateChanged) {
+        this.stateChanged = stateChanged;
+    }
+
     public void reachGoal() {
         this.goalsReached++;
         this.goalsLeft--;
     }
 
     // Set the nearest goal to this passenger
-    public void setNearestGoal() {
-        double minDistance = Double.MAX_VALUE;
-        Patch nearestGoal = null;
+    // That goal should also have the fewer passengers queueing for it
+    // To determine this, for each two passengers in the queue (or fraction thereof), a penalty of one meter is added to
+    // the distance to this goal
+    public void setChosenGoal() {
+        double minScore = Double.MAX_VALUE;
+        Patch chosenGoal = null;
+
+        double distance;
+        int passengersQueueing;
+        double score;
 
         for (Patch goal : Main.WALKWAY.getGoalsAtSequence(goalsReached)) {
-            double distance = Coordinates.distance(this.position, goal.getPatchCenterCoordinates());
+            distance = Coordinates.distance(this.position, goal.getPatchCenterCoordinates());
+            passengersQueueing = goal.getPassengersQueueing().size();
 
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestGoal = goal;
+            score = distance + passengersQueueing * 1.5;
+
+            if (score < minScore) {
+                minScore = score;
+                chosenGoal = goal;
             }
         }
 
         // Set the goal nearest to this passenger
-        this.goal = nearestGoal;
+        this.goal = chosenGoal;
     }
-
-    public void clearLeader() {
-        this.leader = null;
-    }
-
-    // Set the leader of this passenger
-    // The leader, which the passenger will roughly follow, will be chosen from the nearest fellow passenger to this
-    // passenger
-    /*public boolean setLeader() {
-        // Choose the patch where a leader shall be searched for - this would depend on the current heading of the
-        // passenger
-        // Reference (in degrees):
-        // 337.5 to 22.5 - right
-        // 22.5 to 67.5 - upper right
-        // 67.5 to 112.5 - up
-        // 112.5 to 157.5 - upper left
-        // 157.5 to 202.5 - left
-        // 202.5 to 247.5 - lower left
-        // 247.5 to 292.5 - down
-        // 292.5 to 337.5 - lower right
-
-        List<Passenger> leaderCandidates = new ArrayList<>();
-
-        double currentHeadingDegrees = Math.toDegrees(this.heading);
-
-        // Also, check the current patch first to see whether there are passengers within the current patch that are
-        // candidates for being leaders for this passenger because if it does, there is no need to check beyond the
-        // current patch anymore, as a leader may be chosen from within
-        if (!this.currentPatch.getPassengers().isEmpty()) {
-            // Check if any of the passengers in the passenger list are within this passenger's field of view
-            for (Passenger passenger : this.currentPatch.getPassengers()) {
-                // Check if there are at most four passengers in this patch
-                // If there is more than that, do not allow this passenger to
-
-                // If this passenger is within this passenger's field of view and is in the same state as this
-                // passenger, add it to the list of leader candidates
-                if (this.goalsReached == passenger.getPassengerMovement().getGoalsReached()
-                        && isWithinFieldOfView(passenger, Math.toRadians(20.0))) {
-                    leaderCandidates.add(passenger);
-                }
-            }
-        }
-
-        // If the leader candidates list isn't empty, choose a random leader from such list
-        if (!leaderCandidates.isEmpty()) {
-            int randomIndex = new Random().nextInt(leaderCandidates.size());
-
-            this.leader = leaderCandidates.get(randomIndex);
-
-            return true;
-        } else {
-            // If no leader candidates were found, try to select one from the neighboring patches
-            Patch chosenPatch = null;
-
-            int truncatedX = (int) this.position.getX();
-            int truncatedY = (int) this.position.getY();
-
-            // Right
-            if (currentHeadingDegrees >= 337.5 && currentHeadingDegrees <= 360.0
-                    || currentHeadingDegrees >= 0 && currentHeadingDegrees < 22.5) {
-                if (truncatedX + 1 < Main.WALKWAY.getColumns()) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
-                }
-            } else if (currentHeadingDegrees >= 22.5 && currentHeadingDegrees < 67.5) {
-                // Upper right
-                if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
-                }
-            } else if (currentHeadingDegrees >= 67.5 && currentHeadingDegrees < 112.5) {
-                // Up
-                if (truncatedY > 0) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX);
-                }
-            } else if (currentHeadingDegrees >= 112.5 && currentHeadingDegrees < 157.5) {
-                // Upper left
-                if (truncatedX > 0 && truncatedY > 0) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
-                }
-            } else if (currentHeadingDegrees >= 157.5 && currentHeadingDegrees < 202.5) {
-                // Left
-                if (truncatedX > 0) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY, truncatedX - 1);
-                }
-            } else if (currentHeadingDegrees >= 202.5 && currentHeadingDegrees < 247.5) {
-                // Lower left
-                if (truncatedX > 0 && truncatedY + 1 < Main.WALKWAY.getRows()) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
-                }
-            } else if (currentHeadingDegrees >= 247.5 && currentHeadingDegrees < 292.5) {
-                // Down
-                if (truncatedY + 1 < Main.WALKWAY.getRows()) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
-                }
-            } else {
-                // Lower right
-                if (truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows()) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
-                }
-            }
-
-            // Check the chosen patch to see whether there are passengers that are candidates for being leaders for this
-            // passenger
-            if (chosenPatch != null && !chosenPatch.getPassengers().isEmpty()) {
-                // Check if any of the passengers in the passenger list are within this passenger's field of view
-                for (Passenger passenger : this.currentPatch.getPassengers()) {
-                    // If this passenger is within this passenger's field of view, add it to the list of leader candidates
-                    if (this.goalsReached == passenger.getPassengerMovement().getGoalsReached()
-                            && isWithinFieldOfView(passenger, Math.toRadians(20.0))) {
-                        leaderCandidates.add(passenger);
-                    }
-                }
-            }
-
-            // If the leader candidates list isn't empty, choose a random leader from such list
-            // If it is, return with no leader selected
-            if (!leaderCandidates.isEmpty()) {
-                int randomIndex = new Random().nextInt(leaderCandidates.size());
-
-                this.leader = leaderCandidates.get(randomIndex);
-
-                return true;
-            } else {
-                return false;
-            }
-
-//            return false;
-        }
-    }*/
 
     // Get the future position of this passenger given the current goal, current heading, and the current walking
     // distance
@@ -713,16 +563,6 @@ public class PassengerMovement {
                 return nearestPassenger;
             }
         }
-
-        // Check the density as well
-        // Get, if any, the nearest passenger found
-        // If there is any,
-        //   If the passenger is not heading this way,
-        //     if it is 0 m (0.5 m actual) (minimum distance) or less away, stop
-        //     if it is 0.5 m (1 m actual) (maximum distance, may vary) or less away, stop
-        //     if it is 2 m or (2.5 actual) less away, slow down
-        //   If the passenger is heading this way, check if left or right, then move towards that spot
-        // If there isn't any, feel free to move normally
     }
 
     public static void face(Passenger currentPassenger, Passenger leader, double headingGoal) {
@@ -782,7 +622,6 @@ public class PassengerMovement {
     // Get the next queueing patch given the current state and the current goal
     public Patch nextQueueingPatch() {
         State state = this.state;
-        Patch goal = this.goal;
 
         // Get the patches to explore
         List<Patch> patchesToExplore = Walkway.get5x5Field(this.currentPatch, this.heading, false);
@@ -820,11 +659,9 @@ public class PassengerMovement {
         Patch chosenPatch = highestPatches.get(0);
 
         List<Double> headingChanges = new ArrayList<>();
-        List<Double> distances = new ArrayList<>();
 
         double headingToHighestPatch;
         double headingChangeRequired;
-        double distanceFromHighestPatchToGoal;
 
         for (Patch patch : highestPatches) {
             headingToHighestPatch = Coordinates.headingTowards(this.position, patch.getPatchCenterCoordinates());
@@ -833,31 +670,15 @@ public class PassengerMovement {
             double headingChangeRequiredDegrees = Math.toDegrees(headingChangeRequired);
 
             headingChanges.add(headingChangeRequiredDegrees);
-
-            distanceFromHighestPatchToGoal = Coordinates.distance(
-                    patch.getPatchCenterCoordinates(),
-                    this.goal.getPatchCenterCoordinates()
-            );
-
-            distances.add(distanceFromHighestPatchToGoal);
         }
 
-        List<Double> scores = new ArrayList<>();
-
-        double minimumScore = Double.MAX_VALUE;
-        double score;
+        double minimumHeadingChange = Double.MAX_VALUE;
 
         for (int index = 0; index < highestPatches.size(); index++) {
-            score = headingChanges.get(index)/* + distances.get(index)*/;
+            double individualScore = headingChanges.get(index);
 
-            scores.add(score);
-        }
-
-        for (int index = 0; index < highestPatches.size(); index++) {
-            double individualScore = scores.get(index);
-
-            if (individualScore < minimumScore) {
-                minimumScore = individualScore;
+            if (individualScore < minimumHeadingChange) {
+                minimumHeadingChange = individualScore;
                 chosenPatch = highestPatches.get(index);
             }
         }
