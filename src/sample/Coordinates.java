@@ -1,5 +1,6 @@
 package sample;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 // Represents a pair of 2D Cartesian coordinates
@@ -109,11 +110,19 @@ public class Coordinates {
         return headingDifference;
     }
 
-    // Compute for the angular mean of two headings
-    public static double meanHeading(double heading1, double heading2) {
+    // Compute for the angular mean of multiple headings
+    public static double meanHeading(double... headings) {
+        double xHeadingSum = 0.0;
+        double yHeadingSum = 0.0;
+
+        for (double heading : headings) {
+            xHeadingSum += Math.cos(heading);
+            yHeadingSum += Math.sin(heading);
+        }
+
         return Math.atan2(
-                (Math.sin(heading1) + Math.sin(heading2)) / 2.0,
-                (Math.cos(heading1) + Math.cos(heading2)) / 2.0
+                yHeadingSum / headings.length,
+                xHeadingSum / headings.length
         );
     }
 

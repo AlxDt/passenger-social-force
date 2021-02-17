@@ -37,7 +37,7 @@ public class PassengerMovement {
         this.walkingDistance = 0.6;
 
         // Add this passenger to the start patch
-        this.currentPatch = Main.WALKWAY.getPatch((int) y, (int) x);
+        this.currentPatch = Main.FLOOR.getPatch((int) y, (int) x);
         currentPatch.getPassengers().add(parent);
 
         // Assign the initial state and action of this passenger
@@ -56,7 +56,7 @@ public class PassengerMovement {
         double y = coordinates.getY();
 
         // Take note of the passenger's new patch
-        Patch newPatch = Main.WALKWAY.getPatch((int) y, (int) x);
+        Patch newPatch = Main.FLOOR.getPatch((int) y, (int) x);
 
         // If the current and new patches are different, it means the passenger has moved patches, and both patches
         // should take that into account
@@ -145,7 +145,7 @@ public class PassengerMovement {
         int passengersQueueing;
         double score;
 
-        for (Patch goal : Main.WALKWAY.getGoalsAtSequence(goalsReached)) {
+        for (Patch goal : Main.FLOOR.getGoalsAtSequence(goalsReached)) {
             distance = Coordinates.distance(this.position, goal.getPatchCenterCoordinates());
             passengersQueueing = goal.getPassengersQueueing().size();
 
@@ -194,14 +194,14 @@ public class PassengerMovement {
             // If they are, adjust them such that they stay within bounds
             if (newX < 0) {
                 newX = 0.0;
-            } else if (newX > Main.WALKWAY.getColumns() - 1) {
-                newX = Main.WALKWAY.getColumns() - 0.99;
+            } else if (newX > Main.FLOOR.getColumns() - 1) {
+                newX = Main.FLOOR.getColumns() - 0.99;
             }
 
             if (newY < 0) {
                 newY = 0.0;
-            } else if (newY > Main.WALKWAY.getRows() - 1) {
-                newY = Main.WALKWAY.getRows() - 0.99;
+            } else if (newY > Main.FLOOR.getRows() - 1) {
+                newY = Main.FLOOR.getRows() - 0.99;
             }
 
             // Then set the position of this passenger to the new coordinates
@@ -223,7 +223,7 @@ public class PassengerMovement {
     // That is, check if a movement considering its current heading would not violate distancing
     public Passenger shouldMove(double minimumDistance, double maximumHeadingChange) {
         // Compile a list of patches which would be explored by this passenger
-        List<Patch> patchesToExplore = Walkway.get5x5Field(
+        List<Patch> patchesToExplore = Floor.get5x5Field(
                 this.getCurrentPatch(),
                 this.getHeading(),
                 true
@@ -274,7 +274,11 @@ public class PassengerMovement {
         final double slowdownDistance = 2.5;
 
         // Get the relevant patches
-        List<Patch> patchesToExplore = Walkway.get5x5Field(this.currentPatch, heading, true);
+        List<Patch> patchesToExplore = Floor.get5x5Field(this.currentPatch, heading, true);
+
+        // Get the obstacles within the current field of view (45 degrees, 2.5 m) in these patches
+        // If there are obstacles here, avoid those obstacles
+        TreeMap<Double, Patch> obstaclesWithinFieldOfView = new TreeMap<>();
 
         // Get the passengers within the current field of view (45 degrees, 2.5 m) in these patches
         // If there are any other passengers within this field of view, this passenger is at least guaranteed to slow
@@ -285,6 +289,25 @@ public class PassengerMovement {
         int numberOfPassengers = 0;
 
         for (Patch patch : patchesToExplore) {
+            // Take note of the obstacles
+            if (patch.isObstacle()) {
+                // Check if this obstacle is within the field of view and within the slowdown distance
+                double distanceToObstacle = Coordinates.distance(
+                        this.position,
+                        patch.getPatchCenterCoordinates()
+                );
+
+                if (Coordinates.isWithinFieldOfView(
+                        this.position,
+                        patch.getPatchCenterCoordinates(),
+                        heading,
+                        Math.toRadians(fieldOfViewAngleDegrees))
+                        && distanceToObstacle < slowdownDistance) {
+                    obstaclesWithinFieldOfView.put(distanceToObstacle, patch);
+                }
+            }
+
+            // Take note of the passengers
             numberOfPassengers += patch.getPassengers().size();
 
             for (Passenger passenger : patch.getPassengers()) {
@@ -314,11 +337,14 @@ public class PassengerMovement {
                 = (numberOfPassengers > maximumDensityTolerated ? maximumDensityTolerated : numberOfPassengers)
                 / maximumDensityTolerated;
 
+        // For each obstacle found within the slowdown distance, get the nearest one, if there is any
+        Map.Entry<Double, Patch> nearestObstacleEntry = obstaclesWithinFieldOfView.firstEntry();
+
         // For each passenger found within the slowdown distance, get the nearest one, if there is any
-        Map.Entry<Double, Passenger> firstEntry = passengersWithinFieldOfView.firstEntry();
+        Map.Entry<Double, Passenger> nearestPassengerEntry = passengersWithinFieldOfView.firstEntry();
 
         // If there are no passengers within the field of view, good - move normally
-        if (firstEntry == null) {
+        if (nearestPassengerEntry == null) {
             PassengerMovement.face(this.parent, null, heading);
 
             this.move();
@@ -327,7 +353,7 @@ public class PassengerMovement {
         } else {
             // If there are passengers within the field of view, get its heading to see whether that passenger is
             // heading towards or away from this passenger
-            Passenger nearestPassenger = firstEntry.getValue();
+            Passenger nearestPassenger = nearestPassengerEntry.getValue();
 
             double headingDifference = Coordinates.headingDifference(
                     heading,
@@ -342,7 +368,7 @@ public class PassengerMovement {
                 PassengerMovement.face(this.parent, nearestPassenger, heading);
 
                 // Check the distance of that nearest passenger to this passenger
-                double distanceToNearestPassenger = firstEntry.getKey();
+                double distanceToNearestPassenger = nearestPassengerEntry.getKey();
 
                 // Modify the maximum stopping distance depending on the density of the environment
                 // That is, the denser the surroundings, the less space this passenger will allow between other
@@ -378,10 +404,10 @@ public class PassengerMovement {
                 //   - The angle formed between the heading to the right passenger and the right edge of the FOV cone
                 // Basically, have this passenger squeeze itself to the widest gap it can see
                 final double leftFieldOfViewEdgeHeading
-                        = (this.heading + Math.toRadians(45.0)) % Math.toRadians(360.0);
+                        = (this.heading + Math.toRadians(60.0)) % Math.toRadians(360.0);
 
                 final double rightFieldOfViewEdgeHeading
-                        = (this.heading - Math.toRadians(45.0)) % Math.toRadians(360.0);
+                        = (this.heading - Math.toRadians(60.0)) % Math.toRadians(360.0);
 
                 Passenger leftPassenger;
                 Passenger rightPassenger;
@@ -549,7 +575,7 @@ public class PassengerMovement {
                 face(this.parent, null, meanHeading);
 
                 // The slowdown factor linearly depends on the distance between this passenger and the closest passenger
-                final double distanceToNearestPassenger = firstEntry.getKey();
+                final double distanceToNearestPassenger = nearestPassengerEntry.getKey();
 
                 double slowdownFactor
                         = distanceToNearestPassenger / slowdownDistance;
@@ -624,7 +650,7 @@ public class PassengerMovement {
         State state = this.state;
 
         // Get the patches to explore
-        List<Patch> patchesToExplore = Walkway.get5x5Field(this.currentPatch, this.heading, false);
+        List<Patch> patchesToExplore = Floor.get5x5Field(this.currentPatch, this.heading, false);
 
         // Collect the patches with the highest floor field values
         List<Patch> highestPatches = new ArrayList<>();

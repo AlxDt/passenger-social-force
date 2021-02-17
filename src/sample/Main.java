@@ -13,7 +13,7 @@ public class Main extends Application {
     private static final int ROWS = 60;
     private static final int COLUMNS = 106;
 
-    public static final Walkway WALKWAY = new Walkway(ROWS, COLUMNS);
+    public static final Floor FLOOR = new Floor(ROWS, COLUMNS);
 
     public static void main(String[] args) {
         launch(args);

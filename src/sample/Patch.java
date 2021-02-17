@@ -9,6 +9,8 @@ public class Patch {
     private final Coordinates patchCenterCoordinates;
     private final List<Passenger> passengers;
     private final Map<PassengerMovement.State, FloorField> floorFieldValues;
+    private boolean obstacle;
+
     private ArrayDeque<Passenger> passengersQueueing;
     private Passenger passengerTransacting;
     private List<Patch> associatedPatches;
@@ -33,6 +35,8 @@ public class Patch {
         // TODO: Add all available statuses to all floor fields, not just queueing
         this.floorFieldValues.put(PassengerMovement.State.IN_QUEUE, new FloorField());
 
+        this.obstacle = false;
+
         this.waitingTime = 0;
 
         this.patchCenterCoordinates = Coordinates.patchCenterCoordinates(this);
@@ -49,6 +53,14 @@ public class Patch {
         return patchCenterCoordinates;
     }
 
+    public boolean isObstacle() {
+        return obstacle;
+    }
+
+    public void setObstacle(boolean obstacle) {
+        this.obstacle = obstacle;
+    }
+
     public Type getType() {
         return type;
     }
@@ -62,6 +74,8 @@ public class Patch {
             this.passengersQueueing = new ArrayDeque<>();
             this.associatedPatches = new ArrayList<>();
             this.goalId = (type == Type.TRANSACTION_AREA ? "T" : "E") + sequence + "-" + index;
+        } else if (type == Type.TICKET_BOOTH || type == Type.OBSTACLE) {
+            this.obstacle = true;
         }
     }
 

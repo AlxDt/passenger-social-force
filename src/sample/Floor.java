@@ -3,7 +3,7 @@ package sample;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Walkway {
+public class Floor {
     private final int rows;
     private final int columns;
     private final Patch[][] region;
@@ -13,7 +13,7 @@ public class Walkway {
     private final List<Patch> obstacles;
     private final List<Passenger> passengers;
 
-    public Walkway(int rows, int columns) {
+    public Floor(int rows, int columns) {
         this.rows = rows;
         this.columns = columns;
 
@@ -132,23 +132,23 @@ public class Walkway {
     private Patch chooseNegativeDiagonal(Patch patch, PassengerMovement.State state, int truncatedX, int truncatedY) {
         Patch chosenPatch;
 
-        final boolean upperRightCondition = truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY > 0;
-        final boolean lowerLeftCondition = truncatedX > 0 && truncatedY + 1 < Main.WALKWAY.getRows();
+        final boolean upperRightCondition = truncatedX + 1 < Main.FLOOR.getColumns() && truncatedY > 0;
+        final boolean lowerLeftCondition = truncatedX > 0 && truncatedY + 1 < Main.FLOOR.getRows();
 
         if (upperRightCondition && lowerLeftCondition) {
-            Patch upperRight = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
-            Patch lowerLeft = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
+            Patch upperRight = Main.FLOOR.getPatch(truncatedY - 1, truncatedX + 1);
+            Patch lowerLeft = Main.FLOOR.getPatch(truncatedY + 1, truncatedX - 1);
 
             chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upperRight, lowerLeft);
         } else {
             // One of the required patches are out of bounds
             if (!upperRightCondition && lowerLeftCondition) {
                 // Upper right not available, choose lower left
-                Patch lowerLeft = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX - 1);
+                Patch lowerLeft = Main.FLOOR.getPatch(truncatedY + 1, truncatedX - 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, lowerLeft);
             } else if (upperRightCondition && !lowerLeftCondition) {
                 // Lower left not available, choose upper right
-                Patch upperRight = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX + 1);
+                Patch upperRight = Main.FLOOR.getPatch(truncatedY - 1, truncatedX + 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upperRight);
             } else {
                 // Neither are available
@@ -163,22 +163,22 @@ public class Walkway {
         Patch chosenPatch;
 
         final boolean upperLeftCondition = truncatedX > 0 && truncatedY > 0;
-        final boolean lowerRightCondition = truncatedX + 1 < Main.WALKWAY.getColumns() && truncatedY + 1 < Main.WALKWAY.getRows();
+        final boolean lowerRightCondition = truncatedX + 1 < Main.FLOOR.getColumns() && truncatedY + 1 < Main.FLOOR.getRows();
 
         if (upperLeftCondition && lowerRightCondition) {
-            Patch upperLeft = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
-            Patch lowerRight = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
+            Patch upperLeft = Main.FLOOR.getPatch(truncatedY - 1, truncatedX - 1);
+            Patch lowerRight = Main.FLOOR.getPatch(truncatedY + 1, truncatedX + 1);
 
             chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upperLeft, lowerRight);
         } else {
             // One of the required patches are out of bounds
             if (!upperLeftCondition && lowerRightCondition) {
                 // Upper left not available, choose lower right
-                Patch lowerRight = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX + 1);
+                Patch lowerRight = Main.FLOOR.getPatch(truncatedY + 1, truncatedX + 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, lowerRight);
             } else if (upperLeftCondition && !lowerRightCondition) {
                 // Lower right not available, choose upper left
-                Patch upperLeft = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX - 1);
+                Patch upperLeft = Main.FLOOR.getPatch(truncatedY - 1, truncatedX - 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upperLeft);
             } else {
                 // Neither are available
@@ -193,22 +193,22 @@ public class Walkway {
         Patch chosenPatch;
 
         final boolean leftCondition = truncatedX > 0;
-        final boolean rightCondition = truncatedX + 1 < Main.WALKWAY.getColumns();
+        final boolean rightCondition = truncatedX + 1 < Main.FLOOR.getColumns();
 
         if (leftCondition && rightCondition) {
-            Patch left = Main.WALKWAY.getPatch(truncatedY, truncatedX - 1);
-            Patch right = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
+            Patch left = Main.FLOOR.getPatch(truncatedY, truncatedX - 1);
+            Patch right = Main.FLOOR.getPatch(truncatedY, truncatedX + 1);
 
             chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, left, right);
         } else {
             // One of the required patches are out of bounds
             if (!leftCondition) {
                 // Left not available, choose right
-                Patch right = Main.WALKWAY.getPatch(truncatedY, truncatedX + 1);
+                Patch right = Main.FLOOR.getPatch(truncatedY, truncatedX + 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, right);
             } else {
                 // Right not available, choose left
-                Patch left = Main.WALKWAY.getPatch(truncatedY, truncatedX - 1);
+                Patch left = Main.FLOOR.getPatch(truncatedY, truncatedX - 1);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, left);
             }
         }
@@ -220,22 +220,22 @@ public class Walkway {
         Patch chosenPatch;
 
         final boolean upperCondition = truncatedY > 0;
-        final boolean lowerCondition = truncatedY + 1 < Main.WALKWAY.getRows();
+        final boolean lowerCondition = truncatedY + 1 < Main.FLOOR.getRows();
 
         if (upperCondition && lowerCondition) {
-            Patch upper = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX);
-            Patch lower = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
+            Patch upper = Main.FLOOR.getPatch(truncatedY - 1, truncatedX);
+            Patch lower = Main.FLOOR.getPatch(truncatedY + 1, truncatedX);
 
             chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upper, lower);
         } else {
             // One of the required patches are out of bounds
             if (!upperCondition) {
                 // Upper not available, choose lower
-                Patch lower = Main.WALKWAY.getPatch(truncatedY + 1, truncatedX);
+                Patch lower = Main.FLOOR.getPatch(truncatedY + 1, truncatedX);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, lower);
             } else {
                 // Lower not available, choose upper
-                Patch upper = Main.WALKWAY.getPatch(truncatedY - 1, truncatedX);
+                Patch upper = Main.FLOOR.getPatch(truncatedY - 1, truncatedX);
                 chosenPatch = getPatchWithHighestFloorFieldValue(state, patch, upper);
             }
         }
@@ -290,7 +290,7 @@ public class Walkway {
                 if (rowOffset < 0) {
                     yCondition = truncatedY + rowOffset > 0;
                 } else if (rowOffset > 0) {
-                    yCondition = truncatedY + rowOffset < Main.WALKWAY.getRows();
+                    yCondition = truncatedY + rowOffset < Main.FLOOR.getRows();
                 } else {
                     yCondition = true;
                 }
@@ -299,7 +299,7 @@ public class Walkway {
                 if (columnOffset < 0) {
                     xCondition = truncatedX + columnOffset > 0;
                 } else if (columnOffset > 0) {
-                    xCondition = truncatedX + columnOffset < Main.WALKWAY.getColumns();
+                    xCondition = truncatedX + columnOffset < Main.FLOOR.getColumns();
                 } else {
                     xCondition = true;
                 }
@@ -307,7 +307,7 @@ public class Walkway {
                 // Insert the patch to the list of patches to be explored if the patches are within the bounds of the
                 // walkway
                 if (xCondition && yCondition) {
-                    chosenPatch = Main.WALKWAY.getPatch(truncatedY + rowOffset, truncatedX + columnOffset);
+                    chosenPatch = Main.FLOOR.getPatch(truncatedY + rowOffset, truncatedX + columnOffset);
 
                     // Make sure that the patch to be added is within the field of view of the passenger which invoked
                     // this method
@@ -408,9 +408,9 @@ public class Walkway {
         // Get the maximum floor field value for the chosen state
         double maximumFloorField = 0.0;
 
-        for (int row = 0; row < Main.WALKWAY.region.length; row++) {
-            for (int column = 0; column < Main.WALKWAY.region[0].length; column++) {
-                double currentFloorField = Main.WALKWAY.getPatch(row, column).getFloorFieldValues().get(state).getValue();
+        for (int row = 0; row < Main.FLOOR.region.length; row++) {
+            for (int column = 0; column < Main.FLOOR.region[0].length; column++) {
+                double currentFloorField = Main.FLOOR.getPatch(row, column).getFloorFieldValues().get(state).getValue();
 
                 if (currentFloorField > maximumFloorField) {
                     maximumFloorField = currentFloorField;
@@ -429,9 +429,9 @@ public class Walkway {
         // This is to avoid division by zero issues
         if (maximumFloorField > 0.0) {
             // Divide everything else using the maximum value found
-            for (int row = 0; row < Main.WALKWAY.region.length; row++) {
-                for (int column = 0; column < Main.WALKWAY.region[0].length; column++) {
-                    Patch patch = Main.WALKWAY.getPatch(row, column);
+            for (int row = 0; row < Main.FLOOR.region.length; row++) {
+                for (int column = 0; column < Main.FLOOR.region[0].length; column++) {
+                    Patch patch = Main.FLOOR.getPatch(row, column);
 
                     FloorField floorField = patch.getFloorFieldValues().get(state);
                     floorField.setValue(floorField.getValue() / maximumFloorField);
