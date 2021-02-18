@@ -1,8 +1,11 @@
-package sample;
+package com.crowdsimulation.model.core.environment.station.patch.floorfield;
+
+import com.crowdsimulation.model.core.environment.station.BaseStation;
+import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 import java.util.Objects;
 
-public class FloorField {
+public class FloorField extends BaseStation {
     private double value;
     private Patch goal;
     private Patch apex;

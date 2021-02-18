@@ -1,11 +1,13 @@
-package sample;
+package com.crowdsimulation.model.core.agent.passenger;
 
+import com.crowdsimulation.model.core.agent.Agent;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import javafx.scene.paint.Color;
 
 import java.util.Objects;
 import java.util.Random;
 
-public class Passenger {
+public class Passenger extends PatchObject implements Agent {
     // Keep track of the number of passengers generated
     private static int passengerCount = 0;
     private final int identifier;

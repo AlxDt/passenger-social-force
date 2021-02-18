@@ -1,14 +1,37 @@
-package sample;
+package com.crowdsimulation.model.core.environment.station.patch;
+
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
+import com.crowdsimulation.model.core.environment.station.BaseStation;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
+import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
+import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
 
 import java.util.*;
 
-public class Patch {
+public class Patch extends BaseStation {
+    // TODO: Make entry waiting time adjustable based on UI sliders
     public static final int ENTRY_WAITING_TIME = 10;
 
+    // Denotes the position of this patch based on a discrete row x column matrix
     private final MatrixPosition matrixPosition;
+
+    // Denotes the center of this patch in a Cartesian pixel coordinate system
     private final Coordinates patchCenterCoordinates;
+
+    // Denotes the list of passengers that are currently on this patch
     private final List<Passenger> passengers;
+
+    ////
+
+    // Denotes the amenity present on this patch
+    private PatchObject patchObject;
+
+    // Denotes layers of floor fields that this patch has
+    // Each layer corresponds to a goal
     private final Map<PassengerMovement.State, FloorField> floorFieldValues;
+
     private boolean obstacle;
 
     private ArrayDeque<Passenger> passengersQueueing;
@@ -121,6 +144,14 @@ public class Patch {
 
     public Integer getIndex() {
         return index;
+    }
+
+    public PatchObject getPatchObject() {
+        return patchObject;
+    }
+
+    public void setPatchObject(PatchObject patchObject) {
+        this.patchObject = patchObject;
     }
 
     @Override

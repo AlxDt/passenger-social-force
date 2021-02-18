@@ -1,6 +1,7 @@
-package sample;
+package com.crowdsimulation.model.core.environment.station.utility;
 
-import java.util.Arrays;
+import com.crowdsimulation.model.core.environment.station.patch.Patch;
+
 import java.util.Objects;
 
 // Represents a pair of 2D Cartesian coordinates

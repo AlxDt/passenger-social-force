@@ -1,5 +1,11 @@
-package sample;
+package com.crowdsimulation.controller.screen.main;
 
+import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.screen.ScreenController;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
+import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -16,7 +22,7 @@ import javafx.scene.text.Text;
 
 import java.util.*;
 
-public class Controller {
+public class MainScreenController extends ScreenController {
     private final DrawState[] stateSequences = new DrawState[]{
             DrawState.SPAWN,
             DrawState.CHECKPOINT,
@@ -100,7 +106,7 @@ public class Controller {
 
     private int numAgents;
 
-    public Controller() {
+    public MainScreenController() {
         this.hasStarted = false;
         this.isDrawingFloorFields = false;
 
@@ -112,7 +118,7 @@ public class Controller {
 
     @FXML
     private void initialize() {
-        tileSize = canvas.getHeight() / Main.FLOOR.getRows();
+        tileSize = canvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
         graphicsContext = canvas.getGraphicsContext2D();
 
         List<String> floorFieldChoicesList = new ArrayList<>();
@@ -217,7 +223,7 @@ public class Controller {
             while (true) {
                 // Make the starting patches randomly generate passengers
                 // But only do it when there is no passenger at the start patch
-                for (Patch start : Main.FLOOR.getStarts()) {
+                for (Patch start : Main.simulator.getCurrentFloor().getStarts()) {
                     if (spawnButton.isSelected()
                             && start.getPassengers().size() == 0
                             && rng.nextDouble() < CHANCE_PER_TICK) {
@@ -229,7 +235,7 @@ public class Controller {
                 updateNumAgents();
 
                 // Make each passenger move
-                for (Passenger passenger : Main.FLOOR.getPassengers()) {
+                for (Passenger passenger : Main.simulator.getCurrentFloor().getPassengers()) {
                     PassengerMovement passengerMovement = passenger.getPassengerMovement();
 
                     // Only move if the passenger is not waiting
@@ -444,9 +450,9 @@ public class Controller {
                     }
 
                     // Check if the passenger is at its goal
-                    if (Main.FLOOR.checkGoal(passenger)) {
+                    if (Main.simulator.getCurrentFloor().checkGoal(passenger)) {
                         // Check if the goal the passenger is on allows this passenger to pass
-                        if (Main.FLOOR.checkPass(passenger, trainDoorsOpenButton.isSelected())) {
+                        if (Main.simulator.getCurrentFloor().checkPass(passenger, trainDoorsOpenButton.isSelected())) {
                             // TODO: Take into account other states other than transacting
                             // Restore the status and action of the passenger
                             passengerMovement.setState(PassengerMovement.State.WALKING);
@@ -483,7 +489,7 @@ public class Controller {
                     removedPassenger.getPassengerMovement().getCurrentPatch().getPassengers().remove(removedPassenger);
 
                     // Remove the passenger from the passengers list
-                    Main.FLOOR.getPassengers().remove(removedPassenger);
+                    Main.simulator.getCurrentFloor().getPassengers().remove(removedPassenger);
 
                     this.numAgents--;
                 }
@@ -510,11 +516,11 @@ public class Controller {
         Passenger passenger = new Passenger(
                 start.getPatchCenterCoordinates().getX(),
                 start.getPatchCenterCoordinates().getY(),
-                Main.FLOOR.getNumGoals()
+                Main.simulator.getCurrentFloor().getNumGoals()
         );
 
         // Add the newly created passenger to the list of passengers
-        Main.FLOOR.getPassengers().add(passenger);
+        Main.simulator.getCurrentFloor().getPassengers().add(passenger);
 
         // Increment the current number of passengers
         this.numAgents++;
@@ -548,11 +554,11 @@ public class Controller {
                 }
             });
 
-            Rectangle[][] rectangles = new Rectangle[Main.FLOOR.getRows()][Main.FLOOR.getColumns()];
+            Rectangle[][] rectangles = new Rectangle[Main.simulator.getCurrentFloor().getRows()][Main.simulator.getCurrentFloor().getColumns()];
 
             // Draw listeners for each patch
-            for (int row = 0; row < Main.FLOOR.getRows(); row++) {
-                for (int column = 0; column < Main.FLOOR.getColumns(); column++) {
+            for (int row = 0; row < Main.simulator.getCurrentFloor().getRows(); row++) {
+                for (int column = 0; column < Main.simulator.getCurrentFloor().getColumns(); column++) {
                     rectangles[row][column]
                             = new Rectangle(column * tileSize, row * tileSize, tileSize, tileSize);
 
@@ -588,7 +594,7 @@ public class Controller {
 
                                     break;
                                 case RIGHT:
-                                    if (columnCopy + 1 < Main.FLOOR.getColumns()) {
+                                    if (columnCopy + 1 < Main.simulator.getCurrentFloor().getColumns()) {
                                         extraRectangle = rectangles[rowCopy][columnCopy + 1];
                                         extraRectangle.setOpacity(1.0);
                                         extraRectangle.setFill(Color.LIGHTGRAY);
@@ -601,7 +607,7 @@ public class Controller {
 
                                     break;
                                 case DOWN:
-                                    if (rowCopy + 1 < Main.FLOOR.getRows()) {
+                                    if (rowCopy + 1 < Main.simulator.getCurrentFloor().getRows()) {
                                         extraRectangle = rectangles[rowCopy + 1][columnCopy];
                                         extraRectangle.setOpacity(1.0);
                                         extraRectangle.setFill(Color.LIGHTGRAY);
@@ -651,7 +657,7 @@ public class Controller {
 
                         switch (drawState) {
                             case SPAWN:
-                                Main.FLOOR.setType(patchRow, patchColumn, Patch.Type.SPAWN, this.sequence);
+                                Main.simulator.getCurrentFloor().setType(patchRow, patchColumn, Patch.Type.SPAWN, this.sequence);
 
                                 break;
                             case CHECKPOINT:
@@ -660,14 +666,14 @@ public class Controller {
                                     extraPatchColumn = (int) previousExtraRectangle.getProperties().get("column");
 
                                     // TODO: There are more types that ticket booths
-                                    Main.FLOOR.setType(
+                                    Main.simulator.getCurrentFloor().setType(
                                             patchRow,
                                             patchColumn,
                                             Patch.Type.TICKET_BOOTH,
                                             this.sequence
                                     );
 
-                                    Main.FLOOR.setType(
+                                    Main.simulator.getCurrentFloor().setType(
                                             extraPatchRow,
                                             extraPatchColumn,
                                             Patch.Type.TRANSACTION_AREA,
@@ -677,31 +683,31 @@ public class Controller {
 
                                 break;
                             case DESPAWN:
-                                Main.FLOOR.setType(patchRow, patchColumn, Patch.Type.DESPAWN, this.sequence);
+                                Main.simulator.getCurrentFloor().setType(patchRow, patchColumn, Patch.Type.DESPAWN, this.sequence);
 
                                 break;
                             case OBSTACLE:
-                                Main.FLOOR.setType(patchRow, patchColumn, Patch.Type.OBSTACLE, this.sequence);
+                                Main.simulator.getCurrentFloor().setType(patchRow, patchColumn, Patch.Type.OBSTACLE, this.sequence);
 
                                 break;
                             case FLOOR_FIELDS:
                                 // TODO: Consider other floor fields
                                 // TODO: There should only be one apex patch
-                                Patch patch = Main.FLOOR.getPatch(patchRow, patchColumn);
+                                Patch patch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
 
                                 PassengerMovement.State state
                                         = matchState(drawChoiceBox.getSelectionModel().getSelectedItem());
 
-                                Patch goal = Main.FLOOR.getGoalFromGoalId(
+                                Patch goal = Main.simulator.getCurrentFloor().getGoalFromGoalId(
                                         targetChoiceBox.getSelectionModel().getSelectedItem()
                                 );
 
-                                Main.FLOOR.setType(patchRow, patchColumn, Patch.Type.CLEAR, this.sequence);
+                                Main.simulator.getCurrentFloor().setType(patchRow, patchColumn, Patch.Type.CLEAR, this.sequence);
 
                                 assert state != null;
 
                                 // Make sure that there will only be one apex patch
-                                Main.FLOOR.setFloorField(
+                                Main.simulator.getCurrentFloor().setFloorField(
                                         patch,
                                         state,
                                         goal,
@@ -741,9 +747,9 @@ public class Controller {
 
             boolean isGateOrExit = false;
 
-            for (int row = 0; row < Main.FLOOR.getRows(); row++) {
-                for (int column = 0; column < Main.FLOOR.getColumns(); column++) {
-                    Patch patch = Main.FLOOR.getPatch(row, column);
+            for (int row = 0; row < Main.simulator.getCurrentFloor().getRows(); row++) {
+                for (int column = 0; column < Main.simulator.getCurrentFloor().getColumns(); column++) {
+                    Patch patch = Main.simulator.getCurrentFloor().getPatch(row, column);
 
                     switch (patch.getType()) {
                         case CLEAR:
@@ -769,7 +775,7 @@ public class Controller {
                                     color = Color.WHITE;
                                 } else {
                                     color = Color.hsb(120.0,
-                                            floorField / Main.FLOOR.getMaximumFloorFieldValue(state),
+                                            floorField / Main.simulator.getCurrentFloor().getMaximumFloorFieldValue(state),
                                             1.0
                                     );
                                 }
@@ -838,7 +844,7 @@ public class Controller {
             // Draw passengers, if any
             final double passengerDiameter = tileSize * 0.5;
 
-            for (Passenger passenger : Main.FLOOR.getPassengers()) {
+            for (Passenger passenger : Main.simulator.getCurrentFloor().getPassengers()) {
                 // TODO: Add switch to enable random colors
                 switch (passenger.getPassengerMovement().getAction()) {
                     case WILL_QUEUE:
@@ -874,7 +880,7 @@ public class Controller {
                 if (modeIndex == 0) {
                     // Draw starts
                     stepButton.setDisable(true);
-                    nextButton.setDisable(Main.FLOOR.getStarts().size() == 0);
+                    nextButton.setDisable(Main.simulator.getCurrentFloor().getStarts().size() == 0);
 
                     floorFieldChoiceBox.setDisable(true);
                     targetChoiceBox.setDisable(true);
@@ -882,7 +888,7 @@ public class Controller {
                 } else if (modeIndex == 1) {
                     // Draw gates
                     // Do not let the user go to the next step or mode if no gates have been added yet for this step
-                    if (sequence == Main.FLOOR.getGoals().size()) {
+                    if (sequence == Main.simulator.getCurrentFloor().getGoals().size()) {
                         stepButton.setDisable(true);
                         nextButton.setDisable(true);
 
@@ -900,7 +906,7 @@ public class Controller {
                 } else if (modeIndex == 2) {
                     // Draw goals
                     // Do not let the user go to the next step or mode if no goals have been added yet for this stop
-                    nextButton.setDisable(sequence == Main.FLOOR.getGoals().size());
+                    nextButton.setDisable(sequence == Main.simulator.getCurrentFloor().getGoals().size());
                     stepButton.setDisable(true);
 
                     floorFieldChoiceBox.setDisable(true);
@@ -925,7 +931,7 @@ public class Controller {
                         drawChoiceBox.setDisable(false);
 
                         // Add to the targets choice box
-                        List<Patch> flattenedGoals = Main.FLOOR.getGoalsFlattened();
+                        List<Patch> flattenedGoals = Main.simulator.getCurrentFloor().getGoalsFlattened();
 
                         List<String> flattenedGoalIds = new ArrayList<>();
 
@@ -944,8 +950,8 @@ public class Controller {
             boolean enableStart = true;
 
             // Check whether all goals have floor fields attached to them
-            if (!Main.FLOOR.getGoalsFlattened().isEmpty()) {
-                for (Patch goal : Main.FLOOR.getGoalsFlattened()) {
+            if (!Main.simulator.getCurrentFloor().getGoalsFlattened().isEmpty()) {
+                for (Patch goal : Main.simulator.getCurrentFloor().getGoalsFlattened()) {
                     if (goal.getAssociatedPatches().isEmpty()) {
                         enableStart = false;
 

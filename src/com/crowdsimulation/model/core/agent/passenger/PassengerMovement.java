@@ -1,4 +1,10 @@
-package sample;
+package com.crowdsimulation.model.core.agent.passenger;
+
+import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.model.core.environment.station.Floor;
+import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
+import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 
 import java.util.*;
 
@@ -37,7 +43,7 @@ public class PassengerMovement {
         this.walkingDistance = 0.6;
 
         // Add this passenger to the start patch
-        this.currentPatch = Main.FLOOR.getPatch((int) y, (int) x);
+        this.currentPatch = Main.simulator.getCurrentFloor().getPatch((int) y, (int) x);
         currentPatch.getPassengers().add(parent);
 
         // Assign the initial state and action of this passenger
@@ -56,7 +62,7 @@ public class PassengerMovement {
         double y = coordinates.getY();
 
         // Take note of the passenger's new patch
-        Patch newPatch = Main.FLOOR.getPatch((int) y, (int) x);
+        Patch newPatch = Main.simulator.getCurrentFloor().getPatch((int) y, (int) x);
 
         // If the current and new patches are different, it means the passenger has moved patches, and both patches
         // should take that into account
@@ -145,7 +151,7 @@ public class PassengerMovement {
         int passengersQueueing;
         double score;
 
-        for (Patch goal : Main.FLOOR.getGoalsAtSequence(goalsReached)) {
+        for (Patch goal : Main.simulator.getCurrentFloor().getGoalsAtSequence(goalsReached)) {
             distance = Coordinates.distance(this.position, goal.getPatchCenterCoordinates());
             passengersQueueing = goal.getPassengersQueueing().size();
 
@@ -194,14 +200,14 @@ public class PassengerMovement {
             // If they are, adjust them such that they stay within bounds
             if (newX < 0) {
                 newX = 0.0;
-            } else if (newX > Main.FLOOR.getColumns() - 1) {
-                newX = Main.FLOOR.getColumns() - 0.99;
+            } else if (newX > Main.simulator.getCurrentFloor().getColumns() - 1) {
+                newX = Main.simulator.getCurrentFloor().getColumns() - 0.5;
             }
 
             if (newY < 0) {
                 newY = 0.0;
-            } else if (newY > Main.FLOOR.getRows() - 1) {
-                newY = Main.FLOOR.getRows() - 0.99;
+            } else if (newY > Main.simulator.getCurrentFloor().getRows() - 1) {
+                newY = Main.simulator.getCurrentFloor().getRows() - 0.5;
             }
 
             // Then set the position of this passenger to the new coordinates

@@ -1,4 +1,4 @@
-package sample;
+package com.crowdsimulation.model.core.environment.station.utility;
 
 import java.util.Objects;
 
