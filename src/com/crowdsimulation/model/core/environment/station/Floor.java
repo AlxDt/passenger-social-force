@@ -2,9 +2,8 @@ package com.crowdsimulation.model.core.environment.station;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
-import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
 
@@ -21,20 +20,25 @@ public class Floor extends BaseStation {
     // The row x column containing the patches which constitute this floor
     private final Patch[][] patches;
 
-    private final List<Patch> starts;
+    // Amenity lists
+    private final List<StationGate> stationGates;
+
+/*    private final List<Patch> starts;
     private final List<List<Patch>> goals;
     private final List<Patch> obstacles;
-    private final List<Passenger> passengers;
+    private final List<Passenger> passengers;*/
 
     public Floor(int rows, int columns) {
         this.rows = rows;
         this.columns = columns;
 
-        // Initialize region
+        // Initialize the patches
         this.patches = new Patch[rows][columns];
-        this.initializeRegion();
+        this.initializePatches();
 
-        // Initialize empty start and end patches
+        // Initialize the amenity lists
+        this.stationGates = new ArrayList<>();
+/*        // Initialize empty start and end patches
         this.starts = new ArrayList<>();
         this.goals = new ArrayList<>();
 
@@ -42,17 +46,17 @@ public class Floor extends BaseStation {
         this.obstacles = new ArrayList<>();
 
         // Initialize the passenger list
-        this.passengers = new ArrayList<>();
+        this.passengers = new ArrayList<>();*/
     }
 
-    private void initializeRegion() {
+    private void initializePatches() {
         MatrixPosition matrixPosition;
 
         for (int row = 0; row < rows; row++) {
             for (int column = 0; column < columns; column++) {
                 matrixPosition = new MatrixPosition(row, column);
 
-                patches[row][column] = new Patch(matrixPosition, Patch.Type.CLEAR);
+                patches[row][column] = new Patch(matrixPosition);
             }
         }
     }
@@ -63,10 +67,6 @@ public class Floor extends BaseStation {
 
     public int getColumns() {
         return columns;
-    }
-
-    public List<Patch> getStarts() {
-        return starts;
     }
 
     public Patch getPatch(Coordinates coordinates) {
@@ -142,11 +142,15 @@ public class Floor extends BaseStation {
         return patchesToExplore;
     }
 
-    public int getNumGoals() {
-        return this.goals.size();
+    public List<StationGate> getStationGates() {
+        return stationGates;
     }
 
-    public void setType(int row, int column, Patch.Type type, int sequence) {
+    /*public int getNumGoals() {
+        return this.goals.size();
+    }*/
+
+/*    public void setType(int row, int column, Patch.Type type, int sequence) {
         Patch patch = patches[row][column];
 
         int index = -1;
@@ -177,13 +181,9 @@ public class Floor extends BaseStation {
             // Change the state
             patch.setType(type, sequence, index);
         }
-    }
+    }*/
 
-    public List<Passenger> getPassengers() {
-        return passengers;
-    }
-
-    public void setFloorField(
+/*    public void setFloorField(
             Patch patch,
             PassengerMovement.State state,
             Patch associatedGoal,
@@ -219,9 +219,9 @@ public class Floor extends BaseStation {
 //                = new FloorField(patch.getFloorFields().get(state).getValue() + 1.0, association);
 //
 //        patch.getFloorFields().put(state, newFloorField);
-    }
+    }*/
 
-    public double getMaximumFloorFieldValue(PassengerMovement.State state) {
+/*    public double getMaximumFloorFieldValue(PassengerMovement.State state) {
         // Get the maximum floor field value for the chosen state
         double maximumFloorField = 0.0;
 
@@ -238,9 +238,9 @@ public class Floor extends BaseStation {
         }
 
         return maximumFloorField;
-    }
+    }*/
 
-    public boolean checkGoal(Passenger passenger) {
+/*    public boolean checkGoal(Passenger passenger) {
         // Get its goal
         Patch goal = passenger.getPassengerMovement().getGoal();
 
@@ -248,9 +248,9 @@ public class Floor extends BaseStation {
         return passenger.getPassengerMovement().getAction() == PassengerMovement.Action.TRANSACTING
                 && (int) passenger.getPassengerMovement().getPosition().getX() == goal.getMatrixPosition().getColumn()
                 && (int) passenger.getPassengerMovement().getPosition().getY() == goal.getMatrixPosition().getRow();
-    }
+    }*/
 
-    public boolean checkPass(Passenger passenger, boolean trainDoorsOpen) {
+/*    public boolean checkPass(Passenger passenger, boolean trainDoorsOpen) {
         // Get its goal
 //        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
         Patch goal = passenger.getPassengerMovement().getGoal();
@@ -270,9 +270,9 @@ public class Floor extends BaseStation {
         }
 
         return true;
-    }
+    }*/
 
-    public List<Patch> getGoalsAtSequence(int sequence) {
+/*    public List<Patch> getGoalsAtSequence(int sequence) {
         return goals.get(sequence);
     }
 
@@ -297,5 +297,5 @@ public class Floor extends BaseStation {
         int index = Integer.parseInt(split[1]);
 
         return this.goals.get(sequence).get(index);
-    }
+    }*/
 }

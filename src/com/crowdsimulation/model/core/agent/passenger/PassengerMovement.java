@@ -1,15 +1,7 @@
 package com.crowdsimulation.model.core.agent.passenger;
 
-import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.model.core.environment.station.Floor;
-import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
-import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
-
-import java.util.*;
-
 public class PassengerMovement {
-    private final Passenger parent;
+/*    private final Passenger parent;
     private final double walkingDistance;
     private final Coordinates position;
     private double heading;
@@ -21,6 +13,8 @@ public class PassengerMovement {
     private State state;
     private Action action;
     private boolean stateChanged;
+
+    // TODO: Denote whether this passenger has a SJ or SV
 
     public PassengerMovement(Passenger parent, double x, double y, int numGoals) {
         this.parent = parent;
@@ -716,7 +710,7 @@ public class PassengerMovement {
         }
 
         return chosenPatch;
-    }
+    }*/
 
     public enum State {
         WALKING,

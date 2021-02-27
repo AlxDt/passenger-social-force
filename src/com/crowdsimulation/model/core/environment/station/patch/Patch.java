@@ -3,16 +3,16 @@ package com.crowdsimulation.model.core.environment.station.patch;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.BaseStation;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
 
 import java.util.*;
 
 public class Patch extends BaseStation {
-    // TODO: Make entry waiting time adjustable based on UI sliders
-    public static final int ENTRY_WAITING_TIME = 10;
+/*    // TODO: Make entry waiting time adjustable based on UI sliders
+    public static final int ENTRY_WAITING_TIME = 10;*/
 
     // Denotes the position of this patch based on a discrete row x column matrix
     private final MatrixPosition matrixPosition;
@@ -23,16 +23,13 @@ public class Patch extends BaseStation {
     // Denotes the list of passengers that are currently on this patch
     private final List<Passenger> passengers;
 
-    ////
-
     // Denotes the amenity present on this patch
-    private PatchObject patchObject;
+    private Amenity amenity;
 
-    // Denotes layers of floor fields that this patch has
-    // Each layer corresponds to a goal
-    private final Map<PassengerMovement.State, FloorField> floorFieldValues;
+    // Denotes the individual floor field value of this patch, given the queueable goal patch and the desired state
+    private final Map<Queueable, Map<PassengerMovement.State, Double>> values;
 
-    private boolean obstacle;
+/*    private boolean obstacle;
 
     private ArrayDeque<Passenger> passengersQueueing;
     private Passenger passengerTransacting;
@@ -41,10 +38,19 @@ public class Patch extends BaseStation {
     private Type type;
     private int waitingTime;
     private final Integer sequence;
-    private final Integer index;
+    private final Integer index;*/
 
-    public Patch(MatrixPosition matrixPosition, Type type) {
+    public Patch(MatrixPosition matrixPosition/*, Type type*/) {
+        super();
+
         this.matrixPosition = matrixPosition;
+        this.patchCenterCoordinates = Coordinates.patchCenterCoordinates(this);
+
+        this.passengers = new ArrayList<>();
+        this.amenity = null;
+        this.values = new HashMap<>();
+
+/*        this.matrixPosition = matrixPosition;
         this.type = type;
         this.passengers = new ArrayList<>();
 
@@ -55,7 +61,6 @@ public class Patch extends BaseStation {
 
         this.floorFieldValues = new HashMap<>();
 
-        // TODO: Add all available statuses to all floor fields, not just queueing
         this.floorFieldValues.put(PassengerMovement.State.IN_QUEUE, new FloorField());
 
         this.obstacle = false;
@@ -65,7 +70,7 @@ public class Patch extends BaseStation {
         this.patchCenterCoordinates = Coordinates.patchCenterCoordinates(this);
 
         this.sequence = null;
-        this.index = null;
+        this.index = null;*/
     }
 
     public MatrixPosition getMatrixPosition() {
@@ -76,7 +81,7 @@ public class Patch extends BaseStation {
         return patchCenterCoordinates;
     }
 
-    public boolean isObstacle() {
+/*    public boolean isObstacle() {
         return obstacle;
     }
 
@@ -100,13 +105,13 @@ public class Patch extends BaseStation {
         } else if (type == Type.TICKET_BOOTH || type == Type.OBSTACLE) {
             this.obstacle = true;
         }
-    }
+    }*/
 
     public List<Passenger> getPassengers() {
         return passengers;
     }
 
-    public ArrayDeque<Passenger> getPassengersQueueing() {
+/*    public ArrayDeque<Passenger> getPassengersQueueing() {
         return passengersQueueing;
     }
 
@@ -144,14 +149,14 @@ public class Patch extends BaseStation {
 
     public Integer getIndex() {
         return index;
+    }*/
+
+    public Amenity getAmenity() {
+        return amenity;
     }
 
-    public PatchObject getPatchObject() {
-        return patchObject;
-    }
-
-    public void setPatchObject(PatchObject patchObject) {
-        this.patchObject = patchObject;
+    public void setAmenity(Amenity amenity) {
+        this.amenity = amenity;
     }
 
     @Override
@@ -159,16 +164,14 @@ public class Patch extends BaseStation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Patch patch = (Patch) o;
-        return matrixPosition.equals(patch.matrixPosition) &&
-                type == patch.type;
+        return matrixPosition.equals(patch.matrixPosition);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(matrixPosition, type);
+        return Objects.hash(matrixPosition);
     }
-
-    public enum Type {
+/*    public enum Type {
         CLEAR,
         SPAWN,
         SECURITY_ENTRANCE,
@@ -177,5 +180,5 @@ public class Patch extends BaseStation {
         TRANSACTION_AREA,
         DESPAWN,
         OBSTACLE;
-    }
+    }*/
 }

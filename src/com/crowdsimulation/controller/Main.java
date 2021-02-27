@@ -9,13 +9,13 @@ import javafx.scene.Parent;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-    // Stores the simulator object in charge ofall the simulation processes
+    // Stores the simulator object in charge of all the simulation processes
     public static Simulator simulator = null;
 
     // Keep a reference to the main controller
     public static MainScreenController mainScreenController;
 
-    public static final int DELAY_IN_MS = 50;
+//    public static final int DELAY_IN_MS = 50;
 
     public static void main(String[] args) {
         launch(args);
@@ -39,7 +39,7 @@ public class Main extends Application {
         MainScreenController mainController = loader.getController();
         mainController.showWindow(
                 root,
-                "Station creator and simulator",
+                "Station editor",
                 false);
 
         Main.mainScreenController = mainController;

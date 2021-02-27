@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0"
+            prefWidth="1160.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.crowdsimulation.controller.screen.main.MainScreenControllerOld">
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="780.0" spacing="15.0" BorderPane.alignment="CENTER">
+            <children>
+                <Label fx:id="floorFieldValueLabel" prefHeight="17.0" prefWidth="111.0" text="Floor field value: "/>
+                <Slider fx:id="floorFieldValueSlider" blockIncrement="0.01" majorTickUnit="0.3" max="1.0" min="0.1"
+                        minorTickCount="2" prefHeight="38.0" prefWidth="140.0" showTickLabels="true"
+                        showTickMarks="true" snapToTicks="true" value="1.0"/>
+                <Label fx:id="stateLabel" text="View floor field:"/>
+                <ChoiceBox fx:id="floorFieldChoiceBox" prefHeight="25.0" prefWidth="99.0">
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </ChoiceBox>
+                <Label fx:id="targetLabel" text="Target goal:"/>
+                <ChoiceBox fx:id="targetChoiceBox" prefHeight="25.0" prefWidth="100.0"/>
+                <Label fx:id="drawLabel" prefHeight="17.0" prefWidth="38.0" text="Draw:"/>
+                <ChoiceBox fx:id="drawChoiceBox" prefHeight="25.0" prefWidth="100.0"/>
+                <Button fx:id="stepButton" defaultButton="true" disable="true" layoutX="407.0" layoutY="13.0"
+                        mnemonicParsing="false" onAction="#step" prefHeight="25.0" prefWidth="68.0" text="Next step"/>
+                <Button fx:id="nextButton" defaultButton="true" disable="true" mnemonicParsing="false" onAction="#next"
+                        prefHeight="25.0" prefWidth="83.0" text="Next mode"/>
+                <Button fx:id="startButton" defaultButton="true" disable="true" layoutX="470.0" layoutY="13.0"
+                        mnemonicParsing="false" onAction="#play" prefHeight="25.0" prefWidth="97.0" text="Start"/>
+            </children>
+            <BorderPane.margin>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+            </BorderPane.margin>
+        </HBox>
+    </bottom>
+    <center>
+        <StackPane fx:id="stackPane" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <children>
+                <Canvas fx:id="canvas" height="600.0" width="1060.0"/>
+                <Pane fx:id="overlay" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+                      minWidth="-Infinity" prefHeight="600.0" prefWidth="1060.0"/>
+            </children>
+        </StackPane>
+    </center>
+    <top>
+        <HBox alignment="CENTER" prefHeight="50.0" prefWidth="600.0" spacing="20.0" BorderPane.alignment="CENTER">
+            <children>
+                <Button fx:id="loadButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="100.0" text="Load"/>
+                <Button fx:id="saveButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="100.0" text="Save">
+                    <HBox.margin>
+                        <Insets/>
+                    </HBox.margin>
+                </Button>
+                <Text fx:id="promptText" strokeType="OUTSIDE" strokeWidth="0.0" text="Drawing..." textAlignment="CENTER"
+                      wrappingWidth="86.13671875"/>
+                <ToggleButton fx:id="spawnButton" disable="true" mnemonicParsing="false" text="Spawn passengers"/>
+                <ToggleButton fx:id="trainDoorsOpenButton" disable="true" mnemonicParsing="false"
+                              text="Train doors open"/>
+            </children>
+        </HBox>
+    </top>
+</BorderPane>

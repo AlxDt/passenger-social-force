@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Station extends BaseStation implements Environment {
+    // Denotes the dimensions of this station
     public static final int ROWS = 60;
     public static final int COLUMNS = 106;
 
@@ -15,9 +16,10 @@ public class Station extends BaseStation implements Environment {
     // Each station contains a list of floors
     private final List<Floor> floors;
 
+    // TODO: Revise temporary constructor
     public Station() {
         // TODO: Load station from file
-        this.name = null;
+        this.name = "Test station";
         this.floors = new ArrayList<>();
 
         // TODO: Remove ad-hoc adding when implementation is made to load from file

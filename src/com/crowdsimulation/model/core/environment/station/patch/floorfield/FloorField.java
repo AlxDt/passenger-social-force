@@ -3,26 +3,27 @@ package com.crowdsimulation.model.core.environment.station.patch.floorfield;
 import com.crowdsimulation.model.core.environment.station.BaseStation;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FloorField extends BaseStation {
-    private double value;
-    private Patch goal;
-    private Patch apex;
+// A floor field is a group of patches with values from 0.0 to 1.0 corresponding to a state
+public abstract class FloorField extends BaseStation {
+    // Denotes the patches contained in this floor field
+    private final List<Patch> associatedPatches;
+
+    /*    private double value;*/
 
     public FloorField() {
-        this.value = 0.0;
+        super();
+
+        /*//        this.value = 0.0;*/
+        this.associatedPatches = new ArrayList<>();
+/*
         this.goal = null;
-        this.apex = null;
+        this.apex = null;*/
     }
 
-    public FloorField(double value, Patch goal) {
-        this.value = value;
-        this.goal = goal;
-        this.apex = null;
-    }
-
-    public double getValue() {
+/*    public double getValue() {
         return value;
     }
 
@@ -36,17 +37,38 @@ public class FloorField extends BaseStation {
 
     public void setGoal(Patch goal) {
         this.goal = goal;
+    }*/
+
+/*    public FloorField(Queueable goal, Patch apex) {
+        super();
+
+        this.associatedPatches = new ArrayList<>();
+
+        this.goal = goal;
+        this.apex = apex;
+    }*/
+
+    public List<Patch> getAssociatedPatches() {
+        return associatedPatches;
     }
 
-    public Patch getApex() {
+/*    public Patch getApex() {
         return apex;
+    }
+
+    public Queueable getGoal() {
+        return goal;
     }
 
     public void setApex(Patch apex) {
         this.apex = apex;
     }
 
-    @Override
+    public void setGoal(Queueable goal) {
+        this.goal = goal;
+    }*/
+
+/*    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -58,5 +80,7 @@ public class FloorField extends BaseStation {
     @Override
     public int hashCode() {
         return Objects.hash(value, goal);
-    }
+    }*/
+
+
 }
