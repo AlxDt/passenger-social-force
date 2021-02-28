@@ -127,6 +127,15 @@ public class UIInitializer {
         stationGateBuildModeChoiceBox.setItems(BUILD_MODE_CHOICEBOX_ITEMS);
         stationGateBuildModeChoiceBox.getSelectionModel().select(0);
 
+        boolean evaluateClassEquality = Main.simulator.getCurrentAmenity().isNotNull().get();
+
+        stationGateBuildModeChoiceBox.setOnAction(event -> {
+            Simulator.BuildState newBuildState = stationGateBuildModeChoiceBox.getSelectionModel().getSelectedItem();
+            Main.simulator.setBuildState(newBuildState);
+
+            Main.mainScreenController.checkEnableStationGateControls();
+        });
+
         stationGateModeLabel.setLabelFor(stationGateModeChoiceBox);
 
         stationGateModeChoiceBox.setItems(FXCollections.observableArrayList(
@@ -136,18 +145,6 @@ public class UIInitializer {
         ));
         stationGateModeChoiceBox.getSelectionModel().select(0);
 
-        stationGateBuildModeChoiceBox.setOnAction(event -> {
-            Simulator.BuildState newBuildState = stationGateBuildModeChoiceBox.getSelectionModel().getSelectedItem();
-            Main.simulator.setBuildState(newBuildState);
-
-            /*Main.simulator.setCurrentAmenity(null);
-            Main.simulator.setCurrentClass(null);*/
-
-            if (newBuildState != Simulator.BuildState.EDITING_ONE) {
-                Main.mainScreenController.setEnableStationGateControls(true);
-            }
-        });
-
         stationGateSpawnLabel.setLabelFor(stationGateSpinner);
 
         stationGateSpinner.setValueFactory(
@@ -156,8 +153,6 @@ public class UIInitializer {
                         100,
                         50)
         );
-
-        boolean evaluateClassEquality = Main.simulator.getCurrentAmenity().isNotNull().get();
 
         // Disable when drawing or ((current amenity is null or current amenity is of the wrong type)
         // and not in the edit all mode)
@@ -206,6 +201,8 @@ public class UIInitializer {
         securityBuildModeChoiceBox.setOnAction(event -> {
             Simulator.BuildState newBuildState = securityBuildModeChoiceBox.getSelectionModel().getSelectedItem();
             Main.simulator.setBuildState(newBuildState);
+
+            Main.mainScreenController.checkEnableSecurityControls();
         });
 
         securityIntervalLabel.setLabelFor(securityIntervalSpinner);
@@ -217,12 +214,37 @@ public class UIInitializer {
                         5)
         );
 
-        deleteSecurityButton.disableProperty().bind(
-                Bindings.equal(
-                        Main.simulator.getOperationMode(),
-                        Simulator.OperationMode.TESTING
-                )
-        );
+        boolean evaluateClassEquality = Main.simulator.getCurrentAmenity().isNotNull().get();
+
+        // Disable when drawing or ((current amenity is null or current amenity is of the wrong type)
+        // and not in the edit all mode)
+        BooleanBinding bindingValue =
+                Bindings.or(
+                        Bindings.equal(
+                                Main.simulator.getBuildState(),
+                                Simulator.BuildState.DRAWING
+                        ),
+                        Bindings.and(
+                                Bindings.or(
+                                        Bindings.isNull(
+                                                Main.simulator.getCurrentAmenity()
+                                        ),
+                                        (evaluateClassEquality) ?
+                                                Bindings.equal(
+                                                        Main.simulator.getCurrentAmenity().get().getClass(),
+                                                        Main.simulator.getCurrentClass()
+                                                ) :
+                                                Bindings.createBooleanBinding(() -> false)
+                                ),
+                                Bindings.notEqual(
+                                        Main.simulator.getBuildState(),
+                                        Simulator.BuildState.EDITING_ALL
+                                )
+                        )
+                );
+
+        saveSecurityButton.disableProperty().bind(bindingValue);
+        deleteSecurityButton.disableProperty().bind(bindingValue);
     }
 
     // Iterate through each build subtab to set the listeners for the changing of build categories and subcategories

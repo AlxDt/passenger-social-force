@@ -211,7 +211,7 @@ public class GraphicsController extends Controller {
                     Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
 
                     // Set the amenity on the patch as the current amenity of the simulation
-                    Main.simulator.getCurrentAmenity().set(currentPatch.getAmenity());
+                    Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
 
                     // Then get the amenity which may be in that patch
                     Amenity patchAmenity = currentPatch.getAmenity();

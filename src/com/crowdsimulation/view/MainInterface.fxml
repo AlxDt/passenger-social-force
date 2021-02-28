@@ -154,7 +154,7 @@
                                                       <ChoiceBox fx:id="securityBuildModeChoiceBox" prefHeight="25.0" prefWidth="200.0" />
                                                       <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                          <children>
-                                                            <CheckBox fx:id="securityEnableCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" text="Enable security gate" />
+                                                            <CheckBox fx:id="securityEnableCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" selected="true" text="Enable security gate" />
                                                          </children>
                                                       </HBox>
                                                       <HBox alignment="CENTER" layoutX="10.0" layoutY="167.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
@@ -168,7 +168,8 @@
                                                             <Spinner fx:id="securityIntervalSpinner" prefHeight="25.0" prefWidth="132.0" />
                                                          </children>
                                                       </HBox>
-                                                      <Button fx:id="deleteSecurityButton" cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                      <Button fx:id="saveSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#saveSecurityAction" prefHeight="25.0" prefWidth="200.0" text="Save" />
+                                                      <Button fx:id="deleteSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteSecurityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
                                                    </children>
                                                 </VBox>
                                              </children>

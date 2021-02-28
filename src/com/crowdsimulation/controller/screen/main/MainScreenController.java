@@ -93,6 +93,9 @@ public class MainScreenController extends ScreenController {
     private Spinner<Integer> securityIntervalSpinner;
 
     @FXML
+    private Button saveSecurityButton;
+
+    @FXML
     private Button deleteSecurityButton;
 
     // Test tab variables
@@ -120,7 +123,7 @@ public class MainScreenController extends ScreenController {
                 securityBlockPassengerCheckBox,
                 securityIntervalLabel,
                 securityIntervalSpinner,
-                null,
+                saveSecurityButton,
                 deleteSecurityButton,
                 buildTabPane
         );
@@ -183,6 +186,7 @@ public class MainScreenController extends ScreenController {
     }
 
     @FXML
+    // Remove a station gate
     public void deleteStationGateAction() {
         // Remove just one station gate
         if (Main.simulator.getBuildState().get() == Simulator.BuildState.EDITING_ONE) {
@@ -202,6 +206,77 @@ public class MainScreenController extends ScreenController {
 
             // Clear the list of station gates in this floor
             Main.simulator.getCurrentFloor().getStationGates().clear();
+        }
+
+        // Hence, the simulator won't have this amenity anymore
+        Main.simulator.setCurrentAmenity(null);
+        Main.simulator.setCurrentClass(null);
+
+        // Redraw controls
+        checkEnableStationGateControls();
+
+        // Redraw the interface
+        drawInterface(Main.simulator.getCurrentFloor(), false);
+    }
+
+    @FXML
+    // Edit security
+    public void saveSecurityAction() {
+        // Edit just one station gate
+        if (Main.simulator.getBuildState().get() == Simulator.BuildState.EDITING_ONE) {
+            Security securityToEdit
+                    = (Security) Main.simulator.getCurrentAmenity().get();
+
+            securityToEdit.setEnabled(
+                    securityEnableCheckBox.isSelected()
+            );
+
+            securityToEdit.setBlockEntry(
+                    securityBlockPassengerCheckBox.isSelected()
+            );
+
+            securityToEdit.setWaitingTime(
+                    securityIntervalSpinner.getValue()
+            );
+        } else {
+            // Edit all station gates
+            for (Security security : Main.simulator.getCurrentFloor().getSecurities()) {
+                security.setEnabled(
+                        securityEnableCheckBox.isSelected()
+                );
+
+                security.setBlockEntry(
+                        securityBlockPassengerCheckBox.isSelected()
+                );
+
+                security.setWaitingTime(
+                        securityIntervalSpinner.getValue()
+                );
+            }
+        }
+    }
+
+    @FXML
+    // Remove security
+    public void deleteSecurityAction() {
+        // Remove just one security
+        if (Main.simulator.getBuildState().get() == Simulator.BuildState.EDITING_ONE) {
+            // Delete this amenity from the patch that contains it
+            Main.simulator.getCurrentAmenity().get().getPatch().setAmenity(null);
+
+            // Also delete this amenity from the list of station gates in this floor
+            Main.simulator.getCurrentFloor().getSecurities().remove(
+                    Main.simulator.getCurrentAmenity().get()
+            );
+        } else {
+            // Remove all securities
+            for (Security security : Main.simulator.getCurrentFloor().getSecurities()) {
+                // Delete this amenity from the patch that contains it
+                security.getPatch().setAmenity(null);
+            }
+
+            // Clear the list of securities in this floor
+            Main.simulator.getCurrentFloor().getSecurities().clear();
         }
 
         // Hence, the simulator won't have this amenity anymore
@@ -358,8 +433,6 @@ public class MainScreenController extends ScreenController {
 
                             switch (buildState) {
                                 case DRAWING:
-                                    setEnableStationGateControls(true);
-
                                     // Only add if the current patch doesn't already have an amenity
                                     if (Main.simulator.getCurrentAmenity().isNull().get()) {
                                         // Prepare the amenity that will be placed on the station
@@ -383,10 +456,10 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
+                                    Main.mainScreenController.checkEnableStationGateControls();
+
                                     // Only edit if there is already a station gate on that patch
                                     if (Main.simulator.getCurrentAmenity().get() instanceof StationGate) {
-                                        setEnableStationGateControls(true);
-
                                         StationGate stationGateToEdit
                                                 = (StationGate) Main.simulator.getCurrentAmenity().get();
 
@@ -402,15 +475,19 @@ public class MainScreenController extends ScreenController {
                                                 stationGateToEdit.getStationGateMode()
                                         );
                                     } else {
-                                        setEnableStationGateControls(false);
+                                        // If there is no amenity there, just do nothing
+                                        if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                            // If clicked on an existing amenity, switch to editing mode, then open that
+                                            // amenity's controls
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        }
                                     }
 
                                     break;
                                 case EDITING_ALL:
                                     // No specific values need to be set here because all station gates will be edited
                                     // once save is clicked
-                                    setEnableStationGateControls(true);
-
+                                    // If there is no amenity there, just do nothing
                                     if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
@@ -422,17 +499,73 @@ public class MainScreenController extends ScreenController {
 
                             break;
                         case SECURITY:
-/*                            // Prepare the amenity that will be placed on the station
-                            Amenity newAmenity = null;
+                            Main.simulator.setCurrentClass(Security.class);
 
-                            newAmenity = new Security(
-                                    securityEnableCheckBox.isSelected(),
-                                    securityIntervalSpinner.getValue(),
-                                    securityBlockPassengerCheckBox.isSelected()
-                            );
+                            switch (buildState) {
+                                case DRAWING:
 
-                            // Set the amenity on that patch
-                            currentPatch.setAmenity(newAmenity);*/
+                                    // Only add if the current patch doesn't already have an amenity
+                                    if (Main.simulator.getCurrentAmenity().isNull().get()) {
+                                        // Prepare the amenity that will be placed on the station
+                                        Security securityToAdd = new Security(
+                                                currentPatch,
+                                                securityEnableCheckBox.isSelected(),
+                                                securityIntervalSpinner.getValue(),
+                                                securityBlockPassengerCheckBox.isSelected()
+                                        );
+
+                                        // Set the amenity on that patch
+                                        currentPatch.setAmenity(securityToAdd);
+
+                                        // Add this station gate to the list of all security gates on this floor
+                                        Main.simulator.getCurrentFloor().getSecurities().add(securityToAdd);
+                                    } else {
+                                        // If clicked on an existing amenity, switch to editing mode, then open that
+                                        // amenity's controls
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                    }
+
+                                    break;
+                                case EDITING_ONE:
+                                    // Only edit if there is already a station gate on that patch
+                                    if (Main.simulator.getCurrentAmenity().get() instanceof Security) {
+                                        Security securityToEdit
+                                                = (Security) Main.simulator.getCurrentAmenity().get();
+
+                                        securityEnableCheckBox.setSelected(
+                                                securityToEdit.isEnabled()
+                                        );
+
+                                        securityBlockPassengerCheckBox.setSelected(
+                                                securityToEdit.isBlockEntry()
+                                        );
+
+                                        securityIntervalSpinner.getValueFactory().setValue(
+                                                securityToEdit.getWaitingTime()
+                                        );
+                                    } else {
+                                        // If there is no amenity there, just do nothing
+                                        if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                            // If clicked on an existing amenity, switch to editing mode, then open that
+                                            // amenity's controls
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        }
+                                    }
+
+                                    break;
+                                case EDITING_ALL:
+                                    // No specific values need to be set here because all station gates will be edited
+                                    // once save is clicked
+
+                                    // If there is no amenity there, just do nothing
+                                    if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                        // If clicked on an existing amenity, switch to editing mode, then open that
+                                        // amenity's controls
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                    }
+
+                                    break;
+                            }
 
                             break;
                         case STAIRS:
@@ -447,6 +580,12 @@ public class MainScreenController extends ScreenController {
                             break;
                         case TRAIN_BOARDING_AREA:
                             break;
+                        case NONE:
+                            if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                            }
+
+                            break;
                     }
 
                     break;
@@ -455,7 +594,7 @@ public class MainScreenController extends ScreenController {
             }
         } else {
             // If the operation mode is testing, the user wants to edit (one or all)
-            System.out.println("edit");
+            System.out.println("test");
         }
     }
 
@@ -471,16 +610,33 @@ public class MainScreenController extends ScreenController {
     }
 
     // Enable/disable the security gate controls
-    public void setEnableStationGateControls(boolean enable) {
-        if (enable) {
-            stationGateEnableCheckBox.setDisable(false);
-            stationGateModeChoiceBox.setDisable(false);
-            stationGateSpawnSpinner.setDisable(false);
-        } else {
-            stationGateEnableCheckBox.setDisable(true);
-            stationGateModeChoiceBox.setDisable(true);
-            stationGateSpawnSpinner.setDisable(true);
-        }
+    public void checkEnableStationGateControls() {
+        boolean value
+                = Main.simulator.getBuildState().get() != Simulator.BuildState.EDITING_ONE
+                || (
+                Main.simulator.getCurrentAmenity().isNotNull().get()
+                        && Main.simulator.getCurrentAmenity().get().getClass()
+                        == Main.simulator.getCurrentClass().get()
+        );
+
+        stationGateEnableCheckBox.setDisable(!value);
+        stationGateModeChoiceBox.setDisable(!value);
+        stationGateSpawnSpinner.setDisable(!value);
+    }
+
+    // Enable/disable the security gate controls
+    public void checkEnableSecurityControls() {
+        boolean value
+                = Main.simulator.getBuildState().get() != Simulator.BuildState.EDITING_ONE
+                || (
+                Main.simulator.getCurrentAmenity().isNotNull().get()
+                        && Main.simulator.getCurrentAmenity().get().getClass()
+                        == Main.simulator.getCurrentClass().get()
+        );
+
+        securityEnableCheckBox.setDisable(!value);
+        securityBlockPassengerCheckBox.setDisable(!value);
+        securityIntervalSpinner.setDisable(!value);
     }
 
     // Given an amenity, open the subcategory (category) and titled pane (subcategory) that contains that amenity
@@ -552,12 +708,12 @@ public class MainScreenController extends ScreenController {
                 switch (buildSubcategory) {
                     case STATION_ENTRANCE_EXIT:
                         titledPanes.get(0).setExpanded(true);
-
                         stationGateBuildModeChoiceBox.getSelectionModel().select(Simulator.BuildState.EDITING_ONE);
 
                         break;
                     case SECURITY:
                         titledPanes.get(1).setExpanded(true);
+                        securityBuildModeChoiceBox.getSelectionModel().select(Simulator.BuildState.EDITING_ONE);
 
                         break;
                 }

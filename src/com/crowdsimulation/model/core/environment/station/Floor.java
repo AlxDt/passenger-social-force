@@ -4,6 +4,7 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
 
@@ -22,6 +23,7 @@ public class Floor extends BaseStation {
 
     // Amenity lists
     private final List<StationGate> stationGates;
+    private final List<Security> securities;
 
 /*    private final List<Patch> starts;
     private final List<List<Patch>> goals;
@@ -38,6 +40,7 @@ public class Floor extends BaseStation {
 
         // Initialize the amenity lists
         this.stationGates = new ArrayList<>();
+        this.securities = new ArrayList<>();
 /*        // Initialize empty start and end patches
         this.starts = new ArrayList<>();
         this.goals = new ArrayList<>();
@@ -144,6 +147,10 @@ public class Floor extends BaseStation {
 
     public List<StationGate> getStationGates() {
         return stationGates;
+    }
+
+    public List<Security> getSecurities() {
+        return securities;
     }
 
     /*public int getNumGoals() {
