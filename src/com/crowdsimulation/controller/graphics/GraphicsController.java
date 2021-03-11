@@ -15,6 +15,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
+import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ContextMenu;
@@ -32,7 +33,17 @@ import java.util.HashMap;
 public class GraphicsController extends Controller {
     private static final HashMap<Class<?>, Color> PATCH_COLORS = new HashMap<>();
 
+    public static TicketBoothTransactionArea.DrawOrientation drawTicketBoothOrientation;
+    public static Rectangle extraRectangle;
+    public static Patch extraPatch;
+    public static boolean validTicketBoothDraw;
+
     static {
+        GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
+        GraphicsController.extraRectangle = null;
+        GraphicsController.extraPatch = null;
+        GraphicsController.validTicketBoothDraw = true;
+
         // The designated colors of the patch amenities (or lack thereof)
         PATCH_COLORS.put(null, Color.WHITE); // Empty patch
 
@@ -136,6 +147,28 @@ public class GraphicsController extends Controller {
         // Get the background canvas
         final Canvas backgroundCanvas = (Canvas) canvases.getChildren().get(0);
 
+        // Draw listeners for the canvas (used for the detection of the orientation when drawing ticket booths)
+        backgroundCanvas.getScene().setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case W:
+                    GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
+
+                    break;
+                case D:
+                    GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.RIGHT;
+
+                    break;
+                case S:
+                    GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.DOWN;
+
+                    break;
+                case A:
+                    GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.LEFT;
+
+                    break;
+            }
+        });
+
         // Initialize the rectangle matrix to be used as listeners
         final Rectangle[][] rectangles
                 = new Rectangle[
@@ -149,6 +182,7 @@ public class GraphicsController extends Controller {
             for (int column = 0; column < Main.simulator.getCurrentFloor().getColumns(); column++) {
                 // Individually initialize each listener in the matrix
                 rectangles[row][column] = new Rectangle(column * tileSize, row * tileSize, tileSize, tileSize);
+
                 Rectangle rectangle = rectangles[row][column];
 
                 rectangle.setFill(Color.DARKGRAY);
@@ -172,6 +206,90 @@ public class GraphicsController extends Controller {
 
                     // Get the patch where the mouse is currently on
                     Patch patch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
+
+                    if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                            && Main.simulator.getBuildState().get() == Simulator.BuildState.DRAWING) {
+                        Rectangle extraRectangle;
+
+                        switch (GraphicsController.drawTicketBoothOrientation) {
+                            case UP:
+                                if (rowCopy - 1 >= 0) {
+                                    extraRectangle = rectangles[rowCopy - 1][columnCopy];
+                                    extraRectangle.setOpacity(1.0);
+                                    extraRectangle.setFill(Color.LIGHTGRAY);
+
+                                    GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                            rowCopy - 1,
+                                            columnCopy
+                                    );
+
+                                    GraphicsController.extraRectangle = extraRectangle;
+                                    GraphicsController.validTicketBoothDraw
+                                            = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                } else {
+                                    GraphicsController.validTicketBoothDraw = false;
+                                }
+
+                                break;
+                            case RIGHT:
+                                if (columnCopy + 1 < Main.simulator.getCurrentFloor().getColumns()) {
+                                    extraRectangle = rectangles[rowCopy][columnCopy + 1];
+                                    extraRectangle.setOpacity(1.0);
+                                    extraRectangle.setFill(Color.LIGHTGRAY);
+
+                                    GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                            rowCopy,
+                                            columnCopy + 1
+                                    );
+
+                                    GraphicsController.extraRectangle = extraRectangle;
+                                    GraphicsController.validTicketBoothDraw
+                                            = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                } else {
+                                    GraphicsController.validTicketBoothDraw = false;
+                                }
+
+                                break;
+                            case DOWN:
+                                if (rowCopy + 1 < Main.simulator.getCurrentFloor().getRows()) {
+                                    extraRectangle = rectangles[rowCopy + 1][columnCopy];
+                                    extraRectangle.setOpacity(1.0);
+                                    extraRectangle.setFill(Color.LIGHTGRAY);
+
+                                    GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                            rowCopy + 1,
+                                            columnCopy
+                                    );
+
+                                    GraphicsController.extraRectangle = extraRectangle;
+                                    GraphicsController.validTicketBoothDraw
+                                            = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                } else {
+                                    GraphicsController.validTicketBoothDraw = false;
+                                }
+
+                                break;
+                            case LEFT:
+                                if (columnCopy - 1 >= 0) {
+                                    extraRectangle = rectangles[rowCopy][columnCopy - 1];
+                                    extraRectangle.setOpacity(1.0);
+                                    extraRectangle.setFill(Color.LIGHTGRAY);
+
+                                    GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                            rowCopy,
+                                            columnCopy - 1
+                                    );
+
+                                    GraphicsController.extraRectangle = extraRectangle;
+                                    GraphicsController.validTicketBoothDraw
+                                            = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                } else {
+                                    GraphicsController.validTicketBoothDraw = false;
+                                }
+
+                                break;
+                        }
+                    }
 
                     // Create a tooltip to show the contents of this patch, if any
                     final StringBuilder tooltipText = new StringBuilder();
@@ -197,6 +315,11 @@ public class GraphicsController extends Controller {
                 // Actions for when the mouse exits a listener
                 rectangle.addEventFilter(MouseEvent.MOUSE_EXITED, event -> {
                     rectangle.setOpacity(0.0);
+
+                    if (extraRectangle != null) {
+                        extraRectangle.setOpacity(0.0);
+                        extraRectangle.setFill(Color.DARKGRAY);
+                    }
                 });
 
                 // Actions for when the mouse clicks a listener
@@ -209,6 +332,19 @@ public class GraphicsController extends Controller {
 
                     // Get the patch where the mouse is currently on
                     Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
+
+                    // Special case: if a ticket booth is currently being draw, get the extra patch as well, assuming
+                    // a valid ticket booth drawing spot
+                    if (GraphicsController.validTicketBoothDraw
+                            && Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH) {
+                        int extraPatchRow = (int) GraphicsController.extraRectangle.getProperties().get("row");
+                        int extraPatchColumn = (int) GraphicsController.extraRectangle.getProperties().get("column");
+
+                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                extraPatchRow,
+                                extraPatchColumn
+                        );
+                    }
 
                     // Set the amenity on the patch as the current amenity of the simulation
                     Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
@@ -223,32 +359,6 @@ public class GraphicsController extends Controller {
 
                         // Redraw the station view
                         drawStationView(canvases, floor, tileSize, true);
-                    } else if (event.getButton() == MouseButton.SECONDARY) {
-                        // Actions for right click
-                        // TODO: If there is no amenity in that patch, check if there is a floor field on it (depending on
-                        // what is selected in the floor field menu)
-                        if (patchAmenity == null) {
-
-                        } else {
-                            // If there is an amenity in that patch, show the context menu to delete it
-                            ContextMenu deleteContextMenu = new ContextMenu();
-
-                            MenuItem menuItem = new MenuItem("Delete");
-                            menuItem.setOnAction(event2 -> {
-                                // Delete amenity on this patch
-                                Main.mainScreenController.deleteStationGateAction();
-                            });
-
-                            deleteContextMenu.getItems().add(menuItem);
-
-                            rectangle.setOnContextMenuRequested(event2 -> {
-                                deleteContextMenu.show(
-                                        rectangle,
-                                        columnCopy * tileSize + 5 * tileSize,
-                                        rowCopy * tileSize + 10 * tileSize
-                                );
-                            });
-                        }
                     }
                 });
 

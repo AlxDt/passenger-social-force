@@ -1,10 +1,12 @@
-package com.crowdsimulation.controller.screen.main;
+package com.crowdsimulation.controller.screen.main.service;
 
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.screen.main.MainScreenController;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 import com.crowdsimulation.model.simulator.Simulator;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
@@ -12,7 +14,7 @@ import javafx.scene.layout.VBox;
 
 import java.util.List;
 
-public class UIInitializer {
+public class UIInitializeService {
     private static final ObservableList<Simulator.BuildState> BUILD_MODE_CHOICEBOX_ITEMS;
 
     static {
@@ -25,7 +27,9 @@ public class UIInitializer {
 
     // Initialize the build tab UI controls
     public static void initializeBuildTab(
-            ChoiceBox<Simulator.BuildState> stationGateBuildModeChoiceBox,
+            ChoiceBox<Simulator.BuildState> buildModeChoiceBox,
+            // Entrances/exits
+            // Station gate
             CheckBox stationGateEnableCheckBox,
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
@@ -33,18 +37,32 @@ public class UIInitializer {
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
             Button deleteStationGateButton,
-            ChoiceBox<Simulator.BuildState> securityBuildModeChoiceBox,
+            // Security
             CheckBox securityEnableCheckBox,
             CheckBox securityBlockPassengerCheckBox,
             Label securityIntervalLabel,
             Spinner<Integer> securityIntervalSpinner,
             Button saveSecurityButton,
             Button deleteSecurityButton,
+            // Concourse amenities
+            // Ticket booth
+            CheckBox ticketBoothEnableCheckBox,
+            Label ticketBoothModeLabel,
+            ChoiceBox<TicketBoothTransactionArea.TicketBoothType> ticketBoothModeChoiceBox,
+            Label ticketBoothIntervalLabel,
+            Spinner<Integer> ticketBoothIntervalSpinner,
+            Button saveTicketBoothButton,
+            Button deleteTicketBoothButton,
+            // Tab pane
             TabPane buildTabPane
     ) {
+        // Initialize the build mode choice box
+        initializeBuildModeCheckbox(
+                buildModeChoiceBox
+        );
+
         // Initialize categories
         initializeEntrancesAndExits(
-                stationGateBuildModeChoiceBox,
                 stationGateEnableCheckBox,
                 stationGateModeLabel,
                 stationGateModeChoiceBox,
@@ -52,7 +70,6 @@ public class UIInitializer {
                 stationGateSpinner,
                 saveStationGateButton,
                 deleteStationGateButton,
-                securityBuildModeChoiceBox,
                 securityEnableCheckBox,
                 securityBlockPassengerCheckBox,
                 securityIntervalLabel,
@@ -61,8 +78,30 @@ public class UIInitializer {
                 deleteSecurityButton
         );
 
+        initializeConcourseAmenities(
+                ticketBoothEnableCheckBox,
+                ticketBoothModeLabel,
+                ticketBoothModeChoiceBox,
+                ticketBoothIntervalLabel,
+                ticketBoothIntervalSpinner,
+                saveTicketBoothButton,
+                deleteTicketBoothButton
+        );
+
         // Initialize listeners
         initializeCategoryListeners(buildTabPane);
+    }
+
+    // Initialize the build mode choice box
+    private static void initializeBuildModeCheckbox(ChoiceBox<Simulator.BuildState> buildModeChoiceBox) {
+        buildModeChoiceBox.setItems(BUILD_MODE_CHOICEBOX_ITEMS);
+        buildModeChoiceBox.getSelectionModel().select(0);
+
+        buildModeChoiceBox.setOnAction(event -> {
+            Simulator.BuildState newBuildState = buildModeChoiceBox.getSelectionModel().getSelectedItem();
+
+            Main.simulator.setBuildState(newBuildState);
+        });
     }
 
     // Initialize the test tab UI controls
@@ -75,7 +114,6 @@ public class UIInitializer {
 
     // Initialize the entrances and exits build category UI controls
     private static void initializeEntrancesAndExits(
-            ChoiceBox<Simulator.BuildState> stationGateBuildModeChoiceBox,
             CheckBox stationGateEnableCheckBox,
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
@@ -83,7 +121,6 @@ public class UIInitializer {
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
             Button deleteStationGateButton,
-            ChoiceBox<Simulator.BuildState> securityBuildModeChoiceBox,
             CheckBox securityEnableCheckBox,
             CheckBox securityBlockPassengerCheckBox,
             Label securityIntervalLabel,
@@ -92,7 +129,6 @@ public class UIInitializer {
             Button deleteSecurityButton
     ) {
         initializeStationEntranceExit(
-                stationGateBuildModeChoiceBox,
                 stationGateEnableCheckBox,
                 stationGateModeLabel,
                 stationGateModeChoiceBox,
@@ -103,7 +139,6 @@ public class UIInitializer {
         );
 
         initializeSecurity(
-                securityBuildModeChoiceBox,
                 securityEnableCheckBox,
                 securityBlockPassengerCheckBox,
                 securityIntervalLabel,
@@ -115,7 +150,6 @@ public class UIInitializer {
 
     // Initialize the station entrance/exit UI controls
     private static void initializeStationEntranceExit(
-            ChoiceBox<Simulator.BuildState> stationGateBuildModeChoiceBox,
             CheckBox stationGateEnableCheckBox,
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
@@ -124,17 +158,18 @@ public class UIInitializer {
             Button saveStationGateButton,
             Button deleteStationGateButton
     ) {
-        stationGateBuildModeChoiceBox.setItems(BUILD_MODE_CHOICEBOX_ITEMS);
-        stationGateBuildModeChoiceBox.getSelectionModel().select(0);
+/*        stationGateBuildModeChoiceBox.setItems(BUILD_MODE_CHOICEBOX_ITEMS);
+        stationGateBuildModeChoiceBox.getSelectionModel().select(0);*/
 
-        boolean evaluateClassEquality = Main.simulator.getCurrentAmenity().isNotNull().get();
+//        boolean evaluateClassEquality = Main.simulator.getCurrentAmenity().isNotNull().get();
 
-        stationGateBuildModeChoiceBox.setOnAction(event -> {
+/*        stationGateBuildModeChoiceBox.setOnAction(event -> {
             Simulator.BuildState newBuildState = stationGateBuildModeChoiceBox.getSelectionModel().getSelectedItem();
             Main.simulator.setBuildState(newBuildState);
 
-            Main.mainScreenController.checkEnableStationGateControls();
-        });
+            Main.simulator.setCurrentClass(StationGate.class);
+//            Main.mainScreenController.checkEnableStationGateControls();
+        });*/
 
         stationGateModeLabel.setLabelFor(stationGateModeChoiceBox);
 
@@ -154,40 +189,16 @@ public class UIInitializer {
                         50)
         );
 
-        // Disable when drawing or ((current amenity is null or current amenity is of the wrong type)
-        // and not in the edit all mode)
-        BooleanBinding bindingValue =
-                Bindings.or(
-                        Bindings.equal(
-                                Main.simulator.getBuildState(),
-                                Simulator.BuildState.DRAWING
-                        ),
-                        Bindings.and(
-                                Bindings.or(
-                                        Bindings.isNull(
-                                                Main.simulator.getCurrentAmenity()
-                                        ),
-                                        (evaluateClassEquality) ?
-                                                Bindings.equal(
-                                                        Main.simulator.getCurrentAmenity().get().getClass(),
-                                                        Main.simulator.getCurrentClass()
-                                                ) :
-                                                Bindings.createBooleanBinding(() -> false)
-                                ),
-                                Bindings.notEqual(
-                                        Main.simulator.getBuildState(),
-                                        Simulator.BuildState.EDITING_ALL
-                                )
-                        )
-                );
+        stationGateEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        stationGateModeChoiceBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        stationGateSpinner.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
 
-        saveStationGateButton.disableProperty().bind(bindingValue);
-        deleteStationGateButton.disableProperty().bind(bindingValue);
+        saveStationGateButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        deleteStationGateButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
     }
 
     // Initialize the security UI controls
     private static void initializeSecurity(
-            ChoiceBox<Simulator.BuildState> securityBuildModeChoiceBox,
             CheckBox securityEnableCheckBox,
             CheckBox securityBlockPassengerCheckBox,
             Label securityIntervalLabel,
@@ -195,16 +206,6 @@ public class UIInitializer {
             Button saveSecurityButton,
             Button deleteSecurityButton
     ) {
-        securityBuildModeChoiceBox.setItems(BUILD_MODE_CHOICEBOX_ITEMS);
-        securityBuildModeChoiceBox.getSelectionModel().select(0);
-
-        securityBuildModeChoiceBox.setOnAction(event -> {
-            Simulator.BuildState newBuildState = securityBuildModeChoiceBox.getSelectionModel().getSelectedItem();
-            Main.simulator.setBuildState(newBuildState);
-
-            Main.mainScreenController.checkEnableSecurityControls();
-        });
-
         securityIntervalLabel.setLabelFor(securityIntervalSpinner);
 
         securityIntervalSpinner.setValueFactory(
@@ -214,37 +215,69 @@ public class UIInitializer {
                         5)
         );
 
-        boolean evaluateClassEquality = Main.simulator.getCurrentAmenity().isNotNull().get();
+        securityEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        securityBlockPassengerCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        securityIntervalSpinner.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
 
-        // Disable when drawing or ((current amenity is null or current amenity is of the wrong type)
-        // and not in the edit all mode)
-        BooleanBinding bindingValue =
-                Bindings.or(
-                        Bindings.equal(
-                                Main.simulator.getBuildState(),
-                                Simulator.BuildState.DRAWING
-                        ),
-                        Bindings.and(
-                                Bindings.or(
-                                        Bindings.isNull(
-                                                Main.simulator.getCurrentAmenity()
-                                        ),
-                                        (evaluateClassEquality) ?
-                                                Bindings.equal(
-                                                        Main.simulator.getCurrentAmenity().get().getClass(),
-                                                        Main.simulator.getCurrentClass()
-                                                ) :
-                                                Bindings.createBooleanBinding(() -> false)
-                                ),
-                                Bindings.notEqual(
-                                        Main.simulator.getBuildState(),
-                                        Simulator.BuildState.EDITING_ALL
-                                )
-                        )
-                );
+        saveSecurityButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        deleteSecurityButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+    }
 
-        saveSecurityButton.disableProperty().bind(bindingValue);
-        deleteSecurityButton.disableProperty().bind(bindingValue);
+    // Initialize the concourse amenities build category UI controls
+    private static void initializeConcourseAmenities(
+            CheckBox ticketBoothEnableCheckBox,
+            Label ticketBoothModeLabel,
+            ChoiceBox<TicketBoothTransactionArea.TicketBoothType> ticketBoothModeChoiceBox,
+            Label ticketBoothIntervalLabel,
+            Spinner<Integer> ticketBoothIntervalSpinner,
+            Button saveTicketBoothButton,
+            Button deleteTicketBoothButton
+    ) {
+        initializeTicketBooth(
+                ticketBoothEnableCheckBox,
+                ticketBoothModeLabel,
+                ticketBoothModeChoiceBox,
+                ticketBoothIntervalLabel,
+                ticketBoothIntervalSpinner,
+                saveTicketBoothButton,
+                deleteTicketBoothButton
+        );
+    }
+
+    // Initialize the ticket booth controls
+    private static void initializeTicketBooth(
+            CheckBox ticketBoothEnableCheckBox,
+            Label ticketBoothModeLabel,
+            ChoiceBox<TicketBoothTransactionArea.TicketBoothType> ticketBoothModeChoiceBox,
+            Label ticketBoothIntervalLabel,
+            Spinner<Integer> ticketBoothIntervalSpinner,
+            Button saveTicketBoothButton,
+            Button deleteTicketBoothButton
+    ) {
+        ticketBoothModeLabel.setLabelFor(ticketBoothModeChoiceBox);
+
+        ticketBoothModeChoiceBox.setItems(FXCollections.observableArrayList(
+                TicketBoothTransactionArea.TicketBoothType.SINGLE_JOURNEY,
+                TicketBoothTransactionArea.TicketBoothType.STORED_VALUE,
+                TicketBoothTransactionArea.TicketBoothType.ALL_TICKET_TYPES
+        ));
+        ticketBoothModeChoiceBox.getSelectionModel().select(0);
+
+        ticketBoothIntervalLabel.setLabelFor(ticketBoothIntervalSpinner);
+
+        ticketBoothIntervalSpinner.setValueFactory(
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(
+                        5,
+                        60,
+                        5)
+        );
+
+        ticketBoothEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        ticketBoothModeChoiceBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        ticketBoothIntervalSpinner.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+
+        saveTicketBoothButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        deleteTicketBoothButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
     }
 
     // Iterate through each build subtab to set the listeners for the changing of build categories and subcategories
@@ -264,10 +297,6 @@ public class UIInitializer {
                     if (currentTitledPane.isExpanded() && currentTitledPane == newValue) {
                         Main.simulator.setBuildSubcategory(
                                 MainScreenController.getBuildSubcategory(buildTabPane.getSelectionModel())
-                        );
-
-                        Main.simulator.setBuildState(
-                                getCurrentBuildStateInAccordion(currentAccordion)
                         );
                     } else {
                         // If not, just check if this pane is the previous subcategory and the new subcategory is null
@@ -291,25 +320,10 @@ public class UIInitializer {
                         Main.simulator.setBuildSubcategory(
                                 MainScreenController.getBuildSubcategory(buildTabPane.getSelectionModel())
                         );
-
-                        if (currentAccordion.getExpandedPane() != null) {
-                            Main.simulator.setBuildState(
-                                    getCurrentBuildStateInAccordion(currentAccordion)
-                            );
-                        }
                     }
                 });
             }
         }
-    }
-
-    private static Simulator.BuildState getCurrentBuildStateInAccordion(Accordion currentAccordion) {
-        VBox outerVBox = (VBox) currentAccordion.getExpandedPane().getContent();
-        VBox innerVBox = (VBox) outerVBox.getChildren().get(0);
-        ChoiceBox<Simulator.BuildState> buildStateChoiceBox
-                = (ChoiceBox<Simulator.BuildState>) innerVBox.getChildren().get(0);
-
-        return buildStateChoiceBox.getSelectionModel().getSelectedItem();
     }
 
     private static void initializeSimulationControls(

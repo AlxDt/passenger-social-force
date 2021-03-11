@@ -147,7 +147,8 @@ public class Simulator {
         STAIRS_AND_ELEVATORS,
         CONCOURSE_AMENITIES,
         PLATFORM_AMENITIES,
-        FLOOR_FIELDS
+        FLOORS_AND_FLOOR_FIELDS,
+        WALLS
     }
 
     // Describes the subcategories within the current build category
@@ -174,7 +175,10 @@ public class Simulator {
         QUEUEING_FLOOR_FIELD,
         PLATFORM_FLOOR_FIELD,
         STAIR_FLOOR_FIELD,
-        ELEVATOR_FLOOR_FIELD
+        ELEVATOR_FLOOR_FIELD,
+
+        // Walls
+        WALL
     }
 
     // Describes the states within the build mode in the program

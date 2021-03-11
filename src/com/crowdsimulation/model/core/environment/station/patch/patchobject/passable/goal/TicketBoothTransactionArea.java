@@ -67,8 +67,27 @@ public class TicketBoothTransactionArea extends Goal {
 
     // Lists the types of tickets the ticket booth this transaction area belongs to dispenses
     public enum TicketBoothType {
-        SINGLE_JOURNEY,
-        STORED_VALUE,
-        ALL_TICKET_TYPES
+        SINGLE_JOURNEY ("Single journey"),
+        STORED_VALUE ("Stored value"),
+        ALL_TICKET_TYPES ("All ticket types");
+
+        private final String name;
+
+        TicketBoothType(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
+    }
+
+    // The drawing orientation of this ticket booth
+    public enum DrawOrientation {
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT
     }
 }

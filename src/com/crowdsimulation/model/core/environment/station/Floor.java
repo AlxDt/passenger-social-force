@@ -3,6 +3,7 @@ package com.crowdsimulation.model.core.environment.station;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
@@ -25,6 +26,8 @@ public class Floor extends BaseStation {
     private final List<StationGate> stationGates;
     private final List<Security> securities;
 
+    private final List<TicketBooth> ticketBooths;
+
 /*    private final List<Patch> starts;
     private final List<List<Patch>> goals;
     private final List<Patch> obstacles;
@@ -41,6 +44,8 @@ public class Floor extends BaseStation {
         // Initialize the amenity lists
         this.stationGates = new ArrayList<>();
         this.securities = new ArrayList<>();
+
+        this.ticketBooths = new ArrayList<>();
 /*        // Initialize empty start and end patches
         this.starts = new ArrayList<>();
         this.goals = new ArrayList<>();
@@ -70,6 +75,18 @@ public class Floor extends BaseStation {
 
     public int getColumns() {
         return columns;
+    }
+
+    public List<StationGate> getStationGates() {
+        return stationGates;
+    }
+
+    public List<Security> getSecurities() {
+        return securities;
+    }
+
+    public List<TicketBooth> getTicketBooths() {
+        return ticketBooths;
     }
 
     public Patch getPatch(Coordinates coordinates) {
@@ -143,14 +160,6 @@ public class Floor extends BaseStation {
         }
 
         return patchesToExplore;
-    }
-
-    public List<StationGate> getStationGates() {
-        return stationGates;
-    }
-
-    public List<Security> getSecurities() {
-        return securities;
     }
 
     /*public int getNumGoals() {
