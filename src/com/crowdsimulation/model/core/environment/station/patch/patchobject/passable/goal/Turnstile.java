@@ -1,24 +1,21 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.BlockableAmenity;
 
-public class Turnstile extends Goal {
+public class Turnstile extends BlockableAmenity {
     // Denotes the current mode of this turnstile
     private TurnstileMode turnstileMode;
-
-    public Turnstile() {
-        super(null,true, 0);
-
-        this.turnstileMode = null;
-    }
 
     public Turnstile(
             Patch patch,
             boolean enabled,
             int waitingTime,
+            boolean blockEntry,
             TurnstileMode turnstileMode
     ) {
-        super(patch, enabled, waitingTime);
+        super(patch, enabled, waitingTime, blockEntry);
 
         this.turnstileMode = turnstileMode;
     }
@@ -34,6 +31,20 @@ public class Turnstile extends Goal {
     @Override
     public String toString() {
         return "Turnstile";
+    }
+
+    // Turnstile factory
+    public static class TurnstileFactory extends AmenityFactory {
+        @Override
+        public Amenity createAmenity(Patch patch, Object... objects) {
+            return new Turnstile(
+                    patch,
+                    (boolean) objects[0],
+                    (int) objects[1],
+                    (boolean) objects[2],
+                    (TurnstileMode) objects[3]
+            );
+        }
     }
 
     // Lists the possible modes of this turnstile

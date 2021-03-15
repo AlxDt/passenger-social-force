@@ -2,15 +2,13 @@ package com.crowdsimulation.controller.screen.main.service;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.main.MainScreenController;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 
 import java.util.List;
 
@@ -27,6 +25,7 @@ public class UIInitializeService {
 
     // Initialize the build tab UI controls
     public static void initializeBuildTab(
+            Label buildModeLabel,
             ChoiceBox<Simulator.BuildState> buildModeChoiceBox,
             // Entrances/exits
             // Station gate
@@ -53,12 +52,22 @@ public class UIInitializeService {
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
             Button deleteTicketBoothButton,
+            // Turnstile
+            CheckBox turnstileEnableCheckBox,
+            CheckBox turnstileBlockPassengerCheckBox,
+            Label turnstileDirectionLabel,
+            ChoiceBox<Turnstile.TurnstileMode> turnstileDirectionChoiceBox,
+            Label turnstileIntervalLabel,
+            Spinner<Integer> turnstileIntervalSpinner,
+            Button saveTurnstileButton,
+            Button deleteTurnstileButton,
             // Tab pane
             TabPane buildTabPane
     ) {
         // Initialize the build mode choice box
-        initializeBuildModeCheckbox(
-                buildModeChoiceBox
+        initializeBuildModeChoiceBox(
+                buildModeChoiceBox,
+                buildModeLabel
         );
 
         // Initialize categories
@@ -85,7 +94,15 @@ public class UIInitializeService {
                 ticketBoothIntervalLabel,
                 ticketBoothIntervalSpinner,
                 saveTicketBoothButton,
-                deleteTicketBoothButton
+                deleteTicketBoothButton,
+                turnstileEnableCheckBox,
+                turnstileBlockPassengerCheckBox,
+                turnstileDirectionLabel,
+                turnstileDirectionChoiceBox,
+                turnstileIntervalLabel,
+                turnstileIntervalSpinner,
+                saveTurnstileButton,
+                deleteTurnstileButton
         );
 
         // Initialize listeners
@@ -93,7 +110,12 @@ public class UIInitializeService {
     }
 
     // Initialize the build mode choice box
-    private static void initializeBuildModeCheckbox(ChoiceBox<Simulator.BuildState> buildModeChoiceBox) {
+    private static void initializeBuildModeChoiceBox(
+            ChoiceBox<Simulator.BuildState> buildModeChoiceBox,
+            Label buildModeLabel
+    ) {
+        buildModeLabel.setLabelFor(buildModeChoiceBox);
+
         buildModeChoiceBox.setItems(BUILD_MODE_CHOICEBOX_ITEMS);
         buildModeChoiceBox.getSelectionModel().select(0);
 
@@ -158,19 +180,6 @@ public class UIInitializeService {
             Button saveStationGateButton,
             Button deleteStationGateButton
     ) {
-/*        stationGateBuildModeChoiceBox.setItems(BUILD_MODE_CHOICEBOX_ITEMS);
-        stationGateBuildModeChoiceBox.getSelectionModel().select(0);*/
-
-//        boolean evaluateClassEquality = Main.simulator.getCurrentAmenity().isNotNull().get();
-
-/*        stationGateBuildModeChoiceBox.setOnAction(event -> {
-            Simulator.BuildState newBuildState = stationGateBuildModeChoiceBox.getSelectionModel().getSelectedItem();
-            Main.simulator.setBuildState(newBuildState);
-
-            Main.simulator.setCurrentClass(StationGate.class);
-//            Main.mainScreenController.checkEnableStationGateControls();
-        });*/
-
         stationGateModeLabel.setLabelFor(stationGateModeChoiceBox);
 
         stationGateModeChoiceBox.setItems(FXCollections.observableArrayList(
@@ -231,7 +240,15 @@ public class UIInitializeService {
             Label ticketBoothIntervalLabel,
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
-            Button deleteTicketBoothButton
+            Button deleteTicketBoothButton,
+            CheckBox turnstileEnableCheckBox,
+            CheckBox turnstileBlockPassengerCheckBox,
+            Label turnstileDirectionLabel,
+            ChoiceBox<Turnstile.TurnstileMode> turnstileDirectionChoiceBox,
+            Label turnstileIntervalLabel,
+            Spinner<Integer> turnstileIntervalSpinner,
+            Button saveTurnstileButton,
+            Button deleteTurnstileButton
     ) {
         initializeTicketBooth(
                 ticketBoothEnableCheckBox,
@@ -241,6 +258,17 @@ public class UIInitializeService {
                 ticketBoothIntervalSpinner,
                 saveTicketBoothButton,
                 deleteTicketBoothButton
+        );
+
+        initializeTurnstile(
+                turnstileEnableCheckBox,
+                turnstileBlockPassengerCheckBox,
+                turnstileDirectionLabel,
+                turnstileDirectionChoiceBox,
+                turnstileIntervalLabel,
+                turnstileIntervalSpinner,
+                saveTurnstileButton,
+                deleteTurnstileButton
         );
     }
 
@@ -278,6 +306,44 @@ public class UIInitializeService {
 
         saveTicketBoothButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
         deleteTicketBoothButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+    }
+
+    // Initialize the turnstile controls
+    private static void initializeTurnstile(
+            CheckBox turnstileEnableCheckBox,
+            CheckBox turnstileBlockPassengerCheckBox,
+            Label turnstileDirectionLabel,
+            ChoiceBox<Turnstile.TurnstileMode> turnstileDirectionChoiceBox,
+            Label turnstileIntervalLabel,
+            Spinner<Integer> turnstileIntervalSpinner,
+            Button saveTurnstileButton,
+            Button deleteTurnstileButton
+    ) {
+        turnstileDirectionLabel.setLabelFor(turnstileDirectionChoiceBox);
+
+        turnstileDirectionChoiceBox.setItems(FXCollections.observableArrayList(
+                Turnstile.TurnstileMode.BOARDING,
+                Turnstile.TurnstileMode.ALIGHTING,
+                Turnstile.TurnstileMode.BIDIRECTIONAL
+        ));
+        turnstileDirectionChoiceBox.getSelectionModel().select(0);
+
+        turnstileIntervalLabel.setLabelFor(turnstileIntervalSpinner);
+
+        turnstileIntervalSpinner.setValueFactory(
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(
+                        1,
+                        10,
+                        3)
+        );
+
+        turnstileEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        turnstileBlockPassengerCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        turnstileDirectionChoiceBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        turnstileIntervalSpinner.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+
+        saveTurnstileButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        deleteTurnstileButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
     }
 
     // Iterate through each build subtab to set the listeners for the changing of build categories and subcategories

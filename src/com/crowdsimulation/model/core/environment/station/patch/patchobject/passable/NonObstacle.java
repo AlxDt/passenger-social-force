@@ -3,11 +3,11 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
-public abstract class Passable extends Amenity {
+public abstract class NonObstacle extends Amenity {
     // Denotes whether this passable patch object is enabled or not (passengers cannot pass through it)
-    private boolean enabled;
+    protected boolean enabled;
 
-    public Passable(Patch patch, boolean enabled) {
+    public NonObstacle(Patch patch, boolean enabled) {
         super(patch);
 
         this.enabled = enabled;

@@ -1,6 +1,7 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
 public class StationGate extends Gate {
     // Denotes the chance of generating a passenger per second
@@ -8,13 +9,6 @@ public class StationGate extends Gate {
 
     // Denotes the mode of this station gate (whether it's entry/exit only, or both)
     private StationGateMode stationGateMode;
-
-    public StationGate() {
-        super(null,true);
-
-        this.chancePerSecond = 50;
-        this.stationGateMode = StationGateMode.ENTRANCE_AND_EXIT;
-    }
 
     public StationGate(
             Patch patch,
@@ -49,11 +43,24 @@ public class StationGate extends Gate {
         return "Station entrance/exit";
     }
 
+    // Station gate factory
+    public static class StationGateFactory extends AmenityFactory {
+        @Override
+        public Amenity createAmenity(Patch patch, Object... objects) {
+            return new StationGate(
+                    patch,
+                    (boolean) objects[0],
+                    (double) objects[1],
+                    (StationGateMode) objects[2]
+            );
+        }
+    }
+
     // Lists the mode of this station gate (whether it's entry/exit only, or both)
     public enum StationGateMode {
-        ENTRANCE ("Entrance"),
-        EXIT ("Exit"),
-        ENTRANCE_AND_EXIT ("Entrance and exit");
+        ENTRANCE("Entrance"),
+        EXIT("Exit"),
+        ENTRANCE_AND_EXIT("Entrance and exit");
 
         private final String name;
 

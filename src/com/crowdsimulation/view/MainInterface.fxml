@@ -112,7 +112,7 @@
                      <children>
                         <HBox alignment="CENTER" prefHeight="40.0" prefWidth="250.0" spacing="10.0">
                            <children>
-                              <Label text="Build mode:" />
+                              <Label fx:id="buildModeLabel" text="Build mode:" />
                               <ChoiceBox fx:id="buildModeChoiceBox" prefHeight="25.0" prefWidth="156.0" />
                            </children>
                            <VBox.margin>
@@ -310,22 +310,28 @@
                                                          <children>
                                                             <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                                <children>
-                                                                  <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" text="Enable turnstile" wrapText="true" />
+                                                                  <CheckBox fx:id="turnstileEnableCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" selected="true" text="Enable turnstile" wrapText="true" />
                                                                </children>
                                                             </HBox>
                                                             <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                                <children>
-                                                                  <Label text="Direction" />
-                                                                  <ChoiceBox prefHeight="25.0" prefWidth="140.0" />
+                                                                  <CheckBox fx:id="turnstileBlockPassengerCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" text="Block passenger entry" wrapText="true" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                                               <children>
+                                                                  <Label fx:id="turnstileDirectionLabel" text="Direction" />
+                                                                  <ChoiceBox fx:id="turnstileDirectionChoiceBox" prefHeight="25.0" prefWidth="140.0" />
                                                                </children>
                                                             </HBox>
                                                             <HBox alignment="CENTER" layoutX="10.0" layoutY="242.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                                <children>
-                                                                  <Label prefHeight="17.0" prefWidth="128.0" text="Interval (s):" />
-                                                                  <Spinner prefHeight="25.0" prefWidth="200.0" />
+                                                                  <Label fx:id="turnstileIntervalLabel" prefHeight="17.0" prefWidth="128.0" text="Interval (s):" />
+                                                                  <Spinner fx:id="turnstileIntervalSpinner" prefHeight="25.0" prefWidth="200.0" />
                                                                </children>
                                                             </HBox>
-                                                            <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                            <Button fx:id="saveTurnstileButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
+                                                            <Button fx:id="deleteTurnstileButton" cancelButton="true" layoutX="10.0" layoutY="134.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                          </children>
                                                       </VBox>
                                                    </children>

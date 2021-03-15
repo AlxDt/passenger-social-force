@@ -333,10 +333,13 @@ public class GraphicsController extends Controller {
                     // Get the patch where the mouse is currently on
                     Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
 
-                    // Special case: if a ticket booth is currently being draw, get the extra patch as well, assuming
+                    // Special case: if a ticket booth is currently being drawmn get the extra patch as well, assuming
                     // a valid ticket booth drawing spot
-                    if (GraphicsController.validTicketBoothDraw
-                            && Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH) {
+                    if (
+                            GraphicsController.validTicketBoothDraw
+                            && Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                            && extraRectangle != null
+                    ) {
                         int extraPatchRow = (int) GraphicsController.extraRectangle.getProperties().get("row");
                         int extraPatchColumn = (int) GraphicsController.extraRectangle.getProperties().get("column");
 

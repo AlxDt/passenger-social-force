@@ -1,16 +1,13 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.BlockableAmenity;
 
-public class Security extends Goal {
+public class Security extends BlockableAmenity {
     // Denotes whether to block passengers from passing through
     private boolean blockEntry;
-
-    public Security() {
-        super(null,true, 0);
-
-        this.blockEntry = false;
-    }
 
     public Security(
             Patch patch,
@@ -18,9 +15,7 @@ public class Security extends Goal {
             int waitingTime,
             boolean blockPassengers
     ) {
-        super(patch, enabled, waitingTime);
-
-        this.blockEntry = blockPassengers;
+        super(patch, enabled, waitingTime, blockPassengers);
     }
 
     public boolean isBlockEntry() {
@@ -29,6 +24,19 @@ public class Security extends Goal {
 
     public void setBlockEntry(boolean blockEntry) {
         this.blockEntry = blockEntry;
+    }
+
+    // Security factory
+    public static class SecurityFactory extends AmenityFactory {
+        @Override
+        public Amenity createAmenity(Patch patch, Object... objects) {
+            return new Security(
+                    patch,
+                    (boolean) objects[0],
+                    (int) objects[1],
+                    (boolean) objects[2]
+            );
+        }
     }
 
     @Override

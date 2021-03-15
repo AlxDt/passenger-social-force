@@ -1,18 +1,18 @@
 package com.crowdsimulation.model.core.environment.station;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Floor extends BaseStation {
+public class Floor extends BaseStationObject {
     // Denotes the number of rows this floor has
     private final int rows;
 
@@ -27,6 +27,7 @@ public class Floor extends BaseStation {
     private final List<Security> securities;
 
     private final List<TicketBooth> ticketBooths;
+    private final List<Turnstile> turnstiles;
 
 /*    private final List<Patch> starts;
     private final List<List<Patch>> goals;
@@ -46,6 +47,7 @@ public class Floor extends BaseStation {
         this.securities = new ArrayList<>();
 
         this.ticketBooths = new ArrayList<>();
+        this.turnstiles = new ArrayList<>();
 /*        // Initialize empty start and end patches
         this.starts = new ArrayList<>();
         this.goals = new ArrayList<>();
@@ -87,6 +89,10 @@ public class Floor extends BaseStation {
 
     public List<TicketBooth> getTicketBooths() {
         return ticketBooths;
+    }
+
+    public List<Turnstile> getTurnstiles() {
+        return turnstiles;
     }
 
     public Patch getPatch(Coordinates coordinates) {

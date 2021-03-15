@@ -2,7 +2,9 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 
 public class TicketBoothTransactionArea extends Goal {
     // Denotes the ticket booth associated with this transaction area
@@ -13,14 +15,6 @@ public class TicketBoothTransactionArea extends Goal {
 
     // Takes note of the passenger currently transacting in the ticket booth
     private Passenger passengerTransacting;
-
-    public TicketBoothTransactionArea() {
-        super(null,true, 0);
-
-        this.ticketBooth = null;
-        this.ticketBoothType = null;
-        this.passengerTransacting = null;
-    }
 
     public TicketBoothTransactionArea(
             Patch patch,
@@ -63,6 +57,20 @@ public class TicketBoothTransactionArea extends Goal {
     @Override
     public String toString() {
         return "Ticket booth transaction area";
+    }
+
+    // Ticket booth transaction area factory
+    public static class TicketBoothTransactionAreaFactory extends AmenityFactory {
+        @Override
+        public Amenity createAmenity(Patch patch, Object... objects) {
+            return new TicketBoothTransactionArea(
+                    patch,
+                    (boolean) objects[0],
+                    (int) objects[1],
+                    (TicketBooth) objects[2],
+                    (TicketBoothType) objects [3]
+            );
+        }
     }
 
     // Lists the types of tickets the ticket booth this transaction area belongs to dispenses

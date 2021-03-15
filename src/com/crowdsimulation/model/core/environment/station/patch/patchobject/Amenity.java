@@ -2,7 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
-public class Amenity extends PatchObject {
+public abstract class Amenity extends PatchObject {
     // Denotes the patch which contains this amenity
     private final Patch patch;
 
@@ -12,5 +12,10 @@ public class Amenity extends PatchObject {
 
     public Patch getPatch() {
         return patch;
+    }
+
+    public abstract static class AmenityFactory {
+        // Create an amenity
+        public abstract Amenity createAmenity(Patch patch, Object... objects);
     }
 }

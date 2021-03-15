@@ -5,7 +5,7 @@ import com.crowdsimulation.model.core.environment.Environment;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Station extends BaseStation implements Environment {
+public class Station extends BaseStationObject implements Environment {
     // Denotes the dimensions of this station
     public static final int ROWS = 60;
     public static final int COLUMNS = 106;

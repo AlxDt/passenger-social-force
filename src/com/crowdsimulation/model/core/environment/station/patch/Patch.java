@@ -2,7 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch;
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
-import com.crowdsimulation.model.core.environment.station.BaseStation;
+import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
@@ -10,7 +10,7 @@ import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition
 
 import java.util.*;
 
-public class Patch extends BaseStation {
+public class Patch extends BaseStationObject {
 /*    // TODO: Make entry waiting time adjustable based on UI sliders
     public static final int ENTRY_WAITING_TIME = 10;*/
 

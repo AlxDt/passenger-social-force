@@ -1,6 +1,8 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 
 public class TicketBooth extends Obstacle {
@@ -17,6 +19,16 @@ public class TicketBooth extends Obstacle {
 
     public void setTicketBoothTransactionArea(TicketBoothTransactionArea ticketBoothTransactionArea) {
         this.ticketBoothTransactionArea = ticketBoothTransactionArea;
+    }
+
+    // Ticket booth factory
+    public static class TicketBoothFactory extends AmenityFactory {
+        @Override
+        public Amenity createAmenity(Patch patch, Object... objects) {
+            return new TicketBooth(
+                    patch
+            );
+        }
     }
 
     @Override
