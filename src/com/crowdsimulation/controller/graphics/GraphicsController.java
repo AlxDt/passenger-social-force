@@ -18,8 +18,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -337,8 +335,8 @@ public class GraphicsController extends Controller {
                     // a valid ticket booth drawing spot
                     if (
                             GraphicsController.validTicketBoothDraw
-                            && Main.simulator.getBuildSubcategory().get() == Simulator.BuildSubcategory.TICKET_BOOTH
-                            && extraRectangle != null
+                                    && Main.simulator.getBuildSubcategory().get() == Simulator.BuildSubcategory.TICKET_BOOTH
+                                    && extraRectangle != null
                     ) {
                         int extraPatchRow = (int) GraphicsController.extraRectangle.getProperties().get("row");
                         int extraPatchColumn = (int) GraphicsController.extraRectangle.getProperties().get("column");
