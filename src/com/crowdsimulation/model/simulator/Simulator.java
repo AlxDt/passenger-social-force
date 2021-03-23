@@ -12,10 +12,10 @@ public class Simulator {
     private final SimpleObjectProperty<OperationMode> operationMode;
 
     // Denotes the current category within the build operation
-    private BuildCategory buildCategory;
+    private SimpleObjectProperty<BuildCategory> buildCategory;
 
     // Denotes the current build category within the current build category
-    private BuildSubcategory buildSubcategory;
+    private SimpleObjectProperty<BuildSubcategory> buildSubcategory;
 
     // Denotes the current state mostly while the program is in building mode
     private final SimpleObjectProperty<BuildState> buildState;
@@ -38,10 +38,10 @@ public class Simulator {
         this.operationMode = new SimpleObjectProperty<>(OperationMode.BUILDING);
 
         // The program is initially in the entrances/exits tab
-        this.buildCategory = BuildCategory.ENTRANCES_AND_EXITS;
+        this.buildCategory = new SimpleObjectProperty<>(BuildCategory.ENTRANCES_AND_EXITS);
 
         // The program initially does not have a build subcategory
-        this.buildSubcategory = BuildSubcategory.NONE;
+        this.buildSubcategory = new SimpleObjectProperty<>(BuildSubcategory.NONE);
 
         // The program is initially in the drawing state
         this.buildState = new SimpleObjectProperty<>(BuildState.DRAWING);
@@ -63,32 +63,28 @@ public class Simulator {
         return operationMode;
     }
 
-    public SimpleObjectProperty<OperationMode> operationModeProperty() {
-        return operationMode;
-    }
-
-    public BuildCategory getBuildCategory() {
+    public SimpleObjectProperty<BuildCategory> getBuildCategory() {
         return buildCategory;
     }
 
-    public void setBuildCategory(BuildCategory buildCategory) {
-        this.buildCategory = buildCategory;
-    }
-
-    public BuildSubcategory getBuildSubcategory() {
+    public SimpleObjectProperty<BuildSubcategory> getBuildSubcategory() {
         return buildSubcategory;
-    }
-
-    public void setBuildSubcategory(BuildSubcategory buildSubcategory) {
-        this.buildSubcategory = buildSubcategory;
     }
 
     public SimpleObjectProperty<BuildState> getBuildState() {
         return buildState;
     }
 
-    public SimpleObjectProperty<BuildState> buildStateProperty() {
-        return buildState;
+    public void setOperationMode(OperationMode operationMode) {
+        this.operationMode.set(operationMode);
+    }
+
+    public void setBuildCategory(BuildCategory buildCategory) {
+        this.buildCategory.set(buildCategory);
+    }
+
+    public void setBuildSubcategory(BuildSubcategory buildSubcategory) {
+        this.buildSubcategory.set(buildSubcategory);
     }
 
     public void setBuildState(BuildState buildState) {
@@ -173,9 +169,6 @@ public class Simulator {
 
         // Floor fields
         QUEUEING_FLOOR_FIELD,
-        PLATFORM_FLOOR_FIELD,
-        STAIR_FLOOR_FIELD,
-        ELEVATOR_FLOOR_FIELD,
 
         // Walls
         WALL

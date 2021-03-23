@@ -7,6 +7,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.Tab?>
@@ -49,8 +50,7 @@
                   </HBox>
                   <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="10.0" prefHeight="50.0" prefWidth="659.0" spacing="200.0">
                      <children>
-                        <Text fx:id="operationModeText" layoutX="544.0" layoutY="40.0" strokeType="OUTSIDE" strokeWidth="0.0" />
-                        <Text fx:id="promptText" layoutX="639.0" layoutY="40.0" strokeType="OUTSIDE" strokeWidth="0.0" />
+                        <Text fx:id="promptText" layoutX="544.0" layoutY="40.0" strokeType="OUTSIDE" strokeWidth="0.0" />
                      </children>
                      <padding>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -350,26 +350,27 @@
                                              <content>
                                                 <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
                                                    <children>
-                                                      <VBox alignment="CENTER" prefHeight="70.0" prefWidth="200.0" spacing="10.0">
+                                                      <VBox alignment="TOP_CENTER" prefHeight="339.0" prefWidth="199.0" spacing="10.0">
                                                          <children>
-                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="10.0" prefWidth="199.0" spacing="10.0">
                                                                <children>
-                                                                  <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" text="Enable train boarding area" wrapText="true" />
+                                                                  <CheckBox fx:id="trainDoorEnableCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" selected="true" text="Enable train boarding area" wrapText="true" />
                                                                </children>
                                                             </HBox>
                                                             <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                                <children>
-                                                                  <Label text="Direction:" />
-                                                                  <ChoiceBox prefHeight="25.0" prefWidth="138.0" />
+                                                                  <Label fx:id="trainDoorDirectionLabel" text="Direction:" />
+                                                                  <ChoiceBox fx:id="trainDoorDirectionChoiceBox" prefHeight="25.0" prefWidth="138.0" />
                                                                </children>
                                                             </HBox>
-                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="194.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="194.0" prefHeight="200.0" prefWidth="199.0" spacing="10.0">
                                                                <children>
-                                                                  <Label text="Carriages:" />
-                                                                  <ChoiceBox prefHeight="25.0" prefWidth="138.0" />
+                                                                  <Label fx:id="trainDoorCarriageLabel" prefHeight="7.0" prefWidth="53.0" text="Carriages:" wrapText="true" />
+                                                                  <ListView fx:id="trainDoorCarriageListView" fixedCellSize="30.0" prefHeight="17.0" prefWidth="138.0" />
                                                                </children>
                                                             </HBox>
-                                                            <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                            <Button fx:id="saveTrainDoorButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
+                                                            <Button fx:id="deleteTrainDoorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                          </children>
                                                       </VBox>
                                                    </children>
@@ -403,84 +404,26 @@
                                                 </VBox>
                                              </content>
                                           </TitledPane>
-                                          <TitledPane animated="false" text="Platform floor field">
+                                          <TitledPane animated="false" layoutX="10.0" layoutY="10.0" text="Floor field">
                                              <content>
                                                 <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
                                                    <children>
                                                       <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
                                                          <children>
-                                                            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="When the Add platform floor field button is toggled, click the train boarding area where you want to add floor fields to, then click an empty patch to add a floor field on that location with a value set by the intensity slider below." wrappingWidth="200.0" />
-                                                            <ToggleButton mnemonicParsing="false" prefHeight="25.0" prefWidth="215.0" text="Add platform floor field" />
                                                             <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                                <children>
                                                                   <Label text="Intensity:" />
                                                                   <Slider blockIncrement="0.05" majorTickUnit="0.25" max="1.0" minorTickCount="5" prefWidth="140.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.5" />
                                                                </children>
                                                             </HBox>
-                                                            <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
-                                                         </children>
-                                                      </VBox>
-                                                   </children>
-                                                </VBox>
-                                             </content>
-                                          </TitledPane>
-                                          <TitledPane animated="false" layoutX="10.0" layoutY="598.0" text="Stair floor field">
-                                             <content>
-                                                <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
-                                                   <children>
-                                                      <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
-                                                         <children>
-                                                            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="When the Add stair floor field button is toggled, click the stair or escalator portal where you want to add floor fields to, then click an empty patch to add a floor field on that location with a passenger speed multiplier set by the intensity slider below." wrappingWidth="200.0" />
-                                                            <ToggleButton mnemonicParsing="false" prefHeight="25.0" prefWidth="215.0" text="Add stair floor field" />
-                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                                            <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                                <children>
-                                                                  <Label text="Speed multiplier" />
-                                                                  <Slider blockIncrement="0.1" majorTickUnit="0.5" max="2.0" minorTickCount="4" prefHeight="38.0" prefWidth="102.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
+                                                                  <Label fx:id="turnstileDirectionLabel1" text="Direction" />
+                                                                  <ChoiceBox fx:id="turnstileDirectionChoiceBox1" prefHeight="25.0" prefWidth="140.0" />
                                                                </children>
                                                             </HBox>
-                                                            <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
-                                                         </children>
-                                                      </VBox>
-                                                   </children>
-                                                </VBox>
-                                             </content>
-                                          </TitledPane>
-                                          <TitledPane animated="false" layoutX="10.0" layoutY="60.0" text="Elevator floor field">
-                                             <content>
-                                                <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
-                                                   <children>
-                                                      <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
-                                                         <children>
-                                                            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="When the Add elevator floor field button is toggled, click the elevator where you want to add floor fields to, then click an empty patch to add a floor field on that location with a value set by the intensity slider below." wrappingWidth="200.0" />
-                                                            <ToggleButton mnemonicParsing="false" prefHeight="25.0" prefWidth="215.0" text="Add elevator floor field" />
-                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                               <children>
-                                                                  <Label text="Intensity:" />
-                                                                  <Slider blockIncrement="0.05" majorTickUnit="0.25" max="1.0" minorTickCount="5" prefWidth="140.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.5" />
-                                                               </children>
-                                                            </HBox>
-                                                            <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
-                                                         </children>
-                                                      </VBox>
-                                                   </children>
-                                                </VBox>
-                                             </content>
-                                          </TitledPane>
-                                          <TitledPane animated="false" layoutX="10.0" layoutY="10.0" text="Queueing floor field">
-                                             <content>
-                                                <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
-                                                   <children>
-                                                      <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
-                                                         <children>
-                                                            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="When the Add queueing floor field button is toggled, click the security gate, ticket booth transaction area, or turnstile where you want to add floor fields to, then click an empty patch to add a floor field on that location with a value set by the intensity slider below." wrappingWidth="200.0" />
-                                                            <ToggleButton mnemonicParsing="false" prefHeight="25.0" prefWidth="215.0" text="Add queueing floor field" />
-                                                            <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
-                                                            <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                               <children>
-                                                                  <Label text="Intensity:" />
-                                                                  <Slider blockIncrement="0.05" majorTickUnit="0.25" max="1.0" minorTickCount="5" prefWidth="140.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.5" />
-                                                               </children>
-                                                            </HBox>
+                                                            <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Save" />
+                                                            <Button cancelButton="true" layoutX="11.0" layoutY="58.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                          </children>
                                                       </VBox>
                                                    </children>

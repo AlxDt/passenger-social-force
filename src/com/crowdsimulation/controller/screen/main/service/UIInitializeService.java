@@ -3,9 +3,12 @@ package com.crowdsimulation.controller.screen.main.service;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.main.MainScreenController;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
@@ -61,6 +64,14 @@ public class UIInitializeService {
             Spinner<Integer> turnstileIntervalSpinner,
             Button saveTurnstileButton,
             Button deleteTurnstileButton,
+            // Platform amenities
+            CheckBox trainDoorEnableCheckBox,
+            Label trainDoorDirectionLabel,
+            ChoiceBox<TrainDoor.TrainDoorPlatform> trainDoorDirectionChoiceBox,
+            Label trainDoorCarriageLabel,
+            ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
+            Button saveTrainDoorButton,
+            Button deleteTrainDoorButton,
             // Tab pane
             TabPane buildTabPane
     ) {
@@ -105,6 +116,16 @@ public class UIInitializeService {
                 deleteTurnstileButton
         );
 
+        initializePlatformAmenities(
+                trainDoorEnableCheckBox,
+                trainDoorDirectionLabel,
+                trainDoorDirectionChoiceBox,
+                trainDoorCarriageLabel,
+                trainDoorCarriageListView,
+                saveTrainDoorButton,
+                deleteTrainDoorButton
+        );
+
         // Initialize listeners
         initializeCategoryListeners(buildTabPane);
     }
@@ -123,6 +144,8 @@ public class UIInitializeService {
             Simulator.BuildState newBuildState = buildModeChoiceBox.getSelectionModel().getSelectedItem();
 
             Main.simulator.setBuildState(newBuildState);
+
+            Main.mainScreenController.updatePromptText();
         });
     }
 
@@ -346,6 +369,67 @@ public class UIInitializeService {
         deleteTurnstileButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
     }
 
+    // Initialize the platform amenities build category UI controls
+    private static void initializePlatformAmenities(
+            CheckBox trainDoorEnableCheckBox,
+            Label trainDoorDirectionLabel,
+            ChoiceBox<TrainDoor.TrainDoorPlatform> trainDoorDirectionChoiceBox,
+            Label trainDoorCarriageLabel,
+            ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
+            Button saveTrainDoorButton,
+            Button deleteTrainDoorButton
+    ) {
+        initializeTrainBoardingArea(
+                trainDoorEnableCheckBox,
+                trainDoorDirectionLabel,
+                trainDoorDirectionChoiceBox,
+                trainDoorCarriageLabel,
+                trainDoorCarriageListView,
+                saveTrainDoorButton,
+                deleteTrainDoorButton
+        );
+    }
+
+    // Initialize the train boarding area controls
+    private static void initializeTrainBoardingArea(
+            CheckBox trainDoorEnableCheckBox,
+            Label trainDoorDirectionLabel,
+            ChoiceBox<TrainDoor.TrainDoorPlatform> trainDoorDirectionChoiceBox,
+            Label trainDoorCarriageLabel,
+            ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriagesListView,
+            Button saveTrainDoorButton,
+            Button deleteTrainDoorButton
+    ) {
+        trainDoorDirectionLabel.setLabelFor(trainDoorDirectionChoiceBox);
+
+        trainDoorDirectionChoiceBox.setItems(FXCollections.observableArrayList(
+                TrainDoor.TrainDoorPlatform.NORTHBOUND,
+                TrainDoor.TrainDoorPlatform.SOUTHBOUND,
+                TrainDoor.TrainDoorPlatform.WESTBOUND,
+                TrainDoor.TrainDoorPlatform.EASTBOUND
+        ));
+        trainDoorDirectionChoiceBox.getSelectionModel().select(0);
+
+        trainDoorCarriageLabel.setLabelFor(trainDoorCarriagesListView);
+
+        trainDoorCarriagesListView.setItems(FXCollections.observableArrayList(
+                TrainDoor.TrainDoorCarriage.LRT_1_FIRST_GENERATION,
+                TrainDoor.TrainDoorCarriage.LRT_1_SECOND_GENERATION,
+                TrainDoor.TrainDoorCarriage.LRT_1_THIRD_GENERATION,
+                TrainDoor.TrainDoorCarriage.LRT_2_FIRST_GENERATION,
+                TrainDoor.TrainDoorCarriage.MRT_3_FIRST_GENERATION,
+                TrainDoor.TrainDoorCarriage.MRT_3_SECOND_GENERATION
+        ));
+        trainDoorCarriagesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+        trainDoorEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        trainDoorDirectionChoiceBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        trainDoorCarriagesListView.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+
+        saveTrainDoorButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        deleteTrainDoorButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+    }
+
     // Iterate through each build subtab to set the listeners for the changing of build categories and subcategories
     private static void initializeCategoryListeners(TabPane buildTabPane) {
         List<Tab> buildSubtabs = buildTabPane.getTabs();
@@ -364,6 +448,8 @@ public class UIInitializeService {
                         Main.simulator.setBuildSubcategory(
                                 MainScreenController.getBuildSubcategory(buildTabPane.getSelectionModel())
                         );
+
+                        Main.mainScreenController.updatePromptText();
                     } else {
                         // If not, just check if this pane is the previous subcategory and the new subcategory is null
                         // The previous state was either from an expanded subcategory or has been replaced with another
@@ -372,6 +458,8 @@ public class UIInitializeService {
                             Main.simulator.setBuildSubcategory(
                                     MainScreenController.getBuildSubcategory(buildTabPane.getSelectionModel())
                             );
+
+                            Main.mainScreenController.updatePromptText();
                         }
                     }
                 });
@@ -386,6 +474,8 @@ public class UIInitializeService {
                         Main.simulator.setBuildSubcategory(
                                 MainScreenController.getBuildSubcategory(buildTabPane.getSelectionModel())
                         );
+
+                        Main.mainScreenController.updatePromptText();
                     }
                 });
             }
@@ -397,9 +487,13 @@ public class UIInitializeService {
     ) {
         playButton.setOnAction(event -> {
             if (playButton.isSelected()) {
-                Main.simulator.getOperationMode().set(Simulator.OperationMode.TESTING);
+                Main.simulator.setOperationMode(Simulator.OperationMode.TESTING);
+
+                Main.mainScreenController.updatePromptText();
             } else {
-                Main.simulator.getOperationMode().set(Simulator.OperationMode.BUILDING);
+                Main.simulator.setOperationMode(Simulator.OperationMode.BUILDING);
+
+                Main.mainScreenController.updatePromptText();
             }
         });
     }
