@@ -46,7 +46,7 @@ public class StationGate extends Gate {
     // Station gate factory
     public static class StationGateFactory extends AmenityFactory {
         @Override
-        public Amenity createAmenity(Patch patch, Object... objects) {
+        public Amenity create(Patch patch, Object... objects) {
             return new StationGate(
                     patch,
                     (boolean) objects[0],

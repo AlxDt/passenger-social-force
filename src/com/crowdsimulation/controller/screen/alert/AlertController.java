@@ -2,10 +2,13 @@ package com.crowdsimulation.controller.screen.alert;
 
 import com.crowdsimulation.controller.screen.ScreenController;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+
+import java.util.Optional;
 
 public class AlertController extends ScreenController {
     // Display a simple OK-activated alert box
-    public static void showAlert(String title, String header, String content, Alert.AlertType alertType) {
+    public static void showSimpleAlert(String title, String header, String content, Alert.AlertType alertType) {
         Alert alert = new Alert(alertType);
 
         alert.setTitle(title);
@@ -13,5 +16,18 @@ public class AlertController extends ScreenController {
         alert.setContentText(content);
 
         alert.showAndWait();
+    }
+
+    // Display a simple yes or no confirmation alert box
+    public static boolean showConfirmationAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+
+        Optional<ButtonType> result = alert.showAndWait();
+
+        return result.get() == ButtonType.OK;
     }
 }

@@ -9,6 +9,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
+import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -330,4 +331,81 @@ public class Floor extends BaseStationObject {
 
         return this.goals.get(sequence).get(index);
     }*/
+
+    // Add a floor above or below the given current floor in a list of floors
+    public static Floor addFloorAboveOrBelow(
+            List<Floor> floors,
+            Floor currentFloor,
+            boolean aboveCurrentFloor,
+            int newFloorRows,
+            int newFloorColumns) {
+        // Get the index of the current floor within the given floor list
+        int currentFloorIndex = floors.indexOf(currentFloor);
+
+        if (!aboveCurrentFloor) {
+            return addFloorBelowCurrentFloor(floors, currentFloorIndex, newFloorRows, newFloorColumns);
+        } else {
+            return addFloorAboveCurrentFloor(floors, currentFloorIndex, newFloorRows, newFloorColumns);
+        }
+    }
+
+    // Add a floor below the given current floor in a list of floors
+    private static Floor addFloorBelowCurrentFloor(
+            List<Floor> floors,
+            int currentFloorIndex,
+            int newFloorRows,
+            int newFloorColumns) {
+        // If adding below, the index of the new floor is the index of the current floor
+        // (because the current floor would be chronologically bumped up in the list)
+        int newFloorIndex = currentFloorIndex;
+
+        // Add the floor given the new index
+        return addFloor(floors, newFloorIndex, newFloorRows, newFloorColumns);
+    }
+
+    // Add a floor above the given current floor in a list of floors
+    private static Floor addFloorAboveCurrentFloor(
+            List<Floor> floors,
+            int currentFloorIndex,
+            int newFloorRows,
+            int newFloorsColumns) {
+        // If adding below, the index of the new floor is 1 + the index of the current floor
+        // (because the current floor would stay put in the list)
+        int newFloorIndex = 1 + currentFloorIndex;
+
+        // Add the floor given the new index
+        return addFloor(floors, newFloorIndex, newFloorRows, newFloorsColumns);
+    }
+
+    // Add a floor to the list of floors given an index
+    public static Floor addFloor(
+            List<Floor> floors,
+            int newFloorIndex,
+            int newFloorsRows,
+            int newFloorColumns) {
+        Floor.FloorFactory floorFactory = new FloorFactory();
+        Floor newFloor = floorFactory.create(
+                newFloorsRows,
+                newFloorColumns
+        );
+
+        floors.add(
+                newFloorIndex,
+                newFloor
+        );
+
+        return newFloor;
+    }
+
+    // Remove the given floor from a list of floors
+    public static void removeFloor(List<Floor> floors, Floor floorToBeRemoved) {
+        floors.remove(floorToBeRemoved);
+    }
+
+    // Floor factory
+    public static class FloorFactory {
+        public Floor create(int rows, int columns) {
+            return new Floor(rows, columns);
+        }
+    }
 }

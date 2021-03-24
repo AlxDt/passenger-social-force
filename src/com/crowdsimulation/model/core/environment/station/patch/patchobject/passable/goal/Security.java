@@ -29,7 +29,7 @@ public class Security extends BlockableAmenity {
     // Security factory
     public static class SecurityFactory extends AmenityFactory {
         @Override
-        public Amenity createAmenity(Patch patch, Object... objects) {
+        public Amenity create(Patch patch, Object... objects) {
             return new Security(
                     patch,
                     (boolean) objects[0],

@@ -30,6 +30,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 
+import java.util.List;
+import java.util.Optional;
+
 public class MainScreenController extends ScreenController {
     // Operational variables
     @FXML
@@ -197,7 +200,20 @@ public class MainScreenController extends ScreenController {
     // Passenger controls
     // Platform controls
 
+    // Top bar
     // Top bar text prompt
+    @FXML
+    private Text stationNameText;
+
+    @FXML
+    private Button floorBelowButton;
+
+    @FXML
+    private Text floorNumberText;
+
+    @FXML
+    private Button floorAboveButton;
+
     @FXML
     private Text promptText;
 
@@ -306,14 +322,18 @@ public class MainScreenController extends ScreenController {
                 buildTabPane
         );
 
+        UIInitializeService.initializeTopTab(
+                floorBelowButton,
+                floorAboveButton
+        );
+
         UIInitializeService.initializeTestTab(
                 playButton
         );
-
-        updatePromptText();
     }
 
     @FXML
+    // TODO: Load a station from a file
     public void loadStationAction() {
         // TODO: Display a dialog box for loading a station from a file
         Station station = new Station();
@@ -324,20 +344,233 @@ public class MainScreenController extends ScreenController {
         // Set the current floor to the lowermost floor of the station
         Main.simulator.setCurrentFloor(station.getFloors().get(0));
 
+        // Set the index of the current floor
+        Main.simulator.setCurrentFloorIndex(0);
+
+        // Update the top bar, reflecting the name and other details of the current station
+        updateTopBar();
+
         // Draw the interface
-        drawInterface(Main.simulator.getCurrentFloor(), true);
+        drawInterface(true);
     }
 
     @FXML
     // Remove amenities
     public void deleteAmenityAction() {
         deleteAmenityInFloor(Main.simulator.getBuildState().get() == Simulator.BuildState.EDITING_ONE);
+
+        // Hence, the simulator won't have this amenity anymore
+        Main.simulator.setCurrentAmenity(null);
+        Main.simulator.setCurrentClass(null);
+
+        // Redraw the interface
+        drawInterface(false);
     }
 
     @FXML
     // Save amenities
     public void saveAmenityAction() {
         saveAmenityInFloor(Main.simulator.getBuildState().get() == Simulator.BuildState.EDITING_ONE);
+
+        // Reset the current amenity and class to nulls to disable the save and delete buttons
+        Main.simulator.setCurrentAmenity(null);
+        Main.simulator.setCurrentClass(null);
+    }
+
+    @FXML
+    // Add a floor below this current floor
+    public void addFloorBelowAction() {
+        // Retrieve the floors of the current station
+        Floor currentFloor = Main.simulator.getCurrentFloor();
+        List<Floor> currentStationFloors = Main.simulator.getStation().getFloors();
+
+        // Add the floor below
+        Floor newFloor = Floor.addFloorAboveOrBelow(
+                currentStationFloors,
+                currentFloor,
+                false,
+                Station.ROWS,
+                Station.COLUMNS
+        );
+
+        // Switch to that new floor
+        switchFloor(newFloor, false);
+
+        // Show a dialog box to confirm that a floor was added
+        AlertController.showSimpleAlert(
+                "Floor added",
+                "Floor added successfully",
+                "A new floor has been added successfully. The view has been switched to that new floor.",
+                Alert.AlertType.INFORMATION
+        );
+    }
+
+    @FXML
+    // Add a floor above this current floor
+    public void addFloorAboveAction() {
+        // Retrieve the floors of the current station
+        Floor currentFloor = Main.simulator.getCurrentFloor();
+        List<Floor> currentStationFloors = Main.simulator.getStation().getFloors();
+
+        // Add the floor below
+        Floor newFloor = Floor.addFloorAboveOrBelow(
+                currentStationFloors,
+                currentFloor,
+                true,
+                Station.ROWS,
+                Station.COLUMNS
+        );
+
+        // Switch to that new floor
+        switchFloor(newFloor, false);
+
+        // Show a dialog box to confirm that a floor was added
+        AlertController.showSimpleAlert(
+                "Floor added",
+                "Floor added successfully",
+                "A new floor has been added successfully. The view has been switched to that new floor.",
+                Alert.AlertType.INFORMATION
+        );
+    }
+
+    @FXML
+    // Delete current floor
+    public void deleteFloorAction() {
+        List<Floor> floors = Main.simulator.getStation().getFloors();
+
+        // Only allow deletion of floors when there are more than one
+        // i.e., you can't delete the only floor you're working on
+        if (floors.size() > 1) {
+            // Show a dialog to confirm floor deletion
+            boolean confirm = AlertController.showConfirmationAlert(
+                    "Are you sure?",
+                    "Are you sure you want to delete this floor?",
+                    "All amenities within this floor will be deleted. Stairs, escalators, and elevators" +
+                            " going to or coming from this floor will also be deleted from other floors. This" +
+                            " operation cannot be undone."
+            );
+
+            if (confirm) {
+                Floor floorToBeRemoved = Main.simulator.getCurrentFloor();
+                Floor floorToSwitchTo;
+
+                // Delete the current floor
+                Floor.removeFloor(
+                        floors,
+                        floorToBeRemoved
+                );
+
+                // Switch to the floor below the floor to be deleted, if any
+                if (Main.simulator.getCurrentFloorIndex().get() > 0) {
+                    floorToSwitchTo = floors.get(
+                            Main.simulator.getCurrentFloorIndex().get() - 1
+                    );
+
+                    // Show a dialog box to confirm that a floor was added
+                    AlertController.showSimpleAlert(
+                            "Floor deleted",
+                            "Floor deleted successfully",
+                            "The floor has been deleted successfully. The view has been switched to the floor below" +
+                                    " the deleted floor.",
+                            Alert.AlertType.INFORMATION
+                    );
+                } else {
+                    // If there is no floor below it, switch to the floor above it
+                    floorToSwitchTo = floors.get(0);
+
+                    // Show a dialog box to confirm that a floor was added
+                    AlertController.showSimpleAlert(
+                            "Floor deleted",
+                            "Floor deleted successfully",
+                            "The floor has been deleted successfully. The view has been switched to the floor above" +
+                                    " the deleted floor.",
+                            Alert.AlertType.INFORMATION
+                    );
+                }
+
+                // Switch to the floor below
+                switchFloor(floorToSwitchTo, false);
+            }
+        } else {
+            // Show a dialog box to tell the user that deleting a singular floor is not allowed
+            AlertController.showSimpleAlert(
+                    "Deletion failed",
+                    "Floor deletion failed",
+                    "You may not delete the only floor in this station.",
+                    Alert.AlertType.ERROR
+            );
+        }
+    }
+
+    @FXML
+    // Switch view to the floor below
+    public void switchToFloorBelowAction() {
+        // Get the floor below
+        Floor floorBelow = Main.simulator.getStation().getFloors().get(
+                Main.simulator.getCurrentFloorIndex().get() - 1
+        );
+
+        // Switch to that floor
+        switchFloor(floorBelow, false);
+    }
+
+    @FXML
+    // Switch view to the floor above
+    public void switchToFloorAboveAction() {
+        // Get the floor above
+        Floor floorAbove = Main.simulator.getStation().getFloors().get(
+                Main.simulator.getCurrentFloorIndex().get() + 1
+        );
+
+        // Switch to that floor
+        switchFloor(floorAbove, false);
+    }
+
+    // Switch to a given floor
+    private void switchFloor(Floor floor, boolean showListeners) {
+        // Make the given floor the current floor
+        Main.simulator.setCurrentFloor(floor);
+
+        // Update the index of the current floor
+        Main.simulator.setCurrentFloorIndex(
+                Main.simulator.getStation().getFloors().indexOf(floor)
+        );
+
+        // Switch to that floor by redrawing the interface
+        drawInterface(showListeners);
+
+        // Update the top bar
+        updateTopBar();
+
+        // Check if the above and below switch floor buttons may be enabled
+        floorBelowButton.setDisable(
+                Main.simulator.getCurrentFloorIndex().get() == 0
+        );
+
+        floorAboveButton.setDisable(
+                Main.simulator.getCurrentFloorIndex().get() == Main.simulator.getStation().getFloors().size() - 1
+        );
+    }
+
+    // Update the top bar as a while
+    private void updateTopBar() {
+        updateStationNameText();
+        updateFloorNumberText();
+        updatePromptText();
+    }
+
+    // Set the station name text
+    private void updateStationNameText() {
+        stationNameText.setText(
+                Main.simulator.getStation().getName()
+        );
+    }
+
+    // Set the floor number text
+    public void updateFloorNumberText() {
+        floorNumberText.setText(
+                "Floor #" + (Main.simulator.getCurrentFloorIndex().get() + 1)
+        );
     }
 
     // Set the prompt text
@@ -413,6 +646,10 @@ public class MainScreenController extends ScreenController {
                 amenityText = "train boarding area" + ((editingAll) ? "s" : "");
 
                 break;
+            case FLOOR:
+                amenityText = "floor" + ((editingAll) ? "s" : "");
+
+                break;
             case QUEUEING_FLOOR_FIELD:
                 amenityText = "queueing floor field" + ((editingAll) ? "s" : "");
 
@@ -424,9 +661,7 @@ public class MainScreenController extends ScreenController {
         }
 
         promptText.setText(
-                operationModeText
-                        + ((testing)
-                        ?
+                operationModeText + ((testing) ?
                         ""
                         :
                         ": "
@@ -447,10 +682,6 @@ public class MainScreenController extends ScreenController {
         } else {
             saveAllAmenitiesInFloor();
         }
-
-        // Reset the current amenity and class to nulls to disable the save and delete buttons
-        Main.simulator.setCurrentAmenity(null);
-        Main.simulator.setCurrentClass(null);
     }
 
     // Save the current amenity in a floor
@@ -551,8 +782,8 @@ public class MainScreenController extends ScreenController {
                             trainDoorCarriageListView.getSelectionModel().getSelectedItems()
                     );
                 } else {
-                    AlertController.showAlert(
-                            "Invalid input",
+                    AlertController.showSimpleAlert(
+                            "No carriages selected",
                             "No carriages selected",
                             "Please select the train carriage(s) supported by this train boarding area",
                             Alert.AlertType.ERROR
@@ -666,8 +897,8 @@ public class MainScreenController extends ScreenController {
                         );
                     }
                 } else {
-                    AlertController.showAlert(
-                            "Invalid input",
+                    AlertController.showSimpleAlert(
+                            "No carriages selected",
                             "No carriages selected",
                             "Please select the train carriage(s) supported by these train boarding areas",
                             Alert.AlertType.ERROR
@@ -688,13 +919,6 @@ public class MainScreenController extends ScreenController {
         } else {
             deleteAllAmenitiesInFloor();
         }
-
-        // Hence, the simulator won't have this amenity anymore
-        Main.simulator.setCurrentAmenity(null);
-        Main.simulator.setCurrentClass(null);
-
-        // Redraw the interface
-        drawInterface(Main.simulator.getCurrentFloor(), false);
     }
 
     // Delete the current amenity in a floor
@@ -893,7 +1117,11 @@ public class MainScreenController extends ScreenController {
                     buildSubcategory = Simulator.BuildSubcategory.TRAIN_BOARDING_AREA;
 
                     break;
-                case "Queueing floor field":
+                case "Floor":
+                    buildSubcategory = Simulator.BuildSubcategory.FLOOR;
+
+                    break;
+                case "Floor field":
                     buildSubcategory = Simulator.BuildSubcategory.QUEUEING_FLOOR_FIELD;
 
                     break;
@@ -936,7 +1164,7 @@ public class MainScreenController extends ScreenController {
                                         StationGate.StationGateFactory stationGateFactory
                                                 = new StationGate.StationGateFactory();
 
-                                        StationGate stationGateToAdd = (StationGate) stationGateFactory.createAmenity(
+                                        StationGate stationGateToAdd = (StationGate) stationGateFactory.create(
                                                 currentPatch,
                                                 stationGateEnableCheckBox.isSelected(),
                                                 stationGateSpawnSpinner.getValue() / 100.0,
@@ -1018,7 +1246,7 @@ public class MainScreenController extends ScreenController {
                                         Security.SecurityFactory securityFactory
                                                 = new Security.SecurityFactory();
 
-                                        Security securityToAdd = (Security) securityFactory.createAmenity(
+                                        Security securityToAdd = (Security) securityFactory.create(
                                                 currentPatch,
                                                 securityEnableCheckBox.isSelected(),
                                                 securityIntervalSpinner.getValue(),
@@ -1116,11 +1344,11 @@ public class MainScreenController extends ScreenController {
                                                     .TicketBoothTransactionAreaFactory();
 
                                             TicketBooth ticketBoothToAdd
-                                                    = (TicketBooth) ticketBoothFactory.createAmenity(currentPatch);
+                                                    = (TicketBooth) ticketBoothFactory.create(currentPatch);
 
                                             TicketBoothTransactionArea ticketBoothTransactionAreaToAdd
                                                     = (TicketBoothTransactionArea)
-                                                    ticketBoothTransactionAreaFactory.createAmenity(
+                                                    ticketBoothTransactionAreaFactory.create(
                                                             extraPatch,
                                                             ticketBoothEnableCheckBox.isSelected(),
                                                             ticketBoothIntervalSpinner.getValue(),
@@ -1226,7 +1454,7 @@ public class MainScreenController extends ScreenController {
                                         // Prepare the amenity that will be placed on the station
                                         Turnstile.TurnstileFactory turnstileFactory = new Turnstile.TurnstileFactory();
 
-                                        Turnstile turnstileToAdd = (Turnstile) turnstileFactory.createAmenity(
+                                        Turnstile turnstileToAdd = (Turnstile) turnstileFactory.create(
                                                 currentPatch,
                                                 turnstileEnableCheckBox.isSelected(),
                                                 turnstileIntervalSpinner.getValue(),
@@ -1314,7 +1542,7 @@ public class MainScreenController extends ScreenController {
                                             TrainDoor.TrainDoorFactory trainDoorFactory
                                                     = new TrainDoor.TrainDoorFactory();
 
-                                            TrainDoor trainDoorToAdd = (TrainDoor) trainDoorFactory.createAmenity(
+                                            TrainDoor trainDoorToAdd = (TrainDoor) trainDoorFactory.create(
                                                     currentPatch,
                                                     trainDoorEnableCheckBox.isSelected(),
                                                     trainDoorDirectionChoiceBox.getSelectionModel().getSelectedItem(),
@@ -1327,8 +1555,8 @@ public class MainScreenController extends ScreenController {
                                             // Add this station gate to the list of all train doors on this floor
                                             Main.simulator.getCurrentFloor().getTrainDoors().add(trainDoorToAdd);
                                         } else {
-                                            AlertController.showAlert(
-                                                    "Invalid input",
+                                            AlertController.showSimpleAlert(
+                                                    "No carriages selected",
                                                     "No carriages selected",
                                                     "Please select the train carriage(s) supported by" +
                                                             " the train boarding area to be added",
@@ -1583,7 +1811,7 @@ public class MainScreenController extends ScreenController {
     }
 
     // Draw the interface
-    private void drawInterface(Floor currentFloor, boolean drawListeners) {
+    private void drawInterface(boolean drawListeners) {
         final double tileSize = backgroundCanvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
 
         // Initially draw the station environment, showing the current floor

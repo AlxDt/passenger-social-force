@@ -1,6 +1,10 @@
 package com.crowdsimulation.model.core.environment.station;
 
 import com.crowdsimulation.model.core.environment.Environment;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.IntegerBinding;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +14,7 @@ public class Station extends BaseStationObject implements Environment {
     public static final int ROWS = 60;
     public static final int COLUMNS = 106;
 
+    // Contains binding values for the number of floors this station has
     // The name of the station
     private final String name;
 
@@ -19,11 +24,12 @@ public class Station extends BaseStationObject implements Environment {
     // TODO: Revise temporary constructor
     public Station() {
         // TODO: Load station from file
-        this.name = "Test station";
+        this.name = "Test Station";
         this.floors = new ArrayList<>();
 
         // TODO: Remove ad-hoc adding when implementation is made to load from file
-        this.floors.add(new Floor(ROWS, COLUMNS));
+        // Initially, the station has one floor
+        Floor.addFloor(this.floors, 0, Station.ROWS, Station.COLUMNS);
     }
 
     public String getName() {

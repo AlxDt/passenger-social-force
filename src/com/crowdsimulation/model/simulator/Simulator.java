@@ -3,6 +3,7 @@ package com.crowdsimulation.model.simulator;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 // The simulator has total control over the aspects of the crowd simulation
@@ -25,11 +26,12 @@ public class Simulator {
     private Station station;
 
     // Denotes the index of the floor displayed
-    private int currentFloorIndex;
+    private SimpleIntegerProperty currentFloorIndex;
 
     // Denotes the floor currently displayed
     private Floor currentFloor;
 
+    // Denotes the current amenity and classes being drawn or edited
     private final SimpleObjectProperty<Amenity> currentAmenity;
     private final SimpleObjectProperty<Class> currentClass;
 
@@ -46,17 +48,17 @@ public class Simulator {
         // The program is initially in the drawing state
         this.buildState = new SimpleObjectProperty<>(BuildState.DRAWING);
 
-        this.station = null;
-        this.currentFloorIndex = -1;
-        this.currentFloor = null;
+/*        this.station = null;
+        this.currentFloorIndex = new SimpleIntegerProperty(-1);
+        this.currentFloor = null;*/
 
         this.currentAmenity = new SimpleObjectProperty<>(null);
         this.currentClass = new SimpleObjectProperty<>(null);
 
         // TODO: Remove ad-hoc constants
         this.station = new Station();
-        this.currentFloorIndex = 0;
-        this.currentFloor = station.getFloors().get(this.currentFloorIndex);
+        this.currentFloorIndex = new SimpleIntegerProperty(0);
+        this.currentFloor = station.getFloors().get(this.currentFloorIndex.get());
     }
 
     public SimpleObjectProperty<OperationMode> getOperationMode() {
@@ -99,12 +101,12 @@ public class Simulator {
         this.station = station;
     }
 
-    public int getCurrentFloorIndex() {
+    public SimpleIntegerProperty getCurrentFloorIndex() {
         return currentFloorIndex;
     }
 
     public void setCurrentFloorIndex(int currentFloorIndex) {
-        this.currentFloorIndex = currentFloorIndex;
+        this.currentFloorIndex.set(currentFloorIndex);
     }
 
     public Floor getCurrentFloor() {
@@ -167,7 +169,8 @@ public class Simulator {
         // Platform amenities
         TRAIN_BOARDING_AREA,
 
-        // Floor fields
+        // Floors and floor fields
+        FLOOR,
         QUEUEING_FLOOR_FIELD,
 
         // Walls

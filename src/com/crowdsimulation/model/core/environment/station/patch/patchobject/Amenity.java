@@ -16,6 +16,6 @@ public abstract class Amenity extends PatchObject {
 
     public abstract static class AmenityFactory {
         // Create an amenity
-        public abstract Amenity createAmenity(Patch patch, Object... objects);
+        public abstract Amenity create(Patch patch, Object... objects);
     }
 }

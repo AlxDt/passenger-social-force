@@ -149,6 +149,15 @@ public class UIInitializeService {
         });
     }
 
+    // Initialize the build tab UI controls
+    public static void initializeTopTab(
+            Button floorBelowButton,
+            Button floorAboveButton
+    ) {
+        floorBelowButton.setDisable(true);
+        floorAboveButton.setDisable(true);
+    }
+
     // Initialize the test tab UI controls
     public static void initializeTestTab(
             ToggleButton playButton
