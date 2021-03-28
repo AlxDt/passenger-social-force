@@ -36,13 +36,13 @@ public class Turnstile extends BlockableAmenity {
     // Turnstile factory
     public static class TurnstileFactory extends AmenityFactory {
         @Override
-        public Amenity create(Patch patch, Object... objects) {
+        public Turnstile create(Object... objects) {
             return new Turnstile(
-                    patch,
-                    (boolean) objects[0],
-                    (int) objects[1],
-                    (boolean) objects[2],
-                    (TurnstileMode) objects[3]
+                    (Patch) objects[0],
+                    (boolean) objects[1],
+                    (int) objects[2],
+                    (boolean) objects[3],
+                    (TurnstileMode) objects[4]
             );
         }
     }

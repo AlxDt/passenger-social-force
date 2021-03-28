@@ -2,7 +2,6 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.BlockableAmenity;
 
 public class Security extends BlockableAmenity {
@@ -29,12 +28,12 @@ public class Security extends BlockableAmenity {
     // Security factory
     public static class SecurityFactory extends AmenityFactory {
         @Override
-        public Amenity create(Patch patch, Object... objects) {
+        public Security create(Object... objects) {
             return new Security(
-                    patch,
-                    (boolean) objects[0],
-                    (int) objects[1],
-                    (boolean) objects[2]
+                    (Patch) objects[0],
+                    (boolean) objects[1],
+                    (int) objects[2],
+                    (boolean) objects[3]
             );
         }
     }

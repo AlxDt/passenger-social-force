@@ -23,9 +23,9 @@ public class TicketBooth extends Obstacle {
     // Ticket booth factory
     public static class TicketBoothFactory extends AmenityFactory {
         @Override
-        public Amenity create(Patch patch, Object... objects) {
+        public Amenity create(Object... objects) {
             return new TicketBooth(
-                    patch
+                    (Patch) objects[0]
             );
         }
     }

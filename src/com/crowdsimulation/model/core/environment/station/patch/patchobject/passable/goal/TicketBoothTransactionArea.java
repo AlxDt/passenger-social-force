@@ -62,13 +62,13 @@ public class TicketBoothTransactionArea extends Goal {
     // Ticket booth transaction area factory
     public static class TicketBoothTransactionAreaFactory extends AmenityFactory {
         @Override
-        public Amenity create(Patch patch, Object... objects) {
+        public TicketBoothTransactionArea create(Object... objects) {
             return new TicketBoothTransactionArea(
-                    patch,
-                    (boolean) objects[0],
-                    (int) objects[1],
-                    (TicketBooth) objects[2],
-                    (TicketBoothType) objects [3]
+                    (Patch) objects[0],
+                    (boolean) objects[1],
+                    (int) objects[2],
+                    (TicketBooth) objects[3],
+                    (TicketBoothType) objects [4]
             );
         }
     }

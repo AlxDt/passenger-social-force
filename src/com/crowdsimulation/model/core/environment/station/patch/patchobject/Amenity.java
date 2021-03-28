@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject;
 
+import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 public abstract class Amenity extends PatchObject {
@@ -14,8 +15,9 @@ public abstract class Amenity extends PatchObject {
         return patch;
     }
 
-    public abstract static class AmenityFactory {
-        // Create an amenity
-        public abstract Amenity create(Patch patch, Object... objects);
+    // Create an amenity
+    public abstract static class AmenityFactory extends BaseStationObject.StationObjectFactory {
+        @Override
+        public abstract Amenity create(Object... objects);
     }
 }

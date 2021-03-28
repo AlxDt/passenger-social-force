@@ -15,8 +15,14 @@ import javafx.scene.control.*;
 
 import java.util.List;
 
-public class UIInitializeService {
+public class InitializeMainScreenService extends InitializeScreenService {
     private static final ObservableList<Simulator.BuildState> BUILD_MODE_CHOICEBOX_ITEMS;
+
+    // Binding variables
+    public static BooleanBinding SAVE_DELETE_BINDING;
+    public static BooleanBinding SPECIFIC_CONTROLS_BINDING;
+    public static BooleanBinding DRAW_ONLY_BINDING;
+    public static BooleanBinding PORTAL_DRAW_IN_PROGRESS_BINDING;
 
     static {
         BUILD_MODE_CHOICEBOX_ITEMS = FXCollections.observableArrayList(
@@ -24,9 +30,74 @@ public class UIInitializeService {
                 Simulator.BuildState.EDITING_ONE,
                 Simulator.BuildState.EDITING_ALL
         );
+
+        boolean evaluateClassEquality = Main.simulator.currentAmenityProperty().isNotNull().get();
+
+        InitializeMainScreenService.SAVE_DELETE_BINDING =
+                Bindings.or(
+                        Bindings.equal(
+                                Main.simulator.buildStateProperty(),
+                                Simulator.BuildState.DRAWING
+                        ),
+                        Bindings.and(
+                                Bindings.or(
+                                        Bindings.isNull(
+                                                Main.simulator.currentAmenityProperty()
+                                        ),
+                                        (evaluateClassEquality) ?
+                                                Bindings.equal(
+                                                        Main.simulator.getCurrentAmenity().getClass(),
+                                                        Main.simulator.currentClassProperty()
+                                                ) :
+                                                Bindings.createBooleanBinding(() -> false)
+                                ),
+                                Bindings.notEqual(
+                                        Main.simulator.buildStateProperty(),
+                                        Simulator.BuildState.EDITING_ALL
+                                )
+                        )
+                );
+
+        InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING =
+                Bindings.and(
+                        Bindings.equal(
+                                Main.simulator.buildStateProperty(),
+                                Simulator.BuildState.EDITING_ONE
+                        ),
+                        Bindings.or(
+                                Bindings.isNull(
+                                        Main.simulator.currentAmenityProperty()
+                                ),
+                                (evaluateClassEquality) ?
+                                        Bindings.notEqual(
+                                                Main.simulator.getCurrentAmenity().getClass(),
+                                                Main.simulator.currentClassProperty()
+                                        ) :
+                                        Bindings.createBooleanBinding(() -> false)
+                        )
+                );
+
+        InitializeMainScreenService.DRAW_ONLY_BINDING =
+                Bindings.or(
+                        Bindings.notEqual(
+                                Main.simulator.buildStateProperty(),
+                                Simulator.BuildState.DRAWING
+                        ),
+                        Main.simulator.portalDrawingProperty()
+                );
+
+        InitializeMainScreenService.PORTAL_DRAW_IN_PROGRESS_BINDING =
+                Bindings.equal(
+                        Main.simulator.portalDrawingProperty(),
+                        Bindings.createBooleanBinding(() -> true)
+                );
     }
 
     // Initialize the build tab UI controls
+    public static void initializeSidebar(TabPane sideBar) {
+        sideBar.disableProperty().bind(InitializeMainScreenService.PORTAL_DRAW_IN_PROGRESS_BINDING);
+    }
+
     public static void initializeBuildTab(
             Label buildModeLabel,
             ChoiceBox<Simulator.BuildState> buildModeChoiceBox,
@@ -46,6 +117,10 @@ public class UIInitializeService {
             Spinner<Integer> securityIntervalSpinner,
             Button saveSecurityButton,
             Button deleteSecurityButton,
+            // Stairs and elevators
+            Button addElevatorButton,
+            Button editElevatorButton,
+            Button deleteElevatorButton,
             // Concourse amenities
             // Ticket booth
             CheckBox ticketBoothEnableCheckBox,
@@ -96,6 +171,12 @@ public class UIInitializeService {
                 securityIntervalSpinner,
                 saveSecurityButton,
                 deleteSecurityButton
+        );
+
+        initializeStairsElevators(
+                addElevatorButton,
+                editElevatorButton,
+                deleteElevatorButton
         );
 
         initializeConcourseAmenities(
@@ -150,7 +231,7 @@ public class UIInitializeService {
     }
 
     // Initialize the build tab UI controls
-    public static void initializeTopTab(
+    public static void initializeTopBar(
             Button floorBelowButton,
             Button floorAboveButton
     ) {
@@ -230,12 +311,12 @@ public class UIInitializeService {
                         50)
         );
 
-        stationGateEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        stationGateModeChoiceBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        stationGateSpinner.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        stationGateEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        stationGateModeChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        stationGateSpinner.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
-        saveStationGateButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
-        deleteStationGateButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        saveStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+        deleteStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the security UI controls
@@ -256,12 +337,51 @@ public class UIInitializeService {
                         5)
         );
 
-        securityEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        securityBlockPassengerCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        securityIntervalSpinner.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        securityEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        securityBlockPassengerCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        securityIntervalSpinner.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
-        saveSecurityButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
-        deleteSecurityButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        saveSecurityButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+        deleteSecurityButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+    }
+
+    // Initialize the stairs and elevators build category UI controls
+    private static void initializeStairsElevators(
+            Button addElevatorButton,
+            Button editElevatorButton,
+            Button deleteElevatorButton
+    ) {
+        initializeStairs();
+
+        initializeEscalators();
+
+        initializeElevators(
+                addElevatorButton,
+                editElevatorButton,
+                deleteElevatorButton
+        );
+    }
+
+    // Initialize the stairs controls
+    private static void initializeStairs() {
+
+    }
+
+    // Initialize the escalators controls
+    private static void initializeEscalators() {
+
+    }
+
+    // Initialize the elevators controls
+    private static void initializeElevators(
+            Button addElevatorButton,
+            Button editElevatorButton,
+            Button deleteElevatorButton
+    ) {
+        addElevatorButton.disableProperty().bind(InitializeMainScreenService.DRAW_ONLY_BINDING);
+
+        editElevatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+        deleteElevatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the concourse amenities build category UI controls
@@ -332,12 +452,12 @@ public class UIInitializeService {
                         5)
         );
 
-        ticketBoothEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        ticketBoothModeChoiceBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        ticketBoothIntervalSpinner.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        ticketBoothEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        ticketBoothModeChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        ticketBoothIntervalSpinner.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
-        saveTicketBoothButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
-        deleteTicketBoothButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        saveTicketBoothButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+        deleteTicketBoothButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the turnstile controls
@@ -369,13 +489,13 @@ public class UIInitializeService {
                         3)
         );
 
-        turnstileEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        turnstileBlockPassengerCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        turnstileDirectionChoiceBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        turnstileIntervalSpinner.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        turnstileEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        turnstileBlockPassengerCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        turnstileDirectionChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        turnstileIntervalSpinner.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
-        saveTurnstileButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
-        deleteTurnstileButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        saveTurnstileButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+        deleteTurnstileButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the platform amenities build category UI controls
@@ -431,12 +551,12 @@ public class UIInitializeService {
         ));
         trainDoorCarriagesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        trainDoorEnableCheckBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        trainDoorDirectionChoiceBox.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
-        trainDoorCarriagesListView.disableProperty().bind(MainScreenController.SPECIFIC_CONTROLS_BINDING);
+        trainDoorEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        trainDoorDirectionChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        trainDoorCarriagesListView.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
-        saveTrainDoorButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
-        deleteTrainDoorButton.disableProperty().bind(MainScreenController.SAVE_DELETE_BINDING);
+        saveTrainDoorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+        deleteTrainDoorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Iterate through each build subtab to set the listeners for the changing of build categories and subcategories

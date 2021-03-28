@@ -4,39 +4,46 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.alert.AlertController;
-import com.crowdsimulation.controller.screen.main.service.UIInitializeService;
+import com.crowdsimulation.controller.screen.feature.portalcontroller.PortalFloorSelectorController;
+import com.crowdsimulation.controller.screen.feature.portalcontroller.edit.ElevatorEditController;
+import com.crowdsimulation.controller.screen.feature.portalcontroller.setup.ElevatorSetupController;
+import com.crowdsimulation.controller.screen.feature.portalcontroller.setup.PortalSetupController;
+import com.crowdsimulation.controller.screen.main.service.InitializeMainScreenService;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.Elevator;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.EscalatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.StairPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 public class MainScreenController extends ScreenController {
     // Operational variables
     @FXML
-    private TabPane operationTabPane;
+    private TabPane sidebar;
 
     @FXML
     private TabPane buildTabPane;
@@ -113,6 +120,14 @@ public class MainScreenController extends ScreenController {
     // Escalator
 
     // Elevator
+    @FXML
+    private Button addElevatorButton;
+
+    @FXML
+    private Button editElevatorButton;
+
+    @FXML
+    private Button deleteElevatorButton;
 
     // Concourse amenities
     // Ticket booth
@@ -217,62 +232,19 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Text promptText;
 
-    // Binding variables
-    public static BooleanBinding SAVE_DELETE_BINDING;
-    public static BooleanBinding SPECIFIC_CONTROLS_BINDING;
-
-    static {
-        boolean evaluateClassEquality = Main.simulator.getCurrentAmenity().isNotNull().get();
-
-        MainScreenController.SAVE_DELETE_BINDING =
-                Bindings.or(
-                        Bindings.equal(
-                                Main.simulator.getBuildState(),
-                                Simulator.BuildState.DRAWING
-                        ),
-                        Bindings.and(
-                                Bindings.or(
-                                        Bindings.isNull(
-                                                Main.simulator.getCurrentAmenity()
-                                        ),
-                                        (evaluateClassEquality) ?
-                                                Bindings.equal(
-                                                        Main.simulator.getCurrentAmenity().get().getClass(),
-                                                        Main.simulator.getCurrentClass()
-                                                ) :
-                                                Bindings.createBooleanBinding(() -> false)
-                                ),
-                                Bindings.notEqual(
-                                        Main.simulator.getBuildState(),
-                                        Simulator.BuildState.EDITING_ALL
-                                )
-                        )
-                );
-
-        MainScreenController.SPECIFIC_CONTROLS_BINDING =
-                Bindings.and(
-                        Bindings.equal(
-                                Main.simulator.getBuildState(),
-                                Simulator.BuildState.EDITING_ONE
-                        ),
-                        Bindings.or(
-                                Bindings.isNull(
-                                        Main.simulator.getCurrentAmenity()
-                                ),
-                                (evaluateClassEquality) ?
-                                        Bindings.notEqual(
-                                                Main.simulator.getCurrentAmenity().get().getClass(),
-                                                Main.simulator.getCurrentClass()
-                                        ) :
-                                        Bindings.createBooleanBinding(() -> false)
-                        )
-                );
-    }
-
     @FXML
     public void initialize() {
         // Initialize all UI elements and label references
-        UIInitializeService.initializeBuildTab(
+        InitializeMainScreenService.initializeTopBar(
+                floorBelowButton,
+                floorAboveButton
+        );
+
+        InitializeMainScreenService.initializeSidebar(
+                sidebar
+        );
+
+        InitializeMainScreenService.initializeBuildTab(
                 buildModeLabel,
                 buildModeChoiceBox,
                 // Entrances/exits
@@ -291,6 +263,13 @@ public class MainScreenController extends ScreenController {
                 securityIntervalSpinner,
                 saveSecurityButton,
                 deleteSecurityButton,
+                // Stairs and elevators
+                // Stairs
+                // Escalator
+                // Elevator
+                addElevatorButton,
+                editElevatorButton,
+                deleteElevatorButton,
                 // Concourse amenities
                 // Ticket booth
                 ticketBoothEnableCheckBox,
@@ -322,12 +301,7 @@ public class MainScreenController extends ScreenController {
                 buildTabPane
         );
 
-        UIInitializeService.initializeTopTab(
-                floorBelowButton,
-                floorAboveButton
-        );
-
-        UIInitializeService.initializeTestTab(
+        InitializeMainScreenService.initializeTestTab(
                 playButton
         );
     }
@@ -357,7 +331,7 @@ public class MainScreenController extends ScreenController {
     @FXML
     // Remove amenities
     public void deleteAmenityAction() {
-        deleteAmenityInFloor(Main.simulator.getBuildState().get() == Simulator.BuildState.EDITING_ONE);
+        deleteAmenityInFloor(Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE);
 
         // Hence, the simulator won't have this amenity anymore
         Main.simulator.setCurrentAmenity(null);
@@ -370,11 +344,167 @@ public class MainScreenController extends ScreenController {
     @FXML
     // Save amenities
     public void saveAmenityAction() {
-        saveAmenityInFloor(Main.simulator.getBuildState().get() == Simulator.BuildState.EDITING_ONE);
+        saveAmenityInFloor(Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE);
 
         // Reset the current amenity and class to nulls to disable the save and delete buttons
         Main.simulator.setCurrentAmenity(null);
         Main.simulator.setCurrentClass(null);
+    }
+
+    @FXML
+    // Add elevator
+    public void addElevatorAction() throws IOException {
+        // Only add an elevator when there are multiple floors
+        if (Main.simulator.getStation().getFloors().size() > 1) {
+            // Display the elevator setup prompt
+            FXMLLoader loader = ScreenController.getLoader(
+                    getClass(),
+                    "/com/crowdsimulation/view/ElevatorSetupInterface.fxml");
+            Parent root = loader.load();
+
+            ElevatorSetupController elevatorSetupController = loader.getController();
+            elevatorSetupController.setElements();
+
+            // Show the window
+            elevatorSetupController.showWindow(
+                    root,
+                    "Elevator setup",
+                    true
+            );
+
+            // Only proceed when this window is closed through the proceed action
+            if (elevatorSetupController.isClosedWithAction()) {
+                // Prompt the user that it is now time to draw the first elevator
+                AlertController.showSimpleAlert(
+                        "Add first elevator",
+                        "Draw the first elevator",
+                        "After closing this window, please draw the first elevator on this floor." +
+                                " Click X to cancel this operation.",
+                        Alert.AlertType.INFORMATION
+                );
+
+                beginPortalDrawing(elevatorSetupController);
+            }
+        } else {
+            AlertController.showSimpleAlert(
+                    "Elevator addition failed",
+                    "Unable to add elevator",
+                    "You may only add elevators when there are more than one floors in the station.",
+                    Alert.AlertType.INFORMATION
+            );
+        }
+    }
+
+    @FXML
+    // Edit elevator
+    public void editElevatorAction() throws IOException {
+        // Display the elevator setup prompt
+        FXMLLoader loader = ScreenController.getLoader(
+                getClass(),
+                "/com/crowdsimulation/view/ElevatorEditInterface.fxml");
+        Parent root = loader.load();
+
+        ElevatorEditController elevatorEditController = loader.getController();
+        elevatorEditController.setElements();
+
+        // Show the window
+        elevatorEditController.showWindow(
+                root,
+                (Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE)
+                        ? "Edit an elevator" : "Edit all elevators",
+                true
+        );
+
+        // Only proceed when this window is closed through the proceed action
+        if (elevatorEditController.isClosedWithAction()) {
+            // Extract the modified elevator shaft from the window
+            ElevatorShaft elevatorShaft = (ElevatorShaft) elevatorEditController.getWindowOutput().get(
+                    ElevatorEditController.OUTPUT_KEY
+            );
+
+            // Determine whether we need to edit one or all
+            boolean editingOne = Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE;
+
+            if (editingOne) {
+                // Apply the changes to the elevator shaft to its component elevators
+                saveSingleAmenityInFloor(elevatorShaft);
+            } else {
+                // Apply the changes to the elevator shaft to all elevator shafts and all their component elevators
+                saveAllAmenitiesInFloor(elevatorShaft);
+            }
+
+            // Prompt the user that the elevator has been successfully edited
+            if (editingOne) {
+                AlertController.showSimpleAlert(
+                        "Elevator edited",
+                        "Elevator successfully edited",
+                        "The elevator has been successfully edited.",
+                        Alert.AlertType.INFORMATION
+                );
+            } else {
+                AlertController.showSimpleAlert(
+                        "Elevators edited",
+                        "Elevators successfully edited",
+                        "The elevators have been successfully edited.",
+                        Alert.AlertType.INFORMATION
+                );
+            }
+        }
+    }
+
+    @FXML
+    // Delete elevator
+    public void deleteElevatorAction() {
+        boolean editingOne = Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE;
+        boolean confirm;
+
+        // Show a dialog to confirm floor deletion
+        if (editingOne) {
+            confirm = AlertController.showConfirmationAlert(
+                    "Are you sure?",
+                    "Are you sure you want to delete this elevator?",
+                    "This will remove this elevator from all its serviced floors. This operation cannot be undone."
+            );
+        } else {
+            confirm = AlertController.showConfirmationAlert(
+                    "Are you sure?",
+                    "Are you sure you want to delete all elevators?",
+                    "This will remove all elevators from their serviced floors. This operation cannot be undone."
+            );
+        }
+
+        // Determine whether we need to edit one or all
+        if (confirm) {
+            if (editingOne) {
+                // Delete this elevator
+                deleteSingleAmenityInFloor(
+                        ((ElevatorPortal) Main.simulator.getCurrentAmenity()).getElevatorShaft()
+                );
+            } else {
+                // Delete all elevators
+                deleteAllAmenitiesInFloor();
+            }
+
+            // Prompt the user that the elevator has been successfully edited
+            if (editingOne) {
+                AlertController.showSimpleAlert(
+                        "Elevator deleted",
+                        "Elevator successfully deleted",
+                        "The elevator has been successfully deleted.",
+                        Alert.AlertType.INFORMATION
+                );
+            } else {
+                AlertController.showSimpleAlert(
+                        "All elevators deleted",
+                        "All elevators successfully deleted",
+                        "All elevators have been successfully deleted.",
+                        Alert.AlertType.INFORMATION
+                );
+            }
+
+            // Redraw the interface
+            drawInterface(false);
+        }
     }
 
     @FXML
@@ -394,7 +524,7 @@ public class MainScreenController extends ScreenController {
         );
 
         // Switch to that new floor
-        switchFloor(newFloor, false);
+        switchFloor(newFloor);
 
         // Show a dialog box to confirm that a floor was added
         AlertController.showSimpleAlert(
@@ -422,7 +552,7 @@ public class MainScreenController extends ScreenController {
         );
 
         // Switch to that new floor
-        switchFloor(newFloor, false);
+        switchFloor(newFloor);
 
         // Show a dialog box to confirm that a floor was added
         AlertController.showSimpleAlert(
@@ -461,9 +591,9 @@ public class MainScreenController extends ScreenController {
                 );
 
                 // Switch to the floor below the floor to be deleted, if any
-                if (Main.simulator.getCurrentFloorIndex().get() > 0) {
+                if (Main.simulator.getCurrentFloorIndex() > 0) {
                     floorToSwitchTo = floors.get(
-                            Main.simulator.getCurrentFloorIndex().get() - 1
+                            Main.simulator.getCurrentFloorIndex() - 1
                     );
 
                     // Show a dialog box to confirm that a floor was added
@@ -489,12 +619,12 @@ public class MainScreenController extends ScreenController {
                 }
 
                 // Switch to the floor below
-                switchFloor(floorToSwitchTo, false);
+                switchFloor(floorToSwitchTo);
             }
         } else {
             // Show a dialog box to tell the user that deleting a singular floor is not allowed
             AlertController.showSimpleAlert(
-                    "Deletion failed",
+                    "Floor deletion failed",
                     "Floor deletion failed",
                     "You may not delete the only floor in this station.",
                     Alert.AlertType.ERROR
@@ -507,11 +637,11 @@ public class MainScreenController extends ScreenController {
     public void switchToFloorBelowAction() {
         // Get the floor below
         Floor floorBelow = Main.simulator.getStation().getFloors().get(
-                Main.simulator.getCurrentFloorIndex().get() - 1
+                Main.simulator.getCurrentFloorIndex() - 1
         );
 
         // Switch to that floor
-        switchFloor(floorBelow, false);
+        switchFloor(floorBelow);
     }
 
     @FXML
@@ -519,15 +649,15 @@ public class MainScreenController extends ScreenController {
     public void switchToFloorAboveAction() {
         // Get the floor above
         Floor floorAbove = Main.simulator.getStation().getFloors().get(
-                Main.simulator.getCurrentFloorIndex().get() + 1
+                Main.simulator.getCurrentFloorIndex() + 1
         );
 
         // Switch to that floor
-        switchFloor(floorAbove, false);
+        switchFloor(floorAbove);
     }
 
     // Switch to a given floor
-    private void switchFloor(Floor floor, boolean showListeners) {
+    private void switchFloor(Floor floor) {
         // Make the given floor the current floor
         Main.simulator.setCurrentFloor(floor);
 
@@ -537,18 +667,25 @@ public class MainScreenController extends ScreenController {
         );
 
         // Switch to that floor by redrawing the interface
-        drawInterface(showListeners);
+        drawInterface(false);
 
         // Update the top bar
         updateTopBar();
 
+        // Reset switch floor buttons
+        resetSwitchFloorButtons();
+    }
+
+    // Reset the switch floor buttons
+    private void resetSwitchFloorButtons() {
         // Check if the above and below switch floor buttons may be enabled
         floorBelowButton.setDisable(
-                Main.simulator.getCurrentFloorIndex().get() == 0
+                Main.simulator.isPortalDrawing() || Main.simulator.getCurrentFloorIndex() == 0
         );
 
         floorAboveButton.setDisable(
-                Main.simulator.getCurrentFloorIndex().get() == Main.simulator.getStation().getFloors().size() - 1
+                Main.simulator.isPortalDrawing()
+                        || Main.simulator.getCurrentFloorIndex() == Main.simulator.getStation().getFloors().size() - 1
         );
     }
 
@@ -569,7 +706,7 @@ public class MainScreenController extends ScreenController {
     // Set the floor number text
     public void updateFloorNumberText() {
         floorNumberText.setText(
-                "Floor #" + (Main.simulator.getCurrentFloorIndex().get() + 1)
+                "Floor #" + (Main.simulator.getCurrentFloorIndex() + 1)
         );
     }
 
@@ -579,11 +716,11 @@ public class MainScreenController extends ScreenController {
         String buildStateText = "";
         String amenityText = "";
 
-        boolean testing = Simulator.OperationMode.TESTING.equals(Main.simulator.getOperationMode().get());
-        boolean editingAll = Simulator.BuildState.EDITING_ALL.equals(Main.simulator.getBuildState().get());
-        boolean noAmenity = Simulator.BuildSubcategory.NONE.equals(Main.simulator.getBuildSubcategory().get());
+        boolean testing = Simulator.OperationMode.TESTING.equals(Main.simulator.getOperationMode());
+        boolean editingAll = Simulator.BuildState.EDITING_ALL.equals(Main.simulator.getBuildState());
+        boolean noAmenity = Simulator.BuildSubcategory.NONE.equals(Main.simulator.getBuildSubcategory());
 
-        switch (Main.simulator.getOperationMode().get()) {
+        switch (Main.simulator.getOperationMode()) {
             case BUILDING:
                 operationModeText = "Building";
 
@@ -594,7 +731,7 @@ public class MainScreenController extends ScreenController {
                 break;
         }
 
-        switch (Main.simulator.getBuildState().get()) {
+        switch (Main.simulator.getBuildState()) {
             case DRAWING:
                 buildStateText = ((!noAmenity) ? "Drawing" : "draw");
 
@@ -609,7 +746,7 @@ public class MainScreenController extends ScreenController {
                 break;
         }
 
-        switch (Main.simulator.getBuildSubcategory().get()) {
+        switch (Main.simulator.getBuildSubcategory()) {
             case NONE:
                 amenityText = "none";
 
@@ -646,10 +783,6 @@ public class MainScreenController extends ScreenController {
                 amenityText = "train boarding area" + ((editingAll) ? "s" : "");
 
                 break;
-            case FLOOR:
-                amenityText = "floor" + ((editingAll) ? "s" : "");
-
-                break;
             case QUEUEING_FLOOR_FIELD:
                 amenityText = "queueing floor field" + ((editingAll) ? "s" : "");
 
@@ -678,18 +811,17 @@ public class MainScreenController extends ScreenController {
     private void saveAmenityInFloor(boolean singleAmenity) {
         // Distinguish whether only a single amenity will be saved or not
         if (singleAmenity) {
-            saveSingleAmenityInFloor();
+            saveSingleAmenityInFloor(Main.simulator.getCurrentAmenity());
         } else {
-            saveAllAmenitiesInFloor();
+            saveAllAmenitiesInFloor(null);
         }
     }
 
     // Save the current amenity in a floor
-    private void saveSingleAmenityInFloor() {
-        switch (Main.simulator.getBuildSubcategory().get()) {
+    private void saveSingleAmenityInFloor(Amenity amenityToSave) {
+        switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
-                StationGate stationGateToEdit
-                        = (StationGate) Main.simulator.getCurrentAmenity().get();
+                StationGate stationGateToEdit = (StationGate) amenityToSave;
 
                 stationGateToEdit.setEnabled(
                         stationGateEnableCheckBox.isSelected()
@@ -705,8 +837,7 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case SECURITY:
-                Security securityToEdit
-                        = (Security) Main.simulator.getCurrentAmenity().get();
+                Security securityToEdit = (Security) amenityToSave;
 
                 securityToEdit.setEnabled(
                         securityEnableCheckBox.isSelected()
@@ -726,10 +857,21 @@ public class MainScreenController extends ScreenController {
             case ESCALATOR:
                 break;
             case ELEVATOR:
+                ElevatorShaft elevatorShaftToEdit = (ElevatorShaft) amenityToSave;
+
+                // Retrieve portal components
+                Portal lowerPortal = elevatorShaftToEdit.getLowerPortal();
+                Portal upperPortal = elevatorShaftToEdit.getUpperPortal();
+
+                // Apply the changes from the elevator shaft to these portals
+                // Only the enabled option is reflected to these portals
+                lowerPortal.setEnabled(elevatorShaftToEdit.isEnabled());
+                upperPortal.setEnabled(elevatorShaftToEdit.isEnabled());
+
                 break;
             case TICKET_BOOTH:
                 TicketBoothTransactionArea ticketBoothTransactionAreaToEdit
-                        = (TicketBoothTransactionArea) Main.simulator.getCurrentAmenity().get();
+                        = (TicketBoothTransactionArea) amenityToSave;
 
                 ticketBoothTransactionAreaToEdit.setEnabled(
                         ticketBoothEnableCheckBox.isSelected()
@@ -745,8 +887,7 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case TURNSTILE:
-                Turnstile turnstileToEdit
-                        = (Turnstile) Main.simulator.getCurrentAmenity().get();
+                Turnstile turnstileToEdit = (Turnstile) amenityToSave;
 
                 turnstileToEdit.setEnabled(
                         turnstileEnableCheckBox.isSelected()
@@ -767,8 +908,7 @@ public class MainScreenController extends ScreenController {
                 break;
             case TRAIN_BOARDING_AREA:
                 if (!trainDoorCarriageListView.getSelectionModel().isEmpty()) {
-                    TrainDoor trainDoorToEdit
-                            = (TrainDoor) Main.simulator.getCurrentAmenity().get();
+                    TrainDoor trainDoorToEdit = (TrainDoor) amenityToSave;
 
                     trainDoorToEdit.setEnabled(
                             trainDoorEnableCheckBox.isSelected()
@@ -783,7 +923,7 @@ public class MainScreenController extends ScreenController {
                     );
                 } else {
                     AlertController.showSimpleAlert(
-                            "No carriages selected",
+                            "Train boarding area addition failed",
                             "No carriages selected",
                             "Please select the train carriage(s) supported by this train boarding area",
                             Alert.AlertType.ERROR
@@ -797,20 +937,20 @@ public class MainScreenController extends ScreenController {
     }
 
     // Save all instances of an amenity in a floor
-    private void saveAllAmenitiesInFloor() {
-        switch (Main.simulator.getBuildSubcategory().get()) {
+    private void saveAllAmenitiesInFloor(PortalShaft portalShaft) {
+        switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
                 // Edit all station gates
-                for (StationGate stationGate : Main.simulator.getCurrentFloor().getStationGates()) {
-                    stationGate.setEnabled(
+                for (StationGate stationGateToEdit : Main.simulator.getCurrentFloor().getStationGates()) {
+                    stationGateToEdit.setEnabled(
                             stationGateEnableCheckBox.isSelected()
                     );
 
-                    stationGate.setChancePerSecond(
+                    stationGateToEdit.setChancePerSecond(
                             stationGateSpawnSpinner.getValue() / 100.0
                     );
 
-                    stationGate.setStationGateMode(
+                    stationGateToEdit.setStationGateMode(
                             stationGateModeChoiceBox.getValue()
                     );
                 }
@@ -818,16 +958,16 @@ public class MainScreenController extends ScreenController {
                 break;
             case SECURITY:
                 // Edit all ticket booths
-                for (Security security : Main.simulator.getCurrentFloor().getSecurities()) {
-                    security.setEnabled(
+                for (Security securityToEdit : Main.simulator.getCurrentFloor().getSecurities()) {
+                    securityToEdit.setEnabled(
                             securityEnableCheckBox.isSelected()
                     );
 
-                    security.setBlockEntry(
+                    securityToEdit.setBlockEntry(
                             securityBlockPassengerCheckBox.isSelected()
                     );
 
-                    security.setWaitingTime(
+                    securityToEdit.setWaitingTime(
                             securityIntervalSpinner.getValue()
                     );
                 }
@@ -838,6 +978,26 @@ public class MainScreenController extends ScreenController {
             case ESCALATOR:
                 break;
             case ELEVATOR:
+                // Edit all escalators
+                ElevatorShaft elevatorShaftReference = (ElevatorShaft) portalShaft;
+
+                for (ElevatorShaft elevatorShaftToEdit : Main.simulator.getStation().getElevatorShafts()) {
+                    // Mirror each elevator shaft to the reference shaft
+                    elevatorShaftToEdit.setEnabled(elevatorShaftReference.isEnabled());
+                    elevatorShaftToEdit.setOpenDelayTime(elevatorShaftReference.getOpenDelayTime());
+                    elevatorShaftToEdit.setDoorOpenTime(elevatorShaftReference.getDoorOpenTime());
+                    elevatorShaftToEdit.setMoveTime(elevatorShaftReference.getMoveTime());
+                    elevatorShaftToEdit.setElevatorDirection(elevatorShaftReference.getElevatorDirection());
+
+                    // Retrieve portal components
+                    Portal lowerPortal = elevatorShaftToEdit.getLowerPortal();
+                    Portal upperPortal = elevatorShaftToEdit.getUpperPortal();
+
+                    // Apply the changes from the elevator shaft to these portals
+                    lowerPortal.setEnabled(elevatorShaftReference.isEnabled());
+                    upperPortal.setEnabled(elevatorShaftReference.isEnabled());
+                }
+
                 break;
             case TICKET_BOOTH:
                 // Edit all ticket booths
@@ -898,7 +1058,7 @@ public class MainScreenController extends ScreenController {
                     }
                 } else {
                     AlertController.showSimpleAlert(
-                            "No carriages selected",
+                            "Train boarding area addition failed",
                             "No carriages selected",
                             "Please select the train carriage(s) supported by these train boarding areas",
                             Alert.AlertType.ERROR
@@ -915,41 +1075,44 @@ public class MainScreenController extends ScreenController {
     private void deleteAmenityInFloor(boolean singleAmenity) {
         // Distinguish whether only a single amenity will be deleted or not
         if (singleAmenity) {
-            deleteSingleAmenityInFloor();
+            deleteSingleAmenityInFloor(Main.simulator.getCurrentAmenity());
         } else {
             deleteAllAmenitiesInFloor();
         }
     }
 
     // Delete the current amenity in a floor
-    private void deleteSingleAmenityInFloor() {
+    private void deleteSingleAmenityInFloor(Amenity amenityToDelete) {
         // If the amenity to be deleted is a ticket booth transaction area, there are some extra steps
         // to be made
         TicketBooth ticketBoothToDelete = null;
 
-        if (Main.simulator.getCurrentAmenity().get() instanceof TicketBoothTransactionArea) {
+        if (amenityToDelete instanceof TicketBoothTransactionArea) {
             // Get the ticket booth from this patch
             ticketBoothToDelete
-                    = ((TicketBoothTransactionArea) Main.simulator.getCurrentAmenity().get()).getTicketBooth();
+                    = ((TicketBoothTransactionArea) Main.simulator.getCurrentAmenity()).getTicketBooth();
 
             // Delete the ticket booth from the patch that contain it
             ticketBoothToDelete.getPatch().setAmenity(null);
         }
 
         // Delete this amenity from the patch that contains it
-        Main.simulator.getCurrentAmenity().get().getPatch().setAmenity(null);
+        // Portal shafts do not have a patch, so ignore if it is
+        if (!(amenityToDelete instanceof PortalShaft)) {
+            amenityToDelete.getPatch().setAmenity(null);
+        }
 
-        // Also delete this amenity from the list of station gates in this floor
-        switch (Main.simulator.getBuildSubcategory().get()) {
+        // Also delete this amenity from its list in this floor
+        switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
                 Main.simulator.getCurrentFloor().getStationGates().remove(
-                        (StationGate) Main.simulator.getCurrentAmenity().get()
+                        (StationGate) amenityToDelete
                 );
 
                 break;
             case SECURITY:
                 Main.simulator.getCurrentFloor().getSecurities().remove(
-                        (Security) Main.simulator.getCurrentAmenity().get()
+                        (Security) amenityToDelete
                 );
 
                 break;
@@ -958,6 +1121,33 @@ public class MainScreenController extends ScreenController {
             case ESCALATOR:
                 break;
             case ELEVATOR:
+                ElevatorShaft elevatorShaftToDelete = (ElevatorShaft) amenityToDelete;
+
+                // Retrieve portal components
+                ElevatorPortal upperPortal = (ElevatorPortal) elevatorShaftToDelete.getUpperPortal();
+                ElevatorPortal lowerPortal = (ElevatorPortal) elevatorShaftToDelete.getLowerPortal();
+
+                // Remove the portals from their patches in their respective floors
+                if (Main.simulator.getFirstPortal() == null) {
+                    // Portal drawing completed, deleting portal from portal shaft
+                    if (upperPortal != null) {
+                        upperPortal.getPatch().setAmenity(null);
+                    }
+
+                    if (lowerPortal != null) {
+                        lowerPortal.getPatch().setAmenity(null);
+                    }
+
+                    // Remove elevator shaft
+                    Main.simulator.getStation().getElevatorShafts().remove(
+                            (ElevatorShaft) elevatorShaftToDelete
+                    );
+                } else {
+                    // Portal drawing uncompleted, deleting portal from simulator
+                    ElevatorPortal portal = (ElevatorPortal) Main.simulator.getFirstPortal();
+                    portal.getPatch().setAmenity(null);
+                }
+
                 break;
             case TICKET_BOOTH:
                 Main.simulator.getCurrentFloor().getTicketBooths().remove(
@@ -967,13 +1157,13 @@ public class MainScreenController extends ScreenController {
                 break;
             case TURNSTILE:
                 Main.simulator.getCurrentFloor().getTurnstiles().remove(
-                        (Turnstile) Main.simulator.getCurrentAmenity().get()
+                        (Turnstile) amenityToDelete
                 );
 
                 break;
             case TRAIN_BOARDING_AREA:
                 Main.simulator.getCurrentFloor().getTrainDoors().remove(
-                        (TrainDoor) Main.simulator.getCurrentAmenity().get()
+                        (TrainDoor) amenityToDelete
                 );
 
                 break;
@@ -984,7 +1174,7 @@ public class MainScreenController extends ScreenController {
 
     // Delete all instances of an amenity in a floor
     private void deleteAllAmenitiesInFloor() {
-        switch (Main.simulator.getBuildSubcategory().get()) {
+        switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
                 for (StationGate stationGate : Main.simulator.getCurrentFloor().getStationGates()) {
                     stationGate.getPatch().setAmenity(null);
@@ -1006,6 +1196,24 @@ public class MainScreenController extends ScreenController {
             case ESCALATOR:
                 break;
             case ELEVATOR:
+                for (ElevatorShaft elevatorShaft : Main.simulator.getStation().getElevatorShafts()) {
+                    // Retrieve portal components
+                    ElevatorPortal upperPortal = (ElevatorPortal) elevatorShaft.getUpperPortal();
+                    ElevatorPortal lowerPortal = (ElevatorPortal) elevatorShaft.getLowerPortal();
+
+                    // Portal from portal shaft
+                    if (upperPortal != null) {
+                        upperPortal.getPatch().setAmenity(null);
+                    }
+
+                    if (lowerPortal != null) {
+                        lowerPortal.getPatch().setAmenity(null);
+                    }
+                }
+
+                // Remove elevator shafts
+                Main.simulator.getStation().getElevatorShafts().clear();
+
                 break;
             case TICKET_BOOTH:
                 for (TicketBooth ticketBooth : Main.simulator.getCurrentFloor().getTicketBooths()) {
@@ -1035,6 +1243,47 @@ public class MainScreenController extends ScreenController {
             case WALL:
                 break;
         }
+    }
+
+    // Commence with adding a portal
+    private void beginPortalDrawing(PortalSetupController portalSetupController) {
+        if (portalSetupController instanceof ElevatorSetupController) {
+            ElevatorShaft elevatorShaft
+                    = (ElevatorShaft) portalSetupController.getWindowOutput().get(ElevatorSetupController.OUTPUT_KEY);
+
+            Main.simulator.setProvisionalPortalShaft(elevatorShaft);
+        }
+
+        // Portal drawing shall now commence
+        Main.simulator.setPortalDrawing(true);
+
+        // Finally, reset the switch floor buttons
+        resetSwitchFloorButtons();
+    }
+
+    // End adding a portal
+    private void endPortalDrawing(boolean completed) {
+        PortalShaft portalShaft = Main.simulator.getProvisionalPortalShaft();
+
+        // If the portal drawing has been completed, register the portal shaft to its respective amenity list
+        if (!completed) {
+            // If the portal drawing sequence was not completed, discard the prematurely added
+            // portals to maintain a consistent state
+            deleteSingleAmenityInFloor(portalShaft);
+        }
+
+        // Discard the portal shaft
+        // If the portal drawing was completed in its entirety, this portal shaft will live on in portals that have been
+        // added despite having its reference removed from the simulator
+        Main.simulator.setProvisionalPortalShaft(null);
+
+        // Portal drawing is now disabled
+        Main.simulator.setPortalDrawing(false);
+        Main.simulator.setFirstPortalDrawn(false);
+        Main.simulator.setFirstPortal(null);
+
+        // Finally, reset the switch floor buttons
+        resetSwitchFloorButtons();
     }
 
     public static Simulator.BuildCategory getBuildCategory(SingleSelectionModel<Tab> currentTabSelectionModel) {
@@ -1117,10 +1366,6 @@ public class MainScreenController extends ScreenController {
                     buildSubcategory = Simulator.BuildSubcategory.TRAIN_BOARDING_AREA;
 
                     break;
-                case "Floor":
-                    buildSubcategory = Simulator.BuildSubcategory.FLOOR;
-
-                    break;
                 case "Floor field":
                     buildSubcategory = Simulator.BuildSubcategory.QUEUEING_FLOOR_FIELD;
 
@@ -1136,12 +1381,12 @@ public class MainScreenController extends ScreenController {
     }
 
     // Contains actions for building or editing
-    public void buildOrEdit(Patch currentPatch) {
+    public void buildOrEdit(Patch currentPatch) throws IOException {
         // Get the current operation mode, category, and subcategory
-        Simulator.OperationMode operationMode = Main.simulator.getOperationMode().get();
-        Simulator.BuildCategory buildCategory = Main.simulator.getBuildCategory().get();
-        Simulator.BuildSubcategory buildSubcategory = Main.simulator.getBuildSubcategory().get();
-        Simulator.BuildState buildState = Main.simulator.getBuildState().get();
+        Simulator.OperationMode operationMode = Main.simulator.getOperationMode();
+        Simulator.BuildCategory buildCategory = Main.simulator.getBuildCategory();
+        Simulator.BuildSubcategory buildSubcategory = Main.simulator.getBuildSubcategory();
+        Simulator.BuildState buildState = Main.simulator.getBuildState();
 
         // If the operation mode is building, the user either wants to draw or edit (one or all)
         if (operationMode == Simulator.OperationMode.BUILDING) {
@@ -1157,7 +1402,7 @@ public class MainScreenController extends ScreenController {
                             switch (buildState) {
                                 case DRAWING:
                                     // Only add if the current patch doesn't already have an amenity
-                                    if (Main.simulator.getCurrentAmenity().isNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(StationGate.class);
 
                                         // Prepare the amenity that will be placed on the station
@@ -1179,7 +1424,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1188,11 +1433,11 @@ public class MainScreenController extends ScreenController {
                                     break;
                                 case EDITING_ONE:
                                     // Only edit if there is already a station gate on that patch
-                                    if (Main.simulator.getCurrentAmenity().get() instanceof StationGate) {
+                                    if (Main.simulator.getCurrentAmenity() instanceof StationGate) {
                                         Main.simulator.setCurrentClass(StationGate.class);
 
                                         StationGate stationGateToEdit
-                                                = (StationGate) Main.simulator.getCurrentAmenity().get();
+                                                = (StationGate) Main.simulator.getCurrentAmenity();
 
                                         stationGateEnableCheckBox.setSelected(
                                                 stationGateToEdit.isEnabled()
@@ -1207,10 +1452,10 @@ public class MainScreenController extends ScreenController {
                                         );
                                     } else {
                                         // If there is no amenity there, just do nothing
-                                        if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                             // If clicked on an existing amenity, switch to editing mode, then open that
                                             // amenity's controls
-                                            goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
                                             buildOrEdit(currentPatch);
@@ -1219,13 +1464,13 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ALL:
-                                    // No specific values need to be set here because all station gates will be edited
+                                    // No specific values need to be set here because all amenities will be edited
                                     // once save is clicked
                                     // If there is no amenity there, just do nothing
-                                    if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1239,7 +1484,7 @@ public class MainScreenController extends ScreenController {
                             switch (buildState) {
                                 case DRAWING:
                                     // Only add if the current patch doesn't already have an amenity
-                                    if (Main.simulator.getCurrentAmenity().isNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(Security.class);
 
                                         // Prepare the amenity that will be placed on the station
@@ -1261,7 +1506,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1269,12 +1514,12 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
-                                    // Only edit if there is already a station gate on that patch
-                                    if (Main.simulator.getCurrentAmenity().get() instanceof Security) {
+                                    // Only edit if there is already a security gate on that patch
+                                    if (Main.simulator.getCurrentAmenity() instanceof Security) {
                                         Main.simulator.setCurrentClass(Security.class);
 
                                         Security securityToEdit
-                                                = (Security) Main.simulator.getCurrentAmenity().get();
+                                                = (Security) Main.simulator.getCurrentAmenity();
 
                                         securityEnableCheckBox.setSelected(
                                                 securityToEdit.isEnabled()
@@ -1289,10 +1534,10 @@ public class MainScreenController extends ScreenController {
                                         );
                                     } else {
                                         // If there is no amenity there, just do nothing
-                                        if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                             // If clicked on an existing amenity, switch to editing mode, then open that
                                             // amenity's controls
-                                            goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
                                             buildOrEdit(currentPatch);
@@ -1301,13 +1546,13 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ALL:
-                                    // No specific values need to be set here because all station gates will be edited
+                                    // No specific values need to be set here because all amenities will be edited
                                     // once save is clicked
                                     // If there is no amenity there, just do nothing
-                                    if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1322,12 +1567,238 @@ public class MainScreenController extends ScreenController {
                         case ESCALATOR:
                             break;
                         case ELEVATOR:
+                            switch (buildState) {
+                                case DRAWING:
+                                    // Only add if the current patch doesn't already have an amenity
+                                    if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                        Main.simulator.setCurrentClass(ElevatorPortal.class);
+
+                                        // If a first portal has already been added, add the second portal this
+                                        // click
+                                        if (!Main.simulator.isFirstPortalDrawn()) {
+                                            // Only add an portal when there are multiple floors
+                                            if (Main.simulator.getStation().getFloors().size() > 1) {
+                                                // If the user has clicked on a patch without the portal being setup yet,
+                                                // show the setup first, then automatically put the first portal where the
+                                                // user clicked
+                                                if (!Main.simulator.isPortalDrawing()) {
+                                                    // Display the portal setup prompt
+                                                    FXMLLoader loader = ScreenController.getLoader(
+                                                            getClass(),
+                                                            "/com/crowdsimulation/view" +
+                                                                    "/ElevatorSetupInterface.fxml");
+                                                    Parent root = loader.load();
+
+                                                    ElevatorSetupController elevatorSetupController;
+
+                                                    elevatorSetupController = loader.getController();
+                                                    elevatorSetupController.setElements();
+
+                                                    // Show the window
+                                                    elevatorSetupController.showWindow(
+                                                            root,
+                                                            "Elevator setup",
+                                                            true
+                                                    );
+
+                                                    // Only proceed when this window is closed through the proceed action
+                                                    if (elevatorSetupController.isClosedWithAction()) {
+                                                        beginPortalDrawing(elevatorSetupController);
+                                                    }
+                                                }
+
+                                                // Only continue when the portal setup has been completed
+                                                if (Main.simulator.isPortalDrawing()) {
+                                                    // Setup has already been shown, so we may now draw the first portal in
+                                                    // peace
+                                                    // Prepare the first portal that will be placed on this floor
+                                                    ElevatorPortal.ElevatorPortalFactory elevatorPortalFactory
+                                                            = new ElevatorPortal.ElevatorPortalFactory();
+
+                                                    ElevatorPortal elevatorPortalToAdd = elevatorPortalFactory.create(
+                                                            currentPatch,
+                                                            Main.simulator.getProvisionalPortalShaft().isEnabled(),
+                                                            Main.simulator.getCurrentFloor(),
+                                                            Main.simulator.getProvisionalPortalShaft()
+                                                    );
+
+                                                    // Set the amenity on that patch
+                                                    currentPatch.setAmenity(elevatorPortalToAdd);
+
+                                                    // The first portal has now been drawn
+                                                    Main.simulator.setFirstPortalDrawn(true);
+                                                    Main.simulator.setFirstPortal(elevatorPortalToAdd);
+
+                                                    // Redraw the interface to briefly show the newly added elevator
+                                                    drawInterface(false);
+
+                                                    // Show the window for choosing the floor where the next portal will be
+                                                    FXMLLoader loader = ScreenController.getLoader(
+                                                            getClass(),
+                                                            "/com/crowdsimulation/view" +
+                                                                    "/PortalFloorSelectorInterface.fxml");
+                                                    Parent root = loader.load();
+
+                                                    PortalFloorSelectorController portalFloorSelectorController
+                                                            = loader.getController();
+                                                    portalFloorSelectorController.setElements();
+
+                                                    portalFloorSelectorController.showWindow(
+                                                            root,
+                                                            "Choose the floor of the second elevator",
+                                                            true
+                                                    );
+
+                                                    // Only continue when the floor selection has been completed
+                                                    if (portalFloorSelectorController.isClosedWithAction()) {
+                                                        // A floor has already been chosen, now retrieve that floor and go there
+                                                        Floor chosenFloor = (Floor) portalFloorSelectorController
+                                                                .getWindowOutput()
+                                                                .get(PortalFloorSelectorController.OUTPUT_KEY);
+
+                                                        // After the chosen floor was selected, we may now set the
+                                                        // provisional portal shaft with one of the portals, now that we
+                                                        // know which one is the portal located in the upper or lower
+                                                        // floor
+                                                        List<Floor> floors = Main.simulator.getStation().getFloors();
+
+                                                        // If the current floor is lower than the chosen floor, this
+                                                        // current floor will be the lower portal
+                                                        if (floors.indexOf(Main.simulator.getCurrentFloor())
+                                                                < floors.indexOf(chosenFloor)) {
+                                                            Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                                    elevatorPortalToAdd
+                                                            );
+                                                        } else {
+                                                            Main.simulator.getProvisionalPortalShaft().setUpperPortal(
+                                                                    elevatorPortalToAdd
+                                                            );
+                                                        }
+
+                                                        // Switch to that floor
+                                                        switchFloor(chosenFloor);
+
+                                                        // Prompt the user that it is now time to draw the second portal
+                                                        AlertController.showSimpleAlert(
+                                                                "Add second elevator",
+                                                                "Draw the second elevator",
+                                                                "After closing this window, please draw the" +
+                                                                        " second elevator on this floor. Click X to" +
+                                                                        " cancel this operation.",
+                                                                Alert.AlertType.INFORMATION
+                                                        );
+                                                    } else {
+                                                        // Cancel portal adding
+                                                        // Also delete the earlier added portal shafts and portals
+                                                        endPortalDrawing(false);
+                                                    }
+                                                }
+                                            } else {
+                                                AlertController.showSimpleAlert(
+                                                        "Elevator addition failed",
+                                                        "Unable to add elevator",
+                                                        "You may only add elevators when there are more than one floors in the station.",
+                                                        Alert.AlertType.INFORMATION
+                                                );
+                                            }
+                                        } else {
+                                            // Prepare the second portal that will be placed on this floor
+                                            ElevatorPortal.ElevatorPortalFactory elevatorPortalFactory
+                                                    = new ElevatorPortal.ElevatorPortalFactory();
+
+                                            ElevatorPortal elevatorPortalToAdd = elevatorPortalFactory.create(
+                                                    currentPatch,
+                                                    Main.simulator.getProvisionalPortalShaft().isEnabled(),
+                                                    Main.simulator.getCurrentFloor(),
+                                                    Main.simulator.getProvisionalPortalShaft()
+                                            );
+
+                                            // Set the amenity on that patch
+                                            currentPatch.setAmenity(elevatorPortalToAdd);
+
+                                            // If the upper portal has already been set, then this portal will be the
+                                            // lower one (and vice versa)
+                                            if (Main.simulator.getProvisionalPortalShaft().getUpperPortal() == null) {
+                                                Main.simulator.getProvisionalPortalShaft().setUpperPortal(
+                                                        elevatorPortalToAdd
+                                                );
+                                            } else {
+                                                Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                        elevatorPortalToAdd
+                                                );
+                                            }
+
+                                            // Register the provisional shaft to the station
+                                            Main.simulator.getStation().getElevatorShafts().add(
+                                                    (ElevatorShaft) Main.simulator.getProvisionalPortalShaft()
+                                            );
+
+                                            // Finish adding the portal
+                                            endPortalDrawing(true);
+
+                                            // Again, briefly redraw the interface to let the user have a glimpse at
+                                            // the newly added elevator
+                                            drawInterface(false);
+
+                                            // Let the user know that portal addition has been successful
+                                            AlertController.showSimpleAlert(
+                                                    "Elevator addition successful",
+                                                    "Elevator successfully added",
+                                                    "The elevator has been successfully added.",
+                                                    Alert.AlertType.INFORMATION
+                                            );
+                                        }
+                                    } else {
+                                        // If clicked on an existing amenity, switch to editing mode, then open that
+                                        // amenity's controls
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                        // Then revisit this method as if that amenity was clicked
+                                        buildOrEdit(currentPatch);
+                                    }
+
+                                    break;
+                                case EDITING_ONE:
+                                    // Only edit if there is already a elevator on that patch
+                                    if (Main.simulator.getCurrentAmenity() instanceof ElevatorPortal) {
+                                        Main.simulator.setCurrentClass(ElevatorPortal.class);
+
+                                        // Do nothing, editing is handled by the sidebar button
+                                    } else {
+                                        // If there is no amenity there, just do nothing
+                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                            // If clicked on an existing amenity, switch to editing mode, then open that
+                                            // amenity's controls
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                            // Then revisit this method as if that amenity was clicked
+                                            buildOrEdit(currentPatch);
+                                        }
+                                    }
+
+                                    break;
+                                case EDITING_ALL:
+                                    // No specific values need to be set here because all amenities will be edited
+                                    // once save is clicked
+                                    // If there is no amenity there, just do nothing
+                                    if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                        // If clicked on an existing amenity, switch to editing mode, then open that
+                                        // amenity's controls
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                        // Then revisit this method as if that amenity was clicked
+                                        buildOrEdit(currentPatch);
+                                    }
+
+                                    break;
+                            }
+
                             break;
                         case TICKET_BOOTH:
                             switch (buildState) {
                                 case DRAWING:
                                     // Only add if the current patch and the extra patch doesn't already have an amenity
-                                    if (Main.simulator.getCurrentAmenity().isNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(TicketBoothTransactionArea.class);
 
                                         // Only add if the current location is valid
@@ -1370,7 +1841,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1380,8 +1851,8 @@ public class MainScreenController extends ScreenController {
                                 case EDITING_ONE:
                                     // Only edit if there is already a ticket booth or its transaction area on that
                                     // patch
-                                    if (Main.simulator.getCurrentAmenity().get() instanceof TicketBooth
-                                            || Main.simulator.getCurrentAmenity().get()
+                                    if (Main.simulator.getCurrentAmenity() instanceof TicketBooth
+                                            || Main.simulator.getCurrentAmenity()
                                             instanceof TicketBoothTransactionArea) {
                                         Main.simulator.setCurrentClass(TicketBoothTransactionArea.class);
 
@@ -1389,17 +1860,17 @@ public class MainScreenController extends ScreenController {
 
                                         // See whether this patch is a ticket booth or its transaction area
                                         // Resolve for the transaction area
-                                        if (Main.simulator.getCurrentAmenity().get()
+                                        if (Main.simulator.getCurrentAmenity()
                                                 instanceof TicketBooth) {
                                             ticketBoothTransactionAreaToEdit
-                                                    = ((TicketBooth) Main.simulator.getCurrentAmenity().get())
+                                                    = ((TicketBooth) Main.simulator.getCurrentAmenity())
                                                     .getTicketBoothTransactionArea();
 
                                             Main.simulator.setCurrentAmenity(ticketBoothTransactionAreaToEdit);
                                         } else {
                                             ticketBoothTransactionAreaToEdit
                                                     = (TicketBoothTransactionArea)
-                                                    Main.simulator.getCurrentAmenity().get();
+                                                    Main.simulator.getCurrentAmenity();
                                         }
 
                                         ticketBoothEnableCheckBox.setSelected(
@@ -1415,10 +1886,10 @@ public class MainScreenController extends ScreenController {
                                         );
                                     } else {
                                         // If there is no amenity there, just do nothing
-                                        if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                             // If clicked on an existing amenity, switch to editing mode, then open that
                                             // amenity's controls
-                                            goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
                                             buildOrEdit(currentPatch);
@@ -1427,14 +1898,14 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ALL:
-                                    // No specific values need to be set here because all station gates will be edited
+                                    // No specific values need to be set here because all amenities will be edited
                                     // once save is clicked
 
                                     // If there is no amenity there, just do nothing
-                                    if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1448,7 +1919,7 @@ public class MainScreenController extends ScreenController {
                             switch (buildState) {
                                 case DRAWING:
                                     // Only add if the current patch doesn't already have an amenity
-                                    if (Main.simulator.getCurrentAmenity().isNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(Turnstile.class);
 
                                         // Prepare the amenity that will be placed on the station
@@ -1470,7 +1941,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1478,12 +1949,12 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
-                                    // Only edit if there is already a station gate on that patch
-                                    if (Main.simulator.getCurrentAmenity().get() instanceof Turnstile) {
+                                    // Only edit if there is already a turnstile on that patch
+                                    if (Main.simulator.getCurrentAmenity() instanceof Turnstile) {
                                         Main.simulator.setCurrentClass(Turnstile.class);
 
                                         Turnstile turnstileToEdit
-                                                = (Turnstile) Main.simulator.getCurrentAmenity().get();
+                                                = (Turnstile) Main.simulator.getCurrentAmenity();
 
                                         turnstileEnableCheckBox.setSelected(
                                                 turnstileToEdit.isEnabled()
@@ -1502,10 +1973,10 @@ public class MainScreenController extends ScreenController {
                                         );
                                     } else {
                                         // If there is no amenity there, just do nothing
-                                        if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                             // If clicked on an existing amenity, switch to editing mode, then open that
                                             // amenity's controls
-                                            goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
                                             buildOrEdit(currentPatch);
@@ -1514,13 +1985,13 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ALL:
-                                    // No specific values need to be set here because all station gates will be edited
+                                    // No specific values need to be set here because all amenities will be edited
                                     // once save is clicked
                                     // If there is no amenity there, just do nothing
-                                    if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1534,7 +2005,7 @@ public class MainScreenController extends ScreenController {
                             switch (buildState) {
                                 case DRAWING:
                                     // Only add if the current patch doesn't already have an amenity
-                                    if (Main.simulator.getCurrentAmenity().isNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(TrainDoor.class);
 
                                         if (!trainDoorCarriageListView.getSelectionModel().isEmpty()) {
@@ -1556,7 +2027,7 @@ public class MainScreenController extends ScreenController {
                                             Main.simulator.getCurrentFloor().getTrainDoors().add(trainDoorToAdd);
                                         } else {
                                             AlertController.showSimpleAlert(
-                                                    "No carriages selected",
+                                                    "Train boarding area addition failed",
                                                     "No carriages selected",
                                                     "Please select the train carriage(s) supported by" +
                                                             " the train boarding area to be added",
@@ -1566,7 +2037,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1574,12 +2045,12 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
-                                    // Only edit if there is already a station gate on that patch
-                                    if (Main.simulator.getCurrentAmenity().get() instanceof TrainDoor) {
+                                    // Only edit if there is already a train door on that patch
+                                    if (Main.simulator.getCurrentAmenity() instanceof TrainDoor) {
                                         Main.simulator.setCurrentClass(TrainDoor.class);
 
                                         TrainDoor trainDoorToEdit
-                                                = (TrainDoor) Main.simulator.getCurrentAmenity().get();
+                                                = (TrainDoor) Main.simulator.getCurrentAmenity();
 
                                         trainDoorEnableCheckBox.setSelected(
                                                 trainDoorToEdit.isEnabled()
@@ -1597,10 +2068,10 @@ public class MainScreenController extends ScreenController {
                                         }
                                     } else {
                                         // If there is no amenity there, just do nothing
-                                        if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                             // If clicked on an existing amenity, switch to editing mode, then open that
                                             // amenity's controls
-                                            goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
                                             buildOrEdit(currentPatch);
@@ -1609,13 +2080,13 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ALL:
-                                    // No specific values need to be set here because all station gates will be edited
+                                    // No specific values need to be set here because all amenities will be edited
                                     // once save is clicked
                                     // If there is no amenity there, just do nothing
-                                    if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                                    if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
-                                        goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                         // Then revisit this method as if that amenity was clicked
                                         buildOrEdit(currentPatch);
@@ -1628,10 +2099,10 @@ public class MainScreenController extends ScreenController {
                         case WALL:
                             break;
                         case NONE:
-                            if (Main.simulator.getCurrentAmenity().isNotNull().get()) {
+                            if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
                                 // If clicked on an existing amenity, switch to editing mode, then open that
                                 // amenity's controls
-                                goToAmenityControls(Main.simulator.getCurrentAmenity().get());
+                                goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                 // Then revisit this method as if that amenity was clicked
                                 buildOrEdit(currentPatch);
@@ -1674,7 +2145,7 @@ public class MainScreenController extends ScreenController {
         } else if (
                 amenity instanceof StairPortal
                         || amenity instanceof EscalatorPortal
-                        || amenity instanceof Elevator) {
+                        || amenity instanceof ElevatorPortal) {
             buildCategory = Simulator.BuildCategory.STAIRS_AND_ELEVATORS;
 
             if (amenity instanceof StairPortal) {

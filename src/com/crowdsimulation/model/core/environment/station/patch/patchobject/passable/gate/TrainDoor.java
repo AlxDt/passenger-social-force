@@ -50,12 +50,13 @@ public class TrainDoor extends Gate implements Queueable {
     // Train door factory
     public static class TrainDoorFactory extends AmenityFactory {
         @Override
-        public Amenity create(Patch patch, Object... objects) {
+        public TrainDoor
+        create(Object... objects) {
             return new TrainDoor(
-                    patch,
-                    (boolean) objects[0],
-                    (TrainDoorPlatform) objects[1],
-                    (List<TrainDoorCarriage>) objects[2]
+                    (Patch) objects[0],
+                    (boolean) objects[1],
+                    (TrainDoorPlatform) objects[2],
+                    (List<TrainDoorCarriage>) objects[3]
             );
         }
     }

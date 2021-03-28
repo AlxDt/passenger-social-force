@@ -3,6 +3,9 @@ package com.crowdsimulation.model.simulator;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
@@ -13,10 +16,10 @@ public class Simulator {
     private final SimpleObjectProperty<OperationMode> operationMode;
 
     // Denotes the current category within the build operation
-    private SimpleObjectProperty<BuildCategory> buildCategory;
+    private final SimpleObjectProperty<BuildCategory> buildCategory;
 
     // Denotes the current build category within the current build category
-    private SimpleObjectProperty<BuildSubcategory> buildSubcategory;
+    private final SimpleObjectProperty<BuildSubcategory> buildSubcategory;
 
     // Denotes the current state mostly while the program is in building mode
     private final SimpleObjectProperty<BuildState> buildState;
@@ -34,6 +37,13 @@ public class Simulator {
     // Denotes the current amenity and classes being drawn or edited
     private final SimpleObjectProperty<Amenity> currentAmenity;
     private final SimpleObjectProperty<Class> currentClass;
+
+    // Miscellaneous variables
+    private final SimpleBooleanProperty portalDrawing;
+    private final SimpleBooleanProperty firstPortalDrawn;
+
+    private Portal firstPortal;
+    private PortalShaft provisionalPortalShaft;
 
     public Simulator() {
         // The program is initially in the building mode
@@ -59,22 +69,44 @@ public class Simulator {
         this.station = new Station();
         this.currentFloorIndex = new SimpleIntegerProperty(0);
         this.currentFloor = station.getFloors().get(this.currentFloorIndex.get());
+
+        this.portalDrawing = new SimpleBooleanProperty(false);
+        this.firstPortalDrawn = new SimpleBooleanProperty(false);
+
+        this.firstPortal = null;
+        this.provisionalPortalShaft = null;
     }
 
-    public SimpleObjectProperty<OperationMode> getOperationMode() {
+    public SimpleObjectProperty<OperationMode> operationModeProperty() {
         return operationMode;
     }
 
-    public SimpleObjectProperty<BuildCategory> getBuildCategory() {
+    public OperationMode getOperationMode() {
+        return operationMode.get();
+    }
+
+    public SimpleObjectProperty<BuildCategory> buildCategoryProperty() {
         return buildCategory;
     }
 
-    public SimpleObjectProperty<BuildSubcategory> getBuildSubcategory() {
+    public BuildCategory getBuildCategory() {
+        return buildCategory.get();
+    }
+
+    public SimpleObjectProperty<BuildSubcategory> buildSubcategoryProperty() {
         return buildSubcategory;
     }
 
-    public SimpleObjectProperty<BuildState> getBuildState() {
+    public BuildSubcategory getBuildSubcategory() {
+        return buildSubcategory.get();
+    }
+
+    public SimpleObjectProperty<BuildState> buildStateProperty() {
         return buildState;
+    }
+
+    public BuildState getBuildState() {
+        return buildState.get();
     }
 
     public void setOperationMode(OperationMode operationMode) {
@@ -101,8 +133,12 @@ public class Simulator {
         this.station = station;
     }
 
-    public SimpleIntegerProperty getCurrentFloorIndex() {
+    public SimpleIntegerProperty currentFloorIndexProperty() {
         return currentFloorIndex;
+    }
+
+    public int getCurrentFloorIndex() {
+        return currentFloorIndex.get();
     }
 
     public void setCurrentFloorIndex(int currentFloorIndex) {
@@ -117,20 +153,68 @@ public class Simulator {
         this.currentFloor = currentFloor;
     }
 
-    public SimpleObjectProperty<Amenity> getCurrentAmenity() {
+    public SimpleObjectProperty<Amenity> currentAmenityProperty() {
         return currentAmenity;
+    }
+
+    public Amenity getCurrentAmenity() {
+        return currentAmenity.get();
     }
 
     public void setCurrentAmenity(Amenity currentAmenity) {
         this.currentAmenity.set(currentAmenity);
     }
 
-    public SimpleObjectProperty<Class> getCurrentClass() {
+    public SimpleObjectProperty<Class> currentClassProperty() {
         return currentClass;
+    }
+
+    public Class getCurrentClass() {
+        return currentClass.get();
     }
 
     public void setCurrentClass(Class currentClass) {
         this.currentClass.set(currentClass);
+    }
+
+    public boolean isPortalDrawing() {
+        return portalDrawing.get();
+    }
+
+    public SimpleBooleanProperty portalDrawingProperty() {
+        return portalDrawing;
+    }
+
+    public void setPortalDrawing(boolean portalDrawing) {
+        this.portalDrawing.set(portalDrawing);
+    }
+
+    public boolean isFirstPortalDrawn() {
+        return firstPortalDrawn.get();
+    }
+
+    public SimpleBooleanProperty firstPortalDrawnProperty() {
+        return firstPortalDrawn;
+    }
+
+    public void setFirstPortalDrawn(boolean firstPortalDrawn) {
+        this.firstPortalDrawn.set(firstPortalDrawn);
+    }
+
+    public Portal getFirstPortal() {
+        return firstPortal;
+    }
+
+    public void setFirstPortal(Portal firstPortal) {
+        this.firstPortal = firstPortal;
+    }
+
+    public PortalShaft getProvisionalPortalShaft() {
+        return provisionalPortalShaft;
+    }
+
+    public void setProvisionalPortalShaft(PortalShaft provisionalPortalShaft) {
+        this.provisionalPortalShaft = provisionalPortalShaft;
     }
 
     // Describes the modes of operation in this program
@@ -170,7 +254,6 @@ public class Simulator {
         TRAIN_BOARDING_AREA,
 
         // Floors and floor fields
-        FLOOR,
         QUEUEING_FLOOR_FIELD,
 
         // Walls

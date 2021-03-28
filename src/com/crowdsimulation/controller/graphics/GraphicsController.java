@@ -9,9 +9,9 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.obst
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.Elevator;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.EscalatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.StairPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
@@ -26,6 +26,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 public class GraphicsController extends Controller {
@@ -50,7 +51,7 @@ public class GraphicsController extends Controller {
 
         PATCH_COLORS.put(StairPortal.class, Color.VIOLET); // Stairs
         PATCH_COLORS.put(EscalatorPortal.class, Color.DARKVIOLET); // Escalator
-        PATCH_COLORS.put(Elevator.class, Color.DEEPPINK); // Elevator
+        PATCH_COLORS.put(ElevatorPortal.class, Color.DEEPPINK); // Elevator
 
         PATCH_COLORS.put(Security.class, Color.DEEPSKYBLUE); // Security gate
         PATCH_COLORS.put(TicketBooth.class, Color.GREEN); // Ticket booth
@@ -194,8 +195,6 @@ public class GraphicsController extends Controller {
 
                 // Actions for when the mouse enters a listener
                 rectangle.addEventFilter(MouseEvent.MOUSE_ENTERED, e -> {
-                    rectangle.setOpacity(1.0);
-
                     int patchRow;
                     int patchColumn;
 
@@ -205,8 +204,10 @@ public class GraphicsController extends Controller {
                     // Get the patch where the mouse is currently on
                     Patch patch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
 
-                    if (Main.simulator.getBuildSubcategory().get() == Simulator.BuildSubcategory.TICKET_BOOTH
-                            && Main.simulator.getBuildState().get() == Simulator.BuildState.DRAWING) {
+                    rectangle.setOpacity(1.0);
+
+                    if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                            && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
                         Rectangle extraRectangle;
 
                         switch (GraphicsController.drawTicketBoothOrientation) {
@@ -335,7 +336,7 @@ public class GraphicsController extends Controller {
                     // a valid ticket booth drawing spot
                     if (
                             GraphicsController.validTicketBoothDraw
-                                    && Main.simulator.getBuildSubcategory().get() == Simulator.BuildSubcategory.TICKET_BOOTH
+                                    && Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                                     && extraRectangle != null
                     ) {
                         int extraPatchRow = (int) GraphicsController.extraRectangle.getProperties().get("row");
@@ -356,7 +357,11 @@ public class GraphicsController extends Controller {
                     // Actions for left click
                     if (event.getButton() == MouseButton.PRIMARY) {
                         // Commence building or editing on that patch
-                        Main.mainScreenController.buildOrEdit(currentPatch);
+                        try {
+                            Main.mainScreenController.buildOrEdit(currentPatch);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
                         // Redraw the station view
                         drawStationView(canvases, floor, tileSize, true);

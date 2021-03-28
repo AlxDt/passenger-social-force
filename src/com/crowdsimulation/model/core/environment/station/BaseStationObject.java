@@ -4,5 +4,8 @@ public abstract class BaseStationObject {
     public BaseStationObject() {
     }
 
-    // TODO: Implement factories for all objects
+    public abstract static class StationObjectFactory {
+        // Create a base station object
+        public abstract BaseStationObject create(Object... objects);
+    }
 }

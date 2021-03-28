@@ -4,39 +4,28 @@ import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 public abstract class Portal extends Gate {
-    // Denotes the lower of the two floors that this portal serves
-    private final Floor lowerFloor;
-
-    // Denotes the upper of the two floors that this portal serves
-    private final Floor upperFloor;
+    // Denotes the floor that this portal serves
+    private final Floor floorServed;
 
     // Denotes the location of this portal
-    private final PortalLocation portalLocation;
+    private PortalLocation portalLocation;
 
-    public Portal(
-            Patch patch,
-            boolean enabled,
-            Floor lowerFloor,
-            Floor upperFloor,
-            PortalLocation portalLocation
-    ) {
+    public Portal(Patch patch, boolean enabled, Floor floorServed) {
         super(patch, enabled);
 
-        this.lowerFloor = lowerFloor;
-        this.upperFloor = upperFloor;
-        this.portalLocation = portalLocation;
+        this.floorServed = floorServed;
     }
 
-    public Floor getLowerFloor() {
-        return lowerFloor;
-    }
-
-    public Floor getUpperFloor() {
-        return upperFloor;
+    public Floor getFloorServed() {
+        return floorServed;
     }
 
     public PortalLocation getPortalLocation() {
         return portalLocation;
+    }
+
+    public void setPortalLocation(PortalLocation portalLocation) {
+        this.portalLocation = portalLocation;
     }
 
     // Denotes the two locations that the portal may be in

@@ -5,11 +5,11 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
-import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -402,10 +402,14 @@ public class Floor extends BaseStationObject {
         floors.remove(floorToBeRemoved);
     }
 
-    // Floor factory
-    public static class FloorFactory {
-        public Floor create(int rows, int columns) {
-            return new Floor(rows, columns);
+    // Create a floor
+    public static class FloorFactory extends BaseStationObject.StationObjectFactory {
+        @Override
+        public Floor create(Object... objects) {
+            return new Floor(
+                    (int) objects[0],
+                    (int) objects[1]
+            );
         }
     }
 }

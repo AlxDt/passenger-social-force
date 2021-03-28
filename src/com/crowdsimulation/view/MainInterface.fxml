@@ -65,7 +65,7 @@
       </VBox>
    </center>
    <right>
-      <TabPane fx:id="operationTabPane" prefHeight="642.0" prefWidth="250.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+      <TabPane fx:id="sidebar" prefHeight="642.0" prefWidth="250.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
         <tabs>
             <Tab text="File">
                <content>
@@ -260,24 +260,9 @@
                                                                <children>
                                                                   <VBox alignment="CENTER" prefHeight="70.0" prefWidth="200.0" spacing="10.0">
                                                                      <children>
-                                                                        <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                                           <children>
-                                                                              <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" text="Enable elevator" wrapText="true" />
-                                                                           </children>
-                                                                        </HBox>
-                                                                        <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                                           <children>
-                                                                              <Label text="Door open time (s):" />
-                                                                              <Spinner prefHeight="25.0" prefWidth="84.0" />
-                                                                           </children>
-                                                                        </HBox>
-                                                                        <HBox alignment="CENTER" layoutX="10.0" layoutY="242.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                                           <children>
-                                                                              <Label text="Time to move (s):" />
-                                                                              <Spinner prefHeight="25.0" prefWidth="94.0" />
-                                                                           </children>
-                                                                        </HBox>
-                                                                        <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                                        <Button fx:id="addElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addElevatorAction" prefHeight="25.0" prefWidth="199.0" text="Add" />
+                                                                        <Button fx:id="editElevatorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#editElevatorAction" prefHeight="25.0" prefWidth="199.0" text="Edit" />
+                                                                        <Button fx:id="deleteElevatorButton" cancelButton="true" layoutX="10.0" layoutY="15.0" mnemonicParsing="false" onAction="#deleteElevatorAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>
