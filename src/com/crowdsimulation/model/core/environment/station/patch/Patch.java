@@ -1,10 +1,10 @@
 package com.crowdsimulation.model.core.environment.station.patch;
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
-import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
 
@@ -27,7 +27,7 @@ public class Patch extends BaseStationObject {
     private Amenity amenity;
 
     // Denotes the individual floor field value of this patch, given the queueable goal patch and the desired state
-    private final Map<Queueable, Map<PassengerMovement.State, Double>> values;
+    private final Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues;
 
 /*    private boolean obstacle;
 
@@ -48,7 +48,7 @@ public class Patch extends BaseStationObject {
 
         this.passengers = new ArrayList<>();
         this.amenity = null;
-        this.values = new HashMap<>();
+        this.floorFieldValues = new HashMap<>();
 
 /*        this.matrixPosition = matrixPosition;
         this.type = type;
@@ -111,7 +111,11 @@ public class Patch extends BaseStationObject {
         return passengers;
     }
 
-/*    public ArrayDeque<Passenger> getPassengersQueueing() {
+    public Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> getFloorFieldValues() {
+        return floorFieldValues;
+    }
+
+    /*    public ArrayDeque<Passenger> getPassengersQueueing() {
         return passengersQueueing;
     }
 

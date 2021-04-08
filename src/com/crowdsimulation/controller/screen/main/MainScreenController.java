@@ -4,14 +4,16 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.alert.AlertController;
-import com.crowdsimulation.controller.screen.feature.portalcontroller.PortalFloorSelectorController;
-import com.crowdsimulation.controller.screen.feature.portalcontroller.edit.ElevatorEditController;
-import com.crowdsimulation.controller.screen.feature.portalcontroller.setup.ElevatorSetupController;
-import com.crowdsimulation.controller.screen.feature.portalcontroller.setup.PortalSetupController;
+import com.crowdsimulation.controller.screen.feature.floorfield.NormalFloorFieldController;
+import com.crowdsimulation.controller.screen.feature.portal.PortalFloorSelectorController;
+import com.crowdsimulation.controller.screen.feature.portal.edit.ElevatorEditController;
+import com.crowdsimulation.controller.screen.feature.portal.setup.ElevatorSetupController;
+import com.crowdsimulation.controller.screen.feature.portal.setup.PortalSetupController;
 import com.crowdsimulation.controller.screen.main.service.InitializeMainScreenService;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
@@ -23,9 +25,9 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -36,6 +38,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 
 import java.io.IOException;
 import java.util.List;
@@ -113,6 +116,9 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private Button deleteSecurityButton;
+
+    @FXML
+    private Button addFloorFieldsSecurityButton;
 
     // Stairs and elevators
     // Stairs
@@ -232,6 +238,34 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Text promptText;
 
+    public static NormalFloorFieldController normalFloorFieldController;
+
+    public MainScreenController() {
+        try {
+            // Display the elevator setup prompt
+            FXMLLoader loader = ScreenController.getLoader(
+                    getClass(),
+                    "/com/crowdsimulation/view/NormalFloorFieldInterface.fxml");
+            Parent root = loader.load();
+
+            MainScreenController.normalFloorFieldController = loader.getController();
+            MainScreenController.normalFloorFieldController.setElements();
+            MainScreenController.normalFloorFieldController.setRoot(root);
+
+            MainScreenController.normalFloorFieldController.setX(Screen.getPrimary().getBounds().getWidth() * 0.75);
+            MainScreenController.normalFloorFieldController.setY(Screen.getPrimary().getBounds().getHeight() * 0.25);
+        } catch (IOException ex) {
+            MainScreenController.normalFloorFieldController = null;
+
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void closeAction() {
+
+    }
+
     @FXML
     public void initialize() {
         // Initialize all UI elements and label references
@@ -263,6 +297,7 @@ public class MainScreenController extends ScreenController {
                 securityIntervalSpinner,
                 saveSecurityButton,
                 deleteSecurityButton,
+                addFloorFieldsSecurityButton,
                 // Stairs and elevators
                 // Stairs
                 // Escalator
@@ -352,158 +387,187 @@ public class MainScreenController extends ScreenController {
     }
 
     @FXML
-    // Add elevator
-    public void addElevatorAction() throws IOException {
-        // Only add an elevator when there are multiple floors
-        if (Main.simulator.getStation().getFloors().size() > 1) {
-            // Display the elevator setup prompt
-            FXMLLoader loader = ScreenController.getLoader(
-                    getClass(),
-                    "/com/crowdsimulation/view/ElevatorSetupInterface.fxml");
-            Parent root = loader.load();
+    // Add a portal
+    public void addPortalAction() throws IOException {
+        switch (Main.simulator.getBuildSubcategory()) {
+            case STAIRS:
+                break;
+            case ESCALATOR:
+                break;
+            case ELEVATOR:
+                // Only add an elevator when there are multiple floors
+                if (Main.simulator.getStation().getFloors().size() > 1) {
+                    // Display the elevator setup prompt
+                    FXMLLoader loader = ScreenController.getLoader(
+                            getClass(),
+                            "/com/crowdsimulation/view/ElevatorSetupInterface.fxml");
+                    Parent root = loader.load();
 
-            ElevatorSetupController elevatorSetupController = loader.getController();
-            elevatorSetupController.setElements();
+                    ElevatorSetupController elevatorSetupController = loader.getController();
+                    elevatorSetupController.setElements();
 
-            // Show the window
-            elevatorSetupController.showWindow(
-                    root,
-                    "Elevator setup",
-                    true
-            );
+                    // Show the window
+                    elevatorSetupController.showWindow(
+                            root,
+                            "Elevator setup",
+                            true,
+                            false
+                    );
 
-            // Only proceed when this window is closed through the proceed action
-            if (elevatorSetupController.isClosedWithAction()) {
-                // Prompt the user that it is now time to draw the first elevator
-                AlertController.showSimpleAlert(
-                        "Add first elevator",
-                        "Draw the first elevator",
-                        "After closing this window, please draw the first elevator on this floor." +
-                                " Click X to cancel this operation.",
-                        Alert.AlertType.INFORMATION
-                );
+                    // Only proceed when this window is closed through the proceed action
+                    if (elevatorSetupController.isClosedWithAction()) {
+                        // Prompt the user that it is now time to draw the first elevator
+                        AlertController.showSimpleAlert(
+                                "Add first elevator",
+                                "Draw the first elevator",
+                                "After closing this window, please draw the first elevator on this floor." +
+                                        " Click X to cancel this operation.",
+                                Alert.AlertType.INFORMATION
+                        );
 
-                beginPortalDrawing(elevatorSetupController);
-            }
-        } else {
-            AlertController.showSimpleAlert(
-                    "Elevator addition failed",
-                    "Unable to add elevator",
-                    "You may only add elevators when there are more than one floors in the station.",
-                    Alert.AlertType.INFORMATION
-            );
+                        beginPortalDrawing(elevatorSetupController);
+                    }
+                } else {
+                    AlertController.showSimpleAlert(
+                            "Elevator addition failed",
+                            "Unable to add elevator",
+                            "You may only add elevators when there are more than one floors in the station.",
+                            Alert.AlertType.INFORMATION
+                    );
+                }
+
+                break;
         }
     }
 
     @FXML
     // Edit elevator
-    public void editElevatorAction() throws IOException {
-        // Display the elevator setup prompt
-        FXMLLoader loader = ScreenController.getLoader(
-                getClass(),
-                "/com/crowdsimulation/view/ElevatorEditInterface.fxml");
-        Parent root = loader.load();
+    public void editPortalAction() throws IOException {
+        switch (Main.simulator.getBuildSubcategory()) {
+            case STAIRS:
+                break;
+            case ESCALATOR:
+                break;
+            case ELEVATOR:
+                // Display the elevator setup prompt
+                FXMLLoader loader = ScreenController.getLoader(
+                        getClass(),
+                        "/com/crowdsimulation/view/ElevatorEditInterface.fxml");
+                Parent root = loader.load();
 
-        ElevatorEditController elevatorEditController = loader.getController();
-        elevatorEditController.setElements();
+                ElevatorEditController elevatorEditController = loader.getController();
+                elevatorEditController.setElements();
 
-        // Show the window
-        elevatorEditController.showWindow(
-                root,
-                (Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE)
-                        ? "Edit an elevator" : "Edit all elevators",
-                true
-        );
-
-        // Only proceed when this window is closed through the proceed action
-        if (elevatorEditController.isClosedWithAction()) {
-            // Extract the modified elevator shaft from the window
-            ElevatorShaft elevatorShaft = (ElevatorShaft) elevatorEditController.getWindowOutput().get(
-                    ElevatorEditController.OUTPUT_KEY
-            );
-
-            // Determine whether we need to edit one or all
-            boolean editingOne = Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE;
-
-            if (editingOne) {
-                // Apply the changes to the elevator shaft to its component elevators
-                saveSingleAmenityInFloor(elevatorShaft);
-            } else {
-                // Apply the changes to the elevator shaft to all elevator shafts and all their component elevators
-                saveAllAmenitiesInFloor(elevatorShaft);
-            }
-
-            // Prompt the user that the elevator has been successfully edited
-            if (editingOne) {
-                AlertController.showSimpleAlert(
-                        "Elevator edited",
-                        "Elevator successfully edited",
-                        "The elevator has been successfully edited.",
-                        Alert.AlertType.INFORMATION
+                // Show the window
+                elevatorEditController.showWindow(
+                        root,
+                        (Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE)
+                                ? "Edit an elevator" : "Edit all elevators",
+                        true,
+                        false
                 );
-            } else {
-                AlertController.showSimpleAlert(
-                        "Elevators edited",
-                        "Elevators successfully edited",
-                        "The elevators have been successfully edited.",
-                        Alert.AlertType.INFORMATION
-                );
-            }
+
+                // Only proceed when this window is closed through the proceed action
+                if (elevatorEditController.isClosedWithAction()) {
+                    // Extract the modified elevator shaft from the window
+                    ElevatorShaft elevatorShaft = (ElevatorShaft) elevatorEditController.getWindowOutput().get(
+                            ElevatorEditController.OUTPUT_KEY
+                    );
+
+                    // Determine whether we need to edit one or all
+                    boolean editingOne = Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE;
+
+                    if (editingOne) {
+                        // Apply the changes to the elevator shaft to its component elevators
+                        saveSingleAmenityInFloor(elevatorShaft);
+                    } else {
+                        // Apply the changes to the elevator shaft to all elevator shafts and all their component elevators
+                        saveAllAmenitiesInFloor(elevatorShaft);
+                    }
+
+                    // Prompt the user that the elevator has been successfully edited
+                    if (editingOne) {
+                        AlertController.showSimpleAlert(
+                                "Elevator edited",
+                                "Elevator successfully edited",
+                                "The elevator has been successfully edited.",
+                                Alert.AlertType.INFORMATION
+                        );
+                    } else {
+                        AlertController.showSimpleAlert(
+                                "Elevators edited",
+                                "Elevators successfully edited",
+                                "The elevators have been successfully edited.",
+                                Alert.AlertType.INFORMATION
+                        );
+                    }
+                }
+
+                break;
         }
     }
 
     @FXML
     // Delete elevator
-    public void deleteElevatorAction() {
+    public void deletePortalAction() {
         boolean editingOne = Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE;
         boolean confirm;
 
-        // Show a dialog to confirm floor deletion
-        if (editingOne) {
-            confirm = AlertController.showConfirmationAlert(
-                    "Are you sure?",
-                    "Are you sure you want to delete this elevator?",
-                    "This will remove this elevator from all its serviced floors. This operation cannot be undone."
-            );
-        } else {
-            confirm = AlertController.showConfirmationAlert(
-                    "Are you sure?",
-                    "Are you sure you want to delete all elevators?",
-                    "This will remove all elevators from their serviced floors. This operation cannot be undone."
-            );
-        }
+        switch (Main.simulator.getBuildSubcategory()) {
+            case STAIRS:
+                break;
+            case ESCALATOR:
+                break;
+            case ELEVATOR:
+                // Show a dialog to confirm floor deletion
+                if (editingOne) {
+                    confirm = AlertController.showConfirmationAlert(
+                            "Are you sure?",
+                            "Are you sure you want to delete this elevator?",
+                            "This will remove this elevator from all its serviced floors. This operation cannot be undone."
+                    );
+                } else {
+                    confirm = AlertController.showConfirmationAlert(
+                            "Are you sure?",
+                            "Are you sure you want to delete all elevators?",
+                            "This will remove all elevators from their serviced floors. This operation cannot be undone."
+                    );
+                }
 
-        // Determine whether we need to edit one or all
-        if (confirm) {
-            if (editingOne) {
-                // Delete this elevator
-                deleteSingleAmenityInFloor(
-                        ((ElevatorPortal) Main.simulator.getCurrentAmenity()).getElevatorShaft()
-                );
-            } else {
-                // Delete all elevators
-                deleteAllAmenitiesInFloor();
-            }
+                // Determine whether we need to edit one or all
+                if (confirm) {
+                    if (editingOne) {
+                        // Delete this elevator
+                        deleteSingleAmenityInFloor(
+                                ((ElevatorPortal) Main.simulator.getCurrentAmenity()).getElevatorShaft()
+                        );
+                    } else {
+                        // Delete all elevators
+                        deleteAllAmenitiesInFloor();
+                    }
 
-            // Prompt the user that the elevator has been successfully edited
-            if (editingOne) {
-                AlertController.showSimpleAlert(
-                        "Elevator deleted",
-                        "Elevator successfully deleted",
-                        "The elevator has been successfully deleted.",
-                        Alert.AlertType.INFORMATION
-                );
-            } else {
-                AlertController.showSimpleAlert(
-                        "All elevators deleted",
-                        "All elevators successfully deleted",
-                        "All elevators have been successfully deleted.",
-                        Alert.AlertType.INFORMATION
-                );
-            }
+                    // Prompt the user that the elevator has been successfully edited
+                    if (editingOne) {
+                        AlertController.showSimpleAlert(
+                                "Elevator deleted",
+                                "Elevator successfully deleted",
+                                "The elevator has been successfully deleted.",
+                                Alert.AlertType.INFORMATION
+                        );
+                    } else {
+                        AlertController.showSimpleAlert(
+                                "All elevators deleted",
+                                "All elevators successfully deleted",
+                                "All elevators have been successfully deleted.",
+                                Alert.AlertType.INFORMATION
+                        );
+                    }
 
-            // Redraw the interface
-            drawInterface(false);
+                    // Redraw the interface
+                    drawInterface(false);
+                }
+
+                break;
         }
     }
 
@@ -656,6 +720,87 @@ public class MainScreenController extends ScreenController {
         switchFloor(floorAbove);
     }
 
+    @FXML
+    // Add floor fields
+    public void addFloorFieldsAction() throws IOException {
+        // Turn on the floor fields drawing mode
+        beginFloorFieldDrawing();
+
+        // Commence adding the floor fields
+        addFloorFields();
+    }
+
+    // Add floor fields
+    private void addFloorFields() {
+        switch (Main.simulator.getBuildSubcategory()) {
+            case SECURITY:
+                // Show the window to edit the parameters of the floor field
+                MainScreenController.normalFloorFieldController.showWindow(
+                        MainScreenController.normalFloorFieldController.getRoot(),
+                        "Floor field",
+                        false,
+                        true
+                );
+
+                break;
+            case ELEVATOR:
+                break;
+            case TICKET_BOOTH:
+                break;
+            case TURNSTILE:
+                break;
+            case TRAIN_BOARDING_AREA:
+                break;
+        }
+    }
+
+    // Clear floor fields and redraw interface
+    public void clearFloorFieldAction() {
+        clearFloorField();
+
+        drawInterface(false);
+    }
+
+    // Clear an entire floor field
+    private void clearFloorField() {
+        // Clear the floor field of the current target given the current floor field state
+        QueueingFloorField.clearFloorField(
+                Main.simulator.getCurrentFloorFieldTarget().retrieveFloorField(
+                        Main.simulator.getCurrentFloorFieldState()
+                ),
+                Main.simulator.getCurrentFloorFieldState()
+        );
+    }
+
+    // Enable floor fields drawing
+    private void beginFloorFieldDrawing() {
+        Main.simulator.setFloorFieldDrawing(true);
+
+        // Redraw interface
+        drawInterface(false);
+    }
+
+    // Disable floor fields drawing
+    public void endFloorFieldDrawing(boolean windowClosedAutomatically) {
+        Main.simulator.setFloorFieldDrawing(false);
+
+        // If the window will be closed manually, the current patch hasn't changed - the window is just closed
+        // So don't reset the current floor field targets and states
+        // Otherwise, proceed with the reset
+        if (windowClosedAutomatically) {
+            Main.simulator.setCurrentFloorFieldTarget(null);
+            Main.simulator.setCurrentFloorFieldState(null);
+        }
+
+        // If the window is to be closed automatically, do so
+        if (windowClosedAutomatically) {
+            MainScreenController.normalFloorFieldController.closeWindow();
+        }
+
+        // Redraw interface
+        drawInterface(false);
+    }
+
     // Switch to a given floor
     private void switchFloor(Floor floor) {
         // Make the given floor the current floor
@@ -680,11 +825,14 @@ public class MainScreenController extends ScreenController {
     private void resetSwitchFloorButtons() {
         // Check if the above and below switch floor buttons may be enabled
         floorBelowButton.setDisable(
-                Main.simulator.isPortalDrawing() || Main.simulator.getCurrentFloorIndex() == 0
+                Main.simulator.isPortalDrawing()
+                        || Main.simulator.isFloorFieldDrawing()
+                        || Main.simulator.getCurrentFloorIndex() == 0
         );
 
         floorAboveButton.setDisable(
                 Main.simulator.isPortalDrawing()
+                        || Main.simulator.isFloorFieldDrawing()
                         || Main.simulator.getCurrentFloorIndex() == Main.simulator.getStation().getFloors().size() - 1
         );
     }
@@ -781,10 +929,6 @@ public class MainScreenController extends ScreenController {
                 break;
             case TRAIN_BOARDING_AREA:
                 amenityText = "train boarding area" + ((editingAll) ? "s" : "");
-
-                break;
-            case QUEUEING_FLOOR_FIELD:
-                amenityText = "queueing floor field" + ((editingAll) ? "s" : "");
 
                 break;
             case WALL:
@@ -1105,6 +1249,7 @@ public class MainScreenController extends ScreenController {
         // Also delete this amenity from its list in this floor
         switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
+//                if ()
                 Main.simulator.getCurrentFloor().getStationGates().remove(
                         (StationGate) amenityToDelete
                 );
@@ -1307,10 +1452,6 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case 4:
-                buildCategory = Simulator.BuildCategory.FLOORS_AND_FLOOR_FIELDS;
-
-                break;
-            case 5:
                 buildCategory = Simulator.BuildCategory.WALLS;
 
                 break;
@@ -1364,10 +1505,6 @@ public class MainScreenController extends ScreenController {
                     break;
                 case "Train boarding area":
                     buildSubcategory = Simulator.BuildSubcategory.TRAIN_BOARDING_AREA;
-
-                    break;
-                case "Floor field":
-                    buildSubcategory = Simulator.BuildSubcategory.QUEUEING_FLOOR_FIELD;
 
                     break;
                 case "Wall":
@@ -1514,29 +1651,88 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
-                                    // Only edit if there is already a security gate on that patch
-                                    if (Main.simulator.getCurrentAmenity() instanceof Security) {
-                                        Main.simulator.setCurrentClass(Security.class);
+                                    // When in adding floor fields mode, draw a floor field instead
+                                    // Otherwise, just enable the controls in the sidebar
+                                    if (!Main.simulator.isFloorFieldDrawing()) {
+                                        // Only edit if there is already a security gate on that patch
+                                        if (Main.simulator.getCurrentAmenity() instanceof Security) {
+                                            Main.simulator.setCurrentClass(Security.class);
 
-                                        Security securityToEdit
-                                                = (Security) Main.simulator.getCurrentAmenity();
+                                            Security securityToEdit
+                                                    = (Security) Main.simulator.getCurrentAmenity();
 
-                                        securityEnableCheckBox.setSelected(
-                                                securityToEdit.isEnabled()
-                                        );
+                                            // Take note of this amenity as the one that will own the floor fields once
+                                            // drawn
+                                            Main.simulator.setCurrentFloorFieldTarget(securityToEdit);
 
-                                        securityBlockPassengerCheckBox.setSelected(
-                                                securityToEdit.isBlockEntry()
-                                        );
+                                            // Also take note of the current floor field state
+                                            QueueingFloorField.FloorFieldState floorFieldState
+                                                    = securityToEdit.getSecurityFloorFieldState();
 
-                                        securityIntervalSpinner.getValueFactory().setValue(
-                                                securityToEdit.getWaitingTime()
-                                        );
+                                            Main.simulator.setCurrentFloorFieldState(floorFieldState);
+
+                                            // Set the forms to the proper position
+                                            securityEnableCheckBox.setSelected(
+                                                    securityToEdit.isEnabled()
+                                            );
+
+                                            securityBlockPassengerCheckBox.setSelected(
+                                                    securityToEdit.isBlockEntry()
+                                            );
+
+                                            securityIntervalSpinner.getValueFactory().setValue(
+                                                    securityToEdit.getWaitingTime()
+                                            );
+                                        } else {
+                                            // If there is no amenity there, just do nothing
+                                            if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                                // If clicked on an existing amenity, switch to editing mode, then open that
+                                                // amenity's controls
+                                                goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                                // Then revisit this method as if that amenity was clicked
+                                                buildOrEdit(currentPatch);
+                                            }
+                                        }
                                     } else {
-                                        // If there is no amenity there, just do nothing
-                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
-                                            // If clicked on an existing amenity, switch to editing mode, then open that
-                                            // amenity's controls
+                                        // If there is an empty patch here, draw the floor field value
+                                        if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                            // Define the target and the floor field state
+                                            Security target = (Security) Main.simulator.getCurrentFloorFieldTarget();
+
+                                            // If a floor field value is supposed to be drawn, then go ahead and draw
+                                            if (MainScreenController.normalFloorFieldController.getFloorFieldMode()
+                                                    == NormalFloorFieldController.FloorFieldMode.DRAWING) {
+                                                if (!QueueingFloorField.addFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        Main.simulator.getCurrentFloorFieldState(),
+                                                        MainScreenController.normalFloorFieldController.getIntensity()
+                                                )) {
+                                                    // Let the user know if the addition of the floor field value has
+                                                    // failed
+                                                    AlertController.showSimpleAlert(
+                                                            "Floor field value addition failed",
+                                                            "Failed to add a floor field value here",
+                                                            "A floor field may only have a single patch with a"
+                                                                    + " value of 1.0.",
+                                                            Alert.AlertType.ERROR
+                                                    );
+                                                }
+                                            } else {
+                                                // If a floor field value is supposed to be deleted, then go ahead and
+                                                // delete it
+                                                QueueingFloorField.deleteFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        Main.simulator.getCurrentFloorFieldState()
+                                                );
+                                            }
+                                        } else {
+                                            // If it is a different amenity, turn off floor fields mode
+                                            endFloorFieldDrawing(true);
+
+                                            // Switch to editing mode, then open that amenity's controls
                                             goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
@@ -1598,7 +1794,8 @@ public class MainScreenController extends ScreenController {
                                                     elevatorSetupController.showWindow(
                                                             root,
                                                             "Elevator setup",
-                                                            true
+                                                            true,
+                                                            false
                                                     );
 
                                                     // Only proceed when this window is closed through the proceed action
@@ -1646,6 +1843,7 @@ public class MainScreenController extends ScreenController {
                                                     portalFloorSelectorController.showWindow(
                                                             root,
                                                             "Choose the floor of the second elevator",
+                                                            true,
                                                             true
                                                     );
 
@@ -2112,8 +2310,6 @@ public class MainScreenController extends ScreenController {
                     }
 
                     break;
-                case FLOORS_AND_FLOOR_FIELDS:
-                    break;
             }
         } else {
             // If the operation mode is testing, the user wants to edit (one or all)
@@ -2256,20 +2452,10 @@ public class MainScreenController extends ScreenController {
                 titledPanes.get(0).setExpanded(true);
 
                 break;
-            case FLOORS_AND_FLOOR_FIELDS:
+            case WALLS:
                 buildTabPane.getSelectionModel().select(4);
 
-                // TODO: Deal with floor fields
-/*                switch (buildSubcategory) {
-                    case QUEUEING_FLOOR_FIELD:
-                        break;
-                }*/
-
-                break;
-            case WALLS:
-                buildTabPane.getSelectionModel().select(5);
-
-                accordion = (Accordion) buildTabPane.getTabs().get(5).getContent();
+                accordion = (Accordion) buildTabPane.getTabs().get(4).getContent();
                 titledPanes = accordion.getPanes();
 
                 titledPanes.get(0).setExpanded(true);

@@ -2,18 +2,17 @@ package com.crowdsimulation.model.core.environment.station.patch.floorfield.head
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
 public abstract class HeadfulFloorField extends FloorField {
     // Denotes the patch in this floor field with the highest value
     private Patch apex;
 
-    // Denotes the goal associated with this floor field
-    private Queueable goal;
+    // Denotes the target associated with this floor field
+    private final Queueable target;
 
-    public HeadfulFloorField(Patch apex, Queueable goal) {
-        this.apex = apex;
-        this.goal = goal;
+    public HeadfulFloorField(Queueable target) {
+        this.target = target;
     }
 
     public Patch getApex() {
@@ -24,11 +23,7 @@ public abstract class HeadfulFloorField extends FloorField {
         this.apex = apex;
     }
 
-    public Queueable getGoal() {
-        return goal;
-    }
-
-    public void setGoal(Queueable goal) {
-        this.goal = goal;
+    public Queueable getTarget() {
+        return target;
     }
 }

@@ -1,10 +1,17 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal;
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TicketBoothTransactionArea extends Goal {
     // Denotes the ticket booth associated with this transaction area
@@ -16,6 +23,9 @@ public class TicketBoothTransactionArea extends Goal {
     // Takes note of the passenger currently transacting in the ticket booth
     private Passenger passengerTransacting;
 
+    // Denotes the floor field state needed to access the floor fields of this ticket booth transaction area
+    private final QueueingFloorField.FloorFieldState ticketBoothTransactionAreaFloorFieldState;
+
     public TicketBoothTransactionArea(
             Patch patch,
             boolean enabled,
@@ -23,11 +33,29 @@ public class TicketBoothTransactionArea extends Goal {
             TicketBooth ticketBooth,
             TicketBoothType ticketBoothType
     ) {
-        super(patch, enabled, waitingTime);
+        super(
+                patch,
+                enabled,
+                waitingTime,
+                new QueueObject()
+        );
 
         this.ticketBooth = ticketBooth;
         this.ticketBoothType = ticketBoothType;
         this.passengerTransacting = null;
+
+        // Initialize this ticket booth transaction area's floor field state
+        this.ticketBoothTransactionAreaFloorFieldState = new QueueingFloorField.FloorFieldState(
+                PassengerMovement.Direction.BOARDING,
+                PassengerMovement.State.IN_QUEUE,
+                this
+        );
+
+        // Add a blank floor field
+        QueueingFloorField queueingFloorField = new QueueingFloorField(this);
+
+        // Using the floor field state defined earlier, create the floor field
+        this.getQueueObject().getFloorFields().put(this.ticketBoothTransactionAreaFloorFieldState, queueingFloorField);
     }
 
     public TicketBooth getTicketBooth() {
@@ -57,6 +85,42 @@ public class TicketBoothTransactionArea extends Goal {
     @Override
     public String toString() {
         return "Ticket booth transaction area";
+    }
+
+    @Override
+    public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldState() {
+        List<QueueingFloorField.FloorFieldState> floorFieldStates = new ArrayList<>();
+
+        floorFieldStates.add(this.ticketBoothTransactionAreaFloorFieldState);
+
+        return floorFieldStates;
+    }
+
+    @Override
+    public QueueingFloorField retrieveFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
+        return this.getQueueObject().getFloorFields().get(
+                floorFieldState
+        );
+    }
+
+    @Override
+    // Denotes whether the floor field for this ticket booth transaction area is complete
+    public boolean isFloorFieldsComplete() {
+        QueueingFloorField queueingFloorField = retrieveFloorField(this.ticketBoothTransactionAreaFloorFieldState);
+
+        // The floor field of this queueable is complete when there are floor fields present and it has an apex patch
+        return queueingFloorField.getApex() != null && !queueingFloorField.getAssociatedPatches().isEmpty();
+    }
+
+    @Override
+    // Clear all floor fields of this ticket booth transaction area
+    public void clearFloorFields() {
+        QueueingFloorField queueingFloorField = retrieveFloorField(this.ticketBoothTransactionAreaFloorFieldState);
+
+        QueueingFloorField.clearFloorField(
+                queueingFloorField,
+                this.ticketBoothTransactionAreaFloorFieldState
+        );
     }
 
     // Ticket booth transaction area factory

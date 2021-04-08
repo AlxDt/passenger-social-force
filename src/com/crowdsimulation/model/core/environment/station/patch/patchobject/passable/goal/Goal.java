@@ -1,8 +1,9 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
 public abstract class Goal extends NonObstacle implements Queueable {
     // Denotes the textual identifier of this goal
@@ -20,7 +21,10 @@ public abstract class Goal extends NonObstacle implements Queueable {
     // this goal, distance to this goal, etc.
     private final Integer index;
 
-    public Goal(Patch patch, boolean enabled, int waitingTime) {
+    // Denotes the queueing object associated with all goals like this
+    private final QueueObject queueObject;
+
+    public Goal(Patch patch, boolean enabled, int waitingTime, QueueObject queueObject) {
         super(patch, enabled);
 
         this.goalId = null;
@@ -28,6 +32,8 @@ public abstract class Goal extends NonObstacle implements Queueable {
 
         this.sequence = null;
         this.index = null;
+
+        this.queueObject = queueObject;
     }
 
     public String getGoalId() {
@@ -52,5 +58,9 @@ public abstract class Goal extends NonObstacle implements Queueable {
 
     public Integer getIndex() {
         return index;
+    }
+
+    public QueueObject getQueueObject() {
+        return queueObject;
     }
 }

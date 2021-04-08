@@ -4,17 +4,19 @@ import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -28,9 +30,11 @@ import javafx.scene.shape.Rectangle;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 public class GraphicsController extends Controller {
     private static final HashMap<Class<?>, Color> PATCH_COLORS = new HashMap<>();
+    private static final int FLOOR_FIELD_COLOR_HUE = 115;
 
     public static TicketBoothTransactionArea.DrawOrientation drawTicketBoothOrientation;
     public static Rectangle extraRectangle;
@@ -103,27 +107,80 @@ public class GraphicsController extends Controller {
         for (int row = 0; row < floor.getRows(); row++) {
             for (int column = 0; column < floor.getColumns(); column++) {
                 // Get the current patch
-                Patch patch = Main.simulator.getCurrentFloor().getPatch(row, column);
+                Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(row, column);
 
                 // Draw only the background (the environment) if requested
                 // Draw only the foreground (the passengers) if otherwise
                 if (background) {
                     // Draw graphics corresponding to whatever is in the content of the patch
                     // If the patch has no amenity on it, just draw a blank patch
-                    Amenity patchAmenity = patch.getAmenity();
-                    Color amenityColor;
+                    Amenity patchAmenity = currentPatch.getAmenity();
+                    Color patchColor;
 
                     if (patchAmenity == null) {
-                        // TODO: Consider floor fields
                         // There isn't an amenity on this patch, so just use the color corresponding to a blank patch
-                        amenityColor = PATCH_COLORS.get(null);
+                        patchColor = PATCH_COLORS.get(null);
+
+                        if (Main.simulator.isFloorFieldDrawing()) {
+                            // Show the floor fields of the current target with the current floor field state
+                            Queueable target = Main.simulator.getCurrentFloorFieldTarget();
+                            QueueingFloorField.FloorFieldState floorFieldState
+                                    = Main.simulator.getCurrentFloorFieldState();
+
+                            Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
+                                    = currentPatch.getFloorFieldValues();
+                            Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
+                                    = floorFieldValues.get(target);
+
+                            // Draw something if there is a target associated with this patch
+                            if (floorFieldStateDoubleMap != null) {
+                                // If the current patch's floor field state matches the current floor field state, draw
+                                // a green patch
+                                if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
+                                    double value = floorFieldStateDoubleMap.get(floorFieldState);
+
+                                    // Map the colors of this patch to the its field value's intensity
+                                    patchColor = Color.hsb(
+                                            FLOOR_FIELD_COLOR_HUE,
+                                            value,
+                                            1.0
+                                    );
+                                } else {
+                                    // There is a floor field value here with the same target, but it is not of the
+                                    // current floor field state
+                                    // Hence, just draw a grayish patch
+                                    patchColor = Color.hsb(
+                                            FLOOR_FIELD_COLOR_HUE,
+                                            0.25,
+                                            0.25
+                                    );
+                                }
+                            } else if (!floorFieldValues.isEmpty()) {
+                                // If there isn't a floor field with the current target, but the list of floor field
+                                // values isn't empty, there are still other floor field values on this patch
+                                // Hence, just draw a grayish patch
+                                patchColor = Color.hsb(
+                                        FLOOR_FIELD_COLOR_HUE,
+                                        0.1,
+                                        1.0
+                                );
+                            }
+                        }
                     } else {
                         // There is an amenity on this patch, so draw it according to its corresponding color
-                        amenityColor = PATCH_COLORS.get(patchAmenity.getClass());
+                        patchColor = PATCH_COLORS.get(patchAmenity.getClass());
+
+                        // If floor field drawing is on, only color amenities which are of the current class
+                        if (Main.simulator.isFloorFieldDrawing()) {
+                            // Only color the current amenity - color the rest light gray
+                            if (!patchAmenity.equals(Main.simulator.getCurrentFloorFieldTarget())) {
+                                patchColor = Color.LIGHTGRAY;
+                            }
+                        }
                     }
 
                     // Set the color
-                    backgroundGraphicsContext.setFill(amenityColor);
+                    backgroundGraphicsContext.setFill(patchColor);
 
                     // Draw the patch
                     backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);

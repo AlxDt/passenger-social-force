@@ -1,7 +1,6 @@
-package com.crowdsimulation.controller.screen.feature.portalcontroller.edit;
+package com.crowdsimulation.controller.screen.feature.portal.edit;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.screen.feature.portalcontroller.PortalController;
 import com.crowdsimulation.controller.screen.main.service.InitializeElevatorEditService;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
@@ -11,7 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-public class ElevatorEditController extends PortalController {
+public class ElevatorEditController extends PortalEditController {
     public static final String OUTPUT_KEY = "elevator_shaft";
 
     @FXML
@@ -124,5 +123,10 @@ public class ElevatorEditController extends PortalController {
                     null
             );
         }
+    }
+
+    @Override
+    protected void closeAction() {
+
     }
 }

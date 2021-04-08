@@ -2,12 +2,24 @@ package com.crowdsimulation.model.simulator;
 
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableObjectValue;
 
 // The simulator has total control over the aspects of the crowd simulation
 public class Simulator {
@@ -20,6 +32,7 @@ public class Simulator {
 
     // Denotes the current build category within the current build category
     private final SimpleObjectProperty<BuildSubcategory> buildSubcategory;
+    private final SimpleObjectProperty<Class> buildSubcategoryClass;
 
     // Denotes the current state mostly while the program is in building mode
     private final SimpleObjectProperty<BuildState> buildState;
@@ -45,6 +58,11 @@ public class Simulator {
     private Portal firstPortal;
     private PortalShaft provisionalPortalShaft;
 
+    private final SimpleBooleanProperty floorFieldDrawing;
+
+    private Queueable currentFloorFieldTarget;
+    private QueueingFloorField.FloorFieldState currentFloorFieldState;
+
     public Simulator() {
         // The program is initially in the building mode
         this.operationMode = new SimpleObjectProperty<>(OperationMode.BUILDING);
@@ -54,6 +72,7 @@ public class Simulator {
 
         // The program initially does not have a build subcategory
         this.buildSubcategory = new SimpleObjectProperty<>(BuildSubcategory.NONE);
+        this.buildSubcategoryClass = new SimpleObjectProperty<>(null);
 
         // The program is initially in the drawing state
         this.buildState = new SimpleObjectProperty<>(BuildState.DRAWING);
@@ -75,6 +94,9 @@ public class Simulator {
 
         this.firstPortal = null;
         this.provisionalPortalShaft = null;
+
+        this.floorFieldDrawing = new SimpleBooleanProperty(false);
+        this.currentFloorFieldTarget = null;
     }
 
     public SimpleObjectProperty<OperationMode> operationModeProperty() {
@@ -101,6 +123,14 @@ public class Simulator {
         return buildSubcategory.get();
     }
 
+    public Class getBuildSubcategoryClass() {
+        return buildSubcategoryClass.get();
+    }
+
+    public SimpleObjectProperty<Class> buildSubcategoryClassProperty() {
+        return buildSubcategoryClass;
+    }
+
     public SimpleObjectProperty<BuildState> buildStateProperty() {
         return buildState;
     }
@@ -119,6 +149,9 @@ public class Simulator {
 
     public void setBuildSubcategory(BuildSubcategory buildSubcategory) {
         this.buildSubcategory.set(buildSubcategory);
+
+        // Also set the class equivalent of this build subcategory
+        this.buildSubcategoryClass.set(Simulator.buildSubcategoryToClass(this.buildSubcategory.get()));
     }
 
     public void setBuildState(BuildState buildState) {
@@ -217,6 +250,60 @@ public class Simulator {
         this.provisionalPortalShaft = provisionalPortalShaft;
     }
 
+    public boolean isFloorFieldDrawing() {
+        return floorFieldDrawing.get();
+    }
+
+    public SimpleBooleanProperty floorFieldDrawingProperty() {
+        return floorFieldDrawing;
+    }
+
+    public void setFloorFieldDrawing(boolean floorFieldDrawing) {
+        this.floorFieldDrawing.set(floorFieldDrawing);
+    }
+
+    public Queueable getCurrentFloorFieldTarget() {
+        return currentFloorFieldTarget;
+    }
+
+    public void setCurrentFloorFieldTarget(Queueable currentFloorFieldTarget) {
+        this.currentFloorFieldTarget = currentFloorFieldTarget;
+    }
+
+    public QueueingFloorField.FloorFieldState getCurrentFloorFieldState() {
+        return currentFloorFieldState;
+    }
+
+    public void setCurrentFloorFieldState(QueueingFloorField.FloorFieldState currentFloorFieldState) {
+        this.currentFloorFieldState = currentFloorFieldState;
+    }
+
+    // Convert a build subcategory to its corresponding class
+    private static Class buildSubcategoryToClass(BuildSubcategory buildSubcategory) {
+        switch (buildSubcategory) {
+            case STATION_ENTRANCE_EXIT:
+                return StationGate.class;
+            case SECURITY:
+                return Security.class;
+            case STAIRS:
+                return StairPortal.class;
+            case ESCALATOR:
+                return EscalatorPortal.class;
+            case ELEVATOR:
+                return ElevatorPortal.class;
+            case TICKET_BOOTH:
+                return TicketBoothTransactionArea.class;
+            case TURNSTILE:
+                return Turnstile.class;
+            case TRAIN_BOARDING_AREA:
+                return TrainDoor.class;
+            case WALL:
+                return Wall.class;
+        }
+
+        return null;
+    }
+
     // Describes the modes of operation in this program
     public enum OperationMode {
         BUILDING, // The user is building the station
@@ -252,9 +339,6 @@ public class Simulator {
 
         // Platform amenities
         TRAIN_BOARDING_AREA,
-
-        // Floors and floor fields
-        QUEUEING_FLOOR_FIELD,
 
         // Walls
         WALL

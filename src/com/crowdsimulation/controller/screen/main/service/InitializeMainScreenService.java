@@ -5,7 +5,7 @@ import com.crowdsimulation.controller.screen.main.MainScreenController;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Turnstile;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -22,7 +22,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
     public static BooleanBinding SAVE_DELETE_BINDING;
     public static BooleanBinding SPECIFIC_CONTROLS_BINDING;
     public static BooleanBinding DRAW_ONLY_BINDING;
+    public static BooleanBinding ADD_FLOOR_FIELD_BINDING;
     public static BooleanBinding PORTAL_DRAW_IN_PROGRESS_BINDING;
+    public static BooleanBinding FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING;
+    public static BooleanBinding AMENITY_NOT_EQUALS_SUBCATEGORY;
 
     static {
         BUILD_MODE_CHOICEBOX_ITEMS = FXCollections.observableArrayList(
@@ -31,7 +34,24 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 Simulator.BuildState.EDITING_ALL
         );
 
-        boolean evaluateClassEquality = Main.simulator.currentAmenityProperty().isNotNull().get();
+        AMENITY_NOT_EQUALS_SUBCATEGORY = Bindings.createBooleanBinding(() -> {
+                    if (Bindings.isNotNull(Main.simulator.currentAmenityProperty()).get()
+                            && Bindings.isNotNull(Main.simulator.buildSubcategoryClassProperty()).get()) {
+                        return !Main.simulator.buildSubcategoryClassProperty().get().equals(
+                                Main.simulator.getCurrentAmenity().getClass()
+                        );
+                    } else {
+                        return false;
+                    }
+                }, Main.simulator.currentAmenityProperty(), Main.simulator.buildSubcategoryClassProperty()
+        );
+/*                Bindings.and(
+                        Bindings.isNotNull(Main.simulator.currentAmenityProperty()),
+                        Bindings.notEqual(
+                                Main.simulator.buildSubcategoryClassProperty(),
+                                Main.simulator.getCurrentAmenity().getClass()
+                        )
+                );*/
 
         InitializeMainScreenService.SAVE_DELETE_BINDING =
                 Bindings.or(
@@ -44,13 +64,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                                         Bindings.isNull(
                                                 Main.simulator.currentAmenityProperty()
                                         ),
-                                        (evaluateClassEquality) ?
-                                                Bindings.equal(
-                                                        Main.simulator.getCurrentAmenity().getClass(),
-                                                        Main.simulator.currentClassProperty()
-                                                ) :
-                                                Bindings.createBooleanBinding(() -> false)
-                                ),
+                                        AMENITY_NOT_EQUALS_SUBCATEGORY),
                                 Bindings.notEqual(
                                         Main.simulator.buildStateProperty(),
                                         Simulator.BuildState.EDITING_ALL
@@ -68,13 +82,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                                 Bindings.isNull(
                                         Main.simulator.currentAmenityProperty()
                                 ),
-                                (evaluateClassEquality) ?
-                                        Bindings.notEqual(
-                                                Main.simulator.getCurrentAmenity().getClass(),
-                                                Main.simulator.currentClassProperty()
-                                        ) :
-                                        Bindings.createBooleanBinding(() -> false)
-                        )
+                                AMENITY_NOT_EQUALS_SUBCATEGORY)
                 );
 
         InitializeMainScreenService.DRAW_ONLY_BINDING =
@@ -91,11 +99,35 @@ public class InitializeMainScreenService extends InitializeScreenService {
                         Main.simulator.portalDrawingProperty(),
                         Bindings.createBooleanBinding(() -> true)
                 );
+
+        InitializeMainScreenService.FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING =
+                Bindings.equal(
+                        Main.simulator.floorFieldDrawingProperty(),
+                        Bindings.createBooleanBinding(() -> true)
+                );
+
+        InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING =
+                Bindings.or(
+                        Bindings.or(
+                                Bindings.isNull(
+                                        Main.simulator.currentAmenityProperty()
+                                ),
+                                AMENITY_NOT_EQUALS_SUBCATEGORY),
+                        Bindings.notEqual(
+                                Main.simulator.buildStateProperty(),
+                                Simulator.BuildState.EDITING_ONE
+                        )
+                );
     }
 
     // Initialize the build tab UI controls
     public static void initializeSidebar(TabPane sideBar) {
-        sideBar.disableProperty().bind(InitializeMainScreenService.PORTAL_DRAW_IN_PROGRESS_BINDING);
+        sideBar.disableProperty().bind(
+                Bindings.or(
+                        InitializeMainScreenService.PORTAL_DRAW_IN_PROGRESS_BINDING,
+                        InitializeMainScreenService.FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING
+                )
+        );
     }
 
     public static void initializeBuildTab(
@@ -117,6 +149,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> securityIntervalSpinner,
             Button saveSecurityButton,
             Button deleteSecurityButton,
+            Button addFloorFieldsSecurityButton,
             // Stairs and elevators
             Button addElevatorButton,
             Button editElevatorButton,
@@ -170,7 +203,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 securityIntervalLabel,
                 securityIntervalSpinner,
                 saveSecurityButton,
-                deleteSecurityButton
+                deleteSecurityButton,
+                addFloorFieldsSecurityButton
         );
 
         initializeStairsElevators(
@@ -261,7 +295,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label securityIntervalLabel,
             Spinner<Integer> securityIntervalSpinner,
             Button saveSecurityButton,
-            Button deleteSecurityButton
+            Button deleteSecurityButton,
+            Button addFloorFieldsSecurityButton
     ) {
         initializeStationEntranceExit(
                 stationGateEnableCheckBox,
@@ -279,7 +314,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 securityIntervalLabel,
                 securityIntervalSpinner,
                 saveSecurityButton,
-                deleteSecurityButton
+                deleteSecurityButton,
+                addFloorFieldsSecurityButton
         );
     }
 
@@ -326,7 +362,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label securityIntervalLabel,
             Spinner<Integer> securityIntervalSpinner,
             Button saveSecurityButton,
-            Button deleteSecurityButton
+            Button deleteSecurityButton,
+            Button addFloorFieldsSecurityButton
     ) {
         securityIntervalLabel.setLabelFor(securityIntervalSpinner);
 
@@ -343,6 +380,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         saveSecurityButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteSecurityButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        addFloorFieldsSecurityButton.disableProperty().bind(
+                InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING
+        );
     }
 
     // Initialize the stairs and elevators build category UI controls

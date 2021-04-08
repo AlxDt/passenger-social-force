@@ -1,11 +1,9 @@
-package com.crowdsimulation.controller.screen.feature.portalcontroller;
+package com.crowdsimulation.controller.screen.feature.portal;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.ScreenController;
-import com.crowdsimulation.controller.screen.main.service.InitializeElevatorSetupService;
 import com.crowdsimulation.controller.screen.main.service.InitializePortalFloorSelectorService;
 import com.crowdsimulation.model.core.environment.station.Floor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
@@ -43,5 +41,10 @@ public class PortalFloorSelectorController extends ScreenController {
                 floorSpinner,
                 proceedButton
         );
+    }
+
+    @Override
+    protected void closeAction() {
+
     }
 }

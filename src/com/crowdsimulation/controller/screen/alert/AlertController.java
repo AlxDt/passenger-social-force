@@ -30,4 +30,9 @@ public class AlertController extends ScreenController {
 
         return result.get() == ButtonType.OK;
     }
+
+    @Override
+    protected void closeAction() {
+
+    }
 }

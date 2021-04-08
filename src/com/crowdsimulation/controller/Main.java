@@ -40,6 +40,7 @@ public class Main extends Application {
         mainController.showWindow(
                 root,
                 "Station editor",
+                false,
                 false);
 
         Main.mainScreenController = mainController;

@@ -1,8 +1,6 @@
-package com.crowdsimulation.controller.screen.feature.portalcontroller.setup;
+package com.crowdsimulation.controller.screen.feature.portal.setup;
 
-import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.main.service.InitializeElevatorSetupService;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -87,5 +85,10 @@ public class ElevatorSetupController extends PortalSetupController {
                 elevatorDirectionChoiceBox,
                 proceedButton
         );
+    }
+
+    @Override
+    protected void closeAction() {
+
     }
 }

@@ -1,4 +1,4 @@
-package com.crowdsimulation.controller.screen.feature.portalcontroller.setup;
+package com.crowdsimulation.controller.screen.feature.portal.setup;
 
 import com.crowdsimulation.controller.screen.ScreenController;
 

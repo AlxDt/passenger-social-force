@@ -204,6 +204,7 @@
                                                                         </HBox>
                                                                         <Button fx:id="saveSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Save" />
                                                                         <Button fx:id="deleteSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                                        <Button fx:id="addFloorFieldsSecurityButton" cancelButton="true" layoutX="10.0" layoutY="99.0" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="200.0" text="Add floor fields" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>
@@ -260,9 +261,9 @@
                                                                <children>
                                                                   <VBox alignment="CENTER" prefHeight="70.0" prefWidth="200.0" spacing="10.0">
                                                                      <children>
-                                                                        <Button fx:id="addElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addElevatorAction" prefHeight="25.0" prefWidth="199.0" text="Add" />
-                                                                        <Button fx:id="editElevatorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#editElevatorAction" prefHeight="25.0" prefWidth="199.0" text="Edit" />
-                                                                        <Button fx:id="deleteElevatorButton" cancelButton="true" layoutX="10.0" layoutY="15.0" mnemonicParsing="false" onAction="#deleteElevatorAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                                        <Button fx:id="addElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add" />
+                                                                        <Button fx:id="editElevatorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit" />
+                                                                        <Button fx:id="deleteElevatorButton" cancelButton="true" layoutX="10.0" layoutY="15.0" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>
@@ -414,31 +415,6 @@
                               </VBox>
                            </content>
                       </Tab>
-                        <Tab text="Floor fields">
-                           <content>
-                              <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
-                                 <children>
-                                    <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
-                                       <children>
-                                          <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                             <children>
-                                                <Label text="Intensity:" />
-                                                <Slider blockIncrement="0.05" majorTickUnit="0.25" max="1.0" minorTickCount="5" prefWidth="140.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="0.5" />
-                                             </children>
-                                          </HBox>
-                                          <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                             <children>
-                                                <Label text="Direction" />
-                                                <ChoiceBox prefHeight="25.0" prefWidth="140.0" />
-                                             </children>
-                                          </HBox>
-                                          <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Save" />
-                                          <Button cancelButton="true" layoutX="11.0" layoutY="58.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
-                                       </children>
-                                    </VBox>
-                                 </children>
-                              </VBox>
-                           </content></Tab>
                     </tabs>
                   </TabPane>
                </content>

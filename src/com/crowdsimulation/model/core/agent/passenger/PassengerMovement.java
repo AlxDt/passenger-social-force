@@ -1,5 +1,7 @@
 package com.crowdsimulation.model.core.agent.passenger;
 
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
+
 public class PassengerMovement {
 /*    private final Passenger parent;
     private final double walkingDistance;
@@ -712,21 +714,37 @@ public class PassengerMovement {
         return chosenPatch;
     }*/
 
+    public enum Direction {
+        BOARDING,
+        RIDING_TRAIN,
+        ALIGHTING
+    }
+
     public enum State {
         WALKING,
+        IN_GATE,
         IN_QUEUE,
-        AT_PLATFORM,
+        IN_GOAL,
         IN_TRAIN,
     }
 
     public enum Action {
+        /* Walking actions */
         WILL_QUEUE,
+        /* In queue actions */
         ASSEMBLING,
         QUEUEING,
+        /* In goal actions */
+        SECURITY_CHECKING,
         TRANSACTING,
-        WAITING_FOR_TRAIN,
-        BOARDING,
+        USING_TICKET,
+        /* In gate */
+        ASCENDING,
+        DESCENDING,
+        STANDING_IN_CAB,
+        /* Train actions */
         RIDING_TRAIN,
-        LEAVING
+        /* Final actions */
+        EXITING_STATION
     }
 }

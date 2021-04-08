@@ -1,7 +1,10 @@
 package com.crowdsimulation.model.core.environment.station.patch.floorfield;
 
+import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +42,7 @@ public abstract class FloorField extends BaseStationObject {
         this.goal = goal;
     }*/
 
-/*    public FloorField(Queueable goal, Patch apex) {
+/*    public FloorField(QueueObject goal, Patch apex) {
         super();
 
         this.associatedPatches = new ArrayList<>();
@@ -56,7 +59,7 @@ public abstract class FloorField extends BaseStationObject {
         return apex;
     }
 
-    public Queueable getGoal() {
+    public QueueObject getGoal() {
         return goal;
     }
 
@@ -64,7 +67,7 @@ public abstract class FloorField extends BaseStationObject {
         this.apex = apex;
     }
 
-    public void setGoal(Queueable goal) {
+    public void setGoal(QueueObject goal) {
         this.goal = goal;
     }*/
 
@@ -81,6 +84,4 @@ public abstract class FloorField extends BaseStationObject {
     public int hashCode() {
         return Objects.hash(value, goal);
     }*/
-
-
 }
