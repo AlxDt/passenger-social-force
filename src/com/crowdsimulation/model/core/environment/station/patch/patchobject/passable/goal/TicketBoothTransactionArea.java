@@ -82,6 +82,10 @@ public class TicketBoothTransactionArea extends Goal {
         this.passengerTransacting = passengerTransacting;
     }
 
+    public QueueingFloorField.FloorFieldState getTicketBoothTransactionAreaFloorFieldState() {
+        return ticketBoothTransactionAreaFloorFieldState;
+    }
+
     @Override
     public String toString() {
         return "Ticket booth transaction area";

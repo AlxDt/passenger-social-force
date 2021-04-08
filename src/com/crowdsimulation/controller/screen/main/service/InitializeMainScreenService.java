@@ -154,6 +154,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button addElevatorButton,
             Button editElevatorButton,
             Button deleteElevatorButton,
+            Button addFloorFieldsElevatorButton,
             // Concourse amenities
             // Ticket booth
             CheckBox ticketBoothEnableCheckBox,
@@ -163,6 +164,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
             Button deleteTicketBoothButton,
+            Button addFloorFieldsTicketBoothButton,
             // Turnstile
             CheckBox turnstileEnableCheckBox,
             CheckBox turnstileBlockPassengerCheckBox,
@@ -180,6 +182,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
             Button saveTrainDoorButton,
             Button deleteTrainDoorButton,
+            Button addFloorFieldsTrainDoorButton,
             // Tab pane
             TabPane buildTabPane
     ) {
@@ -210,7 +213,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
         initializeStairsElevators(
                 addElevatorButton,
                 editElevatorButton,
-                deleteElevatorButton
+                deleteElevatorButton,
+                addFloorFieldsElevatorButton
         );
 
         initializeConcourseAmenities(
@@ -221,6 +225,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 ticketBoothIntervalSpinner,
                 saveTicketBoothButton,
                 deleteTicketBoothButton,
+                addFloorFieldsTicketBoothButton,
                 turnstileEnableCheckBox,
                 turnstileBlockPassengerCheckBox,
                 turnstileDirectionLabel,
@@ -238,7 +243,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 trainDoorCarriageLabel,
                 trainDoorCarriageListView,
                 saveTrainDoorButton,
-                deleteTrainDoorButton
+                deleteTrainDoorButton,
+                addFloorFieldsTrainDoorButton
         );
 
         // Initialize listeners
@@ -390,7 +396,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeStairsElevators(
             Button addElevatorButton,
             Button editElevatorButton,
-            Button deleteElevatorButton
+            Button deleteElevatorButton,
+            Button addFloorFieldsElevatorButton
     ) {
         initializeStairs();
 
@@ -399,7 +406,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
         initializeElevators(
                 addElevatorButton,
                 editElevatorButton,
-                deleteElevatorButton
+                deleteElevatorButton,
+                addFloorFieldsElevatorButton
         );
     }
 
@@ -417,12 +425,15 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeElevators(
             Button addElevatorButton,
             Button editElevatorButton,
-            Button deleteElevatorButton
+            Button deleteElevatorButton,
+            Button addFloorFieldsElevatorButton
     ) {
         addElevatorButton.disableProperty().bind(InitializeMainScreenService.DRAW_ONLY_BINDING);
 
         editElevatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteElevatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        addFloorFieldsElevatorButton.disableProperty().bind(InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING);
     }
 
     // Initialize the concourse amenities build category UI controls
@@ -434,6 +445,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
             Button deleteTicketBoothButton,
+            Button addFloorFieldsTicketBoothButton,
             CheckBox turnstileEnableCheckBox,
             CheckBox turnstileBlockPassengerCheckBox,
             Label turnstileDirectionLabel,
@@ -450,7 +462,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 ticketBoothIntervalLabel,
                 ticketBoothIntervalSpinner,
                 saveTicketBoothButton,
-                deleteTicketBoothButton
+                deleteTicketBoothButton,
+                addFloorFieldsTicketBoothButton
         );
 
         initializeTurnstile(
@@ -473,7 +486,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label ticketBoothIntervalLabel,
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
-            Button deleteTicketBoothButton
+            Button deleteTicketBoothButton,
+            Button addFloorFieldsTicketBoothButton
     ) {
         ticketBoothModeLabel.setLabelFor(ticketBoothModeChoiceBox);
 
@@ -499,6 +513,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         saveTicketBoothButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteTicketBoothButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        addFloorFieldsTicketBoothButton.disableProperty().bind(
+                InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING
+        );
     }
 
     // Initialize the turnstile controls
@@ -547,7 +565,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
             Button saveTrainDoorButton,
-            Button deleteTrainDoorButton
+            Button deleteTrainDoorButton,
+            Button addFloorFieldsTrainDoorButton
     ) {
         initializeTrainBoardingArea(
                 trainDoorEnableCheckBox,
@@ -556,7 +575,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 trainDoorCarriageLabel,
                 trainDoorCarriageListView,
                 saveTrainDoorButton,
-                deleteTrainDoorButton
+                deleteTrainDoorButton,
+                addFloorFieldsTrainDoorButton
         );
     }
 
@@ -568,7 +588,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriagesListView,
             Button saveTrainDoorButton,
-            Button deleteTrainDoorButton
+            Button deleteTrainDoorButton,
+            Button addFloorFieldsTrainDoorButton
     ) {
         trainDoorDirectionLabel.setLabelFor(trainDoorDirectionChoiceBox);
 
@@ -598,6 +619,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         saveTrainDoorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteTrainDoorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        addFloorFieldsTrainDoorButton.disableProperty().bind(InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING);
     }
 
     // Iterate through each build subtab to set the listeners for the changing of build categories and subcategories

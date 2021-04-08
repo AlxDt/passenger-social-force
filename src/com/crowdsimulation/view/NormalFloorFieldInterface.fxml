@@ -42,7 +42,8 @@
       </HBox>
       <HBox alignment="CENTER" layoutX="10.0" layoutY="90.0" prefHeight="100.0" prefWidth="289.0" spacing="10.0" GridPane.columnSpan="2" GridPane.rowIndex="3">
          <children>
-            <Button fx:id="deleteAllButton" disable="true" mnemonicParsing="false" onAction="#deleteAllAction" prefHeight="25.0" prefWidth="248.0" text="Delete all" />
+            <Button fx:id="validateButton" mnemonicParsing="false" onAction="#validateAction" prefHeight="25.0" prefWidth="248.0" text="Validate" />
+            <Button fx:id="deleteAllButton" disable="true" layoutX="10.0" layoutY="27.0" mnemonicParsing="false" onAction="#deleteAllAction" prefHeight="25.0" prefWidth="248.0" text="Delete all" />
          </children>
       </HBox>
    </children>

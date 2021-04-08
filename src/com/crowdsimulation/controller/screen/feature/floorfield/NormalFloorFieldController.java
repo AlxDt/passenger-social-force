@@ -2,17 +2,16 @@ package com.crowdsimulation.controller.screen.feature.floorfield;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.ScreenController;
+import com.crowdsimulation.controller.screen.alert.AlertController;
 import com.crowdsimulation.controller.screen.main.MainScreenController;
 import com.crowdsimulation.controller.screen.main.service.InitializeNormalFloorFieldService;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.text.Text;
 
 public class NormalFloorFieldController extends ScreenController {
@@ -33,6 +32,9 @@ public class NormalFloorFieldController extends ScreenController {
     private Slider intensitySlider;
 
     @FXML
+    private Button validateButton;
+
+    @FXML
     private Button deleteAllButton;
 
     private Parent root;
@@ -48,6 +50,28 @@ public class NormalFloorFieldController extends ScreenController {
     }
 
     @FXML
+    public void validateAction() {
+        // Check whether the floor fields of the current queueable are complete
+        Queueable target = Main.simulator.getCurrentFloorFieldTarget();
+
+        if (target.isFloorFieldsComplete()) {
+            AlertController.showSimpleAlert(
+                    "Floor fields valid",
+                    "Floor fields valid",
+                    "The floor fields of this target are complete.",
+                    Alert.AlertType.INFORMATION
+            );
+        } else {
+            AlertController.showSimpleAlert(
+                    "Floor fields invalid",
+                    "Floor fields invalid",
+                    "The floor fields of this target are incomplete.",
+                    Alert.AlertType.INFORMATION
+            );
+        }
+    }
+
+    @FXML
     public void deleteAllAction() {
         // In the main controller, clear the floor field of the current target given the floor field state
         Main.mainScreenController.clearFloorFieldAction();
@@ -60,6 +84,7 @@ public class NormalFloorFieldController extends ScreenController {
                 modeChoiceBox,
                 intensityLabel,
                 intensitySlider,
+                validateButton,
                 deleteAllButton
         );
 

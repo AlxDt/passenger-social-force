@@ -204,7 +204,7 @@
                                                                         </HBox>
                                                                         <Button fx:id="saveSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Save" />
                                                                         <Button fx:id="deleteSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
-                                                                        <Button fx:id="addFloorFieldsSecurityButton" cancelButton="true" layoutX="10.0" layoutY="99.0" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="200.0" text="Add floor fields" />
+                                                                        <Button fx:id="addFloorFieldsSecurityButton" cancelButton="true" layoutX="10.0" layoutY="99.0" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="200.0" text="Add floor field" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>
@@ -261,9 +261,10 @@
                                                                <children>
                                                                   <VBox alignment="CENTER" prefHeight="70.0" prefWidth="200.0" spacing="10.0">
                                                                      <children>
-                                                                        <Button fx:id="addElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add" />
-                                                                        <Button fx:id="editElevatorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit" />
-                                                                        <Button fx:id="deleteElevatorButton" cancelButton="true" layoutX="10.0" layoutY="15.0" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                                        <Button fx:id="addElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add elevator" />
+                                                                        <Button fx:id="editElevatorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit elevator" />
+                                                                        <Button fx:id="deleteElevatorButton" cancelButton="true" layoutX="10.0" layoutY="15.0" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete elevator" />
+                                                                        <Button fx:id="addFloorFieldsElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>
@@ -303,6 +304,7 @@
                                                                         </HBox>
                                                                         <Button fx:id="saveTicketBoothButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
                                                                         <Button fx:id="deleteTicketBoothButton" cancelButton="true" layoutX="10.0" layoutY="142.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                                        <Button fx:id="addFloorFieldsTicketBoothButton" cancelButton="true" layoutX="10.0" layoutY="142.0" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>
@@ -378,6 +380,7 @@
                                                                         </HBox>
                                                                         <Button fx:id="saveTrainDoorButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
                                                                         <Button fx:id="deleteTrainDoorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                                        <Button fx:id="addFloorFieldsTrainDoorButton" cancelButton="true" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>

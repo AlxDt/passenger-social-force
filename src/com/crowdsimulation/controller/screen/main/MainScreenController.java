@@ -39,6 +39,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
+import sun.security.krb5.internal.Ticket;
 
 import java.io.IOException;
 import java.util.List;
@@ -135,6 +136,9 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Button deleteElevatorButton;
 
+    @FXML
+    private Button addFloorFieldsElevatorButton;
+
     // Concourse amenities
     // Ticket booth
     @FXML
@@ -157,6 +161,9 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private Button deleteTicketBoothButton;
+
+    @FXML
+    private Button addFloorFieldsTicketBoothButton;
 
     // Turnstile
     @FXML
@@ -207,8 +214,8 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Button deleteTrainDoorButton;
 
-    // Floor fields
-    // Queueing floor field
+    @FXML
+    private Button addFloorFieldsTrainDoorButton;
 
     // Walls
     // Wall
@@ -305,6 +312,7 @@ public class MainScreenController extends ScreenController {
                 addElevatorButton,
                 editElevatorButton,
                 deleteElevatorButton,
+                addFloorFieldsElevatorButton,
                 // Concourse amenities
                 // Ticket booth
                 ticketBoothEnableCheckBox,
@@ -314,6 +322,7 @@ public class MainScreenController extends ScreenController {
                 ticketBoothIntervalSpinner,
                 saveTicketBoothButton,
                 deleteTicketBoothButton,
+                addFloorFieldsTicketBoothButton,
                 // Turnstile
                 turnstileEnableCheckBox,
                 turnstileBlockPassengerCheckBox,
@@ -332,6 +341,7 @@ public class MainScreenController extends ScreenController {
                 trainDoorCarriageListView,
                 saveTrainDoorButton,
                 deleteTrainDoorButton,
+                addFloorFieldsTrainDoorButton,
                 // Build tab
                 buildTabPane
         );
@@ -722,7 +732,7 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     // Add floor fields
-    public void addFloorFieldsAction() throws IOException {
+    public void addFloorFieldsAction() {
         // Turn on the floor fields drawing mode
         beginFloorFieldDrawing();
 
@@ -734,22 +744,19 @@ public class MainScreenController extends ScreenController {
     private void addFloorFields() {
         switch (Main.simulator.getBuildSubcategory()) {
             case SECURITY:
+            case ELEVATOR:
+            case TICKET_BOOTH:
+            case TRAIN_BOARDING_AREA:
                 // Show the window to edit the parameters of the floor field
                 MainScreenController.normalFloorFieldController.showWindow(
                         MainScreenController.normalFloorFieldController.getRoot(),
-                        "Floor field",
+                        "Floor fields",
                         false,
                         true
                 );
 
                 break;
-            case ELEVATOR:
-                break;
-            case TICKET_BOOTH:
-                break;
             case TURNSTILE:
-                break;
-            case TRAIN_BOARDING_AREA:
                 break;
         }
     }
@@ -776,6 +783,9 @@ public class MainScreenController extends ScreenController {
     private void beginFloorFieldDrawing() {
         Main.simulator.setFloorFieldDrawing(true);
 
+        // Reset switch floors buttons
+        resetSwitchFloorButtons();
+
         // Redraw interface
         drawInterface(false);
     }
@@ -796,6 +806,9 @@ public class MainScreenController extends ScreenController {
         if (windowClosedAutomatically) {
             MainScreenController.normalFloorFieldController.closeWindow();
         }
+
+        // Reset switch floors buttons
+        resetSwitchFloorButtons();
 
         // Redraw interface
         drawInterface(false);
@@ -1957,16 +1970,78 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
-                                    // Only edit if there is already a elevator on that patch
-                                    if (Main.simulator.getCurrentAmenity() instanceof ElevatorPortal) {
-                                        Main.simulator.setCurrentClass(ElevatorPortal.class);
+                                    // When in adding floor fields mode, draw a floor field instead
+                                    // Otherwise, just enable the controls in the sidebar
+                                    if (!Main.simulator.isFloorFieldDrawing()) {
+                                        // Only edit if there is already a elevator on that patch
+                                        if (Main.simulator.getCurrentAmenity() instanceof ElevatorPortal) {
+                                            Main.simulator.setCurrentClass(ElevatorPortal.class);
 
-                                        // Do nothing, editing is handled by the sidebar button
+                                            ElevatorPortal elevatorPortalToEdit
+                                                    = (ElevatorPortal) Main.simulator.getCurrentAmenity();
+
+                                            // Take note of this amenity as the one that will own the floor fields once
+                                            // drawn
+                                            Main.simulator.setCurrentFloorFieldTarget(elevatorPortalToEdit);
+
+                                            // Also take note of the current floor field state
+                                            QueueingFloorField.FloorFieldState floorFieldState
+                                                    = elevatorPortalToEdit.getElevatorPortalFloorFieldState();
+
+                                            Main.simulator.setCurrentFloorFieldState(floorFieldState);
+
+                                            // Do nothing afterwards, editing is handled by the sidebar button
+                                        } else {
+                                            // If there is no amenity there, just do nothing
+                                            if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                                // If clicked on an existing amenity, switch to editing mode, then open that
+                                                // amenity's controls
+                                                goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                                // Then revisit this method as if that amenity was clicked
+                                                buildOrEdit(currentPatch);
+                                            }
+                                        }
                                     } else {
-                                        // If there is no amenity there, just do nothing
-                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
-                                            // If clicked on an existing amenity, switch to editing mode, then open that
-                                            // amenity's controls
+                                        // If there is an empty patch here, draw the floor field value
+                                        if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                            // Define the target and the floor field state
+                                            ElevatorPortal target =
+                                                    (ElevatorPortal) Main.simulator.getCurrentFloorFieldTarget();
+
+                                            // If a floor field value is supposed to be drawn, then go ahead and draw
+                                            if (MainScreenController.normalFloorFieldController.getFloorFieldMode()
+                                                    == NormalFloorFieldController.FloorFieldMode.DRAWING) {
+                                                if (!QueueingFloorField.addFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        Main.simulator.getCurrentFloorFieldState(),
+                                                        MainScreenController.normalFloorFieldController.getIntensity()
+                                                )) {
+                                                    // Let the user know if the addition of the floor field value has
+                                                    // failed
+                                                    AlertController.showSimpleAlert(
+                                                            "Floor field value addition failed",
+                                                            "Failed to add a floor field value here",
+                                                            "A floor field may only have a single patch with a"
+                                                                    + " value of 1.0.",
+                                                            Alert.AlertType.ERROR
+                                                    );
+                                                }
+                                            } else {
+                                                // If a floor field value is supposed to be deleted, then go ahead and
+                                                // delete it
+                                                QueueingFloorField.deleteFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        Main.simulator.getCurrentFloorFieldState()
+                                                );
+                                            }
+                                        } else {
+                                            // If it is a different amenity, turn off floor fields mode
+                                            endFloorFieldDrawing(true);
+
+                                            // Switch to editing mode, then open that amenity's controls
                                             goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
@@ -2047,46 +2122,107 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
-                                    // Only edit if there is already a ticket booth or its transaction area on that
-                                    // patch
-                                    if (Main.simulator.getCurrentAmenity() instanceof TicketBooth
-                                            || Main.simulator.getCurrentAmenity()
-                                            instanceof TicketBoothTransactionArea) {
-                                        Main.simulator.setCurrentClass(TicketBoothTransactionArea.class);
+                                    // When in adding floor fields mode, draw a floor field instead
+                                    // Otherwise, just enable the controls in the sidebar
+                                    if (!Main.simulator.isFloorFieldDrawing()) {
+                                        // Only edit if there is already a ticket booth or its transaction area on that
+                                        // patch
+                                        if (Main.simulator.getCurrentAmenity() instanceof TicketBooth
+                                                || Main.simulator.getCurrentAmenity()
+                                                instanceof TicketBoothTransactionArea) {
+                                            Main.simulator.setCurrentClass(TicketBoothTransactionArea.class);
 
-                                        TicketBoothTransactionArea ticketBoothTransactionAreaToEdit;
+                                            TicketBoothTransactionArea ticketBoothTransactionAreaToEdit;
 
-                                        // See whether this patch is a ticket booth or its transaction area
-                                        // Resolve for the transaction area
-                                        if (Main.simulator.getCurrentAmenity()
-                                                instanceof TicketBooth) {
-                                            ticketBoothTransactionAreaToEdit
-                                                    = ((TicketBooth) Main.simulator.getCurrentAmenity())
-                                                    .getTicketBoothTransactionArea();
+                                            // See whether this patch is a ticket booth or its transaction area
+                                            // Resolve for the transaction area
+                                            if (Main.simulator.getCurrentAmenity()
+                                                    instanceof TicketBooth) {
+                                                ticketBoothTransactionAreaToEdit
+                                                        = ((TicketBooth) Main.simulator.getCurrentAmenity())
+                                                        .getTicketBoothTransactionArea();
 
-                                            Main.simulator.setCurrentAmenity(ticketBoothTransactionAreaToEdit);
+                                                Main.simulator.setCurrentAmenity(ticketBoothTransactionAreaToEdit);
+                                            } else {
+                                                ticketBoothTransactionAreaToEdit
+                                                        = (TicketBoothTransactionArea)
+                                                        Main.simulator.getCurrentAmenity();
+                                            }
+
+                                            // Take note of this amenity as the one that will own the floor fields once
+                                            // drawn
+                                            Main.simulator.setCurrentFloorFieldTarget(ticketBoothTransactionAreaToEdit);
+
+                                            // Also take note of the current floor field state
+                                            QueueingFloorField.FloorFieldState floorFieldState
+                                                    = ticketBoothTransactionAreaToEdit
+                                                    .getTicketBoothTransactionAreaFloorFieldState();
+
+                                            Main.simulator.setCurrentFloorFieldState(floorFieldState);
+
+                                            ticketBoothEnableCheckBox.setSelected(
+                                                    ticketBoothTransactionAreaToEdit.isEnabled()
+                                            );
+
+                                            ticketBoothModeChoiceBox.setValue(
+                                                    ticketBoothTransactionAreaToEdit.getTicketBoothType()
+                                            );
+
+                                            ticketBoothIntervalSpinner.getValueFactory().setValue(
+                                                    ticketBoothTransactionAreaToEdit.getWaitingTime()
+                                            );
                                         } else {
-                                            ticketBoothTransactionAreaToEdit
-                                                    = (TicketBoothTransactionArea)
-                                                    Main.simulator.getCurrentAmenity();
+                                            // If there is no amenity there, just do nothing
+                                            if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                                // If clicked on an existing amenity, switch to editing mode, then open that
+                                                // amenity's controls
+                                                goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                                // Then revisit this method as if that amenity was clicked
+                                                buildOrEdit(currentPatch);
+                                            }
                                         }
-
-                                        ticketBoothEnableCheckBox.setSelected(
-                                                ticketBoothTransactionAreaToEdit.isEnabled()
-                                        );
-
-                                        ticketBoothModeChoiceBox.setValue(
-                                                ticketBoothTransactionAreaToEdit.getTicketBoothType()
-                                        );
-
-                                        ticketBoothIntervalSpinner.getValueFactory().setValue(
-                                                ticketBoothTransactionAreaToEdit.getWaitingTime()
-                                        );
                                     } else {
-                                        // If there is no amenity there, just do nothing
-                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
-                                            // If clicked on an existing amenity, switch to editing mode, then open that
-                                            // amenity's controls
+                                        // If there is an empty patch here, draw the floor field value
+                                        if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                            // Define the target and the floor field state
+                                            TicketBoothTransactionArea target
+                                                    = (TicketBoothTransactionArea) Main.simulator
+                                                    .getCurrentFloorFieldTarget();
+
+                                            // If a floor field value is supposed to be drawn, then go ahead and draw
+                                            if (MainScreenController.normalFloorFieldController.getFloorFieldMode()
+                                                    == NormalFloorFieldController.FloorFieldMode.DRAWING) {
+                                                if (!QueueingFloorField.addFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        Main.simulator.getCurrentFloorFieldState(),
+                                                        MainScreenController.normalFloorFieldController.getIntensity()
+                                                )) {
+                                                    // Let the user know if the addition of the floor field value has
+                                                    // failed
+                                                    AlertController.showSimpleAlert(
+                                                            "Floor field value addition failed",
+                                                            "Failed to add a floor field value here",
+                                                            "A floor field may only have a single patch with a"
+                                                                    + " value of 1.0.",
+                                                            Alert.AlertType.ERROR
+                                                    );
+                                                }
+                                            } else {
+                                                // If a floor field value is supposed to be deleted, then go ahead and
+                                                // delete it
+                                                QueueingFloorField.deleteFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        Main.simulator.getCurrentFloorFieldState()
+                                                );
+                                            }
+                                        } else {
+                                            // If it is a different amenity, turn off floor fields mode
+                                            endFloorFieldDrawing(true);
+
+                                            // Switch to editing mode, then open that amenity's controls
                                             goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
@@ -2243,32 +2379,90 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
-                                    // Only edit if there is already a train door on that patch
-                                    if (Main.simulator.getCurrentAmenity() instanceof TrainDoor) {
-                                        Main.simulator.setCurrentClass(TrainDoor.class);
+                                    // When in adding floor fields mode, draw a floor field instead
+                                    // Otherwise, just enable the controls in the sidebar
+                                    if (!Main.simulator.isFloorFieldDrawing()) {
+                                        // Only edit if there is already a train door on that patch
+                                        if (Main.simulator.getCurrentAmenity() instanceof TrainDoor) {
+                                            Main.simulator.setCurrentClass(TrainDoor.class);
 
-                                        TrainDoor trainDoorToEdit
-                                                = (TrainDoor) Main.simulator.getCurrentAmenity();
+                                            TrainDoor trainDoorToEdit
+                                                    = (TrainDoor) Main.simulator.getCurrentAmenity();
 
-                                        trainDoorEnableCheckBox.setSelected(
-                                                trainDoorToEdit.isEnabled()
-                                        );
+                                            // Take note of this amenity as the one that will own the floor fields once
+                                            // drawn
+                                            Main.simulator.setCurrentFloorFieldTarget(trainDoorToEdit);
 
-                                        trainDoorDirectionChoiceBox.setValue(
-                                                trainDoorToEdit.getPlatform()
-                                        );
+                                            // Also take note of the current floor field state
+                                            QueueingFloorField.FloorFieldState floorFieldState
+                                                    = trainDoorToEdit.getTrainDoorFloorFieldState();
 
-                                        trainDoorCarriageListView.getSelectionModel().clearSelection();
+                                            Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
-                                        for (TrainDoor.TrainDoorCarriage trainDoorCarriage
-                                                : trainDoorToEdit.getTrainDoorCarriagesSupported()) {
-                                            trainDoorCarriageListView.getSelectionModel().select(trainDoorCarriage);
+                                            trainDoorEnableCheckBox.setSelected(
+                                                    trainDoorToEdit.isEnabled()
+                                            );
+
+                                            trainDoorDirectionChoiceBox.setValue(
+                                                    trainDoorToEdit.getPlatform()
+                                            );
+
+                                            trainDoorCarriageListView.getSelectionModel().clearSelection();
+
+                                            for (TrainDoor.TrainDoorCarriage trainDoorCarriage
+                                                    : trainDoorToEdit.getTrainDoorCarriagesSupported()) {
+                                                trainDoorCarriageListView.getSelectionModel().select(trainDoorCarriage);
+                                            }
+                                        } else {
+                                            // If there is no amenity there, just do nothing
+                                            if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                                // If clicked on an existing amenity, switch to editing mode, then open that
+                                                // amenity's controls
+                                                goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                                // Then revisit this method as if that amenity was clicked
+                                                buildOrEdit(currentPatch);
+                                            }
                                         }
                                     } else {
-                                        // If there is no amenity there, just do nothing
-                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
-                                            // If clicked on an existing amenity, switch to editing mode, then open that
-                                            // amenity's controls
+                                        // If there is an empty patch here, draw the floor field value
+                                        if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                            // Define the target and the floor field state
+                                            TrainDoor target = (TrainDoor) Main.simulator.getCurrentFloorFieldTarget();
+
+                                            // If a floor field value is supposed to be drawn, then go ahead and draw
+                                            if (MainScreenController.normalFloorFieldController.getFloorFieldMode()
+                                                    == NormalFloorFieldController.FloorFieldMode.DRAWING) {
+                                                if (!QueueingFloorField.addFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        Main.simulator.getCurrentFloorFieldState(),
+                                                        MainScreenController.normalFloorFieldController.getIntensity()
+                                                )) {
+                                                    // Let the user know if the addition of the floor field value has
+                                                    // failed
+                                                    AlertController.showSimpleAlert(
+                                                            "Floor field value addition failed",
+                                                            "Failed to add a floor field value here",
+                                                            "A floor field may only have a single patch with a"
+                                                                    + " value of 1.0.",
+                                                            Alert.AlertType.ERROR
+                                                    );
+                                                }
+                                            } else {
+                                                // If a floor field value is supposed to be deleted, then go ahead and
+                                                // delete it
+                                                QueueingFloorField.deleteFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        Main.simulator.getCurrentFloorFieldState()
+                                                );
+                                            }
+                                        } else {
+                                            // If it is a different amenity, turn off floor fields mode
+                                            endFloorFieldDrawing(true);
+
+                                            // Switch to editing mode, then open that amenity's controls
                                             goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked

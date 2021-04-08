@@ -27,6 +27,7 @@ public class InitializeNormalFloorFieldService {
             ChoiceBox<NormalFloorFieldController.FloorFieldMode> modeChoiceBox,
             Label intensityLabel,
             Slider intensitySlider,
+            Button validateButton,
             Button deleteAllButton
     ) {
         modeLabel.setLabelFor(modeChoiceBox);
@@ -50,9 +51,10 @@ public class InitializeNormalFloorFieldService {
             MainScreenController.normalFloorFieldController.setFloorFieldMode(updatedFloorFieldMode);
 
             NormalFloorFieldController.updatePromptText(promptText, updatedFloorFieldMode);
-
-            deleteAllButton.setDisable(updatedFloorFieldMode == NormalFloorFieldController.FloorFieldMode.DRAWING);
         });
+
+        validateButton.disableProperty().bind(DRAWING_FLOOR_FIELD_MODE);
+        deleteAllButton.disableProperty().bind(Bindings.not(DRAWING_FLOOR_FIELD_MODE));
 
         intensityLabel.setLabelFor(intensitySlider);
         intensitySlider.disableProperty().bind(DRAWING_FLOOR_FIELD_MODE);

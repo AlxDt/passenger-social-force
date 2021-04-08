@@ -77,11 +77,41 @@ public class ElevatorPortal extends Portal implements Queueable {
 
     @Override
     // Denotes whether the floor field for this elevator portal is complete
+    // Calling this method should work in either portal
     public boolean isFloorFieldsComplete() {
         QueueingFloorField queueingFloorField = retrieveFloorField(this.elevatorPortalFloorFieldState);
+        QueueingFloorField queueingFloorFieldOther;
 
-        // The floor field of this queueable is complete when there are floor fields present and it has an apex patch
-        return queueingFloorField.getApex() != null && !queueingFloorField.getAssociatedPatches().isEmpty();
+        ElevatorPortal otherPortal;
+
+        if (this == this.elevatorShaft.getUpperPortal()) {
+            otherPortal = (ElevatorPortal) this.elevatorShaft.getLowerPortal();
+
+            queueingFloorFieldOther = otherPortal.retrieveFloorField(
+                    ((ElevatorPortal) this.elevatorShaft.getLowerPortal()).getElevatorPortalFloorFieldState()
+            );
+        } else {
+            otherPortal = (ElevatorPortal) this.elevatorShaft.getUpperPortal();
+
+            queueingFloorFieldOther = otherPortal.retrieveFloorField(
+                    ((ElevatorPortal) this.elevatorShaft.getUpperPortal()).getElevatorPortalFloorFieldState()
+            );
+        }
+
+        boolean thisFloorFieldCheck;
+        boolean otherFloorFieldCheck;
+
+        thisFloorFieldCheck
+                = queueingFloorField.getApex() != null
+                && !queueingFloorField.getAssociatedPatches().isEmpty();
+
+        otherFloorFieldCheck
+                = queueingFloorFieldOther.getApex() != null
+                && !queueingFloorFieldOther.getAssociatedPatches().isEmpty();
+
+        // The floor field of this queueable is complete when, for both portals in this elevator shaft, there are floor\
+        // fields present and it has an apex patch
+        return thisFloorFieldCheck && otherFloorFieldCheck;
     }
 
     @Override
