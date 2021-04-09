@@ -156,17 +156,20 @@ public class QueueingFloorField extends HeadfulFloorField {
         // Only perform deletion when there definitely is a floor field value in this patch
         // Else, do nothing
         if (map != null) {
-            double value = map.get(floorFieldState);
+            Double value = map.get(floorFieldState);
 
-            QueueingFloorField.unregisterPatch(patch, target, floorFieldState, value);
+            // Make sure that a floor field value exists with the given floor field state
+            if (value != null) {
+                QueueingFloorField.unregisterPatch(patch, target, floorFieldState, value);
 
-            // In the given patch, remove the entry with the reference to the queueable target
-            map.remove(floorFieldState);
+                // In the given patch, remove the entry with the reference to the queueable target
+                map.remove(floorFieldState);
 
-            // If the previous deletion has left the floor field state and value map empty for that target queueable, delete
-            // the map from the target
-            if (map.isEmpty()) {
-                patch.getFloorFieldValues().remove(target);
+                // If the previous deletion has left the floor field state and value map empty for that target queueable, delete
+                // the map from the target
+                if (map.isEmpty()) {
+                    patch.getFloorFieldValues().remove(target);
+                }
             }
         }
     }
@@ -178,6 +181,8 @@ public class QueueingFloorField extends HeadfulFloorField {
     ) {
         // In each patch in the floor field to be deleted, delete the reference to its target
         // This deletes the value within that patch
+        // Note that deletion should only be done when the patch contains a floor field value in the given floor field
+        // state
         List<Patch> associatedPatches = queueingFloorField.getAssociatedPatches();
         Queueable target = queueingFloorField.getTarget();
 
@@ -220,6 +225,15 @@ public class QueueingFloorField extends HeadfulFloorField {
 
         public Queueable getTarget() {
             return target;
+        }
+
+        @Override
+        public String toString() {
+            if (direction != null) {
+                return direction.toString();
+            } else {
+                return "(any direction)";
+            }
         }
     }
 }

@@ -60,7 +60,7 @@ public class ElevatorPortal extends Portal implements Queueable {
     }
 
     @Override
-    public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldState() {
+    public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldStates() {
         List<QueueingFloorField.FloorFieldState> floorFieldStates = new ArrayList<>();
 
         floorFieldStates.add(this.elevatorPortalFloorFieldState);
@@ -115,13 +115,13 @@ public class ElevatorPortal extends Portal implements Queueable {
     }
 
     @Override
-    // Clear all floor fields of this elevator portal
-    public void clearFloorFields() {
-        QueueingFloorField queueingFloorField = retrieveFloorField(this.elevatorPortalFloorFieldState);
+    // Clear all floor fields of this given floor field state in this elevator portal
+    public void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState) {
+        QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,
-                this.elevatorPortalFloorFieldState
+                floorFieldState
         );
     }
 

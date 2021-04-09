@@ -61,7 +61,7 @@ public class Security extends BlockableAmenity {
     }
 
     @Override
-    public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldState() {
+    public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldStates() {
         List<QueueingFloorField.FloorFieldState> floorFieldStates = new ArrayList<>();
 
         floorFieldStates.add(this.securityFloorFieldState);
@@ -85,14 +85,14 @@ public class Security extends BlockableAmenity {
         return queueingFloorField.getApex() != null && !queueingFloorField.getAssociatedPatches().isEmpty();
     }
 
-    // Clear all floor fields of this security gate
+    // Clear all floor fields of the given floor field state in this security gate
     @Override
-    public void clearFloorFields() {
-        QueueingFloorField queueingFloorField = retrieveFloorField(this.securityFloorFieldState);
+    public void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState) {
+        QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,
-                this.securityFloorFieldState
+                floorFieldState
         );
     }
 

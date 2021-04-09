@@ -121,50 +121,48 @@ public class GraphicsController extends Controller {
                         // There isn't an amenity on this patch, so just use the color corresponding to a blank patch
                         patchColor = PATCH_COLORS.get(null);
 
-                        if (Main.simulator.isFloorFieldDrawing()) {
-                            // Show the floor fields of the current target with the current floor field state
-                            Queueable target = Main.simulator.getCurrentFloorFieldTarget();
-                            QueueingFloorField.FloorFieldState floorFieldState
-                                    = Main.simulator.getCurrentFloorFieldState();
+                        // Show the floor fields of the current target with the current floor field state
+                        Queueable target = Main.simulator.getCurrentFloorFieldTarget();
+                        QueueingFloorField.FloorFieldState floorFieldState
+                                = Main.simulator.getCurrentFloorFieldState();
 
-                            Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
-                                    = currentPatch.getFloorFieldValues();
-                            Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
-                                    = floorFieldValues.get(target);
+                        Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
+                                = currentPatch.getFloorFieldValues();
+                        Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
+                                = floorFieldValues.get(target);
 
-                            // Draw something if there is a target associated with this patch
-                            if (floorFieldStateDoubleMap != null) {
-                                // If the current patch's floor field state matches the current floor field state, draw
-                                // a green patch
-                                if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
-                                    double value = floorFieldStateDoubleMap.get(floorFieldState);
+                        // Draw something if there is a target associated with this patch
+                        if (floorFieldStateDoubleMap != null) {
+                            // If the current patch's floor field state matches the current floor field state, draw
+                            // a green patch
+                            if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
+                                double value = floorFieldStateDoubleMap.get(floorFieldState);
 
-                                    // Map the colors of this patch to the its field value's intensity
-                                    patchColor = Color.hsb(
-                                            FLOOR_FIELD_COLOR_HUE,
-                                            value,
-                                            1.0
-                                    );
-                                } else {
-                                    // There is a floor field value here with the same target, but it is not of the
-                                    // current floor field state
-                                    // Hence, just draw a grayish patch
-                                    patchColor = Color.hsb(
-                                            FLOOR_FIELD_COLOR_HUE,
-                                            0.25,
-                                            0.25
-                                    );
-                                }
-                            } else if (!floorFieldValues.isEmpty()) {
-                                // If there isn't a floor field with the current target, but the list of floor field
-                                // values isn't empty, there are still other floor field values on this patch
-                                // Hence, just draw a grayish patch
+                                // Map the colors of this patch to the its field value's intensity
+                                patchColor = Color.hsb(
+                                        FLOOR_FIELD_COLOR_HUE,
+                                        Main.simulator.isFloorFieldDrawing() ? value : 0.1,
+                                        1.0
+                                );
+                            } else {
+                                // There is a floor field value here with the same target, but it is not of the
+                                // current floor field state
+                                // Hence, just draw an unsaturated patch
                                 patchColor = Color.hsb(
                                         FLOOR_FIELD_COLOR_HUE,
                                         0.1,
                                         1.0
                                 );
                             }
+                        } else if (!floorFieldValues.isEmpty()) {
+                            // If there isn't a floor field with the current target, but the list of floor field
+                            // values isn't empty, there are still other floor field values on this patch
+                            // Hence, just draw an unsaturated patch
+                            patchColor = Color.hsb(
+                                    FLOOR_FIELD_COLOR_HUE,
+                                    0.1,
+                                    1.0
+                            );
                         }
                     } else {
                         // There is an amenity on this patch, so draw it according to its corresponding color
@@ -172,9 +170,15 @@ public class GraphicsController extends Controller {
 
                         // If floor field drawing is on, only color amenities which are of the current class
                         if (Main.simulator.isFloorFieldDrawing()) {
-                            // Only color the current amenity - color the rest light gray
+                            // Only color the current amenity - unsaturate the rest
                             if (!patchAmenity.equals(Main.simulator.getCurrentFloorFieldTarget())) {
-                                patchColor = Color.LIGHTGRAY;
+                                double hue = patchColor.getHue();
+
+                                patchColor = Color.hsb(
+                                        hue,
+                                        0.15,
+                                        1.0
+                                );
                             }
                         }
                     }
@@ -194,6 +198,26 @@ public class GraphicsController extends Controller {
                     );*/
                 }
             }
+        }
+
+        // If this amenity is also the currently selected amenity in the simulator, draw a circle around
+        // said amenity
+        final double CIRCLE_DIAMETER = 100.0;
+
+        Amenity currentAmenity = Main.simulator.getCurrentAmenity();
+
+        if (currentAmenity != null
+                && currentAmenity.getPatch().getFloor() == Main.simulator.getCurrentFloor()
+                && !Main.simulator.isFloorFieldDrawing()) {
+            double row = currentAmenity.getPatch().getMatrixPosition().getRow();
+            double column = currentAmenity.getPatch().getMatrixPosition().getColumn();
+
+            backgroundGraphicsContext.strokeOval(
+                    (column * tileSize - CIRCLE_DIAMETER * 0.5 + tileSize * 0.5),
+                    (row * tileSize - CIRCLE_DIAMETER * 0.5 + tileSize * 0.5),
+                    CIRCLE_DIAMETER,
+                    CIRCLE_DIAMETER
+            );
         }
     }
 
@@ -243,7 +267,6 @@ public class GraphicsController extends Controller {
 
                 rectangle.setFill(Color.DARKGRAY);
                 rectangle.setOpacity(0.0);
-                rectangle.setStyle("-fx-cursor: hand;");
                 rectangle.getProperties().put("row", row);
                 rectangle.getProperties().put("column", column);
 
@@ -252,176 +275,184 @@ public class GraphicsController extends Controller {
 
                 // Actions for when the mouse enters a listener
                 rectangle.addEventFilter(MouseEvent.MOUSE_ENTERED, e -> {
-                    int patchRow;
-                    int patchColumn;
+                    // This listener should only be active when there is a subcategory present
+                    if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
+                        int patchRow;
+                        int patchColumn;
 
-                    patchRow = (int) rectangle.getProperties().get("row");
-                    patchColumn = (int) rectangle.getProperties().get("column");
+                        patchRow = (int) rectangle.getProperties().get("row");
+                        patchColumn = (int) rectangle.getProperties().get("column");
 
-                    // Get the patch where the mouse is currently on
-                    Patch patch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
+                        // Get the patch where the mouse is currently on
+                        Patch patch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
 
-                    rectangle.setOpacity(1.0);
+                        rectangle.setOpacity(1.0);
+                        rectangle.setStyle("-fx-cursor: hand;");
 
-                    if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
-                            && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
-                        Rectangle extraRectangle;
+                        if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                                && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
+                            Rectangle extraRectangle;
 
-                        switch (GraphicsController.drawTicketBoothOrientation) {
-                            case UP:
-                                if (rowCopy - 1 >= 0) {
-                                    extraRectangle = rectangles[rowCopy - 1][columnCopy];
-                                    extraRectangle.setOpacity(1.0);
-                                    extraRectangle.setFill(Color.LIGHTGRAY);
+                            switch (GraphicsController.drawTicketBoothOrientation) {
+                                case UP:
+                                    if (rowCopy - 1 >= 0) {
+                                        extraRectangle = rectangles[rowCopy - 1][columnCopy];
+                                        extraRectangle.setOpacity(1.0);
+                                        extraRectangle.setFill(Color.LIGHTGRAY);
 
-                                    GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                            rowCopy - 1,
-                                            columnCopy
-                                    );
+                                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                                rowCopy - 1,
+                                                columnCopy
+                                        );
 
-                                    GraphicsController.extraRectangle = extraRectangle;
-                                    GraphicsController.validTicketBoothDraw
-                                            = patch.getAmenity() == null && extraPatch.getAmenity() == null;
-                                } else {
-                                    GraphicsController.validTicketBoothDraw = false;
-                                }
+                                        GraphicsController.extraRectangle = extraRectangle;
+                                        GraphicsController.validTicketBoothDraw
+                                                = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                    } else {
+                                        GraphicsController.validTicketBoothDraw = false;
+                                    }
 
-                                break;
-                            case RIGHT:
-                                if (columnCopy + 1 < Main.simulator.getCurrentFloor().getColumns()) {
-                                    extraRectangle = rectangles[rowCopy][columnCopy + 1];
-                                    extraRectangle.setOpacity(1.0);
-                                    extraRectangle.setFill(Color.LIGHTGRAY);
+                                    break;
+                                case RIGHT:
+                                    if (columnCopy + 1 < Main.simulator.getCurrentFloor().getColumns()) {
+                                        extraRectangle = rectangles[rowCopy][columnCopy + 1];
+                                        extraRectangle.setOpacity(1.0);
+                                        extraRectangle.setFill(Color.LIGHTGRAY);
 
-                                    GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                            rowCopy,
-                                            columnCopy + 1
-                                    );
+                                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                                rowCopy,
+                                                columnCopy + 1
+                                        );
 
-                                    GraphicsController.extraRectangle = extraRectangle;
-                                    GraphicsController.validTicketBoothDraw
-                                            = patch.getAmenity() == null && extraPatch.getAmenity() == null;
-                                } else {
-                                    GraphicsController.validTicketBoothDraw = false;
-                                }
+                                        GraphicsController.extraRectangle = extraRectangle;
+                                        GraphicsController.validTicketBoothDraw
+                                                = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                    } else {
+                                        GraphicsController.validTicketBoothDraw = false;
+                                    }
 
-                                break;
-                            case DOWN:
-                                if (rowCopy + 1 < Main.simulator.getCurrentFloor().getRows()) {
-                                    extraRectangle = rectangles[rowCopy + 1][columnCopy];
-                                    extraRectangle.setOpacity(1.0);
-                                    extraRectangle.setFill(Color.LIGHTGRAY);
+                                    break;
+                                case DOWN:
+                                    if (rowCopy + 1 < Main.simulator.getCurrentFloor().getRows()) {
+                                        extraRectangle = rectangles[rowCopy + 1][columnCopy];
+                                        extraRectangle.setOpacity(1.0);
+                                        extraRectangle.setFill(Color.LIGHTGRAY);
 
-                                    GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                            rowCopy + 1,
-                                            columnCopy
-                                    );
+                                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                                rowCopy + 1,
+                                                columnCopy
+                                        );
 
-                                    GraphicsController.extraRectangle = extraRectangle;
-                                    GraphicsController.validTicketBoothDraw
-                                            = patch.getAmenity() == null && extraPatch.getAmenity() == null;
-                                } else {
-                                    GraphicsController.validTicketBoothDraw = false;
-                                }
+                                        GraphicsController.extraRectangle = extraRectangle;
+                                        GraphicsController.validTicketBoothDraw
+                                                = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                    } else {
+                                        GraphicsController.validTicketBoothDraw = false;
+                                    }
 
-                                break;
-                            case LEFT:
-                                if (columnCopy - 1 >= 0) {
-                                    extraRectangle = rectangles[rowCopy][columnCopy - 1];
-                                    extraRectangle.setOpacity(1.0);
-                                    extraRectangle.setFill(Color.LIGHTGRAY);
+                                    break;
+                                case LEFT:
+                                    if (columnCopy - 1 >= 0) {
+                                        extraRectangle = rectangles[rowCopy][columnCopy - 1];
+                                        extraRectangle.setOpacity(1.0);
+                                        extraRectangle.setFill(Color.LIGHTGRAY);
 
-                                    GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                            rowCopy,
-                                            columnCopy - 1
-                                    );
+                                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                                rowCopy,
+                                                columnCopy - 1
+                                        );
 
-                                    GraphicsController.extraRectangle = extraRectangle;
-                                    GraphicsController.validTicketBoothDraw
-                                            = patch.getAmenity() == null && extraPatch.getAmenity() == null;
-                                } else {
-                                    GraphicsController.validTicketBoothDraw = false;
-                                }
+                                        GraphicsController.extraRectangle = extraRectangle;
+                                        GraphicsController.validTicketBoothDraw
+                                                = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                    } else {
+                                        GraphicsController.validTicketBoothDraw = false;
+                                    }
 
-                                break;
+                                    break;
+                            }
                         }
+
+                        // Create a tooltip to show the contents of this patch, if any
+                        final StringBuilder tooltipText = new StringBuilder();
+
+                        tooltipText
+                                .append("Row ").append(patchRow).append(", column ").append(patchColumn).append("\n\n");
+
+                        Amenity patchAmenity = patch.getAmenity();
+
+                        if (patchAmenity == null) {
+                            // There isn't an amenity on this patch
+                            tooltipText.append("Empty patch");
+                        } else {
+                            // There is an amenity on this patch, so label accordingly
+                            tooltipText.append(patchAmenity.toString());
+                        }
+
+                        final Tooltip tooltip = new Tooltip(tooltipText.toString());
+
+                        Tooltip.install(rectangle, tooltip);
                     }
-
-                    // Create a tooltip to show the contents of this patch, if any
-                    final StringBuilder tooltipText = new StringBuilder();
-
-                    tooltipText
-                            .append("Row ").append(patchRow).append(", column ").append(patchColumn).append("\n\n");
-
-                    Amenity patchAmenity = patch.getAmenity();
-
-                    if (patchAmenity == null) {
-                        // There isn't an amenity on this patch
-                        tooltipText.append("Empty patch");
-                    } else {
-                        // There is an amenity on this patch, so label accordingly
-                        tooltipText.append(patchAmenity.toString());
-                    }
-
-                    final Tooltip tooltip = new Tooltip(tooltipText.toString());
-
-                    Tooltip.install(rectangle, tooltip);
                 });
 
                 // Actions for when the mouse exits a listener
                 rectangle.addEventFilter(MouseEvent.MOUSE_EXITED, event -> {
-                    rectangle.setOpacity(0.0);
+                    // This listener should only be active when there is a subcategory present
+                    if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
+                        rectangle.setOpacity(0.0);
+                        rectangle.setStyle("-fx-cursor: default;");
 
-                    if (extraRectangle != null) {
-                        extraRectangle.setOpacity(0.0);
-                        extraRectangle.setFill(Color.DARKGRAY);
+                        if (extraRectangle != null) {
+                            extraRectangle.setOpacity(0.0);
+                            extraRectangle.setFill(Color.DARKGRAY);
+                        }
                     }
                 });
 
                 // Actions for when the mouse clicks a listener
                 rectangle.addEventFilter(MouseEvent.MOUSE_CLICKED, event -> {
-                    int patchRow;
-                    int patchColumn;
+                    // This listener should only be active when there is a subcategory present
+                    if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
+                        int patchRow;
+                        int patchColumn;
 
-                    patchRow = (int) rectangle.getProperties().get("row");
-                    patchColumn = (int) rectangle.getProperties().get("column");
+                        patchRow = (int) rectangle.getProperties().get("row");
+                        patchColumn = (int) rectangle.getProperties().get("column");
 
-                    // Get the patch where the mouse is currently on
-                    Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
+                        // Get the patch where the mouse is currently on
+                        Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
 
-                    // Special case: if a ticket booth is currently being drawmn get the extra patch as well, assuming
-                    // a valid ticket booth drawing spot
-                    if (
-                            GraphicsController.validTicketBoothDraw
-                                    && Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
-                                    && extraRectangle != null
-                    ) {
-                        int extraPatchRow = (int) GraphicsController.extraRectangle.getProperties().get("row");
-                        int extraPatchColumn = (int) GraphicsController.extraRectangle.getProperties().get("column");
+                        // Special case: if a ticket booth is currently being drawmn get the extra patch as well, assuming
+                        // a valid ticket booth drawing spot
+                        if (
+                                GraphicsController.validTicketBoothDraw
+                                        && Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                                        && extraRectangle != null
+                        ) {
+                            int extraPatchRow = (int) GraphicsController.extraRectangle.getProperties().get("row");
+                            int extraPatchColumn = (int) GraphicsController.extraRectangle.getProperties().get("column");
 
-                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                extraPatchRow,
-                                extraPatchColumn
-                        );
-                    }
-
-                    // Set the amenity on the patch as the current amenity of the simulation
-                    Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
-
-                    // Then get the amenity which may be in that patch
-                    Amenity patchAmenity = currentPatch.getAmenity();
-
-                    // Actions for left click
-                    if (event.getButton() == MouseButton.PRIMARY) {
-                        // Commence building or editing on that patch
-                        try {
-                            Main.mainScreenController.buildOrEdit(currentPatch);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                            GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
+                                    extraPatchRow,
+                                    extraPatchColumn
+                            );
                         }
 
-                        // Redraw the station view
-                        drawStationView(canvases, floor, tileSize, true);
+                        // Set the amenity on the patch as the current amenity of the simulation
+                        Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
+
+                        // Actions for left click
+                        if (event.getButton() == MouseButton.PRIMARY) {
+                            // Commence building or editing on that patch
+                            try {
+                                Main.mainScreenController.buildOrEdit(currentPatch);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            // Redraw the station view
+                            drawStationView(canvases, floor, tileSize, true);
+                        }
                     }
                 });
 

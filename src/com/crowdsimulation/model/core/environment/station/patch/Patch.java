@@ -2,6 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch;
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
+import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
@@ -26,6 +27,9 @@ public class Patch extends BaseStationObject {
     // Denotes the amenity present on this patch
     private Amenity amenity;
 
+    // Denotes the floor which contains this patch
+    private final Floor floor;
+
     // Denotes the individual floor field value of this patch, given the queueable goal patch and the desired state
     private final Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues;
 
@@ -40,7 +44,7 @@ public class Patch extends BaseStationObject {
     private final Integer sequence;
     private final Integer index;*/
 
-    public Patch(MatrixPosition matrixPosition/*, Type type*/) {
+    public Patch(Floor floor, MatrixPosition matrixPosition) {
         super();
 
         this.matrixPosition = matrixPosition;
@@ -48,6 +52,8 @@ public class Patch extends BaseStationObject {
 
         this.passengers = new ArrayList<>();
         this.amenity = null;
+        this.floor = floor;
+
         this.floorFieldValues = new HashMap<>();
 
 /*        this.matrixPosition = matrixPosition;
@@ -161,6 +167,10 @@ public class Patch extends BaseStationObject {
 
     public void setAmenity(Amenity amenity) {
         this.amenity = amenity;
+    }
+
+    public Floor getFloor() {
+        return floor;
     }
 
     @Override

@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface Queueable {
     // Retrieves the floor field states of this queueable
-    List<QueueingFloorField.FloorFieldState> retrieveFloorFieldState();
+    List<QueueingFloorField.FloorFieldState> retrieveFloorFieldStates();
 
     // Retrieves a floor field of this queueable, given the state
     QueueingFloorField retrieveFloorField(QueueingFloorField.FloorFieldState floorFieldState);
@@ -14,6 +14,6 @@ public interface Queueable {
     // Denotes whether this queueable's floor fields are filled
     boolean isFloorFieldsComplete();
 
-    // Clear all floor fields of this queueable
-    void clearFloorFields();
+    // Clear all floor fields of a certain state in this queueable
+    void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState);
 }

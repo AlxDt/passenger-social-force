@@ -341,6 +341,7 @@
                                                                         </HBox>
                                                                         <Button fx:id="saveTurnstileButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
                                                                         <Button fx:id="deleteTurnstileButton" cancelButton="true" layoutX="10.0" layoutY="134.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                                        <Button fx:id="addFloorFieldsTurnstileButton" cancelButton="true" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>

@@ -174,6 +174,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> turnstileIntervalSpinner,
             Button saveTurnstileButton,
             Button deleteTurnstileButton,
+            Button addFloorFieldsTurnstileButton,
             // Platform amenities
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
@@ -233,7 +234,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 turnstileIntervalLabel,
                 turnstileIntervalSpinner,
                 saveTurnstileButton,
-                deleteTurnstileButton
+                deleteTurnstileButton,
+                addFloorFieldsTurnstileButton
         );
 
         initializePlatformAmenities(
@@ -453,7 +455,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label turnstileIntervalLabel,
             Spinner<Integer> turnstileIntervalSpinner,
             Button saveTurnstileButton,
-            Button deleteTurnstileButton
+            Button deleteTurnstileButton,
+            Button addFloorFieldsTurnstileButton
     ) {
         initializeTicketBooth(
                 ticketBoothEnableCheckBox,
@@ -474,7 +477,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 turnstileIntervalLabel,
                 turnstileIntervalSpinner,
                 saveTurnstileButton,
-                deleteTurnstileButton
+                deleteTurnstileButton,
+                addFloorFieldsTurnstileButton
         );
     }
 
@@ -528,7 +532,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label turnstileIntervalLabel,
             Spinner<Integer> turnstileIntervalSpinner,
             Button saveTurnstileButton,
-            Button deleteTurnstileButton
+            Button deleteTurnstileButton,
+            Button addFloorFieldsTurnstileButton
     ) {
         turnstileDirectionLabel.setLabelFor(turnstileDirectionChoiceBox);
 
@@ -555,6 +560,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         saveTurnstileButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteTurnstileButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        addFloorFieldsTurnstileButton.disableProperty().bind(InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING);
     }
 
     // Initialize the platform amenities build category UI controls

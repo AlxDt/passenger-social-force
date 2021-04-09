@@ -1,7 +1,9 @@
 package com.crowdsimulation.controller.screen.main.service;
 
+import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.feature.floorfield.NormalFloorFieldController;
 import com.crowdsimulation.controller.screen.main.MainScreenController;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
@@ -25,6 +27,8 @@ public class InitializeNormalFloorFieldService {
             Text promptText,
             Label modeLabel,
             ChoiceBox<NormalFloorFieldController.FloorFieldMode> modeChoiceBox,
+            Label directionLabel,
+            ChoiceBox<QueueingFloorField.FloorFieldState> floorFieldStateChoiceBox,
             Label intensityLabel,
             Slider intensitySlider,
             Button validateButton,
@@ -38,6 +42,8 @@ public class InitializeNormalFloorFieldService {
         ));
         modeChoiceBox.getSelectionModel().select(0);
 
+        directionLabel.setLabelFor(floorFieldStateChoiceBox);
+
         NormalFloorFieldController.FloorFieldMode initialFloorFieldMode
                 = modeChoiceBox.getSelectionModel().getSelectedItem();
         MainScreenController.normalFloorFieldController.setFloorFieldMode(initialFloorFieldMode);
@@ -45,12 +51,25 @@ public class InitializeNormalFloorFieldService {
         NormalFloorFieldController.updatePromptText(promptText, initialFloorFieldMode);
 
         modeChoiceBox.setOnAction(event -> {
+            // Set the floor field mode as given in the choice box
             NormalFloorFieldController.FloorFieldMode updatedFloorFieldMode
                     = modeChoiceBox.getSelectionModel().getSelectedItem();
 
             MainScreenController.normalFloorFieldController.setFloorFieldMode(updatedFloorFieldMode);
 
+            // Also update the prompt text
             NormalFloorFieldController.updatePromptText(promptText, updatedFloorFieldMode);
+        });
+
+        floorFieldStateChoiceBox.setOnAction(event -> {
+            // Set the floor field state as given in the choice box
+            QueueingFloorField.FloorFieldState updatedFloorFieldState
+                    = floorFieldStateChoiceBox.getSelectionModel().getSelectedItem();
+
+            MainScreenController.normalFloorFieldController.setFloorFieldState(updatedFloorFieldState);
+
+            // Also update the floor field state
+            Main.mainScreenController.updateFloorFieldState(updatedFloorFieldState);
         });
 
         validateButton.disableProperty().bind(DRAWING_FLOOR_FIELD_MODE);

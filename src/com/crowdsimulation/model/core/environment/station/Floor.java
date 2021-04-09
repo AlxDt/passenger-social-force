@@ -72,7 +72,7 @@ public class Floor extends BaseStationObject {
             for (int column = 0; column < columns; column++) {
                 matrixPosition = new MatrixPosition(row, column);
 
-                patches[row][column] = new Patch(matrixPosition);
+                patches[row][column] = new Patch(this, matrixPosition);
             }
         }
     }

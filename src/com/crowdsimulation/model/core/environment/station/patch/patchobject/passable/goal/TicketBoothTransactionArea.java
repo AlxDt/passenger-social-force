@@ -92,7 +92,7 @@ public class TicketBoothTransactionArea extends Goal {
     }
 
     @Override
-    public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldState() {
+    public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldStates() {
         List<QueueingFloorField.FloorFieldState> floorFieldStates = new ArrayList<>();
 
         floorFieldStates.add(this.ticketBoothTransactionAreaFloorFieldState);
@@ -117,13 +117,13 @@ public class TicketBoothTransactionArea extends Goal {
     }
 
     @Override
-    // Clear all floor fields of this ticket booth transaction area
-    public void clearFloorFields() {
-        QueueingFloorField queueingFloorField = retrieveFloorField(this.ticketBoothTransactionAreaFloorFieldState);
+    // Clear all floor fields of the given floor field state in this ticket booth transaction area
+    public void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState) {
+        QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,
-                this.ticketBoothTransactionAreaFloorFieldState
+                floorFieldState
         );
     }
 

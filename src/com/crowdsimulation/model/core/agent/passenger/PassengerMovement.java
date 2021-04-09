@@ -1,7 +1,5 @@
 package com.crowdsimulation.model.core.agent.passenger;
 
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
-
 public class PassengerMovement {
 /*    private final Passenger parent;
     private final double walkingDistance;
@@ -715,9 +713,20 @@ public class PassengerMovement {
     }*/
 
     public enum Direction {
-        BOARDING,
-        RIDING_TRAIN,
-        ALIGHTING
+        BOARDING("Boarding"),
+        RIDING_TRAIN("Riding train"),
+        ALIGHTING("Alighting");
+
+        private final String name;
+
+        private Direction(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
     }
 
     public enum State {

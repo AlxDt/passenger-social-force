@@ -25,8 +25,8 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.collections.ObservableList;
@@ -39,7 +39,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
-import sun.security.krb5.internal.Ticket;
 
 import java.io.IOException;
 import java.util.List;
@@ -190,6 +189,9 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Button deleteTurnstileButton;
 
+    @FXML
+    private Button addFloorFieldsTurnstileButton;
+
     // Platform amenities
     // Train boarding area
     @FXML
@@ -332,6 +334,7 @@ public class MainScreenController extends ScreenController {
                 turnstileIntervalSpinner,
                 saveTurnstileButton,
                 deleteTurnstileButton,
+                addFloorFieldsTurnstileButton,
                 // Platform amenities
                 // Train doors
                 trainDoorEnableCheckBox,
@@ -442,7 +445,7 @@ public class MainScreenController extends ScreenController {
                             "Elevator addition failed",
                             "Unable to add elevator",
                             "You may only add elevators when there are more than one floors in the station.",
-                            Alert.AlertType.INFORMATION
+                            Alert.AlertType.ERROR
                     );
                 }
 
@@ -742,23 +745,13 @@ public class MainScreenController extends ScreenController {
 
     // Add floor fields
     private void addFloorFields() {
-        switch (Main.simulator.getBuildSubcategory()) {
-            case SECURITY:
-            case ELEVATOR:
-            case TICKET_BOOTH:
-            case TRAIN_BOARDING_AREA:
-                // Show the window to edit the parameters of the floor field
-                MainScreenController.normalFloorFieldController.showWindow(
-                        MainScreenController.normalFloorFieldController.getRoot(),
-                        "Floor fields",
-                        false,
-                        true
-                );
-
-                break;
-            case TURNSTILE:
-                break;
-        }
+        // Show the window to edit the parameters of the floor field
+        MainScreenController.normalFloorFieldController.showWindow(
+                MainScreenController.normalFloorFieldController.getRoot(),
+                "Floor fields",
+                false,
+                true
+        );
     }
 
     // Clear floor fields and redraw interface
@@ -771,11 +764,8 @@ public class MainScreenController extends ScreenController {
     // Clear an entire floor field
     private void clearFloorField() {
         // Clear the floor field of the current target given the current floor field state
-        QueueingFloorField.clearFloorField(
-                Main.simulator.getCurrentFloorFieldTarget().retrieveFloorField(
-                        Main.simulator.getCurrentFloorFieldState()
-                ),
-                Main.simulator.getCurrentFloorFieldState()
+        Main.simulator.getCurrentFloorFieldTarget().clearFloorFields(
+                normalFloorFieldController.getFloorFieldState()
         );
     }
 
@@ -1262,7 +1252,6 @@ public class MainScreenController extends ScreenController {
         // Also delete this amenity from its list in this floor
         switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
-//                if ()
                 Main.simulator.getCurrentFloor().getStationGates().remove(
                         (StationGate) amenityToDelete
                 );
@@ -1444,6 +1433,14 @@ public class MainScreenController extends ScreenController {
         resetSwitchFloorButtons();
     }
 
+    public void updateFloorFieldState(QueueingFloorField.FloorFieldState floorFieldState) {
+        // Update the floor field state
+        Main.simulator.setCurrentFloorFieldState(floorFieldState);
+
+        // Then redraw the interface so the graphics controller could visualize the changing floor field state
+        drawInterface(false);
+    }
+
     public static Simulator.BuildCategory getBuildCategory(SingleSelectionModel<Tab> currentTabSelectionModel) {
         Simulator.BuildCategory buildCategory = null;
 
@@ -1555,22 +1552,26 @@ public class MainScreenController extends ScreenController {
                                     if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(StationGate.class);
 
-                                        // Prepare the amenity that will be placed on the station
-                                        StationGate.StationGateFactory stationGateFactory
-                                                = new StationGate.StationGateFactory();
+                                        // Only add amenities on patches which do not have floor fields
+                                        // Otherwise, do nothing
+                                        if (currentPatch.getFloorFieldValues().isEmpty()) {
+                                            // Prepare the amenity that will be placed on the station
+                                            StationGate.StationGateFactory stationGateFactory
+                                                    = new StationGate.StationGateFactory();
 
-                                        StationGate stationGateToAdd = (StationGate) stationGateFactory.create(
-                                                currentPatch,
-                                                stationGateEnableCheckBox.isSelected(),
-                                                stationGateSpawnSpinner.getValue() / 100.0,
-                                                stationGateModeChoiceBox.getValue()
-                                        );
+                                            StationGate stationGateToAdd = (StationGate) stationGateFactory.create(
+                                                    currentPatch,
+                                                    stationGateEnableCheckBox.isSelected(),
+                                                    stationGateSpawnSpinner.getValue() / 100.0,
+                                                    stationGateModeChoiceBox.getValue()
+                                            );
 
-                                        // Set the amenity on that patch
-                                        currentPatch.setAmenity(stationGateToAdd);
+                                            // Set the amenity on that patch
+                                            currentPatch.setAmenity(stationGateToAdd);
 
-                                        // Add this station gate to the list of all station gates on this floor
-                                        Main.simulator.getCurrentFloor().getStationGates().add(stationGateToAdd);
+                                            // Add this station gate to the list of all station gates on this floor
+                                            Main.simulator.getCurrentFloor().getStationGates().add(stationGateToAdd);
+                                        }
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
@@ -1637,22 +1638,26 @@ public class MainScreenController extends ScreenController {
                                     if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(Security.class);
 
-                                        // Prepare the amenity that will be placed on the station
-                                        Security.SecurityFactory securityFactory
-                                                = new Security.SecurityFactory();
+                                        // Only add amenities on patches which do not have floor fields
+                                        // Otherwise, do nothing
+                                        if (currentPatch.getFloorFieldValues().isEmpty()) {
+                                            // Prepare the amenity that will be placed on the station
+                                            Security.SecurityFactory securityFactory
+                                                    = new Security.SecurityFactory();
 
-                                        Security securityToAdd = (Security) securityFactory.create(
-                                                currentPatch,
-                                                securityEnableCheckBox.isSelected(),
-                                                securityIntervalSpinner.getValue(),
-                                                securityBlockPassengerCheckBox.isSelected()
-                                        );
+                                            Security securityToAdd = (Security) securityFactory.create(
+                                                    currentPatch,
+                                                    securityEnableCheckBox.isSelected(),
+                                                    securityIntervalSpinner.getValue(),
+                                                    securityBlockPassengerCheckBox.isSelected()
+                                            );
 
-                                        // Set the amenity on that patch
-                                        currentPatch.setAmenity(securityToAdd);
+                                            // Set the amenity on that patch
+                                            currentPatch.setAmenity(securityToAdd);
 
-                                        // Add this station gate to the list of all security gates on this floor
-                                        Main.simulator.getCurrentFloor().getSecurities().add(securityToAdd);
+                                            // Add this station gate to the list of all security gates on this floor
+                                            Main.simulator.getCurrentFloor().getSecurities().add(securityToAdd);
+                                        }
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
@@ -1678,9 +1683,12 @@ public class MainScreenController extends ScreenController {
                                             // drawn
                                             Main.simulator.setCurrentFloorFieldTarget(securityToEdit);
 
+                                            // Update the direction choice box
+                                            MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
+
                                             // Also take note of the current floor field state
                                             QueueingFloorField.FloorFieldState floorFieldState
-                                                    = securityToEdit.getSecurityFloorFieldState();
+                                                    = normalFloorFieldController.getFloorFieldState();
 
                                             Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
@@ -1719,7 +1727,7 @@ public class MainScreenController extends ScreenController {
                                                 if (!QueueingFloorField.addFloorFieldValue(
                                                         currentPatch,
                                                         target,
-                                                        Main.simulator.getCurrentFloorFieldState(),
+                                                        MainScreenController.normalFloorFieldController.getFloorFieldState(),
                                                         MainScreenController.normalFloorFieldController.getIntensity()
                                                 )) {
                                                     // Let the user know if the addition of the floor field value has
@@ -1738,7 +1746,7 @@ public class MainScreenController extends ScreenController {
                                                 QueueingFloorField.deleteFloorFieldValue(
                                                         currentPatch,
                                                         target,
-                                                        Main.simulator.getCurrentFloorFieldState()
+                                                        MainScreenController.normalFloorFieldController.getFloorFieldState()
                                                 );
                                             }
                                         } else {
@@ -1782,185 +1790,201 @@ public class MainScreenController extends ScreenController {
                                     if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(ElevatorPortal.class);
 
-                                        // If a first portal has already been added, add the second portal this
-                                        // click
-                                        if (!Main.simulator.isFirstPortalDrawn()) {
-                                            // Only add an portal when there are multiple floors
-                                            if (Main.simulator.getStation().getFloors().size() > 1) {
-                                                // If the user has clicked on a patch without the portal being setup yet,
-                                                // show the setup first, then automatically put the first portal where the
-                                                // user clicked
-                                                if (!Main.simulator.isPortalDrawing()) {
-                                                    // Display the portal setup prompt
-                                                    FXMLLoader loader = ScreenController.getLoader(
-                                                            getClass(),
-                                                            "/com/crowdsimulation/view" +
-                                                                    "/ElevatorSetupInterface.fxml");
-                                                    Parent root = loader.load();
+                                        // Only add amenities on patches which do not have floor fields
+                                        // Otherwise, do nothing
+                                        if (currentPatch.getFloorFieldValues().isEmpty()) {
+                                            // If a first portal has already been added, add the second portal this
+                                            // click
+                                            if (!Main.simulator.isFirstPortalDrawn()) {
+                                                // Only add an portal when there are multiple floors
+                                                if (Main.simulator.getStation().getFloors().size() > 1) {
+                                                    // If the user has clicked on a patch without the portal being setup yet,
+                                                    // show the setup first, then automatically put the first portal where the
+                                                    // user clicked
+                                                    if (!Main.simulator.isPortalDrawing()) {
+                                                        // Display the portal setup prompt
+                                                        FXMLLoader loader = ScreenController.getLoader(
+                                                                getClass(),
+                                                                "/com/crowdsimulation/view" +
+                                                                        "/ElevatorSetupInterface.fxml");
+                                                        Parent root = loader.load();
 
-                                                    ElevatorSetupController elevatorSetupController;
+                                                        ElevatorSetupController elevatorSetupController;
 
-                                                    elevatorSetupController = loader.getController();
-                                                    elevatorSetupController.setElements();
+                                                        elevatorSetupController = loader.getController();
+                                                        elevatorSetupController.setElements();
 
-                                                    // Show the window
-                                                    elevatorSetupController.showWindow(
-                                                            root,
-                                                            "Elevator setup",
-                                                            true,
-                                                            false
-                                                    );
+                                                        // Show the window
+                                                        elevatorSetupController.showWindow(
+                                                                root,
+                                                                "Elevator setup",
+                                                                true,
+                                                                false
+                                                        );
 
-                                                    // Only proceed when this window is closed through the proceed action
-                                                    if (elevatorSetupController.isClosedWithAction()) {
-                                                        beginPortalDrawing(elevatorSetupController);
+                                                        // Only proceed when this window is closed through the proceed action
+                                                        if (elevatorSetupController.isClosedWithAction()) {
+                                                            beginPortalDrawing(elevatorSetupController);
+                                                        }
                                                     }
-                                                }
 
-                                                // Only continue when the portal setup has been completed
-                                                if (Main.simulator.isPortalDrawing()) {
-                                                    // Setup has already been shown, so we may now draw the first portal in
-                                                    // peace
-                                                    // Prepare the first portal that will be placed on this floor
-                                                    ElevatorPortal.ElevatorPortalFactory elevatorPortalFactory
-                                                            = new ElevatorPortal.ElevatorPortalFactory();
+                                                    // Only continue when the portal setup has been completed
+                                                    if (Main.simulator.isPortalDrawing()) {
+                                                        // Setup has already been shown, so we may now draw the first portal in
+                                                        // peace
+                                                        // Prepare the first portal that will be placed on this floor
+                                                        ElevatorPortal.ElevatorPortalFactory elevatorPortalFactory
+                                                                = new ElevatorPortal.ElevatorPortalFactory();
 
-                                                    ElevatorPortal elevatorPortalToAdd = elevatorPortalFactory.create(
-                                                            currentPatch,
-                                                            Main.simulator.getProvisionalPortalShaft().isEnabled(),
-                                                            Main.simulator.getCurrentFloor(),
-                                                            Main.simulator.getProvisionalPortalShaft()
-                                                    );
+                                                        ElevatorPortal elevatorPortalToAdd = elevatorPortalFactory.create(
+                                                                currentPatch,
+                                                                Main.simulator.getProvisionalPortalShaft().isEnabled(),
+                                                                Main.simulator.getCurrentFloor(),
+                                                                Main.simulator.getProvisionalPortalShaft()
+                                                        );
 
-                                                    // Set the amenity on that patch
-                                                    currentPatch.setAmenity(elevatorPortalToAdd);
+                                                        // Set the amenity on that patch
+                                                        currentPatch.setAmenity(elevatorPortalToAdd);
 
-                                                    // The first portal has now been drawn
-                                                    Main.simulator.setFirstPortalDrawn(true);
-                                                    Main.simulator.setFirstPortal(elevatorPortalToAdd);
+                                                        // The first portal has now been drawn
+                                                        Main.simulator.setFirstPortalDrawn(true);
+                                                        Main.simulator.setFirstPortal(elevatorPortalToAdd);
 
-                                                    // Redraw the interface to briefly show the newly added elevator
-                                                    drawInterface(false);
+                                                        // Redraw the interface to briefly show the newly added elevator
+                                                        drawInterface(false);
 
-                                                    // Show the window for choosing the floor where the next portal will be
-                                                    FXMLLoader loader = ScreenController.getLoader(
-                                                            getClass(),
-                                                            "/com/crowdsimulation/view" +
-                                                                    "/PortalFloorSelectorInterface.fxml");
-                                                    Parent root = loader.load();
+                                                        // Show the window for choosing the floor where the next portal will be
+                                                        FXMLLoader loader = ScreenController.getLoader(
+                                                                getClass(),
+                                                                "/com/crowdsimulation/view" +
+                                                                        "/PortalFloorSelectorInterface.fxml");
+                                                        Parent root = loader.load();
 
-                                                    PortalFloorSelectorController portalFloorSelectorController
-                                                            = loader.getController();
-                                                    portalFloorSelectorController.setElements();
+                                                        PortalFloorSelectorController portalFloorSelectorController
+                                                                = loader.getController();
+                                                        portalFloorSelectorController.setElements();
 
-                                                    portalFloorSelectorController.showWindow(
-                                                            root,
-                                                            "Choose the floor of the second elevator",
-                                                            true,
-                                                            true
-                                                    );
+                                                        portalFloorSelectorController.showWindow(
+                                                                root,
+                                                                "Choose the floor of the second elevator",
+                                                                true,
+                                                                true
+                                                        );
 
-                                                    // Only continue when the floor selection has been completed
-                                                    if (portalFloorSelectorController.isClosedWithAction()) {
-                                                        // A floor has already been chosen, now retrieve that floor and go there
-                                                        Floor chosenFloor = (Floor) portalFloorSelectorController
-                                                                .getWindowOutput()
-                                                                .get(PortalFloorSelectorController.OUTPUT_KEY);
+                                                        // Only continue when the floor selection has been completed
+                                                        if (portalFloorSelectorController.isClosedWithAction()) {
+                                                            // A floor has already been chosen, now retrieve that floor and go there
+                                                            Floor chosenFloor = (Floor) portalFloorSelectorController
+                                                                    .getWindowOutput()
+                                                                    .get(PortalFloorSelectorController.OUTPUT_KEY);
 
-                                                        // After the chosen floor was selected, we may now set the
-                                                        // provisional portal shaft with one of the portals, now that we
-                                                        // know which one is the portal located in the upper or lower
-                                                        // floor
-                                                        List<Floor> floors = Main.simulator.getStation().getFloors();
+                                                            // After the chosen floor was selected, we may now set the
+                                                            // provisional portal shaft with one of the portals, now that we
+                                                            // know which one is the portal located in the upper or lower
+                                                            // floor
+                                                            List<Floor> floors = Main.simulator.getStation().getFloors();
 
-                                                        // If the current floor is lower than the chosen floor, this
-                                                        // current floor will be the lower portal
-                                                        if (floors.indexOf(Main.simulator.getCurrentFloor())
-                                                                < floors.indexOf(chosenFloor)) {
-                                                            Main.simulator.getProvisionalPortalShaft().setLowerPortal(
-                                                                    elevatorPortalToAdd
+                                                            // If the current floor is lower than the chosen floor, this
+                                                            // current floor will be the lower portal
+                                                            if (floors.indexOf(Main.simulator.getCurrentFloor())
+                                                                    < floors.indexOf(chosenFloor)) {
+                                                                Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                                        elevatorPortalToAdd
+                                                                );
+                                                            } else {
+                                                                Main.simulator.getProvisionalPortalShaft().setUpperPortal(
+                                                                        elevatorPortalToAdd
+                                                                );
+                                                            }
+
+                                                            // Switch to that floor
+                                                            switchFloor(chosenFloor);
+
+                                                            // Prompt the user that it is now time to draw the second portal
+                                                            AlertController.showSimpleAlert(
+                                                                    "Add second elevator",
+                                                                    "Draw the second elevator",
+                                                                    "After closing this window, please draw the" +
+                                                                            " second elevator on this floor. Click X to" +
+                                                                            " cancel this operation.",
+                                                                    Alert.AlertType.INFORMATION
                                                             );
                                                         } else {
-                                                            Main.simulator.getProvisionalPortalShaft().setUpperPortal(
-                                                                    elevatorPortalToAdd
-                                                            );
+                                                            // Cancel portal adding
+                                                            // Also delete the earlier added portal shafts and portals
+                                                            endPortalDrawing(false);
                                                         }
-
-                                                        // Switch to that floor
-                                                        switchFloor(chosenFloor);
-
-                                                        // Prompt the user that it is now time to draw the second portal
-                                                        AlertController.showSimpleAlert(
-                                                                "Add second elevator",
-                                                                "Draw the second elevator",
-                                                                "After closing this window, please draw the" +
-                                                                        " second elevator on this floor. Click X to" +
-                                                                        " cancel this operation.",
-                                                                Alert.AlertType.INFORMATION
-                                                        );
-                                                    } else {
-                                                        // Cancel portal adding
-                                                        // Also delete the earlier added portal shafts and portals
-                                                        endPortalDrawing(false);
                                                     }
+                                                } else {
+                                                    AlertController.showSimpleAlert(
+                                                            "Elevator addition failed",
+                                                            "Unable to add elevator",
+                                                            "You may only add elevators when there are more than one floors in the station.",
+                                                            Alert.AlertType.ERROR
+                                                    );
                                                 }
                                             } else {
+                                                // Prepare the second portal that will be placed on this floor
+                                                ElevatorPortal.ElevatorPortalFactory elevatorPortalFactory
+                                                        = new ElevatorPortal.ElevatorPortalFactory();
+
+                                                ElevatorPortal elevatorPortalToAdd = elevatorPortalFactory.create(
+                                                        currentPatch,
+                                                        Main.simulator.getProvisionalPortalShaft().isEnabled(),
+                                                        Main.simulator.getCurrentFloor(),
+                                                        Main.simulator.getProvisionalPortalShaft()
+                                                );
+
+                                                // Set the amenity on that patch
+                                                currentPatch.setAmenity(elevatorPortalToAdd);
+
+                                                // If the upper portal has already been set, then this portal will be the
+                                                // lower one (and vice versa)
+                                                if (Main.simulator.getProvisionalPortalShaft().getUpperPortal() == null) {
+                                                    Main.simulator.getProvisionalPortalShaft().setUpperPortal(
+                                                            elevatorPortalToAdd
+                                                    );
+                                                } else {
+                                                    Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                            elevatorPortalToAdd
+                                                    );
+                                                }
+
+                                                // Register the provisional shaft to the station
+                                                Main.simulator.getStation().getElevatorShafts().add(
+                                                        (ElevatorShaft) Main.simulator.getProvisionalPortalShaft()
+                                                );
+
+                                                // Finish adding the portal
+                                                endPortalDrawing(true);
+
+                                                // Again, briefly redraw the interface to let the user have a glimpse at
+                                                // the newly added elevator
+                                                drawInterface(false);
+
+                                                // Let the user know that portal addition has been successful
                                                 AlertController.showSimpleAlert(
-                                                        "Elevator addition failed",
-                                                        "Unable to add elevator",
-                                                        "You may only add elevators when there are more than one floors in the station.",
+                                                        "Elevator addition successful",
+                                                        "Elevator successfully added",
+                                                        "The elevator has been successfully added.",
                                                         Alert.AlertType.INFORMATION
                                                 );
                                             }
                                         } else {
-                                            // Prepare the second portal that will be placed on this floor
-                                            ElevatorPortal.ElevatorPortalFactory elevatorPortalFactory
-                                                    = new ElevatorPortal.ElevatorPortalFactory();
-
-                                            ElevatorPortal elevatorPortalToAdd = elevatorPortalFactory.create(
-                                                    currentPatch,
-                                                    Main.simulator.getProvisionalPortalShaft().isEnabled(),
-                                                    Main.simulator.getCurrentFloor(),
-                                                    Main.simulator.getProvisionalPortalShaft()
-                                            );
-
-                                            // Set the amenity on that patch
-                                            currentPatch.setAmenity(elevatorPortalToAdd);
-
-                                            // If the upper portal has already been set, then this portal will be the
-                                            // lower one (and vice versa)
-                                            if (Main.simulator.getProvisionalPortalShaft().getUpperPortal() == null) {
-                                                Main.simulator.getProvisionalPortalShaft().setUpperPortal(
-                                                        elevatorPortalToAdd
-                                                );
-                                            } else {
-                                                Main.simulator.getProvisionalPortalShaft().setLowerPortal(
-                                                        elevatorPortalToAdd
-                                                );
+                                            // We will end up here if a first portal has been added on an empty patch,
+                                            // but the second one on a patch with a floor field
+                                            if (Main.simulator.isFirstPortalDrawn()) {
+                                                // Cancel portal adding
+                                                // Also delete the earlier added portal shafts and portals
+                                                endPortalDrawing(false);
                                             }
-
-                                            // Register the provisional shaft to the station
-                                            Main.simulator.getStation().getElevatorShafts().add(
-                                                    (ElevatorShaft) Main.simulator.getProvisionalPortalShaft()
-                                            );
-
-                                            // Finish adding the portal
-                                            endPortalDrawing(true);
-
-                                            // Again, briefly redraw the interface to let the user have a glimpse at
-                                            // the newly added elevator
-                                            drawInterface(false);
-
-                                            // Let the user know that portal addition has been successful
-                                            AlertController.showSimpleAlert(
-                                                    "Elevator addition successful",
-                                                    "Elevator successfully added",
-                                                    "The elevator has been successfully added.",
-                                                    Alert.AlertType.INFORMATION
-                                            );
                                         }
                                     } else {
-                                        // If clicked on an existing amenity, switch to editing mode, then open that
+                                        // If clicked on an existing amenity in the middle of adding the portals, cancel
+                                        // portal adding
+                                        endPortalDrawing(false);
+
+                                        // Switch to editing mode, then open that
                                         // amenity's controls
                                         goToAmenityControls(Main.simulator.getCurrentAmenity());
 
@@ -1984,9 +2008,12 @@ public class MainScreenController extends ScreenController {
                                             // drawn
                                             Main.simulator.setCurrentFloorFieldTarget(elevatorPortalToEdit);
 
+                                            // Update the direction choice box
+                                            MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
+
                                             // Also take note of the current floor field state
                                             QueueingFloorField.FloorFieldState floorFieldState
-                                                    = elevatorPortalToEdit.getElevatorPortalFloorFieldState();
+                                                    = normalFloorFieldController.getFloorFieldState();
 
                                             Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
@@ -2015,7 +2042,7 @@ public class MainScreenController extends ScreenController {
                                                 if (!QueueingFloorField.addFloorFieldValue(
                                                         currentPatch,
                                                         target,
-                                                        Main.simulator.getCurrentFloorFieldState(),
+                                                        MainScreenController.normalFloorFieldController.getFloorFieldState(),
                                                         MainScreenController.normalFloorFieldController.getIntensity()
                                                 )) {
                                                     // Let the user know if the addition of the floor field value has
@@ -2034,7 +2061,7 @@ public class MainScreenController extends ScreenController {
                                                 QueueingFloorField.deleteFloorFieldValue(
                                                         currentPatch,
                                                         target,
-                                                        Main.simulator.getCurrentFloorFieldState()
+                                                        MainScreenController.normalFloorFieldController.getFloorFieldState()
                                                 );
                                             }
                                         } else {
@@ -2074,42 +2101,46 @@ public class MainScreenController extends ScreenController {
                                     if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(TicketBoothTransactionArea.class);
 
-                                        // Only add if the current location is valid
-                                        if (GraphicsController.validTicketBoothDraw) {
-                                            Patch extraPatch = GraphicsController.extraPatch;
+                                        // Only add amenities on patches which do not have floor fields
+                                        // Otherwise, do nothing
+                                        if (currentPatch.getFloorFieldValues().isEmpty()) {
+                                            // Only add if the current location is valid
+                                            if (GraphicsController.validTicketBoothDraw) {
+                                                Patch extraPatch = GraphicsController.extraPatch;
 
-                                            // Prepare the amenities that will be placed on the station
-                                            TicketBooth.TicketBoothFactory ticketBoothFactory
-                                                    = new TicketBooth.TicketBoothFactory();
+                                                // Prepare the amenities that will be placed on the station
+                                                TicketBooth.TicketBoothFactory ticketBoothFactory
+                                                        = new TicketBooth.TicketBoothFactory();
 
-                                            TicketBoothTransactionArea.TicketBoothTransactionAreaFactory
-                                                    ticketBoothTransactionAreaFactory
-                                                    = new TicketBoothTransactionArea
-                                                    .TicketBoothTransactionAreaFactory();
+                                                TicketBoothTransactionArea.TicketBoothTransactionAreaFactory
+                                                        ticketBoothTransactionAreaFactory
+                                                        = new TicketBoothTransactionArea
+                                                        .TicketBoothTransactionAreaFactory();
 
-                                            TicketBooth ticketBoothToAdd
-                                                    = (TicketBooth) ticketBoothFactory.create(currentPatch);
+                                                TicketBooth ticketBoothToAdd
+                                                        = (TicketBooth) ticketBoothFactory.create(currentPatch);
 
-                                            TicketBoothTransactionArea ticketBoothTransactionAreaToAdd
-                                                    = (TicketBoothTransactionArea)
-                                                    ticketBoothTransactionAreaFactory.create(
-                                                            extraPatch,
-                                                            ticketBoothEnableCheckBox.isSelected(),
-                                                            ticketBoothIntervalSpinner.getValue(),
-                                                            ticketBoothToAdd,
-                                                            ticketBoothModeChoiceBox.getValue()
-                                                    );
+                                                TicketBoothTransactionArea ticketBoothTransactionAreaToAdd
+                                                        = (TicketBoothTransactionArea)
+                                                        ticketBoothTransactionAreaFactory.create(
+                                                                extraPatch,
+                                                                ticketBoothEnableCheckBox.isSelected(),
+                                                                ticketBoothIntervalSpinner.getValue(),
+                                                                ticketBoothToAdd,
+                                                                ticketBoothModeChoiceBox.getValue()
+                                                        );
 
-                                            ticketBoothToAdd.setTicketBoothTransactionArea(
-                                                    ticketBoothTransactionAreaToAdd
-                                            );
+                                                ticketBoothToAdd.setTicketBoothTransactionArea(
+                                                        ticketBoothTransactionAreaToAdd
+                                                );
 
-                                            // Set the amenities on their respective patches
-                                            currentPatch.setAmenity(ticketBoothToAdd);
-                                            extraPatch.setAmenity(ticketBoothTransactionAreaToAdd);
+                                                // Set the amenities on their respective patches
+                                                currentPatch.setAmenity(ticketBoothToAdd);
+                                                extraPatch.setAmenity(ticketBoothTransactionAreaToAdd);
 
-                                            // Add this station gate to the list of all ticket booths on this floor
-                                            Main.simulator.getCurrentFloor().getTicketBooths().add(ticketBoothToAdd);
+                                                // Add this station gate to the list of all ticket booths on this floor
+                                                Main.simulator.getCurrentFloor().getTicketBooths().add(ticketBoothToAdd);
+                                            }
                                         }
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
@@ -2153,10 +2184,12 @@ public class MainScreenController extends ScreenController {
                                             // drawn
                                             Main.simulator.setCurrentFloorFieldTarget(ticketBoothTransactionAreaToEdit);
 
+                                            // Update the direction choice box
+                                            MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
+
                                             // Also take note of the current floor field state
                                             QueueingFloorField.FloorFieldState floorFieldState
-                                                    = ticketBoothTransactionAreaToEdit
-                                                    .getTicketBoothTransactionAreaFloorFieldState();
+                                                    = normalFloorFieldController.getFloorFieldState();
 
                                             Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
@@ -2196,7 +2229,7 @@ public class MainScreenController extends ScreenController {
                                                 if (!QueueingFloorField.addFloorFieldValue(
                                                         currentPatch,
                                                         target,
-                                                        Main.simulator.getCurrentFloorFieldState(),
+                                                        MainScreenController.normalFloorFieldController.getFloorFieldState(),
                                                         MainScreenController.normalFloorFieldController.getIntensity()
                                                 )) {
                                                     // Let the user know if the addition of the floor field value has
@@ -2215,7 +2248,7 @@ public class MainScreenController extends ScreenController {
                                                 QueueingFloorField.deleteFloorFieldValue(
                                                         currentPatch,
                                                         target,
-                                                        Main.simulator.getCurrentFloorFieldState()
+                                                        normalFloorFieldController.getFloorFieldState()
                                                 );
                                             }
                                         } else {
@@ -2256,22 +2289,26 @@ public class MainScreenController extends ScreenController {
                                     if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                         Main.simulator.setCurrentClass(Turnstile.class);
 
-                                        // Prepare the amenity that will be placed on the station
-                                        Turnstile.TurnstileFactory turnstileFactory = new Turnstile.TurnstileFactory();
+                                        // Only add amenities on patches which do not have floor fields
+                                        // Otherwise, do nothing
+                                        if (currentPatch.getFloorFieldValues().isEmpty()) {
+                                            // Prepare the amenity that will be placed on the station
+                                            Turnstile.TurnstileFactory turnstileFactory = new Turnstile.TurnstileFactory();
 
-                                        Turnstile turnstileToAdd = (Turnstile) turnstileFactory.create(
-                                                currentPatch,
-                                                turnstileEnableCheckBox.isSelected(),
-                                                turnstileIntervalSpinner.getValue(),
-                                                turnstileBlockPassengerCheckBox.isSelected(),
-                                                turnstileDirectionChoiceBox.getValue()
-                                        );
+                                            Turnstile turnstileToAdd = (Turnstile) turnstileFactory.create(
+                                                    currentPatch,
+                                                    turnstileEnableCheckBox.isSelected(),
+                                                    turnstileIntervalSpinner.getValue(),
+                                                    turnstileBlockPassengerCheckBox.isSelected(),
+                                                    turnstileDirectionChoiceBox.getValue()
+                                            );
 
-                                        // Set the amenity on that patch
-                                        currentPatch.setAmenity(turnstileToAdd);
+                                            // Set the amenity on that patch
+                                            currentPatch.setAmenity(turnstileToAdd);
 
-                                        // Add this station gate to the list of all turnstiles on this floor
-                                        Main.simulator.getCurrentFloor().getTurnstiles().add(turnstileToAdd);
+                                            // Add this station gate to the list of all turnstiles on this floor
+                                            Main.simulator.getCurrentFloor().getTurnstiles().add(turnstileToAdd);
+                                        }
                                     } else {
                                         // If clicked on an existing amenity, switch to editing mode, then open that
                                         // amenity's controls
@@ -2283,33 +2320,94 @@ public class MainScreenController extends ScreenController {
 
                                     break;
                                 case EDITING_ONE:
-                                    // Only edit if there is already a turnstile on that patch
-                                    if (Main.simulator.getCurrentAmenity() instanceof Turnstile) {
-                                        Main.simulator.setCurrentClass(Turnstile.class);
+                                    // When in adding floor fields mode, draw a floor field instead
+                                    // Otherwise, just enable the controls in the sidebar
+                                    if (!Main.simulator.isFloorFieldDrawing()) {
+                                        // Only edit if there is already a turnstile on that patch
+                                        if (Main.simulator.getCurrentAmenity() instanceof Turnstile) {
+                                            Main.simulator.setCurrentClass(Turnstile.class);
 
-                                        Turnstile turnstileToEdit
-                                                = (Turnstile) Main.simulator.getCurrentAmenity();
+                                            Turnstile turnstileToEdit
+                                                    = (Turnstile) Main.simulator.getCurrentAmenity();
 
-                                        turnstileEnableCheckBox.setSelected(
-                                                turnstileToEdit.isEnabled()
-                                        );
+                                            // Take note of this amenity as the one that will own the floor fields once
+                                            // drawn
+                                            Main.simulator.setCurrentFloorFieldTarget(turnstileToEdit);
 
-                                        turnstileBlockPassengerCheckBox.setSelected(
-                                                turnstileToEdit.isBlockEntry()
-                                        );
+                                            // Update the direction choice box
+                                            MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
 
-                                        turnstileDirectionChoiceBox.setValue(
-                                                turnstileToEdit.getTurnstileMode()
-                                        );
+                                            // Also take note of the current floor field state
+                                            QueueingFloorField.FloorFieldState floorFieldState
+                                                    = normalFloorFieldController.getFloorFieldState();
 
-                                        turnstileIntervalSpinner.getValueFactory().setValue(
-                                                turnstileToEdit.getWaitingTime()
-                                        );
+                                            Main.simulator.setCurrentFloorFieldState(floorFieldState);
+
+                                            turnstileEnableCheckBox.setSelected(
+                                                    turnstileToEdit.isEnabled()
+                                            );
+
+                                            turnstileBlockPassengerCheckBox.setSelected(
+                                                    turnstileToEdit.isBlockEntry()
+                                            );
+
+                                            turnstileDirectionChoiceBox.setValue(
+                                                    turnstileToEdit.getTurnstileMode()
+                                            );
+
+                                            turnstileIntervalSpinner.getValueFactory().setValue(
+                                                    turnstileToEdit.getWaitingTime()
+                                            );
+                                        } else {
+                                            // If there is no amenity there, just do nothing
+                                            if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                                // If clicked on an existing amenity, switch to editing mode, then open that
+                                                // amenity's controls
+                                                goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                                // Then revisit this method as if that amenity was clicked
+                                                buildOrEdit(currentPatch);
+                                            }
+                                        }
                                     } else {
-                                        // If there is no amenity there, just do nothing
-                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
-                                            // If clicked on an existing amenity, switch to editing mode, then open that
-                                            // amenity's controls
+                                        // If there is an empty patch here, draw the floor field value
+                                        if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                            // Define the target and the floor field state
+                                            Turnstile target = (Turnstile) Main.simulator.getCurrentFloorFieldTarget();
+
+                                            // If a floor field value is supposed to be drawn, then go ahead and draw
+                                            if (MainScreenController.normalFloorFieldController.getFloorFieldMode()
+                                                    == NormalFloorFieldController.FloorFieldMode.DRAWING) {
+                                                if (!QueueingFloorField.addFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        normalFloorFieldController.getFloorFieldState(),
+                                                        MainScreenController.normalFloorFieldController.getIntensity()
+                                                )) {
+                                                    // Let the user know if the addition of the floor field value has
+                                                    // failed
+                                                    AlertController.showSimpleAlert(
+                                                            "Floor field value addition failed",
+                                                            "Failed to add a floor field value here",
+                                                            "A floor field may only have a single patch with a"
+                                                                    + " value of 1.0.",
+                                                            Alert.AlertType.ERROR
+                                                    );
+                                                }
+                                            } else {
+                                                // If a floor field value is supposed to be deleted, then go ahead and
+                                                // delete it
+                                                QueueingFloorField.deleteFloorFieldValue(
+                                                        currentPatch,
+                                                        target,
+                                                        normalFloorFieldController.getFloorFieldState()
+                                                );
+                                            }
+                                        } else {
+                                            // If it is a different amenity, turn off floor fields mode
+                                            endFloorFieldDrawing(true);
+
+                                            // Switch to editing mode, then open that amenity's controls
                                             goToAmenityControls(Main.simulator.getCurrentAmenity());
 
                                             // Then revisit this method as if that amenity was clicked
@@ -2386,32 +2484,40 @@ public class MainScreenController extends ScreenController {
                                         if (Main.simulator.getCurrentAmenity() instanceof TrainDoor) {
                                             Main.simulator.setCurrentClass(TrainDoor.class);
 
-                                            TrainDoor trainDoorToEdit
-                                                    = (TrainDoor) Main.simulator.getCurrentAmenity();
+                                            // Only add amenities on patches which do not have floor fields
+                                            // Otherwise, do nothing
+                                            if (Main.simulator.getCurrentAmenity().getPatch().getFloorFieldValues()
+                                                    .isEmpty()) {
+                                                TrainDoor trainDoorToEdit
+                                                        = (TrainDoor) Main.simulator.getCurrentAmenity();
 
-                                            // Take note of this amenity as the one that will own the floor fields once
-                                            // drawn
-                                            Main.simulator.setCurrentFloorFieldTarget(trainDoorToEdit);
+                                                // Take note of this amenity as the one that will own the floor fields once
+                                                // drawn
+                                                Main.simulator.setCurrentFloorFieldTarget(trainDoorToEdit);
 
-                                            // Also take note of the current floor field state
-                                            QueueingFloorField.FloorFieldState floorFieldState
-                                                    = trainDoorToEdit.getTrainDoorFloorFieldState();
+                                                // Update the direction choice box
+                                                MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
 
-                                            Main.simulator.setCurrentFloorFieldState(floorFieldState);
+                                                // Also take note of the current floor field state
+                                                QueueingFloorField.FloorFieldState floorFieldState
+                                                        = normalFloorFieldController.getFloorFieldState();
 
-                                            trainDoorEnableCheckBox.setSelected(
-                                                    trainDoorToEdit.isEnabled()
-                                            );
+                                                Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
-                                            trainDoorDirectionChoiceBox.setValue(
-                                                    trainDoorToEdit.getPlatform()
-                                            );
+                                                trainDoorEnableCheckBox.setSelected(
+                                                        trainDoorToEdit.isEnabled()
+                                                );
 
-                                            trainDoorCarriageListView.getSelectionModel().clearSelection();
+                                                trainDoorDirectionChoiceBox.setValue(
+                                                        trainDoorToEdit.getPlatform()
+                                                );
 
-                                            for (TrainDoor.TrainDoorCarriage trainDoorCarriage
-                                                    : trainDoorToEdit.getTrainDoorCarriagesSupported()) {
-                                                trainDoorCarriageListView.getSelectionModel().select(trainDoorCarriage);
+                                                trainDoorCarriageListView.getSelectionModel().clearSelection();
+
+                                                for (TrainDoor.TrainDoorCarriage trainDoorCarriage
+                                                        : trainDoorToEdit.getTrainDoorCarriagesSupported()) {
+                                                    trainDoorCarriageListView.getSelectionModel().select(trainDoorCarriage);
+                                                }
                                             }
                                         } else {
                                             // If there is no amenity there, just do nothing
@@ -2436,7 +2542,7 @@ public class MainScreenController extends ScreenController {
                                                 if (!QueueingFloorField.addFloorFieldValue(
                                                         currentPatch,
                                                         target,
-                                                        Main.simulator.getCurrentFloorFieldState(),
+                                                        normalFloorFieldController.getFloorFieldState(),
                                                         MainScreenController.normalFloorFieldController.getIntensity()
                                                 )) {
                                                     // Let the user know if the addition of the floor field value has
@@ -2455,7 +2561,7 @@ public class MainScreenController extends ScreenController {
                                                 QueueingFloorField.deleteFloorFieldValue(
                                                         currentPatch,
                                                         target,
-                                                        Main.simulator.getCurrentFloorFieldState()
+                                                        normalFloorFieldController.getFloorFieldState()
                                                 );
                                             }
                                         } else {
