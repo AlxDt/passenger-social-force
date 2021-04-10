@@ -243,12 +243,9 @@
                                                                <children>
                                                                   <VBox alignment="CENTER" prefHeight="50.0" prefWidth="199.0" spacing="10.0">
                                                                      <children>
-                                                                        <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                                           <children>
-                                                                              <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" text="Enable escalator" wrapText="true" />
-                                                                           </children>
-                                                                        </HBox>
-                                                                        <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                                        <Button fx:id="addEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add escalator" />
+                                                                        <Button fx:id="editEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit escalator" />
+                                                                        <Button fx:id="deleteEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete escalator" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>
