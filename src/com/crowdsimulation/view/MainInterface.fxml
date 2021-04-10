@@ -225,12 +225,9 @@
                                                                <children>
                                                                   <VBox alignment="CENTER" prefHeight="50.0" prefWidth="200.0" spacing="10.0">
                                                                      <children>
-                                                                        <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                                           <children>
-                                                                              <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" text="Enable stairs" wrapText="true" />
-                                                                           </children>
-                                                                        </HBox>
-                                                                        <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                                        <Button fx:id="addStairButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add stairs" />
+                                                                        <Button fx:id="editStairButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit stairs" />
+                                                                        <Button fx:id="deleteStairButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete stairs" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>
@@ -399,7 +396,7 @@
                                                                <children>
                                                                   <VBox alignment="CENTER" prefHeight="20.0" prefWidth="200.0" spacing="10.0">
                                                                      <children>
-                                                                        <Button cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                                        <Button fx:id="deleteWallButton" cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>

@@ -152,6 +152,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button addFloorFieldsSecurityButton,
             // Stairs and elevators
             // Stairs
+            Button addStairButton,
+            Button editStairButton,
+            Button deleteStairButton,
             // Escalator
             Button addEscalatorButton,
             Button editEscalatorButton,
@@ -218,6 +221,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
         );
 
         initializeStairsElevators(
+                addStairButton,
+                editStairButton,
+                deleteStairButton,
                 addEscalatorButton,
                 editEscalatorButton,
                 deleteEscalatorButton,
@@ -405,6 +411,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
     // Initialize the stairs and elevators build category UI controls
     private static void initializeStairsElevators(
+            Button addStairButton,
+            Button editStairButton,
+            Button deleteStairButton,
             Button addEscalatorButton,
             Button editEscalatorButton,
             Button deleteEscalatorButton,
@@ -413,7 +422,11 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button deleteElevatorButton,
             Button addFloorFieldsElevatorButton
     ) {
-        initializeStairs();
+        initializeStairs(
+                addStairButton,
+                editStairButton,
+                deleteStairButton
+        );
 
         initializeEscalators(
                 addEscalatorButton,
@@ -430,8 +443,15 @@ public class InitializeMainScreenService extends InitializeScreenService {
     }
 
     // Initialize the stairs controls
-    private static void initializeStairs() {
+    private static void initializeStairs(
+            Button addStairButton,
+            Button editStairButton,
+            Button deleteStairButton
+    ) {
+        addStairButton.disableProperty().bind(InitializeMainScreenService.DRAW_ONLY_BINDING);
 
+        editStairButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+        deleteStairButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the escalators controls

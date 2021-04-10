@@ -2,8 +2,6 @@ package com.crowdsimulation.controller.screen.feature.portal.edit;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.main.service.InitializeEscalatorEditService;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
 import com.crowdsimulation.model.simulator.Simulator;
@@ -80,10 +78,10 @@ public class EscalatorEditController extends PortalEditController {
         );
         promptText.setText(promptString);
 
-        // If editing one, use the selected elevator as a reference
+        // If editing one, use the selected escalator as a reference
         // If editing all, create a temporary reference portal shaft
         if (editingOne) {
-            // Extract the elevator shaft from the selected elevator portal
+            // Extract the escalator shaft from the selected escalator portal
             this.escalatorShaft
                     = ((EscalatorPortal) Main.simulator.getCurrentAmenity()).getEscalatorShaft();
 
