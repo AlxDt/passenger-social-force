@@ -40,7 +40,18 @@ public class EscalatorShaft extends PortalShaft {
 
     // Denotes the next direction of the escalator
     public enum EscalatorDirection {
-        UP, // The escalator is about to move up
-        DOWN // The escalator is above to move down
+        UP("Going up"), // The escalator is about to move up
+        DOWN("Going down"); // The escalator is about to move down
+
+        private final String name;
+
+        private EscalatorDirection(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
     }
 }

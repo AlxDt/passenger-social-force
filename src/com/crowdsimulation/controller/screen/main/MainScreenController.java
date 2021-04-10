@@ -243,6 +243,8 @@ public class MainScreenController extends ScreenController {
 
     // Walls
     // Wall
+    @FXML
+    private Button deleteWallButton;
 
     // Test tab variables
     // Simulation controls
@@ -373,6 +375,9 @@ public class MainScreenController extends ScreenController {
                 saveTrainDoorButton,
                 deleteTrainDoorButton,
                 addFloorFieldsTrainDoorButton,
+                // Walls
+                // Wall
+                deleteWallButton,
                 // Build tab
                 buildTabPane
         );
@@ -1417,8 +1422,6 @@ public class MainScreenController extends ScreenController {
                 }
 
                 break;
-            case WALL:
-                break;
         }
     }
 
@@ -1587,8 +1590,6 @@ public class MainScreenController extends ScreenController {
                 }
 
                 break;
-            case WALL:
-                break;
         }
     }
 
@@ -1743,6 +1744,10 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case WALL:
+                Main.simulator.getCurrentFloor().getWalls().remove(
+                        (Wall) amenityToDelete
+                );
+
                 break;
         }
     }
@@ -1852,6 +1857,12 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case WALL:
+                for (Wall wall : Main.simulator.getCurrentFloor().getWalls()) {
+                    wall.getPatch().setAmenity(null);
+                }
+
+                Main.simulator.getCurrentFloor().getWalls().clear();
+
                 break;
         }
     }
@@ -3569,6 +3580,76 @@ public class MainScreenController extends ScreenController {
 
                             break;
                         case WALL:
+                            switch (buildState) {
+                                case DRAWING:
+                                    // Only add if the current patch doesn't already have an amenity
+                                    if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                        Main.simulator.setCurrentClass(Wall.class);
+
+                                        // Only add amenities on patches which do not have floor fields
+                                        // Otherwise, do nothing
+                                        if (currentPatch.getFloorFieldValues().isEmpty()) {
+                                            // Prepare the amenity that will be placed on the station
+                                            Wall.WallFactory wallFactory = new Wall.WallFactory();
+
+                                            Wall wallToAdd = (Wall) wallFactory.create(
+                                                    currentPatch
+                                            );
+
+                                            // Set the amenity on that patch
+                                            currentPatch.setAmenity(wallToAdd);
+
+                                            // Add this station gate to the list of all station gates on this floor
+                                            Main.simulator.getCurrentFloor().getWalls().add(wallToAdd);
+                                        }
+                                    } else {
+                                        // If clicked on an existing amenity, switch to editing mode, then open that
+                                        // amenity's controls
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                        // Then revisit this method as if that amenity was clicked
+                                        buildOrEdit(currentPatch);
+                                    }
+
+                                    break;
+                                case EDITING_ONE:
+                                    // Only edit if there is already a wall on that patch
+                                    if (Main.simulator.getCurrentAmenity() instanceof Wall) {
+                                        Main.simulator.setCurrentClass(Wall.class);
+
+                                        Wall wallToEdit
+                                                = (Wall) Main.simulator.getCurrentAmenity();
+
+                                        // No controls for walls - just the delete button
+                                    } else {
+                                        // If there is no amenity there, just do nothing
+                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                            // If clicked on an existing amenity, switch to editing mode, then open that
+                                            // amenity's controls
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                            // Then revisit this method as if that amenity was clicked
+                                            buildOrEdit(currentPatch);
+                                        }
+                                    }
+
+                                    break;
+                                case EDITING_ALL:
+                                    // No specific values need to be set here because all amenities will be edited
+                                    // once save is clicked
+                                    // If there is no amenity there, just do nothing
+                                    if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                        // If clicked on an existing amenity, switch to editing mode, then open that
+                                        // amenity's controls
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                        // Then revisit this method as if that amenity was clicked
+                                        buildOrEdit(currentPatch);
+                                    }
+
+                                    break;
+                            }
+
                             break;
                         case NONE:
                             if (Main.simulator.currentAmenityProperty().isNotNull().get()) {

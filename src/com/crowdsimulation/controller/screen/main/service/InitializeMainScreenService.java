@@ -193,6 +193,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button saveTrainDoorButton,
             Button deleteTrainDoorButton,
             Button addFloorFieldsTrainDoorButton,
+            // Walls
+            // Wall
+            Button deleteWallButton,
             // Tab pane
             TabPane buildTabPane
     ) {
@@ -262,6 +265,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 saveTrainDoorButton,
                 deleteTrainDoorButton,
                 addFloorFieldsTrainDoorButton
+        );
+
+        initializeWalls(
+                deleteWallButton
         );
 
         // Initialize listeners
@@ -671,6 +678,22 @@ public class InitializeMainScreenService extends InitializeScreenService {
         deleteTrainDoorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
 
         addFloorFieldsTrainDoorButton.disableProperty().bind(InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING);
+    }
+
+    // Initialize the wall UI controls
+    private static void initializeWalls(
+            Button deleteWallButton
+    ) {
+        initializeWall(
+                deleteWallButton
+        );
+    }
+
+    // Initialize the wall controls
+    private static void initializeWall(
+            Button deleteWallButton
+    ) {
+        deleteWallButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Iterate through each build subtab to set the listeners for the changing of build categories and subcategories

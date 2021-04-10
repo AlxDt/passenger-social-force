@@ -323,8 +323,8 @@
                                                                         </HBox>
                                                                         <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                                            <children>
-                                                                              <Label fx:id="turnstileDirectionLabel" text="Direction" />
-                                                                              <ChoiceBox fx:id="turnstileDirectionChoiceBox" prefHeight="25.0" prefWidth="140.0" />
+                                                                              <Label fx:id="turnstileDirectionLabel" text="Direction:" />
+                                                                              <ChoiceBox fx:id="turnstileDirectionChoiceBox" prefHeight="25.0" prefWidth="138.0" />
                                                                            </children>
                                                                         </HBox>
                                                                         <HBox alignment="CENTER" layoutX="10.0" layoutY="242.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
@@ -396,7 +396,7 @@
                                                                <children>
                                                                   <VBox alignment="CENTER" prefHeight="20.0" prefWidth="200.0" spacing="10.0">
                                                                      <children>
-                                                                        <Button fx:id="deleteWallButton" cancelButton="true" mnemonicParsing="false" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                                        <Button fx:id="deleteWallButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                                      </children>
                                                                   </VBox>
                                                                </children>

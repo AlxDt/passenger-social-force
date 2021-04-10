@@ -3,6 +3,7 @@ package com.crowdsimulation.model.core.environment.station;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
@@ -32,6 +33,8 @@ public class Floor extends BaseStationObject {
 
     private final List<TrainDoor> trainDoors;
 
+    private final List<Wall> walls;
+
 /*    private final List<Patch> starts;
     private final List<List<Patch>> goals;
     private final List<Patch> obstacles;
@@ -53,6 +56,8 @@ public class Floor extends BaseStationObject {
         this.turnstiles = new ArrayList<>();
 
         this.trainDoors = new ArrayList<>();
+
+        this.walls = new ArrayList<>();
 
 /*        // Initialize empty start and end patches
         this.starts = new ArrayList<>();
@@ -103,6 +108,10 @@ public class Floor extends BaseStationObject {
 
     public List<TrainDoor> getTrainDoors() {
         return trainDoors;
+    }
+
+    public List<Wall> getWalls() {
+        return walls;
     }
 
     public Patch getPatch(Coordinates coordinates) {

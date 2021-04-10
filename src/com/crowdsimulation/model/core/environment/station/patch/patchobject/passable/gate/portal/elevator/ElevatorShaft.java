@@ -101,7 +101,7 @@ public class ElevatorShaft extends PortalShaft {
     // Denotes the next direction of the elevator
     public enum ElevatorDirection {
         UP("Bottom (to go up)"), // The elevator is about to move up
-        DOWN("Top (to go down)"); // The elevator is above to move down
+        DOWN("Top (to go down)"); // The elevator is about to move down
 
         private final String name;
 

@@ -143,8 +143,19 @@ public class Turnstile extends BlockableAmenity {
 
     // Lists the possible modes of this turnstile
     public enum TurnstileMode {
-        BOARDING,
-        ALIGHTING,
-        BIDIRECTIONAL
+        BOARDING("Boarding"),
+        ALIGHTING("Alighting"),
+        BIDIRECTIONAL("Bidirectional");
+
+        private final String name;
+
+        private TurnstileMode(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
     }
 }

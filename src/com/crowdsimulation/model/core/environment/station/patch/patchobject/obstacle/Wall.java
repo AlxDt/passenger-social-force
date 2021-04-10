@@ -7,6 +7,16 @@ public class Wall extends Obstacle {
         super(patch);
     }
 
+    // Wall factory
+    public static class WallFactory extends AmenityFactory {
+        @Override
+        public Wall create(Object... objects) {
+            return new Wall(
+                    (Patch) objects[0]
+            );
+        }
+    }
+
     @Override
     public String toString() {
         return "Wall";
