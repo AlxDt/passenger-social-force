@@ -7,7 +7,9 @@ import com.crowdsimulation.controller.screen.alert.AlertController;
 import com.crowdsimulation.controller.screen.feature.floorfield.NormalFloorFieldController;
 import com.crowdsimulation.controller.screen.feature.portal.PortalFloorSelectorController;
 import com.crowdsimulation.controller.screen.feature.portal.edit.ElevatorEditController;
+import com.crowdsimulation.controller.screen.feature.portal.edit.EscalatorEditController;
 import com.crowdsimulation.controller.screen.feature.portal.setup.ElevatorSetupController;
+import com.crowdsimulation.controller.screen.feature.portal.setup.EscalatorSetupController;
 import com.crowdsimulation.controller.screen.feature.portal.setup.PortalSetupController;
 import com.crowdsimulation.controller.screen.main.service.InitializeMainScreenService;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -24,6 +26,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
@@ -124,6 +127,14 @@ public class MainScreenController extends ScreenController {
     // Stairs
 
     // Escalator
+    @FXML
+    private Button addEscalatorButton;
+
+    @FXML
+    private Button editEscalatorButton;
+
+    @FXML
+    private Button deleteEscalatorButton;
 
     // Elevator
     @FXML
@@ -310,6 +321,9 @@ public class MainScreenController extends ScreenController {
                 // Stairs and elevators
                 // Stairs
                 // Escalator
+                addEscalatorButton,
+                editEscalatorButton,
+                deleteEscalatorButton,
                 // Elevator
                 addElevatorButton,
                 editElevatorButton,
@@ -406,6 +420,47 @@ public class MainScreenController extends ScreenController {
             case STAIRS:
                 break;
             case ESCALATOR:
+                // Only add an escalator when there are multiple floors
+                if (Main.simulator.getStation().getFloors().size() > 1) {
+                    // Display the escalator setup prompt
+                    FXMLLoader loader = ScreenController.getLoader(
+                            getClass(),
+                            "/com/crowdsimulation/view/EscalatorSetupInterface.fxml");
+                    Parent root = loader.load();
+
+                    EscalatorSetupController escalatorSetupController = loader.getController();
+                    escalatorSetupController.setElements();
+
+                    // Show the window
+                    escalatorSetupController.showWindow(
+                            root,
+                            "Escalator setup",
+                            true,
+                            false
+                    );
+
+                    // Only proceed when this window is closed through the proceed action
+                    if (escalatorSetupController.isClosedWithAction()) {
+                        // Prompt the user that it is now time to draw the first elevator
+                        AlertController.showSimpleAlert(
+                                "Add first escalator",
+                                "Draw the first escalator",
+                                "After closing this window, please draw the first escalator on this floor." +
+                                        " Click X to cancel this operation.",
+                                Alert.AlertType.INFORMATION
+                        );
+
+                        beginPortalDrawing(escalatorSetupController);
+                    }
+                } else {
+                    AlertController.showSimpleAlert(
+                            "Escalator addition failed",
+                            "Unable to add escalator",
+                            "You may only add escalators when there are more than one floors in the station.",
+                            Alert.AlertType.ERROR
+                    );
+                }
+
                 break;
             case ELEVATOR:
                 // Only add an elevator when there are multiple floors
@@ -454,19 +509,76 @@ public class MainScreenController extends ScreenController {
     }
 
     @FXML
-    // Edit elevator
+    // Edit a portal
     public void editPortalAction() throws IOException {
+        FXMLLoader loader;
+        Parent root;
+
         switch (Main.simulator.getBuildSubcategory()) {
             case STAIRS:
                 break;
             case ESCALATOR:
+                // Display the escalator edit prompt
+                loader = ScreenController.getLoader(
+                        getClass(),
+                        "/com/crowdsimulation/view/EscalatorEditInterface.fxml");
+                root = loader.load();
+
+                EscalatorEditController escalatorEditController = loader.getController();
+                escalatorEditController.setElements();
+
+                // Show the window
+                escalatorEditController.showWindow(
+                        root,
+                        (Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE)
+                                ? "Edit an escalator" : "Edit all escalators",
+                        true,
+                        false
+                );
+
+                // Only proceed when this window is closed through the proceed action
+                if (escalatorEditController.isClosedWithAction()) {
+                    // Extract the modified escalator shaft from the window
+                    EscalatorShaft escalatorShaft = (EscalatorShaft) escalatorEditController.getWindowOutput().get(
+                            EscalatorEditController.OUTPUT_KEY
+                    );
+
+                    // Determine whether we need to edit one or all
+                    boolean editingOne = Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE;
+
+                    if (editingOne) {
+                        // Apply the changes to the escalator shaft to its component elevators
+                        saveSingleAmenityInFloor(escalatorShaft);
+                    } else {
+                        // Apply the changes to the escalator shaft to all elevator shafts and all their component elevators
+                        saveAllAmenitiesInFloor(escalatorShaft);
+                    }
+
+                    // Prompt the user that the escalator has been successfully edited
+                    if (editingOne) {
+                        AlertController.showSimpleAlert(
+                                "Escalator edited",
+                                "Escalator successfully edited",
+                                "The escalator has been successfully edited.",
+                                Alert.AlertType.INFORMATION
+                        );
+                    } else {
+                        AlertController.showSimpleAlert(
+                                "Escalators edited",
+                                "Escalators successfully edited",
+                                "The escalators have been successfully edited.",
+                                Alert.AlertType.INFORMATION
+                        );
+                    }
+                }
+
                 break;
             case ELEVATOR:
-                // Display the elevator setup prompt
-                FXMLLoader loader = ScreenController.getLoader(
+                // Display the elevator edit prompt
+                loader = ScreenController.getLoader(
                         getClass(),
                         "/com/crowdsimulation/view/ElevatorEditInterface.fxml");
-                Parent root = loader.load();
+                root = loader.load();
 
                 ElevatorEditController elevatorEditController = loader.getController();
                 elevatorEditController.setElements();
@@ -521,7 +633,7 @@ public class MainScreenController extends ScreenController {
     }
 
     @FXML
-    // Delete elevator
+    // Delete a portal
     public void deletePortalAction() {
         boolean editingOne = Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE;
         boolean confirm;
@@ -530,6 +642,54 @@ public class MainScreenController extends ScreenController {
             case STAIRS:
                 break;
             case ESCALATOR:
+                // Show a dialog to confirm floor deletion
+                if (editingOne) {
+                    confirm = AlertController.showConfirmationAlert(
+                            "Are you sure?",
+                            "Are you sure you want to delete this escalator?",
+                            "This will remove this escalator from all its serviced floors. This operation cannot be undone."
+                    );
+                } else {
+                    confirm = AlertController.showConfirmationAlert(
+                            "Are you sure?",
+                            "Are you sure you want to delete all escalators?",
+                            "This will remove all escalators from their serviced floors. This operation cannot be undone."
+                    );
+                }
+
+                // Determine whether we need to edit one or all
+                if (confirm) {
+                    if (editingOne) {
+                        // Delete this escalator
+                        deleteSingleAmenityInFloor(
+                                ((EscalatorPortal) Main.simulator.getCurrentAmenity()).getEscalatorShaft()
+                        );
+                    } else {
+                        // Delete all elevators
+                        deleteAllAmenitiesInFloor();
+                    }
+
+                    // Prompt the user that the elevator has been successfully edited
+                    if (editingOne) {
+                        AlertController.showSimpleAlert(
+                                "Escalator deleted",
+                                "Escalator successfully deleted",
+                                "The escalator has been successfully deleted.",
+                                Alert.AlertType.INFORMATION
+                        );
+                    } else {
+                        AlertController.showSimpleAlert(
+                                "All escalators deleted",
+                                "All escalators successfully deleted",
+                                "All escalators have been successfully deleted.",
+                                Alert.AlertType.INFORMATION
+                        );
+                    }
+
+                    // Redraw the interface
+                    drawInterface(false);
+                }
+
                 break;
             case ELEVATOR:
                 // Show a dialog to confirm floor deletion
@@ -1123,9 +1283,27 @@ public class MainScreenController extends ScreenController {
             case STAIRS:
                 break;
             case ESCALATOR:
+                // Edit all escalators
+                EscalatorShaft escalatorShaftReference = (EscalatorShaft) portalShaft;
+
+                for (EscalatorShaft elevatorShaftToEdit : Main.simulator.getStation().getEscalatorShafts()) {
+                    // Mirror each escalator shaft to the reference shaft
+                    elevatorShaftToEdit.setEnabled(escalatorShaftReference.isEnabled());
+                    elevatorShaftToEdit.setMoveTime(escalatorShaftReference.getMoveTime());
+                    elevatorShaftToEdit.setEscalatorDirection(escalatorShaftReference.getEscalatorDirection());
+
+                    // Retrieve portal components
+                    Portal lowerPortal = elevatorShaftToEdit.getLowerPortal();
+                    Portal upperPortal = elevatorShaftToEdit.getUpperPortal();
+
+                    // Apply the changes from the escalator shaft to these portals
+                    lowerPortal.setEnabled(escalatorShaftReference.isEnabled());
+                    upperPortal.setEnabled(escalatorShaftReference.isEnabled());
+                }
+
                 break;
             case ELEVATOR:
-                // Edit all escalators
+                // Edit all elevators
                 ElevatorShaft elevatorShaftReference = (ElevatorShaft) portalShaft;
 
                 for (ElevatorShaft elevatorShaftToEdit : Main.simulator.getStation().getElevatorShafts()) {
@@ -1266,23 +1444,50 @@ public class MainScreenController extends ScreenController {
             case STAIRS:
                 break;
             case ESCALATOR:
+                EscalatorShaft escalatorShaftToDelete = (EscalatorShaft) amenityToDelete;
+
+                // Retrieve portal components
+                EscalatorPortal upperEscalatorPortal = (EscalatorPortal) escalatorShaftToDelete.getUpperPortal();
+                EscalatorPortal lowerEscalatorPortal = (EscalatorPortal) escalatorShaftToDelete.getLowerPortal();
+
+                // Remove the portals from their patches in their respective floors
+                if (Main.simulator.getFirstPortal() == null) {
+                    // Portal drawing completed, deleting portal from portal shaft
+                    if (upperEscalatorPortal != null) {
+                        upperEscalatorPortal.getPatch().setAmenity(null);
+                    }
+
+                    if (lowerEscalatorPortal != null) {
+                        lowerEscalatorPortal.getPatch().setAmenity(null);
+                    }
+
+                    // Remove elevator shaft
+                    Main.simulator.getStation().getEscalatorShafts().remove(
+                            (EscalatorShaft) escalatorShaftToDelete
+                    );
+                } else {
+                    // Portal drawing uncompleted, deleting portal from simulator
+                    EscalatorPortal portal = (EscalatorPortal) Main.simulator.getFirstPortal();
+                    portal.getPatch().setAmenity(null);
+                }
+
                 break;
             case ELEVATOR:
                 ElevatorShaft elevatorShaftToDelete = (ElevatorShaft) amenityToDelete;
 
                 // Retrieve portal components
-                ElevatorPortal upperPortal = (ElevatorPortal) elevatorShaftToDelete.getUpperPortal();
-                ElevatorPortal lowerPortal = (ElevatorPortal) elevatorShaftToDelete.getLowerPortal();
+                ElevatorPortal upperElevatorPortal = (ElevatorPortal) elevatorShaftToDelete.getUpperPortal();
+                ElevatorPortal lowerElevatorPortal = (ElevatorPortal) elevatorShaftToDelete.getLowerPortal();
 
                 // Remove the portals from their patches in their respective floors
                 if (Main.simulator.getFirstPortal() == null) {
                     // Portal drawing completed, deleting portal from portal shaft
-                    if (upperPortal != null) {
-                        upperPortal.getPatch().setAmenity(null);
+                    if (upperElevatorPortal != null) {
+                        upperElevatorPortal.getPatch().setAmenity(null);
                     }
 
-                    if (lowerPortal != null) {
-                        lowerPortal.getPatch().setAmenity(null);
+                    if (lowerElevatorPortal != null) {
+                        lowerElevatorPortal.getPatch().setAmenity(null);
                     }
 
                     // Remove elevator shaft
@@ -1341,6 +1546,24 @@ public class MainScreenController extends ScreenController {
             case STAIRS:
                 break;
             case ESCALATOR:
+                for (EscalatorShaft escalatorShaft : Main.simulator.getStation().getEscalatorShafts()) {
+                    // Retrieve portal components
+                    EscalatorPortal upperPortal = (EscalatorPortal) escalatorShaft.getUpperPortal();
+                    EscalatorPortal lowerPortal = (EscalatorPortal) escalatorShaft.getLowerPortal();
+
+                    // Portal from portal shaft
+                    if (upperPortal != null) {
+                        upperPortal.getPatch().setAmenity(null);
+                    }
+
+                    if (lowerPortal != null) {
+                        lowerPortal.getPatch().setAmenity(null);
+                    }
+                }
+
+                // Remove escalator shafts
+                Main.simulator.getStation().getEscalatorShafts().clear();
+
                 break;
             case ELEVATOR:
                 for (ElevatorShaft elevatorShaft : Main.simulator.getStation().getElevatorShafts()) {
@@ -1399,6 +1622,11 @@ public class MainScreenController extends ScreenController {
                     = (ElevatorShaft) portalSetupController.getWindowOutput().get(ElevatorSetupController.OUTPUT_KEY);
 
             Main.simulator.setProvisionalPortalShaft(elevatorShaft);
+        } else if (portalSetupController instanceof EscalatorSetupController) {
+            EscalatorShaft escalatorShaft
+                    = (EscalatorShaft) portalSetupController.getWindowOutput().get(EscalatorSetupController.OUTPUT_KEY);
+
+            Main.simulator.setProvisionalPortalShaft(escalatorShaft);
         }
 
         // Portal drawing shall now commence
@@ -1782,13 +2010,262 @@ public class MainScreenController extends ScreenController {
                         case STAIRS:
                             break;
                         case ESCALATOR:
+                            switch (buildState) {
+                                case DRAWING:
+                                    // Only add if the current patch doesn't already have an amenity
+                                    if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                        Main.simulator.setCurrentClass(ElevatorPortal.class);
+
+                                        // Only add amenities on patches which do not have floor fields
+                                        // Otherwise, do nothing
+                                        if (currentPatch.getFloorFieldValues().isEmpty()) {
+                                            // If a first portal has already been added, add the second portal this
+                                            // click
+                                            if (!Main.simulator.isFirstPortalDrawn()) {
+                                                // Only add an portal when there are multiple floors
+                                                if (Main.simulator.getStation().getFloors().size() > 1) {
+                                                    // If the user has clicked on a patch without the portal being setup yet,
+                                                    // show the setup first, then automatically put the first portal where the
+                                                    // user clicked
+                                                    if (!Main.simulator.isPortalDrawing()) {
+                                                        // Display the portal setup prompt
+                                                        FXMLLoader loader = ScreenController.getLoader(
+                                                                getClass(),
+                                                                "/com/crowdsimulation/view" +
+                                                                        "/EscalatorSetupInterface.fxml");
+                                                        Parent root = loader.load();
+
+                                                        EscalatorSetupController escalatorSetupController;
+
+                                                        escalatorSetupController = loader.getController();
+                                                        escalatorSetupController.setElements();
+
+                                                        // Show the window
+                                                        escalatorSetupController.showWindow(
+                                                                root,
+                                                                "Escalator setup",
+                                                                true,
+                                                                false
+                                                        );
+
+                                                        // Only proceed when this window is closed through the proceed action
+                                                        if (escalatorSetupController.isClosedWithAction()) {
+                                                            beginPortalDrawing(escalatorSetupController);
+                                                        }
+                                                    }
+
+                                                    // Only continue when the portal setup has been completed
+                                                    if (Main.simulator.isPortalDrawing()) {
+                                                        // Setup has already been shown, so we may now draw the first portal in
+                                                        // peace
+                                                        // Prepare the first portal that will be placed on this floor
+                                                        EscalatorPortal.EscalatorPortalFactory escalatorPortalFactory
+                                                                = new EscalatorPortal.EscalatorPortalFactory();
+
+                                                        EscalatorPortal escalatorPortalToAdd = escalatorPortalFactory.create(
+                                                                currentPatch,
+                                                                Main.simulator.getProvisionalPortalShaft().isEnabled(),
+                                                                Main.simulator.getCurrentFloor(),
+                                                                Main.simulator.getProvisionalPortalShaft()
+                                                        );
+
+                                                        // Set the amenity on that patch
+                                                        currentPatch.setAmenity(escalatorPortalToAdd);
+
+                                                        // The first portal has now been drawn
+                                                        Main.simulator.setFirstPortalDrawn(true);
+                                                        Main.simulator.setFirstPortal(escalatorPortalToAdd);
+
+                                                        // Redraw the interface to briefly show the newly added elevator
+                                                        drawInterface(false);
+
+                                                        // Show the window for choosing the floor where the next portal will be
+                                                        FXMLLoader loader = ScreenController.getLoader(
+                                                                getClass(),
+                                                                "/com/crowdsimulation/view" +
+                                                                        "/PortalFloorSelectorInterface.fxml");
+                                                        Parent root = loader.load();
+
+                                                        PortalFloorSelectorController portalFloorSelectorController
+                                                                = loader.getController();
+                                                        portalFloorSelectorController.setElements();
+
+                                                        portalFloorSelectorController.showWindow(
+                                                                root,
+                                                                "Choose the floor of the second escalator",
+                                                                true,
+                                                                true
+                                                        );
+
+                                                        // Only continue when the floor selection has been completed
+                                                        if (portalFloorSelectorController.isClosedWithAction()) {
+                                                            // A floor has already been chosen, now retrieve that floor and go there
+                                                            Floor chosenFloor = (Floor) portalFloorSelectorController
+                                                                    .getWindowOutput()
+                                                                    .get(PortalFloorSelectorController.OUTPUT_KEY);
+
+                                                            // After the chosen floor was selected, we may now set the
+                                                            // provisional portal shaft with one of the portals, now that we
+                                                            // know which one is the portal located in the upper or lower
+                                                            // floor
+                                                            List<Floor> floors = Main.simulator.getStation().getFloors();
+
+                                                            // If the current floor is lower than the chosen floor, this
+                                                            // current floor will be the lower portal
+                                                            if (floors.indexOf(Main.simulator.getCurrentFloor())
+                                                                    < floors.indexOf(chosenFloor)) {
+                                                                Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                                        escalatorPortalToAdd
+                                                                );
+                                                            } else {
+                                                                Main.simulator.getProvisionalPortalShaft().setUpperPortal(
+                                                                        escalatorPortalToAdd
+                                                                );
+                                                            }
+
+                                                            // Switch to that floor
+                                                            switchFloor(chosenFloor);
+
+                                                            // Prompt the user that it is now time to draw the second portal
+                                                            AlertController.showSimpleAlert(
+                                                                    "Add second escalator",
+                                                                    "Draw the second escalator",
+                                                                    "After closing this window, please draw the" +
+                                                                            " second escalator on this floor. Click X to" +
+                                                                            " cancel this operation.",
+                                                                    Alert.AlertType.INFORMATION
+                                                            );
+                                                        } else {
+                                                            // Cancel portal adding
+                                                            // Also delete the earlier added portal shafts and portals
+                                                            endPortalDrawing(false);
+                                                        }
+                                                    }
+                                                } else {
+                                                    AlertController.showSimpleAlert(
+                                                            "Escalator addition failed",
+                                                            "Unable to add escalator",
+                                                            "You may only add escalators when there are more than one floors in the station.",
+                                                            Alert.AlertType.ERROR
+                                                    );
+                                                }
+                                            } else {
+                                                // Prepare the second portal that will be placed on this floor
+                                                EscalatorPortal.EscalatorPortalFactory escalatorPortalFactory
+                                                        = new EscalatorPortal.EscalatorPortalFactory();
+
+                                                EscalatorPortal escalatorPortalToAdd = escalatorPortalFactory.create(
+                                                        currentPatch,
+                                                        Main.simulator.getProvisionalPortalShaft().isEnabled(),
+                                                        Main.simulator.getCurrentFloor(),
+                                                        Main.simulator.getProvisionalPortalShaft()
+                                                );
+
+                                                // Set the amenity on that patch
+                                                currentPatch.setAmenity(escalatorPortalToAdd);
+
+                                                // If the upper portal has already been set, then this portal will be the
+                                                // lower one (and vice versa)
+                                                if (Main.simulator.getProvisionalPortalShaft().getUpperPortal() == null) {
+                                                    Main.simulator.getProvisionalPortalShaft().setUpperPortal(
+                                                            escalatorPortalToAdd
+                                                    );
+                                                } else {
+                                                    Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                            escalatorPortalToAdd
+                                                    );
+                                                }
+
+                                                // Register the provisional shaft to the station
+                                                Main.simulator.getStation().getEscalatorShafts().add(
+                                                        (EscalatorShaft) Main.simulator.getProvisionalPortalShaft()
+                                                );
+
+                                                // Finish adding the portal
+                                                endPortalDrawing(true);
+
+                                                // Again, briefly redraw the interface to let the user have a glimpse at
+                                                // the newly added elevator
+                                                drawInterface(false);
+
+                                                // Let the user know that portal addition has been successful
+                                                AlertController.showSimpleAlert(
+                                                        "Escalator addition successful",
+                                                        "Escalator successfully added",
+                                                        "The escalator has been successfully added.",
+                                                        Alert.AlertType.INFORMATION
+                                                );
+                                            }
+                                        } else {
+                                            // We will end up here if a first portal has been added on an empty patch,
+                                            // but the second one on a patch with a floor field
+                                            if (Main.simulator.isFirstPortalDrawn()) {
+                                                // Cancel portal adding
+                                                // Also delete the earlier added portal shafts and portals
+                                                endPortalDrawing(false);
+                                            }
+                                        }
+                                    } else {
+                                        // If clicked on an existing amenity in the middle of adding the portals, cancel
+                                        // portal adding
+                                        if (Main.simulator.isPortalDrawing()) {
+                                            endPortalDrawing(false);
+                                        }
+
+                                        // Switch to editing mode, then open that
+                                        // amenity's controls
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                        // Then revisit this method as if that amenity was clicked
+                                        buildOrEdit(currentPatch);
+                                    }
+
+                                    break;
+                                case EDITING_ONE:
+                                    // Only edit if there is already a elevator on that patch
+                                    if (Main.simulator.getCurrentAmenity() instanceof EscalatorPortal) {
+                                        Main.simulator.setCurrentClass(ElevatorPortal.class);
+
+                                        EscalatorPortal escalatorPortalToEdit
+                                                = (EscalatorPortal) Main.simulator.getCurrentAmenity();
+
+                                        // Do nothing afterwards, editing is handled by the sidebar button
+                                    } else {
+                                        // If there is no amenity there, just do nothing
+                                        if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                            // If clicked on an existing amenity, switch to editing mode, then open that
+                                            // amenity's controls
+                                            goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                            // Then revisit this method as if that amenity was clicked
+                                            buildOrEdit(currentPatch);
+                                        }
+                                    }
+
+                                    break;
+                                case EDITING_ALL:
+                                    // No specific values need to be set here because all amenities will be edited
+                                    // once save is clicked
+                                    // If there is no amenity there, just do nothing
+                                    if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                        // If clicked on an existing amenity, switch to editing mode, then open that
+                                        // amenity's controls
+                                        goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                        // Then revisit this method as if that amenity was clicked
+                                        buildOrEdit(currentPatch);
+                                    }
+
+                                    break;
+                            }
+
                             break;
                         case ELEVATOR:
                             switch (buildState) {
                                 case DRAWING:
                                     // Only add if the current patch doesn't already have an amenity
                                     if (Main.simulator.currentAmenityProperty().isNull().get()) {
-                                        Main.simulator.setCurrentClass(ElevatorPortal.class);
+                                        Main.simulator.setCurrentClass(EscalatorPortal.class);
 
                                         // Only add amenities on patches which do not have floor fields
                                         // Otherwise, do nothing
@@ -1982,7 +2459,9 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // If clicked on an existing amenity in the middle of adding the portals, cancel
                                         // portal adding
-                                        endPortalDrawing(false);
+                                        if (Main.simulator.isPortalDrawing()) {
+                                            endPortalDrawing(false);
+                                        }
 
                                         // Switch to editing mode, then open that
                                         // amenity's controls

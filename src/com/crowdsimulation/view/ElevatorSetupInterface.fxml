@@ -33,7 +33,6 @@
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <CheckBox mnemonicParsing="false" text="Enable elevator" />
                   <Label fx:id="elevatorDelayLabel" text="Opening/closing time (s):" GridPane.rowIndex="1" />
                   <Spinner fx:id="elevatorDelaySpinner" prefHeight="25.0" prefWidth="229.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <Label fx:id="elevatorOpenLabel" text="Open time (s):" GridPane.rowIndex="2" />
