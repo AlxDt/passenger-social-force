@@ -1,7 +1,6 @@
 package com.crowdsimulation.controller.screen.feature.portal.setup;
 
-import com.crowdsimulation.controller.screen.main.service.InitializeElevatorSetupService;
-import com.crowdsimulation.controller.screen.main.service.InitializeStairSetupService;
+import com.crowdsimulation.controller.screen.service.portal.setup.InitializeStairSetupService;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;

@@ -3,8 +3,7 @@ package com.crowdsimulation.controller.screen.feature.floorfield;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.alert.AlertController;
-import com.crowdsimulation.controller.screen.main.service.InitializeNormalFloorFieldService;
-import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
+import com.crowdsimulation.controller.screen.service.floorfield.InitializeNormalFloorFieldService;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -15,7 +14,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class NormalFloorFieldController extends ScreenController {

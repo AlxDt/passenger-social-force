@@ -2,7 +2,7 @@ package com.crowdsimulation.controller.screen.feature.portal;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.ScreenController;
-import com.crowdsimulation.controller.screen.main.service.InitializePortalFloorSelectorService;
+import com.crowdsimulation.controller.screen.service.portal.InitializePortalFloorSelectorService;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;

@@ -7,7 +7,7 @@
 <?import javafx.scene.text.Text?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0"
             prefWidth="1160.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.crowdsimulation.controller.screen.main.MainScreenControllerOld">
+            fx:controller="com.crowdsimulation.controller.screen.feature.main.MainScreenControllerOld">
     <bottom>
         <HBox alignment="CENTER_RIGHT" prefHeight="30.0" prefWidth="780.0" spacing="15.0" BorderPane.alignment="CENTER">
             <children>

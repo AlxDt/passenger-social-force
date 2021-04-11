@@ -1,7 +1,8 @@
-package com.crowdsimulation.controller.screen.main.service;
+package com.crowdsimulation.controller.screen.service.main;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.screen.main.MainScreenController;
+import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
+import com.crowdsimulation.controller.screen.service.InitializeScreenService;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;

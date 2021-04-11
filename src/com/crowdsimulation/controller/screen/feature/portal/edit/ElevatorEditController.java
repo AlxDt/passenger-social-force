@@ -1,7 +1,7 @@
 package com.crowdsimulation.controller.screen.feature.portal.edit;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.screen.main.service.InitializeElevatorEditService;
+import com.crowdsimulation.controller.screen.service.portal.edit.InitializeElevatorEditService;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import com.crowdsimulation.model.simulator.Simulator;

@@ -1,13 +1,12 @@
-package com.crowdsimulation.controller.screen.main.service;
+package com.crowdsimulation.controller.screen.service.portal.setup;
 
+import com.crowdsimulation.controller.screen.service.InitializeScreenService;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
-import javafx.scene.text.Text;
 
-public class InitializeElevatorEditService extends InitializeScreenService {
-    public static void initializeElevatorEdit(
-            Text promptText,
+public class InitializeElevatorSetupService extends InitializeScreenService {
+    public static void initializeElevatorSetup(
             CheckBox elevatorEnableCheckbox,
             Label elevatorDelayLabel,
             Spinner<Integer> elevatorDelaySpinner,

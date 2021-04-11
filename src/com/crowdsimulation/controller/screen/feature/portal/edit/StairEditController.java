@@ -1,7 +1,7 @@
 package com.crowdsimulation.controller.screen.feature.portal.edit;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.screen.main.service.InitializeStairSetupService;
+import com.crowdsimulation.controller.screen.service.portal.setup.InitializeStairSetupService;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.simulator.Simulator;

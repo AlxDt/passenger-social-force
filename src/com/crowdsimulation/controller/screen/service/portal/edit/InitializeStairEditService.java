@@ -1,7 +1,6 @@
-package com.crowdsimulation.controller.screen.main.service;
+package com.crowdsimulation.controller.screen.service.portal.edit;
 
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
-import javafx.collections.FXCollections;
+import com.crowdsimulation.controller.screen.service.InitializeScreenService;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
 

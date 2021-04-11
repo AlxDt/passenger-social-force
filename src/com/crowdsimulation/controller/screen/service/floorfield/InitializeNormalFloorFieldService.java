@@ -1,8 +1,8 @@
-package com.crowdsimulation.controller.screen.main.service;
+package com.crowdsimulation.controller.screen.service.floorfield;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.screen.feature.floorfield.NormalFloorFieldController;
-import com.crowdsimulation.controller.screen.main.MainScreenController;
+import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;

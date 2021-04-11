@@ -1,15 +1,13 @@
-package com.crowdsimulation.controller.screen.main.service;
+package com.crowdsimulation.controller.screen.service.portal;
 
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.screen.service.InitializeScreenService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.text.Text;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class InitializePortalFloorSelectorService extends InitializeScreenService {
     public static void initializePortalFloorSelector(
