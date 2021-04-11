@@ -14,6 +14,9 @@ public interface Queueable {
     // Denotes whether this queueable's floor fields are filled
     boolean isFloorFieldsComplete();
 
-    // Clear all floor fields of a certain state in this queueable
-    void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState);
+    // Delete a floor field of a certain state in this queueable
+    void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState);
+
+    // Delete all floor fields in this queueable
+    void deleteAllFloorFields();
 }

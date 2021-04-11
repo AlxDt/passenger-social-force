@@ -21,6 +21,7 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
@@ -1086,7 +1087,7 @@ public class MainScreenController extends ScreenController {
     // Clear an entire floor field
     private void clearFloorField() {
         // Clear the floor field of the current target given the current floor field state
-        Main.simulator.getCurrentFloorFieldTarget().clearFloorFields(
+        Main.simulator.getCurrentFloorFieldTarget().deleteFloorField(
                 normalFloorFieldController.getFloorFieldState()
         );
     }
@@ -1624,11 +1625,26 @@ public class MainScreenController extends ScreenController {
             amenityToDelete.getPatch().setAmenity(null);
         }
 
+        // If this amenity is a queueable, delete all floor fields associated with it
+        if (amenityToDelete instanceof Queueable) {
+            Queueable queueable = (Queueable) amenityToDelete;
+
+            queueable.deleteAllFloorFields();
+        }
+
+        // If this amenity is an elevator shaft, also delete the floor fields of its individual portals
+        if (amenityToDelete instanceof ElevatorShaft) {
+            ElevatorShaft elevatorShaft = (ElevatorShaft) amenityToDelete;
+
+            ((ElevatorPortal) elevatorShaft.getUpperPortal()).deleteAllFloorFields();
+            ((ElevatorPortal) elevatorShaft.getLowerPortal()).deleteAllFloorFields();
+        }
+
         // Also delete this amenity from its list in this floor
         switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
                 Main.simulator.getCurrentFloor().getStationGates().remove(
-                        (StationGate) amenityToDelete
+                        amenityToDelete
                 );
 
                 break;

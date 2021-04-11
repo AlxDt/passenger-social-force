@@ -168,7 +168,7 @@ public class QueueingFloorField extends HeadfulFloorField {
         List<Patch> associatedPatches = queueingFloorField.getAssociatedPatches();
         Queueable target = queueingFloorField.getTarget();
 
-        ArrayList<Patch> associatedPatchesCopy = new ArrayList<>(associatedPatches);
+        List<Patch> associatedPatchesCopy = new ArrayList<>(associatedPatches);
 
         for (Patch patch : associatedPatchesCopy) {
             QueueingFloorField.deleteFloorFieldValue(

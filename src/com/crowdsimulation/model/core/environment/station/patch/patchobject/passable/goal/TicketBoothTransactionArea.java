@@ -125,13 +125,23 @@ public class TicketBoothTransactionArea extends Goal {
 
     @Override
     // Clear all floor fields of the given floor field state in this ticket booth transaction area
-    public void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState) {
+    public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
         QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,
                 floorFieldState
         );
+    }
+
+    @Override
+    public void deleteAllFloorFields() {
+        // Sweep through each and every floor field and delete them
+        List<QueueingFloorField.FloorFieldState> floorFieldStates = retrieveFloorFieldStates();
+
+        for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
+            deleteFloorField(floorFieldState);
+        }
     }
 
     // Ticket booth transaction area factory

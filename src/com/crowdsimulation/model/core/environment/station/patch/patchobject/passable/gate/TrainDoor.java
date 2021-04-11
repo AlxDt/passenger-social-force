@@ -2,6 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
@@ -108,13 +109,23 @@ public class TrainDoor extends Gate implements Queueable {
 
     @Override
     // Clear all floor fields of the given floor field state in this train door waiting area
-    public void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState) {
+    public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
         QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,
                 floorFieldState
         );
+    }
+
+    @Override
+    public void deleteAllFloorFields() {
+        // Sweep through each and every floor field and delete them
+        List<QueueingFloorField.FloorFieldState> floorFieldStates = retrieveFloorFieldStates();
+
+        for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
+            deleteFloorField(floorFieldState);
+        }
     }
 
     @Override

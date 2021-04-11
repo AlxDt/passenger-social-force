@@ -94,13 +94,23 @@ public class Security extends BlockableAmenity {
 
     // Clear all floor fields of the given floor field state in this security gate
     @Override
-    public void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState) {
+    public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
         QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,
                 floorFieldState
         );
+    }
+
+    @Override
+    public void deleteAllFloorFields() {
+        // Sweep through each and every floor field and delete them
+        List<QueueingFloorField.FloorFieldState> floorFieldStates = retrieveFloorFieldStates();
+
+        for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
+            deleteFloorField(floorFieldState);
+        }
     }
 
     // Security factory

@@ -307,7 +307,10 @@ public class GraphicsController extends Controller {
 
                                         GraphicsController.extraRectangle = extraRectangle;
                                         GraphicsController.validTicketBoothDraw
-                                                = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                                = patch.getAmenity() == null
+                                                && extraPatch.getAmenity() == null
+                                                && patch.getFloorFieldValues().isEmpty()
+                                                && extraPatch.getFloorFieldValues().isEmpty();
                                     } else {
                                         GraphicsController.validTicketBoothDraw = false;
                                     }

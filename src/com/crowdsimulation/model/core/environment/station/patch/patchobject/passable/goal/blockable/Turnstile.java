@@ -124,13 +124,23 @@ public class Turnstile extends BlockableAmenity {
 
     // Clear all floor fields of the given floor field state in this turnstile
     @Override
-    public void clearFloorFields(QueueingFloorField.FloorFieldState floorFieldState) {
+    public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
         QueueingFloorField boardingFloorField = retrieveFloorField(floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 boardingFloorField,
                 floorFieldState
         );
+    }
+
+    @Override
+    public void deleteAllFloorFields() {
+        // Sweep through each and every floor field and delete them
+        List<QueueingFloorField.FloorFieldState> floorFieldStates = retrieveFloorFieldStates();
+
+        for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
+            deleteFloorField(floorFieldState);
+        }
     }
 
     // Turnstile factory
