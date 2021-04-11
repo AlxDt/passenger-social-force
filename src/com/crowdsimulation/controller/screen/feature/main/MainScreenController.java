@@ -48,6 +48,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Screen;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainScreenController extends ScreenController {
@@ -1613,7 +1614,7 @@ public class MainScreenController extends ScreenController {
         if (amenityToDelete instanceof TicketBoothTransactionArea) {
             // Get the ticket booth from this patch
             ticketBoothToDelete
-                    = ((TicketBoothTransactionArea) Main.simulator.getCurrentAmenity()).getTicketBooth();
+                    = ((TicketBoothTransactionArea) amenityToDelete).getTicketBooth();
 
             // Delete the ticket booth from the patch that contain it
             ticketBoothToDelete.getPatch().setAmenity(null);
@@ -1772,109 +1773,99 @@ public class MainScreenController extends ScreenController {
     private void deleteAllAmenitiesInFloor() {
         switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
-                for (StationGate stationGate : Main.simulator.getCurrentFloor().getStationGates()) {
-                    stationGate.getPatch().setAmenity(null);
+                List<StationGate> stationGatesCopy
+                        = new ArrayList<>(Main.simulator.getCurrentFloor().getStationGates());
+
+                for (StationGate stationGate : stationGatesCopy) {
+                    deleteSingleAmenityInFloor(stationGate);
                 }
 
                 Main.simulator.getCurrentFloor().getStationGates().clear();
 
                 break;
             case SECURITY:
-                for (Security security : Main.simulator.getCurrentFloor().getSecurities()) {
-                    security.getPatch().setAmenity(null);
+                List<Security> securitiesCopy
+                        = new ArrayList<>(Main.simulator.getCurrentFloor().getSecurities());
+
+                for (Security securities : securitiesCopy) {
+                    deleteSingleAmenityInFloor(securities);
                 }
 
                 Main.simulator.getCurrentFloor().getSecurities().clear();
 
                 break;
             case STAIRS:
-                for (StairShaft stairShaft : Main.simulator.getStation().getStairShafts()) {
-                    // Retrieve portal components
-                    StairPortal upperPortal = (StairPortal) stairShaft.getUpperPortal();
-                    StairPortal lowerPortal = (StairPortal) stairShaft.getLowerPortal();
+                List<StairShaft> stairsCopy
+                        = new ArrayList<>(Main.simulator.getStation().getStairShafts());
 
-                    // Portal from portal shaft
-                    if (upperPortal != null) {
-                        upperPortal.getPatch().setAmenity(null);
-                    }
-
-                    if (lowerPortal != null) {
-                        lowerPortal.getPatch().setAmenity(null);
-                    }
+                for (StairShaft stairShafts : stairsCopy) {
+                    deleteSingleAmenityInFloor(stairShafts);
                 }
 
-                // Remove stair shafts
                 Main.simulator.getStation().getStairShafts().clear();
 
                 break;
             case ESCALATOR:
-                for (EscalatorShaft escalatorShaft : Main.simulator.getStation().getEscalatorShafts()) {
-                    // Retrieve portal components
-                    EscalatorPortal upperPortal = (EscalatorPortal) escalatorShaft.getUpperPortal();
-                    EscalatorPortal lowerPortal = (EscalatorPortal) escalatorShaft.getLowerPortal();
+                List<EscalatorShaft> escalatorsCopy
+                        = new ArrayList<>(Main.simulator.getStation().getEscalatorShafts());
 
-                    // Portal from portal shaft
-                    if (upperPortal != null) {
-                        upperPortal.getPatch().setAmenity(null);
-                    }
-
-                    if (lowerPortal != null) {
-                        lowerPortal.getPatch().setAmenity(null);
-                    }
+                for (EscalatorShaft escalatorShaft : escalatorsCopy) {
+                    deleteSingleAmenityInFloor(escalatorShaft);
                 }
 
-                // Remove escalator shafts
                 Main.simulator.getStation().getEscalatorShafts().clear();
 
                 break;
             case ELEVATOR:
-                for (ElevatorShaft elevatorShaft : Main.simulator.getStation().getElevatorShafts()) {
-                    // Retrieve portal components
-                    ElevatorPortal upperPortal = (ElevatorPortal) elevatorShaft.getUpperPortal();
-                    ElevatorPortal lowerPortal = (ElevatorPortal) elevatorShaft.getLowerPortal();
+                List<ElevatorShaft> elevatorsCopy
+                        = new ArrayList<>(Main.simulator.getStation().getElevatorShafts());
 
-                    // Portal from portal shaft
-                    if (upperPortal != null) {
-                        upperPortal.getPatch().setAmenity(null);
-                    }
-
-                    if (lowerPortal != null) {
-                        lowerPortal.getPatch().setAmenity(null);
-                    }
+                for (ElevatorShaft elevatorsShaft : elevatorsCopy) {
+                    deleteSingleAmenityInFloor(elevatorsShaft);
                 }
 
-                // Remove elevator shafts
                 Main.simulator.getStation().getElevatorShafts().clear();
 
                 break;
             case TICKET_BOOTH:
-                for (TicketBooth ticketBooth : Main.simulator.getCurrentFloor().getTicketBooths()) {
-                    ticketBooth.getPatch().setAmenity(null);
-                    ticketBooth.getTicketBoothTransactionArea().getPatch().setAmenity(null);
+                List<TicketBooth> ticketBoothsCopy
+                        = new ArrayList<>(Main.simulator.getCurrentFloor().getTicketBooths());
+
+                for (TicketBooth ticketBooths : ticketBoothsCopy) {
+                    deleteSingleAmenityInFloor(ticketBooths.getTicketBoothTransactionArea());
                 }
 
                 Main.simulator.getCurrentFloor().getTicketBooths().clear();
 
                 break;
             case TURNSTILE:
-                for (Turnstile turnstile : Main.simulator.getCurrentFloor().getTurnstiles()) {
-                    turnstile.getPatch().setAmenity(null);
+                List<Turnstile> turnstilesCopy
+                        = new ArrayList<>(Main.simulator.getCurrentFloor().getTurnstiles());
+
+                for (Turnstile turnstile : turnstilesCopy) {
+                    deleteSingleAmenityInFloor(turnstile);
                 }
 
                 Main.simulator.getCurrentFloor().getTurnstiles().clear();
 
                 break;
             case TRAIN_BOARDING_AREA:
-                for (TrainDoor trainDoor : Main.simulator.getCurrentFloor().getTrainDoors()) {
-                    trainDoor.getPatch().setAmenity(null);
+                List<TrainDoor> trainDoorCopy
+                        = new ArrayList<>(Main.simulator.getCurrentFloor().getTrainDoors());
+
+                for (TrainDoor trainDoor : trainDoorCopy) {
+                    deleteSingleAmenityInFloor(trainDoor);
                 }
 
                 Main.simulator.getCurrentFloor().getTrainDoors().clear();
 
                 break;
             case WALL:
-                for (Wall wall : Main.simulator.getCurrentFloor().getWalls()) {
-                    wall.getPatch().setAmenity(null);
+                List<Wall> wallsCopy
+                        = new ArrayList<>(Main.simulator.getCurrentFloor().getWalls());
+
+                for (Wall wall : wallsCopy) {
+                    deleteSingleAmenityInFloor(wall);
                 }
 
                 Main.simulator.getCurrentFloor().getWalls().clear();
