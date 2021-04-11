@@ -2,6 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 
 public class PortalShaft extends NonObstacle {
@@ -12,7 +13,7 @@ public class PortalShaft extends NonObstacle {
     // Denotes the time (s) needed to move the passengers from one end of the shaft to another
     private int moveTime;
 
-    public PortalShaft(Patch patch, boolean enabled, int moveTime) {
+    protected PortalShaft(Patch patch, boolean enabled, int moveTime) {
         super(patch, enabled);
 
         this.moveTime = moveTime;
@@ -40,5 +41,9 @@ public class PortalShaft extends NonObstacle {
 
     public void setMoveTime(int moveTime) {
         this.moveTime = moveTime;
+    }
+
+    // Portal shaft factory
+    public static abstract class PortalShaftFactory extends Gate.GateFactory {
     }
 }

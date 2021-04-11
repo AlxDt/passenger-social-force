@@ -7,25 +7,30 @@ public class EscalatorShaft extends PortalShaft {
     // Denotes the direction of this escalator
     private EscalatorDirection escalatorDirection;
 
-    public EscalatorShaft(
+    protected EscalatorShaft(
             Patch patch,
             boolean enabled,
             int moveTime,
-            EscalatorDirection escalatorDirection) {
+            EscalatorDirection escalatorDirection
+    ) {
         super(patch, enabled, moveTime);
 
         this.escalatorDirection = escalatorDirection;
     }
 
     // Escalator shaft factory
-    public static class EscalatorShaftFactory extends AmenityFactory {
-        @Override
-        public EscalatorShaft create(Object... objects) {
+    public static class EscalatorShaftFactory extends PortalShaftFactory {
+        public EscalatorShaft create(
+                Patch patch,
+                boolean enabled,
+                int moveTime,
+                EscalatorDirection escalatorDirection
+        ) {
             return new EscalatorShaft(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (int) objects[2],
-                    (EscalatorDirection) objects[3]
+                    patch,
+                    enabled,
+                    moveTime,
+                    escalatorDirection
             );
         }
     }

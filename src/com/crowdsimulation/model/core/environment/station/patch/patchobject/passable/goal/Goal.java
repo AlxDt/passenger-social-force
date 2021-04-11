@@ -24,7 +24,7 @@ public abstract class Goal extends NonObstacle implements Queueable {
     // Denotes the queueing object associated with all goals like this
     private final QueueObject queueObject;
 
-    public Goal(Patch patch, boolean enabled, int waitingTime, QueueObject queueObject) {
+    protected Goal(Patch patch, boolean enabled, int waitingTime, QueueObject queueObject) {
         super(patch, enabled);
 
         this.goalId = null;
@@ -62,5 +62,9 @@ public abstract class Goal extends NonObstacle implements Queueable {
 
     public QueueObject getQueueObject() {
         return queueObject;
+    }
+
+    // Goal factory
+    public static abstract class GoalFactory extends AmenityFactory {
     }
 }

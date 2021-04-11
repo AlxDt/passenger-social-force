@@ -26,7 +26,14 @@ public class TicketBoothTransactionArea extends Goal {
     // Denotes the floor field state needed to access the floor fields of this ticket booth transaction area
     private final QueueingFloorField.FloorFieldState ticketBoothTransactionAreaFloorFieldState;
 
-    public TicketBoothTransactionArea(
+    // Factory for ticket booth transaction area creation
+    public static final TicketBoothTransactionAreaFactory ticketBoothTransactionAreaFactory;
+
+    static {
+        ticketBoothTransactionAreaFactory = new TicketBoothTransactionAreaFactory();
+    }
+
+    protected TicketBoothTransactionArea(
             Patch patch,
             boolean enabled,
             int waitingTime,
@@ -52,7 +59,7 @@ public class TicketBoothTransactionArea extends Goal {
         );
 
         // Add a blank floor field
-        QueueingFloorField queueingFloorField = new QueueingFloorField(this);
+        QueueingFloorField queueingFloorField = QueueingFloorField.queueingFloorFieldFactory.create(this);
 
         // Using the floor field state defined earlier, create the floor field
         this.getQueueObject().getFloorFields().put(this.ticketBoothTransactionAreaFloorFieldState, queueingFloorField);
@@ -128,15 +135,20 @@ public class TicketBoothTransactionArea extends Goal {
     }
 
     // Ticket booth transaction area factory
-    public static class TicketBoothTransactionAreaFactory extends AmenityFactory {
-        @Override
-        public TicketBoothTransactionArea create(Object... objects) {
+    public static class TicketBoothTransactionAreaFactory extends GoalFactory {
+        public TicketBoothTransactionArea create(
+                Patch patch,
+                boolean enabled,
+                int waitingTime,
+                TicketBooth ticketBooth,
+                TicketBoothType ticketBoothType
+        ) {
             return new TicketBoothTransactionArea(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (int) objects[2],
-                    (TicketBooth) objects[3],
-                    (TicketBoothType) objects [4]
+                    patch,
+                    enabled,
+                    waitingTime,
+                    ticketBooth,
+                    ticketBoothType
             );
         }
     }

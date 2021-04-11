@@ -8,11 +8,19 @@ public class StairPortal extends Portal {
     // Denotes the stair shaft which contains this stair portal
     private final StairShaft stairShaft;
 
-    public StairPortal(
+    // Factory for stair portal creation
+    public static final StairPortalFactory stairPortalFactory;
+
+    static {
+        stairPortalFactory = new StairPortalFactory();
+    }
+
+    protected StairPortal(
             Patch patch,
             boolean enabled,
             Floor floorServed,
-            StairShaft stairShaft) {
+            StairShaft stairShaft
+    ) {
         super(patch, enabled, floorServed);
 
         this.stairShaft = stairShaft;
@@ -23,14 +31,18 @@ public class StairPortal extends Portal {
     }
 
     // Stair portal factory
-    public static class StairPortalFactory extends AmenityFactory {
-        @Override
-        public StairPortal create(Object... objects) {
+    public static class StairPortalFactory extends PortalFactory {
+        public StairPortal create(
+                Patch patch,
+                boolean enabled,
+                Floor floorServed,
+                StairShaft stairShaft
+        ) {
             return new StairPortal(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (Floor) objects[2],
-                    (StairShaft) objects[3]
+                    patch,
+                    enabled,
+                    floorServed,
+                    stairShaft
             );
         }
     }

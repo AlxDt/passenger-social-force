@@ -21,13 +21,21 @@ public class ElevatorShaft extends PortalShaft {
     // Denotes the direction the elevator is going
     private ElevatorDirection elevatorDirection;
 
-    public ElevatorShaft(
+    // Factory for elevator shaft creation
+    public static final ElevatorShaftFactory elevatorShaftFactory;
+
+    static {
+        elevatorShaftFactory = new ElevatorShaftFactory();
+    }
+
+    protected ElevatorShaft(
             Patch patch,
             boolean enabled,
             int moveTime,
             int openDelayTime,
             int doorOpenTime,
-            ElevatorDirection initialElevatorDirection) {
+            ElevatorDirection initialElevatorDirection
+    ) {
         super(patch, enabled, moveTime);
 
         this.openDelayTime = openDelayTime;
@@ -77,16 +85,22 @@ public class ElevatorShaft extends PortalShaft {
     }
 
     // Elevator shaft factory
-    public static class ElevatorShaftFactory extends AmenityFactory {
-        @Override
-        public ElevatorShaft create(Object... objects) {
+    public static class ElevatorShaftFactory extends PortalShaftFactory {
+        public ElevatorShaft create(
+                Patch patch,
+                boolean enabled,
+                int moveTime,
+                int openDelayTime,
+                int doorOpenTime,
+                ElevatorDirection initialElevatorDirection
+        ) {
             return new ElevatorShaft(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (int) objects[2],
-                    (int) objects[3],
-                    (int) objects[4],
-                    (ElevatorDirection) objects[5]
+                    patch,
+                    enabled,
+                    moveTime,
+                    openDelayTime,
+                    doorOpenTime,
+                    initialElevatorDirection
             );
         }
     }

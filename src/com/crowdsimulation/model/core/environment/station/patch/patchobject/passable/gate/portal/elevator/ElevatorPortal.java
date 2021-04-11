@@ -21,11 +21,19 @@ public class ElevatorPortal extends Portal implements Queueable {
     // Denotes the floor field state needed to access the floor fields of this security gate
     private final QueueingFloorField.FloorFieldState elevatorPortalFloorFieldState;
 
-    public ElevatorPortal(
+    // Factory for elevator portal creation
+    public static final ElevatorPortalFactory elevatorPortalFactory;
+
+    static {
+        elevatorPortalFactory = new ElevatorPortalFactory();
+    }
+
+    protected ElevatorPortal(
             Patch patch,
             boolean enabled,
             Floor floorServed,
-            ElevatorShaft elevatorShaft) {
+            ElevatorShaft elevatorShaft
+    ) {
         super(patch, enabled, floorServed);
 
         this.elevatorShaft = elevatorShaft;
@@ -41,7 +49,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         // Add a blank floor field
-        QueueingFloorField queueingFloorField = new QueueingFloorField(this);
+        QueueingFloorField queueingFloorField = QueueingFloorField.queueingFloorFieldFactory.create(this);
 
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.elevatorPortalFloorFieldState, queueingFloorField);
@@ -126,14 +134,18 @@ public class ElevatorPortal extends Portal implements Queueable {
     }
 
     // Elevator portal factory
-    public static class ElevatorPortalFactory extends AmenityFactory {
-        @Override
-        public ElevatorPortal create(Object... objects) {
+    public static class ElevatorPortalFactory extends PortalFactory {
+        public ElevatorPortal create(
+                Patch patch,
+                boolean enabled,
+                Floor floorServed,
+                ElevatorShaft elevatorShaft
+        ) {
             return new ElevatorPortal(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (Floor) objects[2],
-                    (ElevatorShaft) objects[3]
+                    patch,
+                    enabled,
+                    floorServed,
+                    elevatorShaft
             );
         }
     }

@@ -3,16 +3,22 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.obs
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 public class Wall extends Obstacle {
-    public Wall(Patch patch) {
+    // Factory for wall creation
+    public static final WallFactory wallFactory;
+
+    static {
+        wallFactory = new WallFactory();
+    }
+
+    protected Wall(Patch patch) {
         super(patch);
     }
 
     // Wall factory
-    public static class WallFactory extends AmenityFactory {
-        @Override
-        public Wall create(Object... objects) {
+    public static class WallFactory extends ObstacleFactory {
+        public Wall create(Patch patch) {
             return new Wall(
-                    (Patch) objects[0]
+                    patch
             );
         }
     }

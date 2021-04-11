@@ -10,34 +10,16 @@ import java.util.List;
 import java.util.Map;
 
 public class QueueingFloorField extends HeadfulFloorField {
-    public QueueingFloorField(Queueable target) {
-        super(target);
+    // Factory for queueing floor field creation
+    public static QueueingFloorFieldFactory queueingFloorFieldFactory;
+
+    static {
+        queueingFloorFieldFactory = new QueueingFloorFieldFactory();
     }
 
-/*    // Given the build subcategory, the patch that will have possession of the floor field, and the patch to draw on,
-    // draw an individual floor field value
-    public static void drawFloorField(
-            Simulator.BuildSubcategory buildSubcategory,
-            QueueObject queueable,
-            Patch chosenPatch) {
-        switch (buildSubcategory) {
-            case SECURITY:
-
-                break;
-            case STAIRS:
-                break;
-            case ESCALATOR:
-                break;
-            case ELEVATOR:
-                break;
-            case TICKET_BOOTH:
-                break;
-            case TURNSTILE:
-                break;
-            case TRAIN_BOARDING_AREA:
-                break;
-        }
-    }*/
+    protected QueueingFloorField(Queueable target) {
+        super(target);
+    }
 
     // Adds an individual floor field to a patch and its associated floor field
     public static boolean addFloorFieldValue(
@@ -234,6 +216,17 @@ public class QueueingFloorField extends HeadfulFloorField {
             } else {
                 return "(any direction)";
             }
+        }
+    }
+
+    // Create floor fields
+    public static class QueueingFloorFieldFactory extends HeadfulFloorFieldFactory {
+        public QueueingFloorField create(
+                Queueable target
+        ) {
+            return new QueueingFloorField(
+                    target
+            );
         }
     }
 }

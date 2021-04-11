@@ -2,7 +2,6 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 
@@ -17,7 +16,14 @@ public class Turnstile extends BlockableAmenity {
     private final QueueingFloorField.FloorFieldState turnstileFloorFieldStateBoarding;
     private final QueueingFloorField.FloorFieldState turnstileFloorFieldStateAlighting;
 
-    public Turnstile(
+    // Factory for turnstile creation
+    public static final TurnstileFactory turnstileFactory;
+
+    static {
+        turnstileFactory = new TurnstileFactory();
+    }
+
+    protected Turnstile(
             Patch patch,
             boolean enabled,
             int waitingTime,
@@ -48,8 +54,8 @@ public class Turnstile extends BlockableAmenity {
         this.turnstileMode = turnstileMode;
 
         // Add blank floor fields, one for each direction
-        QueueingFloorField floorFieldBoarding = new QueueingFloorField(this);
-        QueueingFloorField floorFieldAlighting = new QueueingFloorField(this);
+        QueueingFloorField floorFieldBoarding = QueueingFloorField.queueingFloorFieldFactory.create(this);
+        QueueingFloorField floorFieldAlighting = QueueingFloorField.queueingFloorFieldFactory.create(this);
 
         // Using the floor field states defined earlier, create the floor fields
         this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateBoarding, floorFieldBoarding);
@@ -128,15 +134,20 @@ public class Turnstile extends BlockableAmenity {
     }
 
     // Turnstile factory
-    public static class TurnstileFactory extends AmenityFactory {
-        @Override
-        public Turnstile create(Object... objects) {
+    public static class TurnstileFactory extends GoalFactory {
+        public Turnstile create(
+                Patch patch,
+                boolean enabled,
+                int waitingTime,
+                boolean blockEntry,
+                TurnstileMode turnstileMode
+        ) {
             return new Turnstile(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (int) objects[2],
-                    (boolean) objects[3],
-                    (TurnstileMode) objects[4]
+                    patch,
+                    enabled,
+                    waitingTime,
+                    blockEntry,
+                    turnstileMode
             );
         }
     }

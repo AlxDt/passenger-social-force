@@ -10,7 +10,7 @@ public abstract class Portal extends Gate {
     // Denotes the location of this portal
     private PortalLocation portalLocation;
 
-    public Portal(Patch patch, boolean enabled, Floor floorServed) {
+    protected Portal(Patch patch, boolean enabled, Floor floorServed) {
         super(patch, enabled);
 
         this.floorServed = floorServed;
@@ -26,6 +26,11 @@ public abstract class Portal extends Gate {
 
     public void setPortalLocation(PortalLocation portalLocation) {
         this.portalLocation = portalLocation;
+    }
+
+    // Portal factory
+    public static abstract class PortalFactory extends GateFactory {
+
     }
 
     // Denotes the two locations that the portal may be in

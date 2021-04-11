@@ -15,7 +15,14 @@ public class Security extends BlockableAmenity {
     // Denotes the floor field state needed to access the floor fields of this security gate
     private final QueueingFloorField.FloorFieldState securityFloorFieldState;
 
-    public Security(
+    // Factory for security gate creation
+    public static final SecurityFactory securityFactory;
+
+    static {
+        securityFactory = new SecurityFactory();
+    }
+
+    protected Security(
             Patch patch,
             boolean enabled,
             int waitingTime,
@@ -37,7 +44,7 @@ public class Security extends BlockableAmenity {
         );
 
         // Add a blank floor field
-        QueueingFloorField queueingFloorField = new QueueingFloorField(this);
+        QueueingFloorField queueingFloorField = QueueingFloorField.queueingFloorFieldFactory.create(this);
 
         // Using the floor field state defined earlier, create the floor field
         this.getQueueObject().getFloorFields().put(this.securityFloorFieldState, queueingFloorField);
@@ -97,14 +104,18 @@ public class Security extends BlockableAmenity {
     }
 
     // Security factory
-    public static class SecurityFactory extends AmenityFactory {
-        @Override
-        public Security create(Object... objects) {
+    public static class SecurityFactory extends GoalFactory {
+        public Security create(
+                Patch patch,
+                boolean enabled,
+                int waitingTime,
+                boolean blockPassengers
+        ) {
             return new Security(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (int) objects[2],
-                    (boolean) objects[3]
+                    patch,
+                    enabled,
+                    waitingTime,
+                    blockPassengers
             );
         }
     }

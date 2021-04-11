@@ -1,14 +1,20 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 
 public class TicketBooth extends Obstacle {
     // Denotes the transaction area of this ticket booth
     private TicketBoothTransactionArea ticketBoothTransactionArea;
 
-    public TicketBooth(Patch patch) {
+    // Factory for ticket booth creation
+    public static final TicketBoothFactory ticketBoothFactory;
+
+    static {
+        ticketBoothFactory = new TicketBoothFactory();
+    }
+
+    protected TicketBooth(Patch patch) {
         super(patch);
     }
 
@@ -21,11 +27,10 @@ public class TicketBooth extends Obstacle {
     }
 
     // Ticket booth factory
-    public static class TicketBoothFactory extends AmenityFactory {
-        @Override
-        public Amenity create(Object... objects) {
+    public static class TicketBoothFactory extends ObstacleFactory {
+        public TicketBooth create(Patch patch) {
             return new TicketBooth(
-                    (Patch) objects[0]
+                    patch
             );
         }
     }

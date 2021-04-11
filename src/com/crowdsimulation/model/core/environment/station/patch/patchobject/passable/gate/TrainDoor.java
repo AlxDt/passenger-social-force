@@ -19,7 +19,14 @@ public class TrainDoor extends Gate implements Queueable {
     // Denotes the floor field state needed to access the floor fields of this security gate
     private final QueueingFloorField.FloorFieldState trainDoorFloorFieldState;
 
-    public TrainDoor(
+    // Factory for train door creation
+    public static final TrainDoorFactory trainDoorFactory;
+
+    static {
+        trainDoorFactory = new TrainDoorFactory();
+    }
+
+    protected TrainDoor(
             Patch patch,
             boolean enabled,
             TrainDoorPlatform platform,
@@ -43,7 +50,7 @@ public class TrainDoor extends Gate implements Queueable {
         );
 
         // Add a blank floor field
-        QueueingFloorField queueingFloorField = new QueueingFloorField(this);
+        QueueingFloorField queueingFloorField = QueueingFloorField.queueingFloorFieldFactory.create(this);
 
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.trainDoorFloorFieldState, queueingFloorField);
@@ -116,15 +123,18 @@ public class TrainDoor extends Gate implements Queueable {
     }
 
     // Train door factory
-    public static class TrainDoorFactory extends AmenityFactory {
-        @Override
-        public TrainDoor
-        create(Object... objects) {
+    public static class TrainDoorFactory extends GateFactory {
+        public TrainDoor create(
+                Patch patch,
+                boolean enabled,
+                TrainDoorPlatform platform,
+                List<TrainDoorCarriage> trainDoorCarriagesSupported
+        ) {
             return new TrainDoor(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (TrainDoorPlatform) objects[2],
-                    (List<TrainDoorCarriage>) objects[3]
+                    patch,
+                    enabled,
+                    platform,
+                    trainDoorCarriagesSupported
             );
         }
     }

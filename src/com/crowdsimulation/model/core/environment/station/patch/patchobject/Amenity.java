@@ -7,7 +7,7 @@ public abstract class Amenity extends PatchObject {
     // Denotes the patch which contains this amenity
     private final Patch patch;
 
-    public Amenity(Patch patch) {
+    protected Amenity(Patch patch) {
         this.patch = patch;
     }
 
@@ -15,9 +15,7 @@ public abstract class Amenity extends PatchObject {
         return patch;
     }
 
-    // Create an amenity
-    public abstract static class AmenityFactory extends BaseStationObject.StationObjectFactory {
-        @Override
-        public abstract Amenity create(Object... objects);
+    // Template class for amenity factories
+    public static class AmenityFactory extends BaseStationObject.StationObjectFactory {
     }
 }

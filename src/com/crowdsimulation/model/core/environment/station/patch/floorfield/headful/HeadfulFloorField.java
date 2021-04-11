@@ -11,7 +11,7 @@ public abstract class HeadfulFloorField extends FloorField {
     // Denotes the target associated with this floor field
     private final Queueable target;
 
-    public HeadfulFloorField(Queueable target) {
+    protected HeadfulFloorField(Queueable target) {
         this.target = target;
     }
 
@@ -25,5 +25,9 @@ public abstract class HeadfulFloorField extends FloorField {
 
     public Queueable getTarget() {
         return target;
+    }
+
+    public static abstract class HeadfulFloorFieldFactory {
+
     }
 }

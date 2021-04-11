@@ -10,7 +10,14 @@ public class StationGate extends Gate {
     // Denotes the mode of this station gate (whether it's entry/exit only, or both)
     private StationGateMode stationGateMode;
 
-    public StationGate(
+    // Factory for station gate creation
+    public static final StationGateFactory stationGateFactory;
+
+    static {
+        stationGateFactory = new StationGateFactory();
+    }
+
+    protected StationGate(
             Patch patch,
             boolean enabled,
             double chancePerSecond,
@@ -44,14 +51,18 @@ public class StationGate extends Gate {
     }
 
     // Station gate factory
-    public static class StationGateFactory extends AmenityFactory {
-        @Override
-        public StationGate create(Object... objects) {
+    public static class StationGateFactory extends GateFactory {
+        public StationGate create(
+                Patch patch,
+                boolean enabled,
+                double chancePerSecond,
+                StationGateMode stationGateMode
+        ) {
             return new StationGate(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (double) objects[2],
-                    (StationGateMode) objects[3]
+                    patch,
+                    enabled,
+                    chancePerSecond,
+                    stationGateMode
             );
         }
     }

@@ -8,11 +8,19 @@ public class EscalatorPortal extends Portal {
     // Denotes the escalator shaft which contains this escalator portal
     private final EscalatorShaft escalatorShaft;
 
-    public EscalatorPortal(
+    // Factory for escalator portal creation
+    public static final EscalatorPortalFactory escalatorPortalFactory;
+
+    static {
+        escalatorPortalFactory = new EscalatorPortalFactory();
+    }
+
+    protected EscalatorPortal(
             Patch patch,
             boolean enabled,
             Floor floorServed,
-            EscalatorShaft escalatorShaft) {
+            EscalatorShaft escalatorShaft
+    ) {
         super(patch, enabled, floorServed);
 
         this.escalatorShaft = escalatorShaft;
@@ -23,14 +31,18 @@ public class EscalatorPortal extends Portal {
     }
 
     // Escalator portal factory
-    public static class EscalatorPortalFactory extends AmenityFactory {
-        @Override
-        public EscalatorPortal create(Object... objects) {
+    public static class EscalatorPortalFactory extends PortalFactory {
+        public EscalatorPortal create(
+                Patch patch,
+                boolean enabled,
+                Floor floorServed,
+                EscalatorShaft escalatorShaft
+        ) {
             return new EscalatorPortal(
-                    (Patch) objects[0],
-                    (boolean) objects[1],
-                    (Floor) objects[2],
-                    (EscalatorShaft) objects[3]
+                    patch,
+                    enabled,
+                    floorServed,
+                    escalatorShaft
             );
         }
     }

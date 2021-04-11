@@ -2041,10 +2041,7 @@ public class MainScreenController extends ScreenController {
                                         // Otherwise, do nothing
                                         if (currentPatch.getFloorFieldValues().isEmpty()) {
                                             // Prepare the amenity that will be placed on the station
-                                            StationGate.StationGateFactory stationGateFactory
-                                                    = new StationGate.StationGateFactory();
-
-                                            StationGate stationGateToAdd = (StationGate) stationGateFactory.create(
+                                            StationGate stationGateToAdd = StationGate.stationGateFactory.create(
                                                     currentPatch,
                                                     stationGateEnableCheckBox.isSelected(),
                                                     stationGateSpawnSpinner.getValue() / 100.0,
@@ -2127,10 +2124,7 @@ public class MainScreenController extends ScreenController {
                                         // Otherwise, do nothing
                                         if (currentPatch.getFloorFieldValues().isEmpty()) {
                                             // Prepare the amenity that will be placed on the station
-                                            Security.SecurityFactory securityFactory
-                                                    = new Security.SecurityFactory();
-
-                                            Security securityToAdd = (Security) securityFactory.create(
+                                            Security securityToAdd = (Security) Security.securityFactory.create(
                                                     currentPatch,
                                                     securityEnableCheckBox.isSelected(),
                                                     securityIntervalSpinner.getValue(),
@@ -2314,14 +2308,12 @@ public class MainScreenController extends ScreenController {
                                                         // Setup has already been shown, so we may now draw the first portal in
                                                         // peace
                                                         // Prepare the first portal that will be placed on this floor
-                                                        StairPortal.StairPortalFactory stairPortalFactory
-                                                                = new StairPortal.StairPortalFactory();
-
-                                                        StairPortal stairPortalToAdd = stairPortalFactory.create(
+                                                        StairPortal stairPortalToAdd
+                                                                = StairPortal.stairPortalFactory.create(
                                                                 currentPatch,
                                                                 Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                                 Main.simulator.getCurrentFloor(),
-                                                                Main.simulator.getProvisionalPortalShaft()
+                                                                (StairShaft) Main.simulator.getProvisionalPortalShaft()
                                                         );
 
                                                         // Set the amenity on that patch
@@ -2406,14 +2398,11 @@ public class MainScreenController extends ScreenController {
                                                 }
                                             } else {
                                                 // Prepare the second portal that will be placed on this floor
-                                                StairPortal.StairPortalFactory stairPortalFactory
-                                                        = new StairPortal.StairPortalFactory();
-
-                                                StairPortal stairPortalToAdd = stairPortalFactory.create(
+                                                StairPortal stairPortalToAdd = StairPortal.stairPortalFactory.create(
                                                         currentPatch,
                                                         Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                         Main.simulator.getCurrentFloor(),
-                                                        Main.simulator.getProvisionalPortalShaft()
+                                                        (StairShaft) Main.simulator.getProvisionalPortalShaft()
                                                 );
 
                                                 // Set the amenity on that patch
@@ -2565,14 +2554,12 @@ public class MainScreenController extends ScreenController {
                                                         // Setup has already been shown, so we may now draw the first portal in
                                                         // peace
                                                         // Prepare the first portal that will be placed on this floor
-                                                        EscalatorPortal.EscalatorPortalFactory escalatorPortalFactory
-                                                                = new EscalatorPortal.EscalatorPortalFactory();
-
-                                                        EscalatorPortal escalatorPortalToAdd = escalatorPortalFactory.create(
+                                                        EscalatorPortal escalatorPortalToAdd
+                                                                = EscalatorPortal.escalatorPortalFactory.create(
                                                                 currentPatch,
                                                                 Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                                 Main.simulator.getCurrentFloor(),
-                                                                Main.simulator.getProvisionalPortalShaft()
+                                                                (EscalatorShaft) Main.simulator.getProvisionalPortalShaft()
                                                         );
 
                                                         // Set the amenity on that patch
@@ -2657,14 +2644,12 @@ public class MainScreenController extends ScreenController {
                                                 }
                                             } else {
                                                 // Prepare the second portal that will be placed on this floor
-                                                EscalatorPortal.EscalatorPortalFactory escalatorPortalFactory
-                                                        = new EscalatorPortal.EscalatorPortalFactory();
-
-                                                EscalatorPortal escalatorPortalToAdd = escalatorPortalFactory.create(
+                                                EscalatorPortal escalatorPortalToAdd
+                                                        = EscalatorPortal.escalatorPortalFactory.create(
                                                         currentPatch,
                                                         Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                         Main.simulator.getCurrentFloor(),
-                                                        Main.simulator.getProvisionalPortalShaft()
+                                                        (EscalatorShaft) Main.simulator.getProvisionalPortalShaft()
                                                 );
 
                                                 // Set the amenity on that patch
@@ -2771,7 +2756,7 @@ public class MainScreenController extends ScreenController {
                                 case DRAWING:
                                     // Only add if the current patch doesn't already have an amenity
                                     if (Main.simulator.currentAmenityProperty().isNull().get()) {
-                                        Main.simulator.setCurrentClass(EscalatorPortal.class);
+                                        Main.simulator.setCurrentClass(ElevatorPortal.class);
 
                                         // Only add amenities on patches which do not have floor fields
                                         // Otherwise, do nothing
@@ -2816,14 +2801,12 @@ public class MainScreenController extends ScreenController {
                                                         // Setup has already been shown, so we may now draw the first portal in
                                                         // peace
                                                         // Prepare the first portal that will be placed on this floor
-                                                        ElevatorPortal.ElevatorPortalFactory elevatorPortalFactory
-                                                                = new ElevatorPortal.ElevatorPortalFactory();
-
-                                                        ElevatorPortal elevatorPortalToAdd = elevatorPortalFactory.create(
+                                                        ElevatorPortal elevatorPortalToAdd
+                                                                = ElevatorPortal.elevatorPortalFactory.create(
                                                                 currentPatch,
                                                                 Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                                 Main.simulator.getCurrentFloor(),
-                                                                Main.simulator.getProvisionalPortalShaft()
+                                                                (ElevatorShaft) Main.simulator.getProvisionalPortalShaft()
                                                         );
 
                                                         // Set the amenity on that patch
@@ -2908,14 +2891,12 @@ public class MainScreenController extends ScreenController {
                                                 }
                                             } else {
                                                 // Prepare the second portal that will be placed on this floor
-                                                ElevatorPortal.ElevatorPortalFactory elevatorPortalFactory
-                                                        = new ElevatorPortal.ElevatorPortalFactory();
-
-                                                ElevatorPortal elevatorPortalToAdd = elevatorPortalFactory.create(
+                                                ElevatorPortal elevatorPortalToAdd
+                                                        = ElevatorPortal.elevatorPortalFactory.create(
                                                         currentPatch,
                                                         Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                         Main.simulator.getCurrentFloor(),
-                                                        Main.simulator.getProvisionalPortalShaft()
+                                                        (ElevatorShaft) Main.simulator.getProvisionalPortalShaft()
                                                 );
 
                                                 // Set the amenity on that patch
@@ -3094,26 +3075,18 @@ public class MainScreenController extends ScreenController {
                                                 Patch extraPatch = GraphicsController.extraPatch;
 
                                                 // Prepare the amenities that will be placed on the station
-                                                TicketBooth.TicketBoothFactory ticketBoothFactory
-                                                        = new TicketBooth.TicketBoothFactory();
-
-                                                TicketBoothTransactionArea.TicketBoothTransactionAreaFactory
-                                                        ticketBoothTransactionAreaFactory
-                                                        = new TicketBoothTransactionArea
-                                                        .TicketBoothTransactionAreaFactory();
-
                                                 TicketBooth ticketBoothToAdd
-                                                        = (TicketBooth) ticketBoothFactory.create(currentPatch);
+                                                        = TicketBooth.ticketBoothFactory.create(currentPatch);
 
                                                 TicketBoothTransactionArea ticketBoothTransactionAreaToAdd
-                                                        = (TicketBoothTransactionArea)
-                                                        ticketBoothTransactionAreaFactory.create(
-                                                                extraPatch,
-                                                                ticketBoothEnableCheckBox.isSelected(),
-                                                                ticketBoothIntervalSpinner.getValue(),
-                                                                ticketBoothToAdd,
-                                                                ticketBoothModeChoiceBox.getValue()
-                                                        );
+                                                        = TicketBoothTransactionArea.ticketBoothTransactionAreaFactory
+                                                        .create(
+                                                        extraPatch,
+                                                        ticketBoothEnableCheckBox.isSelected(),
+                                                        ticketBoothIntervalSpinner.getValue(),
+                                                        ticketBoothToAdd,
+                                                        ticketBoothModeChoiceBox.getValue()
+                                                );
 
                                                 ticketBoothToAdd.setTicketBoothTransactionArea(
                                                         ticketBoothTransactionAreaToAdd
@@ -3278,9 +3251,7 @@ public class MainScreenController extends ScreenController {
                                         // Otherwise, do nothing
                                         if (currentPatch.getFloorFieldValues().isEmpty()) {
                                             // Prepare the amenity that will be placed on the station
-                                            Turnstile.TurnstileFactory turnstileFactory = new Turnstile.TurnstileFactory();
-
-                                            Turnstile turnstileToAdd = (Turnstile) turnstileFactory.create(
+                                            Turnstile turnstileToAdd = Turnstile.turnstileFactory.create(
                                                     currentPatch,
                                                     turnstileEnableCheckBox.isSelected(),
                                                     turnstileIntervalSpinner.getValue(),
@@ -3427,10 +3398,7 @@ public class MainScreenController extends ScreenController {
 
                                         if (!trainDoorCarriageListView.getSelectionModel().isEmpty()) {
                                             // Prepare the amenity that will be placed on the station
-                                            TrainDoor.TrainDoorFactory trainDoorFactory
-                                                    = new TrainDoor.TrainDoorFactory();
-
-                                            TrainDoor trainDoorToAdd = (TrainDoor) trainDoorFactory.create(
+                                            TrainDoor trainDoorToAdd = TrainDoor.trainDoorFactory.create(
                                                     currentPatch,
                                                     trainDoorEnableCheckBox.isSelected(),
                                                     trainDoorDirectionChoiceBox.getSelectionModel().getSelectedItem(),
@@ -3590,9 +3558,7 @@ public class MainScreenController extends ScreenController {
                                         // Otherwise, do nothing
                                         if (currentPatch.getFloorFieldValues().isEmpty()) {
                                             // Prepare the amenity that will be placed on the station
-                                            Wall.WallFactory wallFactory = new Wall.WallFactory();
-
-                                            Wall wallToAdd = (Wall) wallFactory.create(
+                                            Wall wallToAdd = Wall.wallFactory.create(
                                                     currentPatch
                                             );
 

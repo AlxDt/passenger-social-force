@@ -35,12 +35,20 @@ public class Floor extends BaseStationObject {
 
     private final List<Wall> walls;
 
+    // Factory for floor creation
+    private static final Floor.FloorFactory floorFactory;
+
 /*    private final List<Patch> starts;
     private final List<List<Patch>> goals;
     private final List<Patch> obstacles;
     private final List<Passenger> passengers;*/
 
-    public Floor(int rows, int columns) {
+    static {
+        // Initialize factories
+        floorFactory = new FloorFactory();
+    }
+
+    protected Floor(int rows, int columns) {
         this.rows = rows;
         this.columns = columns;
 
@@ -391,8 +399,7 @@ public class Floor extends BaseStationObject {
             int newFloorIndex,
             int newFloorsRows,
             int newFloorColumns) {
-        Floor.FloorFactory floorFactory = new FloorFactory();
-        Floor newFloor = floorFactory.create(
+        Floor newFloor = Floor.floorFactory.create(
                 newFloorsRows,
                 newFloorColumns
         );
@@ -412,11 +419,10 @@ public class Floor extends BaseStationObject {
 
     // Create a floor
     public static class FloorFactory extends BaseStationObject.StationObjectFactory {
-        @Override
-        public Floor create(Object... objects) {
+        public Floor create(int rows, int columns) {
             return new Floor(
-                    (int) objects[0],
-                    (int) objects[1]
+                    rows,
+                    columns
             );
         }
     }
