@@ -10,6 +10,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
+import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -413,7 +414,23 @@ public class Floor extends BaseStationObject {
     }
 
     // Remove the given floor from a list of floors
-    public static void removeFloor(List<Floor> floors, Floor floorToBeRemoved) {
+    public static void deleteFloor(List<Floor> floors, Floor floorToBeRemoved) {
+        // Delete all amenities in the floor to be removed
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.STATION_ENTRANCE_EXIT);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.SECURITY);
+
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.STAIRS);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.ESCALATOR);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.ELEVATOR);
+
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TICKET_BOOTH);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TURNSTILE);
+
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TRAIN_BOARDING_AREA);
+
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.WALL);
+
+        // Remove the floor specified
         floors.remove(floorToBeRemoved);
     }
 

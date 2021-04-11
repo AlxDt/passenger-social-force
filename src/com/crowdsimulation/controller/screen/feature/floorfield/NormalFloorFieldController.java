@@ -86,7 +86,7 @@ public class NormalFloorFieldController extends ScreenController {
     @FXML
     public void deleteAllAction() {
         // In the main controller, clear the floor field of the current target given the floor field state
-        Main.mainScreenController.clearFloorFieldAction();
+        Main.mainScreenController.deleteFloorFieldAction();
     }
 
     public void setElements() {

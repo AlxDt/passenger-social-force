@@ -754,7 +754,9 @@ public class MainScreenController extends ScreenController {
         boolean editingOne = Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE;
         boolean confirm;
 
-        switch (Main.simulator.getBuildSubcategory()) {
+        Simulator.BuildSubcategory buildSubcategory = Main.simulator.getBuildSubcategory();
+
+        switch (buildSubcategory) {
             case STAIRS:
                 // Show a dialog to confirm floor deletion
                 if (editingOne) {
@@ -776,11 +778,12 @@ public class MainScreenController extends ScreenController {
                     if (editingOne) {
                         // Delete this staircase
                         deleteSingleAmenityInFloor(
-                                ((StairPortal) Main.simulator.getCurrentAmenity()).getStairShaft()
+                                ((StairPortal) Main.simulator.getCurrentAmenity()).getStairShaft(),
+                                buildSubcategory
                         );
                     } else {
                         // Delete all staircases
-                        deleteAllAmenitiesInFloor();
+                        deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.STAIRS);
                     }
 
                     // Prompt the user that the staircase has been successfully edited
@@ -826,11 +829,12 @@ public class MainScreenController extends ScreenController {
                     if (editingOne) {
                         // Delete this escalator
                         deleteSingleAmenityInFloor(
-                                ((EscalatorPortal) Main.simulator.getCurrentAmenity()).getEscalatorShaft()
+                                ((EscalatorPortal) Main.simulator.getCurrentAmenity()).getEscalatorShaft(),
+                                buildSubcategory
                         );
                     } else {
                         // Delete all escalators
-                        deleteAllAmenitiesInFloor();
+                        deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.ESCALATOR);
                     }
 
                     // Prompt the user that the escalator has been successfully edited
@@ -876,11 +880,12 @@ public class MainScreenController extends ScreenController {
                     if (editingOne) {
                         // Delete this elevator
                         deleteSingleAmenityInFloor(
-                                ((ElevatorPortal) Main.simulator.getCurrentAmenity()).getElevatorShaft()
+                                ((ElevatorPortal) Main.simulator.getCurrentAmenity()).getElevatorShaft(),
+                                buildSubcategory
                         );
                     } else {
                         // Delete all elevators
-                        deleteAllAmenitiesInFloor();
+                        deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.ELEVATOR);
                     }
 
                     // Prompt the user that the elevator has been successfully edited
@@ -986,7 +991,7 @@ public class MainScreenController extends ScreenController {
                 Floor floorToSwitchTo;
 
                 // Delete the current floor
-                Floor.removeFloor(
+                Floor.deleteFloor(
                         floors,
                         floorToBeRemoved
                 );
@@ -1078,15 +1083,15 @@ public class MainScreenController extends ScreenController {
         );
     }
 
-    // Clear floor fields and redraw interface
-    public void clearFloorFieldAction() {
-        clearFloorField();
+    // Delete floor fields and redraw interface
+    public void deleteFloorFieldAction() {
+        deleteFloorField();
 
         drawInterface(false);
     }
 
-    // Clear an entire floor field
-    private void clearFloorField() {
+    // Delete a  floor field
+    private void deleteFloorField() {
         // Clear the floor field of the current target given the current floor field state
         Main.simulator.getCurrentFloorFieldTarget().deleteFloorField(
                 normalFloorFieldController.getFloorFieldState()
@@ -1599,14 +1604,14 @@ public class MainScreenController extends ScreenController {
     private void deleteAmenityInFloor(boolean singleAmenity) {
         // Distinguish whether only a single amenity will be deleted or not
         if (singleAmenity) {
-            deleteSingleAmenityInFloor(Main.simulator.getCurrentAmenity());
+            deleteSingleAmenityInFloor(Main.simulator.getCurrentAmenity(), Main.simulator.getBuildSubcategory());
         } else {
-            deleteAllAmenitiesInFloor();
+            deleteAllAmenitiesInFloor(Main.simulator.getBuildSubcategory());
         }
     }
 
     // Delete the current amenity in a floor
-    private void deleteSingleAmenityInFloor(Amenity amenityToDelete) {
+    private void deleteSingleAmenityInFloor(Amenity amenityToDelete, Simulator.BuildSubcategory buildSubcategory) {
         // If the amenity to be deleted is a ticket booth transaction area, there are some extra steps
         // to be made
         TicketBooth ticketBoothToDelete = null;
@@ -1641,8 +1646,7 @@ public class MainScreenController extends ScreenController {
             ((ElevatorPortal) elevatorShaft.getLowerPortal()).deleteAllFloorFields();
         }
 
-        // Also delete this amenity from its list in this floor
-        switch (Main.simulator.getBuildSubcategory()) {
+        switch (buildSubcategory) {
             case STATION_ENTRANCE_EXIT:
                 Main.simulator.getCurrentFloor().getStationGates().remove(
                         amenityToDelete
@@ -1770,14 +1774,14 @@ public class MainScreenController extends ScreenController {
     }
 
     // Delete all instances of an amenity in a floor
-    private void deleteAllAmenitiesInFloor() {
-        switch (Main.simulator.getBuildSubcategory()) {
+    public void deleteAllAmenitiesInFloor(Simulator.BuildSubcategory buildSubcategory) {
+        switch (buildSubcategory) {
             case STATION_ENTRANCE_EXIT:
                 List<StationGate> stationGatesCopy
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getStationGates());
 
                 for (StationGate stationGate : stationGatesCopy) {
-                    deleteSingleAmenityInFloor(stationGate);
+                    deleteSingleAmenityInFloor(stationGate, buildSubcategory);
                 }
 
                 Main.simulator.getCurrentFloor().getStationGates().clear();
@@ -1788,7 +1792,7 @@ public class MainScreenController extends ScreenController {
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getSecurities());
 
                 for (Security securities : securitiesCopy) {
-                    deleteSingleAmenityInFloor(securities);
+                    deleteSingleAmenityInFloor(securities, buildSubcategory);
                 }
 
                 Main.simulator.getCurrentFloor().getSecurities().clear();
@@ -1799,7 +1803,7 @@ public class MainScreenController extends ScreenController {
                         = new ArrayList<>(Main.simulator.getStation().getStairShafts());
 
                 for (StairShaft stairShafts : stairsCopy) {
-                    deleteSingleAmenityInFloor(stairShafts);
+                    deleteSingleAmenityInFloor(stairShafts, buildSubcategory);
                 }
 
                 Main.simulator.getStation().getStairShafts().clear();
@@ -1810,7 +1814,7 @@ public class MainScreenController extends ScreenController {
                         = new ArrayList<>(Main.simulator.getStation().getEscalatorShafts());
 
                 for (EscalatorShaft escalatorShaft : escalatorsCopy) {
-                    deleteSingleAmenityInFloor(escalatorShaft);
+                    deleteSingleAmenityInFloor(escalatorShaft, buildSubcategory);
                 }
 
                 Main.simulator.getStation().getEscalatorShafts().clear();
@@ -1821,7 +1825,7 @@ public class MainScreenController extends ScreenController {
                         = new ArrayList<>(Main.simulator.getStation().getElevatorShafts());
 
                 for (ElevatorShaft elevatorsShaft : elevatorsCopy) {
-                    deleteSingleAmenityInFloor(elevatorsShaft);
+                    deleteSingleAmenityInFloor(elevatorsShaft, buildSubcategory);
                 }
 
                 Main.simulator.getStation().getElevatorShafts().clear();
@@ -1832,7 +1836,7 @@ public class MainScreenController extends ScreenController {
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getTicketBooths());
 
                 for (TicketBooth ticketBooths : ticketBoothsCopy) {
-                    deleteSingleAmenityInFloor(ticketBooths.getTicketBoothTransactionArea());
+                    deleteSingleAmenityInFloor(ticketBooths.getTicketBoothTransactionArea(), buildSubcategory);
                 }
 
                 Main.simulator.getCurrentFloor().getTicketBooths().clear();
@@ -1843,7 +1847,7 @@ public class MainScreenController extends ScreenController {
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getTurnstiles());
 
                 for (Turnstile turnstile : turnstilesCopy) {
-                    deleteSingleAmenityInFloor(turnstile);
+                    deleteSingleAmenityInFloor(turnstile, buildSubcategory);
                 }
 
                 Main.simulator.getCurrentFloor().getTurnstiles().clear();
@@ -1854,7 +1858,7 @@ public class MainScreenController extends ScreenController {
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getTrainDoors());
 
                 for (TrainDoor trainDoor : trainDoorCopy) {
-                    deleteSingleAmenityInFloor(trainDoor);
+                    deleteSingleAmenityInFloor(trainDoor, buildSubcategory);
                 }
 
                 Main.simulator.getCurrentFloor().getTrainDoors().clear();
@@ -1865,7 +1869,7 @@ public class MainScreenController extends ScreenController {
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getWalls());
 
                 for (Wall wall : wallsCopy) {
-                    deleteSingleAmenityInFloor(wall);
+                    deleteSingleAmenityInFloor(wall, buildSubcategory);
                 }
 
                 Main.simulator.getCurrentFloor().getWalls().clear();
@@ -1908,7 +1912,7 @@ public class MainScreenController extends ScreenController {
         if (!completed) {
             // If the portal drawing sequence was not completed, discard the prematurely added
             // portals to maintain a consistent state
-            deleteSingleAmenityInFloor(portalShaft);
+            deleteSingleAmenityInFloor(portalShaft, Main.simulator.getBuildSubcategory());
         }
 
         // Discard the portal shaft
