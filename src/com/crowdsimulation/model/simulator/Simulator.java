@@ -74,7 +74,7 @@ public class Simulator {
     // Simulation variables
     private final AtomicBoolean running;
     // TODO: Replace with SimulationTime object
-    private final int timeElapsed;
+    private int timeElapsed;
     private final Semaphore playSemaphore;
 
     private final Random randomNumberGenerator;
@@ -93,17 +93,12 @@ public class Simulator {
         // The program is initially in the drawing state
         this.buildState = new SimpleObjectProperty<>(BuildState.DRAWING);
 
-/*        this.station = null;
-        this.currentFloorIndex = new SimpleIntegerProperty(-1);
-        this.currentFloor = null;*/
-
         this.currentAmenity = new SimpleObjectProperty<>(null);
         this.currentClass = new SimpleObjectProperty<>(null);
 
-        // TODO: Remove ad-hoc constants
-        this.station = new Station();
+        this.station = null;
         this.currentFloorIndex = new SimpleIntegerProperty(0);
-        this.currentFloor = station.getFloors().get(this.currentFloorIndex.get());
+        this.currentFloor = null;
 
         this.portalDrawing = new SimpleBooleanProperty(false);
         this.firstPortalDrawn = new SimpleBooleanProperty(false);
@@ -301,6 +296,40 @@ public class Simulator {
 
     public void setCurrentFloorFieldState(QueueingFloorField.FloorFieldState currentFloorFieldState) {
         this.currentFloorFieldState = currentFloorFieldState;
+    }
+
+    public void resetToDefaultConfiguration(Station station) {
+        // The program is initially in the building mode
+        this.operationMode.set(OperationMode.BUILDING);
+
+        // The program is initially in the entrances/exits tab
+        this.buildCategory.set(BuildCategory.ENTRANCES_AND_EXITS);
+
+        // The program initially does not have a build subcategory
+        this.buildSubcategory.set(BuildSubcategory.NONE);
+        this.buildSubcategoryClass.set(null);
+
+        // The program is initially in the drawing state
+        this.buildState.set(BuildState.DRAWING);
+
+        this.currentAmenity.set(null);
+        this.currentClass.set(null);
+
+        this.station = station;
+        this.currentFloorIndex.set(0);
+        this.currentFloor = station.getFloors().get(this.currentFloorIndex.get());
+
+        this.portalDrawing.set(false);
+        this.firstPortalDrawn.set(false);
+
+        this.firstPortal = null;
+        this.provisionalPortalShaft = null;
+
+        this.floorFieldDrawing.set(false);
+        this.currentFloorFieldTarget = null;
+
+        this.running.set(false);
+        this.timeElapsed = 0;
     }
 
     // Convert a build subcategory to its corresponding class

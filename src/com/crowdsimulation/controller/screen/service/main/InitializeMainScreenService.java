@@ -131,6 +131,11 @@ public class InitializeMainScreenService extends InitializeScreenService {
         );
     }
 
+    public static void initializeFileTab(
+            Button loadStationButton,
+            Button saveStationButton) {
+    }
+
     public static void initializeBuildTab(
             Button validateButton,
             Label buildModeLabel,
@@ -292,12 +297,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
         buildModeChoiceBox.getSelectionModel().select(0);
 
         buildModeChoiceBox.setOnAction(event -> {
-            Simulator.BuildState newBuildState = buildModeChoiceBox.getSelectionModel().getSelectedItem();
-
-            Main.simulator.setBuildState(newBuildState);
-
-            Main.mainScreenController.updatePromptText();
         });
+
+        buildModeChoiceBox.valueProperty().bindBidirectional(Main.simulator.buildStateProperty());
     }
 
     // Initialize the build tab UI controls

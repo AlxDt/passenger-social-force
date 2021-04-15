@@ -38,6 +38,10 @@ public abstract class ScreenController extends Controller {
         this.stage = null;
     }
 
+    public Stage getStage() {
+        return this.stage;
+    }
+
     public static FXMLLoader getLoader(Class<?> classType, String interfaceLocation) {
         return new FXMLLoader(classType.getResource(
                 interfaceLocation));

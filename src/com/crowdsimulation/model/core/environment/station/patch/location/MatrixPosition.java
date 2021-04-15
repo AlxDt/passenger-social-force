@@ -1,8 +1,10 @@
-package com.crowdsimulation.model.core.environment.station.utility;
+package com.crowdsimulation.model.core.environment.station.patch.location;
+
+import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 
 import java.util.Objects;
 
-public class MatrixPosition {
+public class MatrixPosition extends Location {
     private final int row;
     private final int column;
 

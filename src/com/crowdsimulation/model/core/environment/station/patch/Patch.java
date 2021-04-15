@@ -1,17 +1,18 @@
 package com.crowdsimulation.model.core.environment.station.patch;
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
-import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
-import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
+import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
+import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 
 import java.util.*;
 
-public class Patch extends BaseStationObject {
+public class Patch extends BaseStationObject implements Environment {
 /*    // TODO: Make entry waiting time adjustable based on UI sliders
     public static final int ENTRY_WAITING_TIME = 10;*/
 

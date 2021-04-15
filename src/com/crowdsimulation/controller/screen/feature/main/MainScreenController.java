@@ -45,9 +45,10 @@ import javafx.scene.control.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,6 +76,9 @@ public class MainScreenController extends ScreenController {
     // Save tab variables
     @FXML
     private Button loadStationButton;
+
+    @FXML
+    private Button saveStationButton;
 
     // Build tab variables
     @FXML
@@ -322,6 +326,11 @@ public class MainScreenController extends ScreenController {
                 sidebar
         );
 
+        InitializeMainScreenService.initializeFileTab(
+                loadStationButton,
+                saveStationButton
+        );
+
         InitializeMainScreenService.initializeBuildTab(
                 validateButton,
                 buildModeLabel,
@@ -400,29 +409,77 @@ public class MainScreenController extends ScreenController {
                 speedSlider
         );
 
-        GraphicsController.tileSize = backgroundCanvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
+        // Initially, load a dummy station
+        initializeStation(new Station());
     }
 
     @FXML
-    // TODO: Load a station from a file
     public void loadStationAction() {
-        // TODO: Display a dialog box for loading a station from a file
-        Station station = new Station();
+        FileChooser fileChooser = new FileChooser();
 
-        // Set the station to be worked on to that station
-        Main.simulator.setStation(station);
+        // Set the extension for this station file
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter(
+                "Station file (*.stn)", ".*stn"
+        );
+        fileChooser.getExtensionFilters().add(extensionFilter);
 
-        // Set the current floor to the lowermost floor of the station
-        Main.simulator.setCurrentFloor(station.getFloors().get(0));
+        File stationFile = fileChooser.showOpenDialog(this.getStage());
 
-        // Set the index of the current floor
-        Main.simulator.setCurrentFloorIndex(0);
+        if (stationFile != null) {
+            try {
+                Station station = loadStation(stationFile);
 
-        // Update the top bar, reflecting the name and other details of the current station
-        updateTopBar();
+                // Load the station to the simulator
+                initializeStation(station);
+            } catch (IOException | ClassNotFoundException e) {
+                AlertController.showSimpleAlert(
+                        "File opening failed",
+                        "Failed to load station",
+                        "Failed to load the station from the selected file.",
+                        Alert.AlertType.ERROR
+                );
 
-        // Draw the interface
-        drawInterface(true);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @FXML
+    // Save the station to a file
+    public void saveStationAction() {
+        FileChooser fileChooser = new FileChooser();
+
+        // Set the extension for this station file
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter(
+                "Station file (*.stn)", ".*stn"
+        );
+        fileChooser.getExtensionFilters().add(extensionFilter);
+
+        File stationFile = fileChooser.showSaveDialog(this.getStage());
+
+        if (stationFile != null) {
+            try {
+                Station station = Main.simulator.getStation();
+
+                // Set the name of the station in the interface
+                station.setName(stationFile.getName());
+
+                // Save the station to a file
+                saveStation(station, stationFile);
+
+                // Finally, update the top bar
+                updateTopBar();
+            } catch (IOException e) {
+                AlertController.showSimpleAlert(
+                        "File saving failed",
+                        "Failed to save this station to a file",
+                        "There was an error in saving the station into a file.",
+                        Alert.AlertType.ERROR
+                );
+
+                e.printStackTrace();
+            }
+        }
     }
 
     @FXML
@@ -1123,6 +1180,52 @@ public class MainScreenController extends ScreenController {
 
     public StackPane getInterfaceStackPane() {
         return interfaceStackPane;
+    }
+
+    // Switch the build mode
+    public static void switchBuildMode(Simulator.BuildState newBuildState) {
+        if (newBuildState != Main.simulator.getBuildState()) {
+            Main.simulator.setBuildState(newBuildState);
+
+            Main.mainScreenController.updatePromptText();
+        }
+    }
+
+    private void initializeStation(Station station) {
+        // Reset the simulator to its initial settings
+        Main.simulator.resetToDefaultConfiguration(station);
+
+        // Update the top bar, reflecting the name and other details of the current station
+        updateTopBar();
+
+        // Reset switch floors buttons
+        resetSwitchFloorButtons();
+
+        // Draw the interface
+        GraphicsController.tileSize = backgroundCanvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
+
+        drawInterface(true);
+    }
+
+    // Load station
+    private Station loadStation(File stationFile) throws IOException, ClassNotFoundException {
+        FileInputStream fileInputStream = new FileInputStream(stationFile.getAbsolutePath());
+        ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+
+        Station station = (Station) objectInputStream.readObject();
+
+        objectInputStream.close();
+
+        return station;
+    }
+
+    // Save station
+    private void saveStation(Station station, File stationFile) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(stationFile.getAbsolutePath());
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+
+        objectOutputStream.writeObject(station);
+        objectOutputStream.close();
     }
 
     // Add floor fields
@@ -1978,6 +2081,9 @@ public class MainScreenController extends ScreenController {
         Main.simulator.setFirstPortalDrawn(false);
         Main.simulator.setFirstPortal(null);
 
+        GraphicsController.floorNextPortal = null;
+        GraphicsController.firstPortalDrawnPosition = null;
+
         // Finally, reset the switch floor buttons
         resetSwitchFloorButtons();
     }
@@ -2450,6 +2556,11 @@ public class MainScreenController extends ScreenController {
                                                         );
                                                     }
 
+                                                    // On the added floor, mark the position of the added portal
+                                                    GraphicsController.floorNextPortal = chosenFloor;
+                                                    GraphicsController.firstPortalDrawnPosition
+                                                            = stairPortalToAdd.getPatch().getMatrixPosition();
+
                                                     // Switch to that floor
                                                     switchFloor(chosenFloor);
 
@@ -2695,6 +2806,11 @@ public class MainScreenController extends ScreenController {
                                                                 escalatorPortalToAdd
                                                         );
                                                     }
+
+                                                    // On the added floor, mark the position of the added portal
+                                                    GraphicsController.floorNextPortal = chosenFloor;
+                                                    GraphicsController.firstPortalDrawnPosition
+                                                            = escalatorPortalToAdd.getPatch().getMatrixPosition();
 
                                                     // Switch to that floor
                                                     switchFloor(chosenFloor);
@@ -2942,6 +3058,11 @@ public class MainScreenController extends ScreenController {
                                                                 elevatorPortalToAdd
                                                         );
                                                     }
+
+                                                    // On the added floor, mark the position of the added portal
+                                                    GraphicsController.floorNextPortal = chosenFloor;
+                                                    GraphicsController.firstPortalDrawnPosition
+                                                            = elevatorPortalToAdd.getPatch().getMatrixPosition();
 
                                                     // Switch to that floor
                                                     switchFloor(chosenFloor);

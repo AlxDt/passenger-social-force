@@ -1,9 +1,10 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject;
 
+import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
-public abstract class Amenity extends PatchObject {
+public abstract class Amenity extends PatchObject implements Environment {
     // Denotes the patch which contains this amenity
     private final Patch patch;
 

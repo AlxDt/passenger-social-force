@@ -27,7 +27,7 @@ public class Station extends BaseStationObject implements Environment {
 
     // Contains binding values for the number of floors this station has
     // The name of the station
-    private final String name;
+    private String name;
 
     // Each station contains a list of floors
     private final List<Floor> floors;
@@ -44,7 +44,7 @@ public class Station extends BaseStationObject implements Environment {
     // TODO: Revise temporary constructor
     public Station() {
         // TODO: Load station from file
-        this.name = "Test Station";
+        this.name = "New station";
         this.floors = new ArrayList<>();
 
         this.stairShafts = new ArrayList<>();
@@ -60,6 +60,10 @@ public class Station extends BaseStationObject implements Environment {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<Floor> getFloors() {

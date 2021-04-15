@@ -6,8 +6,7 @@ import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
+import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
 
 import java.util.*;
 

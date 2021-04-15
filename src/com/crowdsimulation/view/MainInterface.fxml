@@ -12,7 +12,6 @@
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.BorderPane?>
@@ -86,14 +85,7 @@
                               <VBox prefHeight="80.0" prefWidth="230.0" spacing="10.0">
                                  <children>
                                     <Text strokeType="OUTSIDE" strokeWidth="0.0" text="After naming, save this station into a file for future use." wrappingWidth="230.6666259765625" />
-                                    <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                       <children>
-                                          <Label text="Station name:" />
-                                          <TextField prefHeight="25.0" prefWidth="105.0" promptText="Station name" />
-                                          <Button mnemonicParsing="false" text="Set" />
-                                       </children>
-                                    </HBox>
-                                    <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="230.0" text="Save this station into a file" />
+                                    <Button fx:id="saveStationButton" mnemonicParsing="false" onAction="#saveStationAction" prefHeight="25.0" prefWidth="230.0" text="Save this station into a file" />
                                  </children>
                               </VBox>
                            </content>

@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics;
 
 import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -18,6 +19,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
+import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -27,6 +29,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 
 import java.io.IOException;
@@ -42,13 +45,18 @@ public class GraphicsController extends Controller {
     public static Patch extraPatch;
     public static boolean validTicketBoothDraw;
 
-    public static double tileSize = -1;
+    public static Floor floorNextPortal;
+    public static MatrixPosition firstPortalDrawnPosition;
+
+    public static double tileSize;
 
     static {
         GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
         GraphicsController.extraRectangle = null;
         GraphicsController.extraPatch = null;
         GraphicsController.validTicketBoothDraw = true;
+
+        GraphicsController.firstPortalDrawnPosition = null;
 
         // The designated colors of the patch amenities (or lack thereof)
         PATCH_COLORS.put(null, Color.WHITE); // Empty patch
@@ -120,35 +128,47 @@ public class GraphicsController extends Controller {
                     Color patchColor;
 
                     if (patchAmenity == null) {
-                        // There isn't an amenity on this patch, so just use the color corresponding to a blank patch
-                        patchColor = PATCH_COLORS.get(null);
+                        // Draw the marker for first portal reference, if any has been drawn
+                        if (!currentPatch.getMatrixPosition().equals(GraphicsController.firstPortalDrawnPosition)) {
+                            // There isn't an amenity on this patch, so just use the color corresponding to a blank patch
+                            patchColor = PATCH_COLORS.get(null);
 
-                        // Show the floor fields of the current target with the current floor field state
-                        Queueable target = Main.simulator.getCurrentFloorFieldTarget();
-                        QueueingFloorField.FloorFieldState floorFieldState
-                                = Main.simulator.getCurrentFloorFieldState();
+                            // Show the floor fields of the current target with the current floor field state
+                            Queueable target = Main.simulator.getCurrentFloorFieldTarget();
+                            QueueingFloorField.FloorFieldState floorFieldState
+                                    = Main.simulator.getCurrentFloorFieldState();
 
-                        Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
-                                = currentPatch.getFloorFieldValues();
-                        Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
-                                = floorFieldValues.get(target);
+                            Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
+                                    = currentPatch.getFloorFieldValues();
+                            Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
+                                    = floorFieldValues.get(target);
 
-                        // Draw something if there is a target associated with this patch
-                        if (floorFieldStateDoubleMap != null) {
-                            // If the current patch's floor field state matches the current floor field state, draw
-                            // a green patch
-                            if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
-                                double value = floorFieldStateDoubleMap.get(floorFieldState);
+                            // Draw something if there is a target associated with this patch
+                            if (floorFieldStateDoubleMap != null) {
+                                // If the current patch's floor field state matches the current floor field state, draw
+                                // a green patch
+                                if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
+                                    double value = floorFieldStateDoubleMap.get(floorFieldState);
 
-                                // Map the colors of this patch to the its field value's intensity
-                                patchColor = Color.hsb(
-                                        FLOOR_FIELD_COLOR_HUE,
-                                        Main.simulator.isFloorFieldDrawing() ? value : 0.1,
-                                        1.0
-                                );
-                            } else {
-                                // There is a floor field value here with the same target, but it is not of the
-                                // current floor field state
+                                    // Map the colors of this patch to the its field value's intensity
+                                    patchColor = Color.hsb(
+                                            FLOOR_FIELD_COLOR_HUE,
+                                            Main.simulator.isFloorFieldDrawing() ? value : 0.1,
+                                            1.0
+                                    );
+                                } else {
+                                    // There is a floor field value here with the same target, but it is not of the
+                                    // current floor field state
+                                    // Hence, just draw an unsaturated patch
+                                    patchColor = Color.hsb(
+                                            FLOOR_FIELD_COLOR_HUE,
+                                            0.1,
+                                            1.0
+                                    );
+                                }
+                            } else if (!floorFieldValues.isEmpty()) {
+                                // If there isn't a floor field with the current target, but the list of floor field
+                                // values isn't empty, there are still other floor field values on this patch
                                 // Hence, just draw an unsaturated patch
                                 patchColor = Color.hsb(
                                         FLOOR_FIELD_COLOR_HUE,
@@ -156,12 +176,13 @@ public class GraphicsController extends Controller {
                                         1.0
                                 );
                             }
-                        } else if (!floorFieldValues.isEmpty()) {
-                            // If there isn't a floor field with the current target, but the list of floor field
-                            // values isn't empty, there are still other floor field values on this patch
-                            // Hence, just draw an unsaturated patch
+                        } else {
+                            // Draw a de-saturated version of the first portal here
+                            patchColor = PATCH_COLORS.get(Main.simulator.getFirstPortal().getClass());
+                            double hue = patchColor.getHue();
+
                             patchColor = Color.hsb(
-                                    FLOOR_FIELD_COLOR_HUE,
+                                    hue,
                                     0.1,
                                     1.0
                             );
@@ -237,20 +258,59 @@ public class GraphicsController extends Controller {
         // Draw listeners for the canvas (used for the detection of the orientation when drawing ticket booths)
         backgroundCanvas.getScene().setOnKeyPressed(e -> {
             switch (e.getCode()) {
+                // Build mode-related shortcut keys
+                case DIGIT1:
+                    if (!Main.simulator.getRunning().get()
+                            && !Main.simulator.isFloorFieldDrawing()
+                            && !Main.simulator.isPortalDrawing()) {
+                        MainScreenController.switchBuildMode(Simulator.BuildState.DRAWING);
+                    }
+
+                    break;
+                case DIGIT2:
+                    if (!Main.simulator.getRunning().get()
+                            && !Main.simulator.isFloorFieldDrawing()
+                            && !Main.simulator.isPortalDrawing()) {
+                        MainScreenController.switchBuildMode(Simulator.BuildState.EDITING_ONE);
+                    }
+
+                    break;
+                case DIGIT3:
+                    if (!Main.simulator.getRunning().get()
+                            && !Main.simulator.isFloorFieldDrawing()
+                            && !Main.simulator.isPortalDrawing()) {
+                        MainScreenController.switchBuildMode(Simulator.BuildState.EDITING_ALL);
+                    }
+
+                    break;
+                // Ticket booth-related shortcut keys
+                // TODO: switch outside
                 case W:
-                    GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
+                    if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                            && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
+                        GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
+                    }
 
                     break;
                 case D:
-                    GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.RIGHT;
+                    if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                            && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
+                        GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.RIGHT;
+                    }
 
                     break;
                 case S:
-                    GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.DOWN;
+                    if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                            && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
+                        GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.DOWN;
+                    }
 
                     break;
                 case A:
-                    GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.LEFT;
+                    if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                            && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
+                        GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.LEFT;
+                    }
 
                     break;
             }
@@ -273,9 +333,33 @@ public class GraphicsController extends Controller {
                 Rectangle rectangle = rectangles[row][column];
 
                 rectangle.setFill(Color.DARKGRAY);
+
                 rectangle.setOpacity(0.0);
                 rectangle.getProperties().put("row", row);
                 rectangle.getProperties().put("column", column);
+
+                // Create cross hairs so it would be easier for the user to align amenities
+                Line horizontalLine = new Line();
+
+                horizontalLine.setStartX(0);
+                horizontalLine.setStartY(row * tileSize + tileSize * 0.5);
+
+                horizontalLine.setEndX(backgroundCanvas.getWidth());
+                horizontalLine.setEndY(row * tileSize + tileSize * 0.5);
+
+                horizontalLine.setOpacity(0.0);
+                horizontalLine.setMouseTransparent(true);
+
+                Line verticalLine = new Line();
+
+                verticalLine.setStartX(column * tileSize + tileSize * 0.5);
+                verticalLine.setStartY(0);
+
+                verticalLine.setEndX(column * tileSize + tileSize * 0.5);
+                verticalLine.setEndY(backgroundCanvas.getHeight());
+
+                verticalLine.setOpacity(0.0);
+                verticalLine.setMouseTransparent(true);
 
                 final int columnCopy = column;
                 final int rowCopy = row;
@@ -284,17 +368,17 @@ public class GraphicsController extends Controller {
                 rectangle.addEventFilter(MouseEvent.MOUSE_ENTERED, e -> {
                     // This listener should only be active when there is a subcategory present
                     if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
-                        int patchRow;
-                        int patchColumn;
-
-                        patchRow = (int) rectangle.getProperties().get("row");
-                        patchColumn = (int) rectangle.getProperties().get("column");
+                        int patchRow = (int) rectangle.getProperties().get("row");
+                        int patchColumn = (int) rectangle.getProperties().get("column");
 
                         // Get the patch where the mouse is currently on
                         Patch patch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
 
                         rectangle.setOpacity(1.0);
-                        rectangle.setStyle("-fx-cursor: hand;");
+                        rectangle.setStyle("-fx-cursor: crosshair;");
+
+                        horizontalLine.setOpacity(0.25);
+                        verticalLine.setOpacity(0.25);
 
                         if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                                 && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
@@ -412,6 +496,9 @@ public class GraphicsController extends Controller {
                         rectangle.setOpacity(0.0);
                         rectangle.setStyle("-fx-cursor: default;");
 
+                        horizontalLine.setOpacity(0.0);
+                        verticalLine.setOpacity(0.0);
+
                         if (extraRectangle != null) {
                             extraRectangle.setOpacity(0.0);
                             extraRectangle.setFill(Color.DARKGRAY);
@@ -432,7 +519,7 @@ public class GraphicsController extends Controller {
                         // Get the patch where the mouse is currently on
                         Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(patchRow, patchColumn);
 
-                        // Special case: if a ticket booth is currently being drawmn get the extra patch as well, assuming
+                        // Special case: if a ticket booth is currently being drawn get the extra patch as well, assuming
                         // a valid ticket booth drawing spot
                         if (
                                 GraphicsController.validTicketBoothDraw
@@ -465,6 +552,9 @@ public class GraphicsController extends Controller {
                         }
                     }
                 });
+
+                overlay.getChildren().add(horizontalLine);
+                overlay.getChildren().add(verticalLine);
 
                 overlay.getChildren().add(rectangle);
             }

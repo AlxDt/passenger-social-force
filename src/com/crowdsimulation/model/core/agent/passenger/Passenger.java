@@ -4,8 +4,6 @@ import com.crowdsimulation.model.core.agent.Agent;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import javafx.scene.paint.Color;
 
 import java.util.Objects;

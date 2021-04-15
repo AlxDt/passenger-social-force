@@ -2,6 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch.floorfield.head
 
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.AbstractFloorFieldObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
 import java.util.ArrayList;
@@ -183,7 +184,7 @@ public class QueueingFloorField extends HeadfulFloorField {
 
     // A combination of a passenger's direction, state, and current target, this object is used for the differentiation
     // of floor fields
-    public static class FloorFieldState {
+    public static class FloorFieldState extends AbstractFloorFieldObject {
         private final PassengerMovement.Direction direction;
         private final PassengerMovement.State state;
         private final Queueable target;

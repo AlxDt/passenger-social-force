@@ -1,11 +1,11 @@
-package com.crowdsimulation.model.core.environment.station.utility;
+package com.crowdsimulation.model.core.environment.station.patch.location;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 import java.util.Objects;
 
 // Represents a pair of 2D Cartesian coordinates
-public class Coordinates {
+public class Coordinates extends Location {
     private double x;
     private double y;
 

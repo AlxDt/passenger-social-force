@@ -2,6 +2,7 @@ package com.crowdsimulation.model.core.environment.station;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
@@ -9,13 +10,13 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
-import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
-import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
+import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
+import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Floor extends BaseStationObject {
+public class Floor extends BaseStationObject implements Environment {
     // Denotes the station which contains this floor
     private final Station station;
 
