@@ -1,7 +1,7 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
 public class StationGate extends Gate {
     // Denotes the chance of generating a passenger per second
@@ -48,6 +48,11 @@ public class StationGate extends Gate {
     @Override
     public String toString() {
         return "Station entrance/exit";
+    }
+
+    @Override
+    public Passenger spawnPassenger() {
+        return Passenger.passengerFactory.create(this);
     }
 
     // Station gate factory

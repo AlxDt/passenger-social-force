@@ -1,9 +1,8 @@
-package com.crowdsimulation.controller.screen.main;
+package com.crowdsimulation.controller.screen.feature.main;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
-import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import javafx.application.Platform;
@@ -22,7 +21,7 @@ import javafx.scene.text.Text;
 
 import java.util.*;
 
-public class MainScreenControllerOld extends ScreenController {
+public class MainScreenControllerOld {
     private final DrawState[] stateSequences = new DrawState[]{
             DrawState.SPAWN,
             DrawState.CHECKPOINT,
@@ -235,7 +234,7 @@ public class MainScreenControllerOld extends ScreenController {
                 updateNumAgents();
 
                 // Make each passenger move
-                for (Passenger passenger : Main.simulator.getCurrentFloor().getPassengers()) {
+                for (Passenger passenger : Main.simulator.getCurrentFloor().getPassengersInFloor()) {
                     PassengerMovement passengerMovement = passenger.getPassengerMovement();
 
                     // Only move if the passenger is not waiting
@@ -489,7 +488,7 @@ public class MainScreenControllerOld extends ScreenController {
                     removedPassenger.getPassengerMovement().getCurrentPatch().getPassengers().remove(removedPassenger);
 
                     // Remove the passenger from the passengers list
-                    Main.simulator.getCurrentFloor().getPassengers().remove(removedPassenger);
+                    Main.simulator.getCurrentFloor().getPassengersInFloor().remove(removedPassenger);
 
                     this.numAgents--;
                 }
@@ -521,7 +520,7 @@ public class MainScreenControllerOld extends ScreenController {
         );
 
         // Add the newly created passenger to the list of passengers
-        Main.simulator.getCurrentFloor().getPassengers().add(passenger);
+        Main.simulator.getCurrentFloor().getPassengersInFloor().add(passenger);
 
         // Increment the current number of passengers
         this.numAgents++;
@@ -845,7 +844,7 @@ public class MainScreenControllerOld extends ScreenController {
             // Draw passengers, if any
             final double passengerDiameter = tileSize * 0.5;
 
-            for (Passenger passenger : Main.simulator.getCurrentFloor().getPassengers()) {
+            for (Passenger passenger : Main.simulator.getCurrentFloor().getPassengersInFloor()) {
                 // TODO: Add switch to enable random colors
                 switch (passenger.getPassengerMovement().getAction()) {
                     case WILL_QUEUE:

@@ -132,6 +132,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     }
 
     public static void initializeBuildTab(
+            Button validateButton,
             Label buildModeLabel,
             ChoiceBox<Simulator.BuildState> buildModeChoiceBox,
             // Entrances/exits
@@ -201,7 +202,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             TabPane buildTabPane
     ) {
         // Initialize the build mode choice box
-        initializeBuildModeChoiceBox(
+        initializeBuildModeHeader(
+                validateButton,
                 buildModeChoiceBox,
                 buildModeLabel
         );
@@ -277,10 +279,13 @@ public class InitializeMainScreenService extends InitializeScreenService {
     }
 
     // Initialize the build mode choice box
-    private static void initializeBuildModeChoiceBox(
+    private static void initializeBuildModeHeader(
+            Button validateButton,
             ChoiceBox<Simulator.BuildState> buildModeChoiceBox,
             Label buildModeLabel
     ) {
+        validateButton.disableProperty().bind(FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING);
+
         buildModeLabel.setLabelFor(buildModeChoiceBox);
 
         buildModeChoiceBox.setItems(BUILD_MODE_CHOICEBOX_ITEMS);
@@ -304,12 +309,19 @@ public class InitializeMainScreenService extends InitializeScreenService {
         floorAboveButton.setDisable(true);
     }
 
-    // Initialize the test tab UI controls
     public static void initializeTestTab(
-            ToggleButton playButton
+            // Simulation controls
+            ToggleButton playButton,
+            Button resetButton,
+            Slider speedSlider
+            // Passenger controls
+            // Platform controls
     ) {
-        // Initialize simulation controls
-        initializeSimulationControls(playButton);
+        initializeSimulationControls(
+                playButton,
+                resetButton,
+                speedSlider
+        );
     }
 
     // Initialize the entrances and exits build category UI controls
@@ -750,17 +762,28 @@ public class InitializeMainScreenService extends InitializeScreenService {
     }
 
     private static void initializeSimulationControls(
-            ToggleButton playButton
+            ToggleButton playButton,
+            Button resetButton,
+            Slider speedSlider
     ) {
         playButton.setOnAction(event -> {
-            if (playButton.isSelected()) {
+            // Not yet running to running (play simulation)
+            if (!Main.simulator.getRunning().get()) {
+                // Update mode
                 Main.simulator.setOperationMode(Simulator.OperationMode.TESTING);
-
                 Main.mainScreenController.updatePromptText();
+
+                // The simulation will now be running
+                Main.simulator.getRunning().set(true);
+                Main.simulator.getPlaySemaphore().release();
             } else {
+                // Update mode
                 Main.simulator.setOperationMode(Simulator.OperationMode.BUILDING);
-
                 Main.mainScreenController.updatePromptText();
+
+                // Running to not running (pause simulation)
+                // The simulation will now be pausing
+                Main.simulator.getRunning().set(false);
             }
         });
     }

@@ -1,7 +1,11 @@
 package com.crowdsimulation.model.core.agent.passenger;
 
 import com.crowdsimulation.model.core.agent.Agent;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import javafx.scene.paint.Color;
 
 import java.util.Objects;
@@ -21,7 +25,14 @@ public class Passenger extends PatchObject implements Agent {
     // Contains the mechanisms for this passenger's movement
     private final PassengerMovement passengerMovement;
 
-    public Passenger(double x, double y, int numGoals) {
+    // Factory for passenger creation
+    public static final PassengerFactory passengerFactory;
+
+    static {
+        passengerFactory = new PassengerFactory();
+    }
+
+    private Passenger(Gate gate) {
         // TODO: Set color options from interface
         Random randomColor = new Random();
 
@@ -34,7 +45,11 @@ public class Passenger extends PatchObject implements Agent {
         Passenger.passengerCount++;
 
         // Instantiate all movement-related fields
-        this.passengerMovement = new PassengerMovement(/*this, x, y, numGoals*/);
+        this.passengerMovement = new PassengerMovement(
+                gate,
+                this,
+                gate.getPatch().getPatchCenterCoordinates()
+        );
     }
 
     public Color getColor() {
@@ -47,6 +62,12 @@ public class Passenger extends PatchObject implements Agent {
 
     public int getIdentifier() {
         return this.identifier;
+    }
+
+    public static class PassengerFactory extends StationObjectFactory {
+        public Passenger create(Gate gate) {
+            return new Passenger(gate);
+        }
     }
 
     @Override

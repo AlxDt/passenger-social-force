@@ -1,14 +1,11 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal;
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
-import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.FloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 
 import java.util.ArrayList;
 import java.util.List;

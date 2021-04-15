@@ -1,11 +1,16 @@
 package com.crowdsimulation.model.simulator;
 
+import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
@@ -19,7 +24,10 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableObjectValue;
+
+import java.util.Random;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 // The simulator has total control over the aspects of the crowd simulation
 public class Simulator {
@@ -63,6 +71,14 @@ public class Simulator {
     private Queueable currentFloorFieldTarget;
     private QueueingFloorField.FloorFieldState currentFloorFieldState;
 
+    // Simulation variables
+    private final AtomicBoolean running;
+    // TODO: Replace with SimulationTime object
+    private final int timeElapsed;
+    private final Semaphore playSemaphore;
+
+    private final Random randomNumberGenerator;
+
     public Simulator() {
         // The program is initially in the building mode
         this.operationMode = new SimpleObjectProperty<>(OperationMode.BUILDING);
@@ -97,6 +113,15 @@ public class Simulator {
 
         this.floorFieldDrawing = new SimpleBooleanProperty(false);
         this.currentFloorFieldTarget = null;
+
+        this.running = new AtomicBoolean(false);
+        this.timeElapsed = 0;
+        this.playSemaphore = new Semaphore(0);
+
+        this.randomNumberGenerator = new Random();
+
+        // Start the simulation thread, but in reality it would be activated much later
+        this.start();
     }
 
     public SimpleObjectProperty<OperationMode> operationModeProperty() {
@@ -302,6 +327,88 @@ public class Simulator {
         }
 
         return null;
+    }
+
+    public AtomicBoolean getRunning() {
+        return running;
+    }
+
+    public Semaphore getPlaySemaphore() {
+        return playSemaphore;
+    }
+
+    public int getTimeElapsed() {
+        return timeElapsed;
+    }
+
+    // Start the simulation thread
+    private void start() {
+        // Run this on a thread so it won't choke the JavaFX UI thread
+        new Thread(() -> {
+            while (true) {
+                try {
+                    // Wait until the play button has been pressed
+                    playSemaphore.acquire();
+
+                    // Keep looping until paused
+                    while (this.running.get()) {
+                        // Update the pertinent variables when ticking
+
+                        // Update all agents in each floor
+                        for (Floor floor : Main.simulator.station.getFloors()) {
+                            updateFloor(floor);
+                        }
+
+                        GraphicsController.requestDrawStationView(
+                                Main.mainScreenController.getInterfaceStackPane(),
+                                Main.simulator.getCurrentFloor(),
+                                false
+                        );
+                        Thread.sleep(100);
+                    }
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    // Make all agents tick (move once in a one-second time frame) in the given floor
+    private void updateFloor(Floor floor) {
+        // Make all station gates in this floor spawn passengers depending on their spawn frequency
+        // Generate a number from 0.0 to 1.0
+        double randomNumber = randomNumberGenerator.nextDouble();
+
+        for (StationGate stationGate : floor.getStationGates()) {
+            // Only deal with station gates which have entrances
+            if (stationGate.getStationGateMode() != StationGate.StationGateMode.EXIT) {
+                // Spawn passengers depending on the spawn frequency of the station gate
+                if (stationGate.getChancePerSecond() > randomNumber) {
+                    spawnPassenger(floor, stationGate);
+                }
+            }
+        }
+
+        // Make each passenger move
+        for (Passenger passenger : Main.simulator.getStation().getPassengersInStation()) {
+            PassengerMovement passengerMovement = passenger.getPassengerMovement();
+
+            // Look for train doors in this floor
+            TrainDoor trainDoor = floor.getTrainDoors().get(0);
+
+            passengerMovement.setGoalAmenity(trainDoor);
+            passengerMovement.move();
+        }
+    }
+
+    // Spawn a passenger from a gate in the given floor
+    private void spawnPassenger(Floor floor, Gate gate) {
+        // Generate the passenger
+        Passenger passenger = gate.spawnPassenger();
+
+        // Add the newly created passenger to the list of passengers in the floor, station, and simulation
+        floor.getStation().getPassengersInStation().add(passenger);
+        floor.getPassengersInFloor().add(passenger);
     }
 
     // Describes the modes of operation in this program

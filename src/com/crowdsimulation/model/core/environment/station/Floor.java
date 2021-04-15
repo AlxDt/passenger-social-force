@@ -1,6 +1,7 @@
 package com.crowdsimulation.model.core.environment.station;
 
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
@@ -10,12 +11,14 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
 import com.crowdsimulation.model.core.environment.station.utility.MatrixPosition;
-import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Floor extends BaseStationObject {
+    // Denotes the station which contains this floor
+    private final Station station;
+
     // Denotes the number of rows this floor has
     private final int rows;
 
@@ -36,6 +39,9 @@ public class Floor extends BaseStationObject {
 
     private final List<Wall> walls;
 
+    // Passengers in this floor
+    private final List<Passenger> passengersInFloor;
+
     // Factory for floor creation
     private static final Floor.FloorFactory floorFactory;
 
@@ -49,7 +55,9 @@ public class Floor extends BaseStationObject {
         floorFactory = new FloorFactory();
     }
 
-    protected Floor(int rows, int columns) {
+    protected Floor(Station station, int rows, int columns) {
+        this.station = station;
+
         this.rows = rows;
         this.columns = columns;
 
@@ -67,6 +75,9 @@ public class Floor extends BaseStationObject {
         this.trainDoors = new ArrayList<>();
 
         this.walls = new ArrayList<>();
+
+        // Initialize the passenger list
+        this.passengersInFloor = new ArrayList<>();
 
 /*        // Initialize empty start and end patches
         this.starts = new ArrayList<>();
@@ -89,6 +100,10 @@ public class Floor extends BaseStationObject {
                 patches[row][column] = new Patch(this, matrixPosition);
             }
         }
+    }
+
+    public Station getStation() {
+        return station;
     }
 
     public int getRows() {
@@ -121,6 +136,10 @@ public class Floor extends BaseStationObject {
 
     public List<Wall> getWalls() {
         return walls;
+    }
+
+    public List<Passenger> getPassengersInFloor() {
+        return passengersInFloor;
     }
 
     public Patch getPatch(Coordinates coordinates) {
@@ -351,6 +370,7 @@ public class Floor extends BaseStationObject {
 
     // Add a floor above or below the given current floor in a list of floors
     public static Floor addFloorAboveOrBelow(
+            Station station,
             List<Floor> floors,
             Floor currentFloor,
             boolean aboveCurrentFloor,
@@ -360,14 +380,15 @@ public class Floor extends BaseStationObject {
         int currentFloorIndex = floors.indexOf(currentFloor);
 
         if (!aboveCurrentFloor) {
-            return addFloorBelowCurrentFloor(floors, currentFloorIndex, newFloorRows, newFloorColumns);
+            return addFloorBelowCurrentFloor(station, floors, currentFloorIndex, newFloorRows, newFloorColumns);
         } else {
-            return addFloorAboveCurrentFloor(floors, currentFloorIndex, newFloorRows, newFloorColumns);
+            return addFloorAboveCurrentFloor(station, floors, currentFloorIndex, newFloorRows, newFloorColumns);
         }
     }
 
     // Add a floor below the given current floor in a list of floors
     private static Floor addFloorBelowCurrentFloor(
+            Station station,
             List<Floor> floors,
             int currentFloorIndex,
             int newFloorRows,
@@ -377,11 +398,12 @@ public class Floor extends BaseStationObject {
         int newFloorIndex = currentFloorIndex;
 
         // Add the floor given the new index
-        return addFloor(floors, newFloorIndex, newFloorRows, newFloorColumns);
+        return addFloor(station, floors, newFloorIndex, newFloorRows, newFloorColumns);
     }
 
     // Add a floor above the given current floor in a list of floors
     private static Floor addFloorAboveCurrentFloor(
+            Station station,
             List<Floor> floors,
             int currentFloorIndex,
             int newFloorRows,
@@ -391,16 +413,18 @@ public class Floor extends BaseStationObject {
         int newFloorIndex = 1 + currentFloorIndex;
 
         // Add the floor given the new index
-        return addFloor(floors, newFloorIndex, newFloorRows, newFloorsColumns);
+        return addFloor(station, floors, newFloorIndex, newFloorRows, newFloorsColumns);
     }
 
     // Add a floor to the list of floors given an index
     public static Floor addFloor(
+            Station station,
             List<Floor> floors,
             int newFloorIndex,
             int newFloorsRows,
             int newFloorColumns) {
         Floor newFloor = Floor.floorFactory.create(
+                station,
                 newFloorsRows,
                 newFloorColumns
         );
@@ -416,19 +440,7 @@ public class Floor extends BaseStationObject {
     // Remove the given floor from a list of floors
     public static void deleteFloor(List<Floor> floors, Floor floorToBeRemoved) {
         // Delete all amenities in the floor to be removed
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.STATION_ENTRANCE_EXIT);
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.SECURITY);
-
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.STAIRS);
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.ESCALATOR);
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.ELEVATOR);
-
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TICKET_BOOTH);
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TURNSTILE);
-
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TRAIN_BOARDING_AREA);
-
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.WALL);
+        Main.mainScreenController.clearAmenities();
 
         // Remove the floor specified
         floors.remove(floorToBeRemoved);
@@ -436,8 +448,9 @@ public class Floor extends BaseStationObject {
 
     // Create a floor
     public static class FloorFactory extends BaseStationObject.StationObjectFactory {
-        public Floor create(int rows, int columns) {
+        public Floor create(Station station, int rows, int columns) {
             return new Floor(
+                    station,
                     rows,
                     columns
             );

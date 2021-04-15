@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics;
 
 import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
@@ -41,6 +42,8 @@ public class GraphicsController extends Controller {
     public static Patch extraPatch;
     public static boolean validTicketBoothDraw;
 
+    public static double tileSize = -1;
+
     static {
         GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
         GraphicsController.extraRectangle = null;
@@ -69,24 +72,23 @@ public class GraphicsController extends Controller {
     public static void requestDrawStationView(
             StackPane canvases,
             Floor floor,
-            double tileSize,
             boolean background) {
         javafx.application.Platform.runLater(() -> {
             // Tell the JavaFX thread that we'd like to draw on the canvas
-            drawStationView(canvases, floor, tileSize, background);
+            drawStationView(canvases, floor, background);
         });
     }
 
     // Send a request to draw the mouse listeners on top of the canvases
-    public static void requestDrawListeners(StackPane canvases, Pane overlay, Floor floor, double tileSize) {
+    public static void requestDrawListeners(StackPane canvases, Pane overlay, Floor floor) {
         javafx.application.Platform.runLater(() -> {
             // Tell the JavaFX thread that we'd like to draw on the canvas
-            drawListeners(canvases, overlay, floor, tileSize);
+            drawListeners(canvases, overlay, floor);
         });
     }
 
     // Draw all that is needed on the station view on the canvases
-    private static void drawStationView(StackPane canvases, Floor floor, double tileSize, boolean background) {
+    private static void drawStationView(StackPane canvases, Floor floor, boolean background) {
         // Get the canvases and their graphics contexts
         final Canvas backgroundCanvas = (Canvas) canvases.getChildren().get(0);
         final Canvas foregroundCanvas = (Canvas) canvases.getChildren().get(1);
@@ -189,13 +191,18 @@ public class GraphicsController extends Controller {
                     // Draw the patch
                     backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
                 } else {
-/*                    // TODO: Draw passengers
-                    foregroundGraphicsContext.fillOval(
-                            30 * tileSize - 2 * 0.5,
-                            30 * tileSize - 2 * 0.5,
-                            2,
-                            2
-                    );*/
+                    // Draw passengers, if any
+                    final double passengerDiameter = tileSize * 0.5;
+
+                    for (Passenger passenger : Main.simulator.getCurrentFloor().getPassengersInFloor()) {
+                        // TODO: Draw passengers
+                        foregroundGraphicsContext.fillOval(
+                                passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerDiameter * 0.5,
+                                passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerDiameter * 0.5,
+                                passengerDiameter,
+                                passengerDiameter
+                        );
+                    }
                 }
             }
         }
@@ -223,7 +230,7 @@ public class GraphicsController extends Controller {
 
     // Draw the mouse listeners over the canvases
     // These listeners allows the user to graphically interact with the station amenities
-    private static void drawListeners(StackPane canvases, Pane overlay, Floor floor, double tileSize) {
+    private static void drawListeners(StackPane canvases, Pane overlay, Floor floor) {
         // Get the background canvas
         final Canvas backgroundCanvas = (Canvas) canvases.getChildren().get(0);
 
@@ -454,7 +461,7 @@ public class GraphicsController extends Controller {
                             }
 
                             // Redraw the station view
-                            drawStationView(canvases, floor, tileSize, true);
+                            drawStationView(canvases, floor, true);
                         }
                     }
                 });

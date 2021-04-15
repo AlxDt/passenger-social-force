@@ -1,28 +1,73 @@
-package com.crowdsimulation.model.core.agent.passenger;
+package com.crowdsimulation.model.core.agent.passenger.movement;
+
+import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.environment.station.Floor;
+import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.utility.Coordinates;
+
+import java.util.*;
 
 public class PassengerMovement {
-/*    private final Passenger parent;
-    private final double walkingDistance;
+    // Denotes the owner of this passenger movement object
+    private final Passenger parent;
+
+    // Denotes the positional and navigational variables of the current passenger
+    // Denotes the position of the passenger
     private final Coordinates position;
+
+    // Denotes the distance (m) the passenger walks in one second
+    private final double walkingDistance;
+
+    // Denotes the heading of the passenger in degrees where
+    // E = 0 degrees
+    // N = 90 degrees
+    // W = 180 degrees
+    // S = 270 degrees
     private double heading;
+
+    // Denotes the patch the passenger is currently in
     private Patch currentPatch;
-    private Patch goal;
-    private int goalsReached;
-    private int goalsLeft;
-    private boolean isWaiting;
+
+    // Denotes the amenity the passenger is currently in, if any
+    private Amenity currentAmenity;
+
+    // Denotes the patch of the passenger's goal
+    private Patch goalPatch;
+
+    // Denotes the amenity the passenger is aiming for
+    private Amenity goalAmenity;
+
+    // Denotes the direction of the passenger - whether the passenger is about to ride a train, or the passenger is
+    // about to depart the station (macroscopic state)
+    private Direction direction;
+
+    // Denotes the state of the passenger - the current disposition of the passenger (microscopic state)
     private State state;
+
+    // Denotes the action of the passenger - the low-level description of what the passenger is doing
     private Action action;
+
+    // Denotes whether the passenger is temporarily waiting in an amenity
+    private boolean isWaitingInAmenity;
+
+    // Denotes whether the state has just been changed
     private boolean stateChanged;
 
     // TODO: Denote whether this passenger has a SJ or SV
 
-    public PassengerMovement(Passenger parent, double x, double y, int numGoals) {
+    public PassengerMovement(Gate gate, Passenger parent, Coordinates coordinates) {
         this.parent = parent;
-        this.position = new Coordinates(x, y);
-        this.goalsReached = 0;
-        this.goalsLeft = numGoals;
-        this.isWaiting = false;
-        this.goal = null;
+
+        this.position = coordinates;
+
+        // TODO: Walking speed should depend on the passenger's age
+        // TODO: Adjust to actual, realistic values
+        // The walking speed values shall be in m/s
+        this.walkingDistance = 0.6;
 
         // All newly generated passengers will face the north by default
         // The heading values shall be in degrees, but have to be converted to radians for the math libraries to process
@@ -32,68 +77,42 @@ public class PassengerMovement {
         // South: 270 degrees
         this.heading = Math.toRadians(90.0);
 
-        // TODO: Walking speed should depend on the passenger's age
-        // The walking speed values shall be in m/s
-        this.walkingDistance = 0.6;
-
         // Add this passenger to the start patch
-        this.currentPatch = Main.simulator.getCurrentFloor().getPatch((int) y, (int) x);
-        currentPatch.getPassengers().add(parent);
+        this.currentPatch = Main.simulator.getCurrentFloor().getPatch(coordinates);
+        this.currentPatch.getPassengers().add(parent);
 
-        // Assign the initial state and action of this passenger
+        // Take note of the amenity where this passenger was spawned
+        this.currentAmenity = gate;
+
+        // Take note of the passenger's goal patch and amenity (on that goal patch)
+        // TODO: Not null!
+        this.goalPatch = null;
+        this.goalAmenity = null;
+
+        // Assign the initial direction, state,  action of this passenger
+        this.direction = Direction.BOARDING;
         this.state = State.WALKING;
         this.action = Action.WILL_QUEUE;
 
+        // No states have been changed yet
         this.stateChanged = true;
     }
 
+    public Passenger getParent() {
+        return parent;
+    }
+
     public Coordinates getPosition() {
-        return this.position;
+        return position;
     }
 
-    private void setPosition(Coordinates coordinates) {
-        double x = coordinates.getX();
-        double y = coordinates.getY();
-
-        // Take note of the passenger's new patch
-        Patch newPatch = Main.simulator.getCurrentFloor().getPatch((int) y, (int) x);
-
-        // If the current and new patches are different, it means the passenger has moved patches, and both patches
-        // should take that into account
-        if (this.currentPatch != newPatch) {
-            // Remove this passenger from the patch that was left behind
-            this.currentPatch.getPassengers().remove(this.parent);
-
-            // Add the passenger to its new patch
-            newPatch.getPassengers().add(this.parent);
-
-            // This new patch will now be the current patch
-            this.currentPatch = newPatch;
-        }
-
-        // Set the new position of this passenger
-        this.position.setX(x);
-        this.position.setY(y);
+    public void setPosition(Coordinates coordinates) {
+        this.position.setX(coordinates.getX());
+        this.position.setY(coordinates.getY());
     }
 
-    public Patch getGoal() {
-        return goal;
-    }
-
-    public Patch getCurrentPatch() {
-        return currentPatch;
-    }
-
-    public int getGoalsLeft() {
-        return goalsLeft;
-    }
-
-    public boolean isWaiting() {
-        return isWaiting;
-    }
-
-    public void setWaiting(boolean waiting) {
-        isWaiting = waiting;
+    public double getWalkingDistance() {
+        return walkingDistance;
     }
 
     public double getHeading() {
@@ -102,6 +121,46 @@ public class PassengerMovement {
 
     public void setHeading(double heading) {
         this.heading = heading;
+    }
+
+    public Patch getCurrentPatch() {
+        return currentPatch;
+    }
+
+    public void setCurrentPatch(Patch currentPatch) {
+        this.currentPatch = currentPatch;
+    }
+
+    public Amenity getCurrentAmenity() {
+        return currentAmenity;
+    }
+
+    public void setCurrentAmenity(Amenity currentAmenity) {
+        this.currentAmenity = currentAmenity;
+    }
+
+    public Patch getGoalPatch() {
+        return goalPatch;
+    }
+
+    public void setGoalPatch(Patch goalPatch) {
+        this.goalPatch = goalPatch;
+    }
+
+    public Amenity getGoalAmenity() {
+        return goalAmenity;
+    }
+
+    public void setGoalAmenity(Amenity goalAmenity) {
+        this.goalAmenity = goalAmenity;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
     }
 
     public State getState() {
@@ -120,6 +179,14 @@ public class PassengerMovement {
         this.action = action;
     }
 
+    public boolean isWaitingInAmenity() {
+        return isWaitingInAmenity;
+    }
+
+    public void setWaitingInAmenity(boolean waitingInAmenity) {
+        isWaitingInAmenity = waitingInAmenity;
+    }
+
     public boolean isStateChanged() {
         return stateChanged;
     }
@@ -128,16 +195,11 @@ public class PassengerMovement {
         this.stateChanged = stateChanged;
     }
 
-    public void reachGoal() {
-        this.goalsReached++;
-        this.goalsLeft--;
-    }
-
-    // Set the nearest goal to this passenger
+// Set the nearest goal to this passenger
     // That goal should also have the fewer passengers queueing for it
     // To determine this, for each two passengers in the queue (or fraction thereof), a penalty of one meter is added to
     // the distance to this goal
-    public void setChosenGoal() {
+    /*public void setChosenGoal() {
         double minScore = Double.MAX_VALUE;
         Patch chosenGoal = null;
 
@@ -159,30 +221,30 @@ public class PassengerMovement {
 
         // Set the goal nearest to this passenger
         this.goal = chosenGoal;
-    }
+    }*/
 
     // Get the future position of this passenger given the current goal, current heading, and the current walking
     // distance
-    public Coordinates getFuturePosition() {
-        return getFuturePosition(this.goal, this.heading, this.walkingDistance);
+    private Coordinates getFuturePosition() {
+        return getFuturePosition(this.goalAmenity, this.heading, this.walkingDistance);
     }
 
     // Get the future position of this passenger given the current goal, current heading, and a given walking distance
-    public Coordinates getFuturePosition(double walkingDistance) {
-        return getFuturePosition(this.goal, this.heading, walkingDistance);
+    private Coordinates getFuturePosition(double walkingDistance) {
+        return getFuturePosition(this.goalAmenity, this.heading, walkingDistance);
     }
 
     // Get the future position of this passenger given a goal and a heading
-    public Coordinates getFuturePosition(Patch goal, double heading, double walkingDistance) {
+    public Coordinates getFuturePosition(Amenity goal, double heading, double walkingDistance) {
         // Check if the distance between this passenger and its goal
-        double distanceToGoal = Coordinates.distance(this.position, goal.getPatchCenterCoordinates());
+        double distanceToGoal = Coordinates.distance(this.position, goal.getPatch().getPatchCenterCoordinates());
 
         // If the distance between this passenger and the goal is less than the distance this passenger covers every
         // time it walks, "snap" the position of the passenger to the center of the goal immediately, to avoid
         // overshooting its target
         // If not, compute the next coordinates normally
         if (distanceToGoal < walkingDistance) {
-            return new Coordinates(goal.getPatchCenterCoordinates().getX(), goal.getPatchCenterCoordinates().getY());
+            return new Coordinates(goal.getPatch().getPatchCenterCoordinates().getX(), goal.getPatch().getPatchCenterCoordinates().getY());
         } else {
             // Given the current position, the current heading, and the walking speed, the coordinates for the new
             // position of the passenger are
@@ -290,7 +352,7 @@ public class PassengerMovement {
 
         for (Patch patch : patchesToExplore) {
             // Take note of the obstacles
-            if (patch.isObstacle()) {
+            if (/*patch.isObstacle()*/false) {
                 // Check if this obstacle is within the field of view and within the slowdown distance
                 double distanceToObstacle = Coordinates.distance(
                         this.position,
@@ -620,6 +682,7 @@ public class PassengerMovement {
         }
     }
 
+/*
     // From a set of patches associated with a goal, get the nearest patch with a floor field value greater than a
     // certain threshold
     public Patch nearestPatchAboveThreshold(double threshold) {
@@ -644,8 +707,9 @@ public class PassengerMovement {
 
         return nearestPatch;
     }
+*/
 
-    // Get the next queueing patch given the current state and the current goal
+/*    // Get the next queueing patch given the current state and the current goal
     public Patch nextQueueingPatch() {
         State state = this.state;
 
@@ -663,7 +727,7 @@ public class PassengerMovement {
             // Aside from empty patches, only consider patches whose associated goal is this passenger's goal
             if (floorField == null || floorField.getGoal() == this.goal) {
                 double floorFieldValue = patch.getFloorFieldValues().get(state).getValue();
-
+F
                 if (floorFieldValue >= maximumFloorFieldValue) {
                     if (floorFieldValue > maximumFloorFieldValue) {
                         maximumFloorFieldValue = floorFieldValue;
@@ -713,9 +777,9 @@ public class PassengerMovement {
     }*/
 
     public enum Direction {
-        BOARDING("Boarding"),
+        BOARDING("Going to the train"),
         RIDING_TRAIN("Riding train"),
-        ALIGHTING("Alighting");
+        ALIGHTING("Going out of the station");
 
         private final String name;
 

@@ -83,6 +83,9 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Label buildModeLabel;
 
+    @FXML
+    private Button validateButton;
+
     // Entrances and exits
     // Station entrance/exit
     @FXML
@@ -253,6 +256,12 @@ public class MainScreenController extends ScreenController {
     @FXML
     private ToggleButton playButton;
 
+    @FXML
+    private Button resetButton;
+
+    @FXML
+    private Slider speedSlider;
+
     // Passenger controls
     // Platform controls
 
@@ -314,6 +323,7 @@ public class MainScreenController extends ScreenController {
         );
 
         InitializeMainScreenService.initializeBuildTab(
+                validateButton,
                 buildModeLabel,
                 buildModeChoiceBox,
                 // Entrances/exits
@@ -385,8 +395,12 @@ public class MainScreenController extends ScreenController {
         );
 
         InitializeMainScreenService.initializeTestTab(
-                playButton
+                playButton,
+                resetButton,
+                speedSlider
         );
+
+        GraphicsController.tileSize = backgroundCanvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
     }
 
     @FXML
@@ -409,6 +423,39 @@ public class MainScreenController extends ScreenController {
 
         // Draw the interface
         drawInterface(true);
+    }
+
+    @FXML
+    // Validate the station layout
+    public void validateStationLayout() {
+        boolean isStationLayoutValid = Station.validateStationLayout(Main.simulator.getStation());
+        boolean isFloorFieldsValid = Station.validateFloorFieldsInStation(Main.simulator.getStation());
+
+        if (isStationLayoutValid && isFloorFieldsValid) {
+            AlertController.showSimpleAlert(
+                    "Valid station",
+                    "Valid station",
+                    "This station contains all the necessary amenities for passenger traversal, and is ready" +
+                            " for testing.",
+                    Alert.AlertType.INFORMATION
+            );
+        } else {
+            if (!isStationLayoutValid) {
+                AlertController.showSimpleAlert(
+                        "Invalid station layout",
+                        "Invalid station layout",
+                        "The layout of this station is invalid and not ready for testing.",
+                        Alert.AlertType.ERROR
+                );
+            } else {
+                AlertController.showSimpleAlert(
+                        "Floor fields incomplete",
+                        "Floor fields incomplete",
+                        "Some amenities of this station do not have complete floor fields.",
+                        Alert.AlertType.ERROR
+                );
+            }
+        }
     }
 
     @FXML
@@ -922,6 +969,7 @@ public class MainScreenController extends ScreenController {
 
         // Add the floor below
         Floor newFloor = Floor.addFloorAboveOrBelow(
+                Main.simulator.getStation(),
                 currentStationFloors,
                 currentFloor,
                 false,
@@ -950,6 +998,7 @@ public class MainScreenController extends ScreenController {
 
         // Add the floor below
         Floor newFloor = Floor.addFloorAboveOrBelow(
+                Main.simulator.getStation(),
                 currentStationFloors,
                 currentFloor,
                 true,
@@ -1070,6 +1119,10 @@ public class MainScreenController extends ScreenController {
 
         // Commence adding the floor fields
         addFloorFields();
+    }
+
+    public StackPane getInterfaceStackPane() {
+        return interfaceStackPane;
     }
 
     // Add floor fields
@@ -1929,12 +1982,35 @@ public class MainScreenController extends ScreenController {
         resetSwitchFloorButtons();
     }
 
+    // Update the floor field state
     public void updateFloorFieldState(QueueingFloorField.FloorFieldState floorFieldState) {
         // Update the floor field state
         Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
         // Then redraw the interface so the graphics controller could visualize the changing floor field state
         drawInterface(false);
+    }
+
+    // Clear all amenities
+    public void clearAmenities() {
+        // Delete all amenities
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.STATION_ENTRANCE_EXIT);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.SECURITY);
+
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.STAIRS);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.ESCALATOR);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.ELEVATOR);
+
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TICKET_BOOTH);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TURNSTILE);
+
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TRAIN_BOARDING_AREA);
+
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.WALL);
+
+        // Then reset simulator variables
+        Main.simulator.setCurrentAmenity(null);
+        Main.simulator.setCurrentClass(null);
     }
 
     public static Simulator.BuildCategory getBuildCategory(SingleSelectionModel<Tab> currentTabSelectionModel) {
@@ -3791,38 +3867,44 @@ public class MainScreenController extends ScreenController {
 
     // Draw the interface
     private void drawInterface(boolean drawListeners) {
-        final double tileSize = backgroundCanvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
-
         // Initially draw the station environment, showing the current floor
-        drawStationViewFloorBackground(Main.simulator.getCurrentFloor(), tileSize);
+        drawStationViewFloorBackground(Main.simulator.getCurrentFloor());
 
         // TODO: Then draw the passengers in the station
 
         // Then draw the mouse listeners over the station view
         if (drawListeners) {
-            drawListeners(Main.simulator.getCurrentFloor(), tileSize);
+            drawListeners(Main.simulator.getCurrentFloor());
         }
     }
 
     // Draw the station view background given a current floor
-    private void drawStationViewFloorBackground(Floor currentFloor, double tileSize) {
+    private void drawStationViewFloorBackground(Floor currentFloor) {
         // Draw each station in the train system onto its respective tab
         GraphicsController.requestDrawStationView(
                 interfaceStackPane,
                 currentFloor,
-                tileSize,
                 true
         );
     }
 
+    // Draw the station view foreground given a current floor
+    private void drawStationViewFloorForeground(Floor currentFloor) {
+        // Draw each station in the train system onto its respective tab
+        GraphicsController.requestDrawStationView(
+                interfaceStackPane,
+                currentFloor,
+                false
+        );
+    }
+
     // Draw the mouse listeners
-    private void drawListeners(Floor currentFloor, double tileSize) {
+    private void drawListeners(Floor currentFloor) {
         // Draw each mouse listener along with their corresponding actions
         GraphicsController.requestDrawListeners(
                 interfaceStackPane,
                 overlay,
-                currentFloor,
-                tileSize
+                currentFloor
         );
     }
 }

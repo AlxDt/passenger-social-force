@@ -1,6 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator;
 
-import com.crowdsimulation.model.core.agent.passenger.PassengerMovement;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
