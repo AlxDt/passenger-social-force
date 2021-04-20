@@ -147,6 +147,10 @@ public class Floor extends BaseStationObject implements Environment {
         return getPatch((int) coordinates.getY(), (int) coordinates.getX());
     }
 
+    public Patch getPatch(MatrixPosition matrixPosition) {
+        return getPatch(matrixPosition.getRow(), matrixPosition.getColumn());
+    }
+
     public Patch getPatch(int row, int column) {
         return patches[row][column];
     }

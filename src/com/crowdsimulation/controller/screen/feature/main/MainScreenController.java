@@ -286,7 +286,11 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Text promptText;
 
+    // The controller for floor field adding
     public static NormalFloorFieldController normalFloorFieldController;
+
+    // The file chooser for saving and loading
+    private FileChooser fileChooser;
 
     public MainScreenController() {
         try {
@@ -300,8 +304,19 @@ public class MainScreenController extends ScreenController {
             MainScreenController.normalFloorFieldController.setElements();
             MainScreenController.normalFloorFieldController.setRoot(root);
 
+            // Set the position where the floor field would appear
             MainScreenController.normalFloorFieldController.setX(Screen.getPrimary().getBounds().getWidth() * 0.75);
             MainScreenController.normalFloorFieldController.setY(Screen.getPrimary().getBounds().getHeight() * 0.25);
+
+            // Initialize the station file chooser
+            this.fileChooser = new FileChooser();
+
+            // Set the extension for this station file
+            FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter(
+                    "Station file (*.stn)", "*.stn"
+            );
+
+            this.fileChooser.getExtensionFilters().add(extensionFilter);
         } catch (IOException ex) {
             MainScreenController.normalFloorFieldController = null;
 
@@ -415,13 +430,7 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     public void loadStationAction() {
-        FileChooser fileChooser = new FileChooser();
-
-        // Set the extension for this station file
-        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter(
-                "Station file (*.stn)", ".*stn"
-        );
-        fileChooser.getExtensionFilters().add(extensionFilter);
+        fileChooser.setTitle("Load a pre-built station from a file");
 
         File stationFile = fileChooser.showOpenDialog(this.getStage());
 
@@ -447,13 +456,7 @@ public class MainScreenController extends ScreenController {
     @FXML
     // Save the station to a file
     public void saveStationAction() {
-        FileChooser fileChooser = new FileChooser();
-
-        // Set the extension for this station file
-        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter(
-                "Station file (*.stn)", ".*stn"
-        );
-        fileChooser.getExtensionFilters().add(extensionFilter);
+        fileChooser.setTitle("Save this station to a file");
 
         File stationFile = fileChooser.showSaveDialog(this.getStage());
 
@@ -462,7 +465,8 @@ public class MainScreenController extends ScreenController {
                 Station station = Main.simulator.getStation();
 
                 // Set the name of the station in the interface
-                station.setName(stationFile.getName());
+                String filenameWithoutExtension = stationFile.getName().replaceFirst("[.][^.]+$", "");
+                station.setName(filenameWithoutExtension);
 
                 // Save the station to a file
                 saveStation(station, stationFile);
