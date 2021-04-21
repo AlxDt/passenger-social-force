@@ -425,7 +425,7 @@ public class MainScreenController extends ScreenController {
         );
 
         // Initially, load a dummy station
-        initializeStation(new Station());
+        initializeStation(new Station(), true);
     }
 
     @FXML
@@ -439,7 +439,7 @@ public class MainScreenController extends ScreenController {
                 Station station = loadStation(stationFile);
 
                 // Load the station to the simulator
-                initializeStation(station);
+                initializeStation(station,false);
             } catch (IOException | ClassNotFoundException e) {
                 AlertController.showSimpleAlert(
                         "File opening failed",
@@ -1195,7 +1195,7 @@ public class MainScreenController extends ScreenController {
         }
     }
 
-    private void initializeStation(Station station) {
+    private void initializeStation(Station station, boolean drawListeners) {
         // Reset the simulator to its initial settings
         Main.simulator.resetToDefaultConfiguration(station);
 
@@ -1208,7 +1208,7 @@ public class MainScreenController extends ScreenController {
         // Draw the interface
         GraphicsController.tileSize = backgroundCanvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
 
-        drawInterface(true);
+        drawInterface(drawListeners);
     }
 
     // Load station
