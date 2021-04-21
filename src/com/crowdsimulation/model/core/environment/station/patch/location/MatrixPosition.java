@@ -1,6 +1,7 @@
 package com.crowdsimulation.model.core.environment.station.patch.location;
 
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
+import com.crowdsimulation.model.core.environment.station.Station;
 
 import java.util.Objects;
 
@@ -19,6 +20,11 @@ public class MatrixPosition extends Location {
 
     public int getColumn() {
         return column;
+    }
+
+    public static boolean inBounds(MatrixPosition matrixPosition) {
+        return matrixPosition.getRow() >= 0 && matrixPosition.getRow() < Station.ROWS
+                && matrixPosition.getColumn() >= 0 && matrixPosition.getColumn() < Station.COLUMNS;
     }
 
     @Override

@@ -90,21 +90,11 @@ public class ElevatorPortal extends Portal implements Queueable {
         QueueingFloorField queueingFloorField = retrieveFloorField(this.elevatorPortalFloorFieldState);
         QueueingFloorField queueingFloorFieldOther;
 
-        ElevatorPortal otherPortal;
+        ElevatorPortal otherPortal = (ElevatorPortal) this.getPair();
 
-        if (this == this.elevatorShaft.getUpperPortal()) {
-            otherPortal = (ElevatorPortal) this.elevatorShaft.getLowerPortal();
-
-            queueingFloorFieldOther = otherPortal.retrieveFloorField(
-                    ((ElevatorPortal) this.elevatorShaft.getLowerPortal()).getElevatorPortalFloorFieldState()
-            );
-        } else {
-            otherPortal = (ElevatorPortal) this.elevatorShaft.getUpperPortal();
-
-            queueingFloorFieldOther = otherPortal.retrieveFloorField(
-                    ((ElevatorPortal) this.elevatorShaft.getUpperPortal()).getElevatorPortalFloorFieldState()
-            );
-        }
+        queueingFloorFieldOther = otherPortal.retrieveFloorField(
+                otherPortal.getElevatorPortalFloorFieldState()
+        );
 
         boolean thisFloorFieldCheck;
         boolean otherFloorFieldCheck;

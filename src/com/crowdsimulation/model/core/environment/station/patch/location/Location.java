@@ -18,6 +18,13 @@ public abstract class Location extends BaseStationObject implements Environment 
         int truncatedX = (int) Math.floor(scaledX);
         int truncatedY = (int) Math.floor(scaledY);
 
-        return new MatrixPosition(truncatedY, truncatedX);
+        MatrixPosition matrixPosition = new MatrixPosition(truncatedY, truncatedX);
+
+        // Only return the position when it is in bounds
+        if (MatrixPosition.inBounds(matrixPosition)) {
+            return matrixPosition;
+        } else {
+            return null;
+        }
     }
 }

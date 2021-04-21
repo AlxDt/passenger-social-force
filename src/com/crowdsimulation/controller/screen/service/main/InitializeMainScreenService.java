@@ -26,7 +26,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
     public static BooleanBinding ADD_FLOOR_FIELD_BINDING;
     public static BooleanBinding PORTAL_DRAW_IN_PROGRESS_BINDING;
     public static BooleanBinding FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING;
-    public static BooleanBinding AMENITY_NOT_EQUALS_SUBCATEGORY;
+    public static BooleanBinding AMENITY_NOT_EQUALS_SUBCATEGORY_BINDING;
+    public static BooleanBinding EDIT_FLOOR_BINDING;
 
     static {
         BUILD_MODE_CHOICEBOX_ITEMS = FXCollections.observableArrayList(
@@ -35,7 +36,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 Simulator.BuildState.EDITING_ALL
         );
 
-        AMENITY_NOT_EQUALS_SUBCATEGORY = Bindings.createBooleanBinding(() -> {
+        AMENITY_NOT_EQUALS_SUBCATEGORY_BINDING = Bindings.createBooleanBinding(() -> {
                     if (Bindings.isNotNull(Main.simulator.currentAmenityProperty()).get()
                             && Bindings.isNotNull(Main.simulator.buildSubcategoryClassProperty()).get()) {
                         return !Main.simulator.buildSubcategoryClassProperty().get().equals(
@@ -46,13 +47,6 @@ public class InitializeMainScreenService extends InitializeScreenService {
                     }
                 }, Main.simulator.currentAmenityProperty(), Main.simulator.buildSubcategoryClassProperty()
         );
-/*                Bindings.and(
-                        Bindings.isNotNull(Main.simulator.currentAmenityProperty()),
-                        Bindings.notEqual(
-                                Main.simulator.buildSubcategoryClassProperty(),
-                                Main.simulator.getCurrentAmenity().getClass()
-                        )
-                );*/
 
         InitializeMainScreenService.SAVE_DELETE_BINDING =
                 Bindings.or(
@@ -65,7 +59,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                                         Bindings.isNull(
                                                 Main.simulator.currentAmenityProperty()
                                         ),
-                                        AMENITY_NOT_EQUALS_SUBCATEGORY),
+                                        AMENITY_NOT_EQUALS_SUBCATEGORY_BINDING),
                                 Bindings.notEqual(
                                         Main.simulator.buildStateProperty(),
                                         Simulator.BuildState.EDITING_ALL
@@ -83,7 +77,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                                 Bindings.isNull(
                                         Main.simulator.currentAmenityProperty()
                                 ),
-                                AMENITY_NOT_EQUALS_SUBCATEGORY)
+                                AMENITY_NOT_EQUALS_SUBCATEGORY_BINDING)
                 );
 
         InitializeMainScreenService.DRAW_ONLY_BINDING =
@@ -113,11 +107,17 @@ public class InitializeMainScreenService extends InitializeScreenService {
                                 Bindings.isNull(
                                         Main.simulator.currentAmenityProperty()
                                 ),
-                                AMENITY_NOT_EQUALS_SUBCATEGORY),
+                                AMENITY_NOT_EQUALS_SUBCATEGORY_BINDING),
                         Bindings.notEqual(
                                 Main.simulator.buildStateProperty(),
                                 Simulator.BuildState.EDITING_ONE
                         )
+                );
+
+        InitializeMainScreenService.EDIT_FLOOR_BINDING =
+                Bindings.or(
+                        PORTAL_DRAW_IN_PROGRESS_BINDING,
+                        FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING
                 );
     }
 
@@ -129,11 +129,6 @@ public class InitializeMainScreenService extends InitializeScreenService {
                         InitializeMainScreenService.FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING
                 )
         );
-    }
-
-    public static void initializeFileTab(
-            Button loadStationButton,
-            Button saveStationButton) {
     }
 
     public static void initializeBuildTab(
@@ -304,11 +299,19 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
     // Initialize the build tab UI controls
     public static void initializeTopBar(
+            Button addFloorBelowButton,
             Button floorBelowButton,
-            Button floorAboveButton
+            Button deleteFloorButton,
+            Button floorAboveButton,
+            Button addFloorAboveButton
     ) {
         floorBelowButton.setDisable(true);
         floorAboveButton.setDisable(true);
+
+        addFloorBelowButton.disableProperty().bind(EDIT_FLOOR_BINDING);
+        addFloorAboveButton.disableProperty().bind(EDIT_FLOOR_BINDING);
+
+        deleteFloorButton.disableProperty().bind(EDIT_FLOOR_BINDING);
     }
 
     public static void initializeTestTab(

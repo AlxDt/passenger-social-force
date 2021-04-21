@@ -13,6 +13,9 @@ import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
+import javafx.util.StringConverter;
+import javafx.util.converter.DoubleStringConverter;
+import javafx.util.converter.NumberStringConverter;
 
 import java.util.List;
 
@@ -38,6 +41,9 @@ public class NormalFloorFieldController extends ScreenController {
 
     @FXML
     private Slider intensitySlider;
+
+    @FXML
+    private TextField intensityTextField;
 
     @FXML
     private Button validateButton;
@@ -98,11 +104,34 @@ public class NormalFloorFieldController extends ScreenController {
                 floorFieldStateChoiceBox,
                 intensityLabel,
                 intensitySlider,
+                intensityTextField,
                 validateButton,
                 deleteAllButton
         );
 
         intensitySlider.valueProperty().bindBidirectional(intensity);
+
+        StringConverter<Number> stringConverter = new NumberStringConverter();
+        intensityTextField.textProperty().bindBidirectional(intensity, stringConverter);
+
+        // Restrict the value of the text field to numbers [0.1, 1.0]
+        intensityTextField.focusedProperty().addListener(((observable, oldValue, newValue) -> {
+            if (!newValue) {
+                String intensityText = intensityTextField.getText();
+
+                try {
+                    double tentativeIntensity = Double.parseDouble(intensityText);
+
+                    if (tentativeIntensity < 0.1) {
+                        intensityTextField.setText("0.1");
+                    } else if (tentativeIntensity > 1.0) {
+                        intensityTextField.setText("1.0");
+                    }
+                } catch (NumberFormatException ex) {
+                    intensityTextField.setText("1.0");
+                }
+            }
+        }));
     }
 
     public Parent getRoot() {

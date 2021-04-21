@@ -4,7 +4,7 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 import java.util.Objects;
 
-// Represents a pair of 2D Cartesian coordinates
+// Represents a pair of 2D Cartesian coordinates in the simulation
 public class Coordinates extends Location {
     private double x;
     private double y;

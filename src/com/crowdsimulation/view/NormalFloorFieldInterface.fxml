@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -38,7 +39,8 @@
       <HBox alignment="CENTER" prefHeight="100.0" prefWidth="289.0" spacing="10.0" GridPane.columnSpan="2" GridPane.rowIndex="3">
          <children>
             <Label fx:id="intensityLabel" text="Intensity:" />
-            <Slider fx:id="intensitySlider" blockIncrement="0.05" majorTickUnit="0.3" max="1.0" min="0.1" minorTickCount="2" prefHeight="38.0" prefWidth="173.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
+            <Slider fx:id="intensitySlider" blockIncrement="0.05" majorTickUnit="0.3" max="1.0" min="0.1" minorTickCount="2" prefHeight="38.0" prefWidth="102.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
+            <TextField fx:id="intensityTextField" prefHeight="25.0" prefWidth="69.0" />
          </children>
       </HBox>
       <HBox alignment="CENTER" layoutX="10.0" layoutY="90.0" prefHeight="100.0" prefWidth="289.0" spacing="10.0" GridPane.columnSpan="2" GridPane.rowIndex="4">

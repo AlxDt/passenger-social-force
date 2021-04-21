@@ -13,6 +13,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amen
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
@@ -25,7 +26,6 @@ import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -34,9 +34,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Window;
+import javafx.scene.text.Font;
 
-import javax.tools.Tool;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +46,7 @@ public class GraphicsController extends Controller {
 
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
     private static Patch markedPatch;
+    private static boolean showTooltip;
     private static Tooltip tooltip;
 
     public static TicketBoothTransactionArea.DrawOrientation drawTicketBoothOrientation;
@@ -63,6 +63,7 @@ public class GraphicsController extends Controller {
     static {
         GraphicsController.markedPatch = null;
 
+        GraphicsController.showTooltip = false;
         GraphicsController.tooltip = new Tooltip(GraphicsController.TOOLTIP_TEMPLATE);
 
         GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
@@ -128,6 +129,8 @@ public class GraphicsController extends Controller {
         if (!background) {
             foregroundGraphicsContext.clearRect(0, 0, canvasWidth, canvasHeight);
         }
+
+        backgroundGraphicsContext.setFont(new Font(9.0));
 
         // Draw all the patches of this floor
         for (int row = 0; row < floor.getRows(); row++) {
@@ -227,6 +230,22 @@ public class GraphicsController extends Controller {
 
                     // Draw the patch
                     backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
+
+                    // If this amenity is a portal, draw the floor it connects to
+                    if (patchAmenity instanceof Portal) {
+                        Portal pair = ((Portal) patchAmenity).getPair();
+
+                        if (pair != null) {
+                            Floor pairFloorServed = pair.getFloorServed();
+                            int pairFloorNumber = Main.simulator.getStation().getFloors().indexOf(pairFloorServed) + 1;
+
+                            backgroundGraphicsContext.strokeText(
+                                    String.valueOf(pairFloorNumber),
+                                    column * tileSize + tileSize * 0.25,
+                                    row * tileSize - tileSize * 0.2
+                            );
+                        }
+                    }
                 } else {
                     // Draw passengers, if any
                     final double passengerDiameter = tileSize * 0.5;
@@ -276,6 +295,7 @@ public class GraphicsController extends Controller {
             switch (e.getCode()) {
                 // Build mode-related shortcut keys
                 case DIGIT1:
+                    // Draw mode
                     if (!Main.simulator.getRunning().get()
                             && !Main.simulator.isFloorFieldDrawing()
                             && !Main.simulator.isPortalDrawing()) {
@@ -284,6 +304,7 @@ public class GraphicsController extends Controller {
 
                     break;
                 case DIGIT2:
+                    // Edit one mode
                     if (!Main.simulator.getRunning().get()
                             && !Main.simulator.isFloorFieldDrawing()
                             && !Main.simulator.isPortalDrawing()) {
@@ -292,6 +313,7 @@ public class GraphicsController extends Controller {
 
                     break;
                 case DIGIT3:
+                    // Edit all mode
                     if (!Main.simulator.getRunning().get()
                             && !Main.simulator.isFloorFieldDrawing()
                             && !Main.simulator.isPortalDrawing()) {
@@ -301,6 +323,7 @@ public class GraphicsController extends Controller {
                     break;
                 // Ticket booth-related shortcut keys
                 case W:
+                    // Rotate up
                     if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                             && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
                         GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
@@ -308,6 +331,7 @@ public class GraphicsController extends Controller {
 
                     break;
                 case D:
+                    // Rotate right
                     if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                             && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
                         GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.RIGHT;
@@ -315,6 +339,7 @@ public class GraphicsController extends Controller {
 
                     break;
                 case S:
+                    // Rotate down
                     if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                             && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
                         GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.DOWN;
@@ -322,9 +347,55 @@ public class GraphicsController extends Controller {
 
                     break;
                 case A:
+                    // Rotate left
                     if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                             && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
                         GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.LEFT;
+                    }
+
+                    break;
+                // Edit one/all shortcut keys
+                case ENTER:
+                    // Save amenity
+                    if (Main.simulator.getBuildState() != Simulator.BuildState.DRAWING
+                            && !Main.simulator.isPortalDrawing()
+                            && !Main.simulator.isFloorFieldDrawing()
+                            && Main.simulator.getBuildCategory() != Simulator.BuildCategory.WALLS) {
+                        if (Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE
+                                && Main.simulator.getCurrentAmenity() != null
+                                || Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ALL) {
+                            if (Main.simulator.getBuildCategory() != Simulator.BuildCategory.STAIRS_AND_ELEVATORS) {
+                                // Non-portal amenities
+                                Main.mainScreenController.saveAmenityAction();
+                            } else {
+                                // Portal amenities
+                                try {
+                                    Main.mainScreenController.editPortalAction();
+                                } catch (IOException ioException) {
+                                    ioException.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+
+                    break;
+                case DELETE:
+                case BACK_SPACE:
+                    // Delete amenity
+                    if (Main.simulator.getBuildState() != Simulator.BuildState.DRAWING
+                            && !Main.simulator.isPortalDrawing()
+                            && !Main.simulator.isFloorFieldDrawing()) {
+                        if (Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE
+                                && Main.simulator.getCurrentAmenity() != null
+                                || Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ALL) {
+                            if (Main.simulator.getBuildCategory() != Simulator.BuildCategory.STAIRS_AND_ELEVATORS) {
+                                // Non-portal amenities
+                                Main.mainScreenController.deleteAmenityAction();
+                            } else {
+                                // Portal amenities
+                                Main.mainScreenController.deletePortalAction();
+                            }
+                        }
                     }
 
                     break;
@@ -336,8 +407,13 @@ public class GraphicsController extends Controller {
                 = new Group[Main.simulator.getCurrentFloor().getRows()][Main.simulator.getCurrentFloor().getColumns()];
 
         backgroundCanvas.addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
+            // If there are no subcategories, erase all markings
             // Update the visual markings
-            updateMarkings(crosshairs, event);
+            Patch currentPatch = retrievePatchFromMouseClick(event);
+
+            if (currentPatch != null) {
+                updateMarkings(backgroundCanvas, crosshairs, currentPatch);
+            }
         });
 
         // Draw listeners for the drawing mechanisms
@@ -345,13 +421,15 @@ public class GraphicsController extends Controller {
             // If there are no subcategories, erase all markings
             if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
                 // Get the patch coordinates from the mouse click coordinates
-                Patch currentPatch = retrieveCurrentPatch(event);
+                Patch currentPatch = retrievePatchFromMouseClick(event);
 
                 // Special case: if a ticket booth is currently being drawn get the extra patch as well, assuming
                 // a valid ticket booth drawing spot
                 adjustIfTicketBooth();
 
                 // Set the amenity on the patch as the current amenity of the simulation
+                assert currentPatch != null;
+
                 Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
 
                 // Actions for left click
@@ -374,35 +452,56 @@ public class GraphicsController extends Controller {
             if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
                 // Only allow dragging when drawing walls
                 if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.WALL) {
-                    // Update the visual markings
-                    updateMarkings(crosshairs, event);
-
                     // Get the patch coordinates from the mouse click coordinates
-                    Patch currentPatch = retrieveCurrentPatch(event);
+                    Patch currentPatch = retrievePatchFromMouseClick(event);
 
-                    // Special case: if a ticket booth is currently being drawn get the extra patch as well, assuming
-                    // a valid ticket booth drawing spot
-                    adjustIfTicketBooth();
+                    // Only proceed when the mouse is dragged within bounds
+                    if (currentPatch != null) {
+                        // Update the visual markings
+                        updateMarkings(backgroundCanvas, crosshairs, currentPatch);
 
-                    // Set the amenity on the patch as the current amenity of the simulation
-                    Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
+                        // Special case: if a ticket booth is currently being drawn get the extra patch as well, assuming
+                        // a valid ticket booth drawing spot
+                        adjustIfTicketBooth();
 
-                    // When dragging, only draw on patches without amenities on them
-                    if (Main.simulator.getCurrentAmenity() == null) {
-                        // Actions for left click
-                        if (event.getButton() == MouseButton.PRIMARY) {
-                            // Commence building or editing on that patch
-                            try {
-                                Main.mainScreenController.buildOrEdit(currentPatch);
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                        // Set the amenity on the patch as the current amenity of the simulation
+                        Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
+
+                        // When dragging, only draw on patches without amenities on them
+                        if (Main.simulator.getCurrentAmenity() == null) {
+                            // Actions for left click
+                            if (event.getButton() == MouseButton.PRIMARY) {
+                                // Commence building or editing on that patch
+                                try {
+                                    Main.mainScreenController.buildOrEdit(currentPatch);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                // Redraw the station view
+                                drawStationView(canvases, floor, true);
                             }
-
-                            // Redraw the station view
-                            drawStationView(canvases, floor, true);
                         }
                     }
                 }
+            }
+        });
+
+        backgroundCanvas.setOnScroll(event -> {
+            // Use the scroll wheel to set the intensity value
+            if (Main.simulator.isFloorFieldDrawing()) {
+                final double zoomFactor = 0.00075;
+                double newValue
+                        = MainScreenController.normalFloorFieldController.getIntensity()
+                        + event.getDeltaY() * zoomFactor;
+
+                if (newValue < 0.1) {
+                    newValue = 0.1;
+                } else if (newValue > 1.0) {
+                    newValue = 1.0;
+                }
+
+                MainScreenController.normalFloorFieldController.setIntensity(newValue);
             }
         });
 
@@ -445,15 +544,16 @@ public class GraphicsController extends Controller {
                 overlay.getChildren().add(crosshair);
             }
         }
-
-        Tooltip.install(backgroundCanvas, GraphicsController.tooltip);
     }
 
-    private static void updateMarkings(Group[][] crosshairs, MouseEvent event) {
+    private static void updateMarkings(Canvas backgroundCanvas, Group[][] crosshairs, Patch currentPatch) {
         // If there are no subcategories, erase all markings
         if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
-            // Get the patch coordinates from the mouse click coordinates
-            Patch currentPatch = retrieveCurrentPatch(event);
+            // Show the tooltip if drawing is active
+            if (!GraphicsController.showTooltip) {
+                GraphicsController.showTooltip = true;
+                Tooltip.install(backgroundCanvas, GraphicsController.tooltip);
+            }
 
             if (GraphicsController.markedPatch == null) {
                 // Update the tooltip content
@@ -478,11 +578,16 @@ public class GraphicsController extends Controller {
                 }
             }
         } else {
+            // Erase crosshair
             if (GraphicsController.markedPatch != null) {
                 unmarkPatch(crosshairs, GraphicsController.markedPatch);
 
                 GraphicsController.markedPatch = null;
             }
+
+            // Erase tooltip
+            GraphicsController.showTooltip = false;
+            Tooltip.uninstall(backgroundCanvas, GraphicsController.tooltip);
         }
     }
 
@@ -531,7 +636,7 @@ public class GraphicsController extends Controller {
         }
     }
 
-    private static Patch retrieveCurrentPatch(MouseEvent event) {
+    private static Patch retrievePatchFromMouseClick(MouseEvent event) {
         // Get the patch coordinates from the mouse click coordinates
         MatrixPosition matrixPosition = Location.screenCoordinatesToMatrixPosition(
                 event.getX(),
@@ -539,8 +644,13 @@ public class GraphicsController extends Controller {
                 tileSize
         );
 
-        // Retrieve the patch at that location
-        return Main.simulator.getCurrentFloor().getPatch(matrixPosition);
+        // When the position given is a null, this means the mouse has been dragged out of bounds
+        if (matrixPosition != null) {
+            // Retrieve the patch at that location
+            return Main.simulator.getCurrentFloor().getPatch(matrixPosition);
+        } else {
+            return null;
+        }
     }
 
     private static void markPatch(Group[][] crosshairs, Patch patch) {

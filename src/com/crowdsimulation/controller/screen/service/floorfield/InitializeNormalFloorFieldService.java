@@ -7,10 +7,7 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.text.Text;
 
 public class InitializeNormalFloorFieldService {
@@ -31,6 +28,7 @@ public class InitializeNormalFloorFieldService {
             ChoiceBox<QueueingFloorField.FloorFieldState> floorFieldStateChoiceBox,
             Label intensityLabel,
             Slider intensitySlider,
+            TextField intensityTextField,
             Button validateButton,
             Button deleteAllButton
     ) {
@@ -77,5 +75,20 @@ public class InitializeNormalFloorFieldService {
 
         intensityLabel.setLabelFor(intensitySlider);
         intensitySlider.disableProperty().bind(DRAWING_FLOOR_FIELD_MODE);
+        intensityTextField.disableProperty().bind(DRAWING_FLOOR_FIELD_MODE);
+
+        intensitySlider.getParent().setOnScroll(event -> {
+            // Use the scroll wheel to set the intensity value
+            final double zoomFactor = 0.00075;
+            double newValue = intensitySlider.getValue() + event.getDeltaY() * zoomFactor;
+
+            if (newValue < 0.1) {
+                newValue = 0.1;
+            } else if (newValue > 1.0) {
+                newValue = 1.0;
+            }
+
+            intensitySlider.setValue(newValue);
+        });
     }
 }

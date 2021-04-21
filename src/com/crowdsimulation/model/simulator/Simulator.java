@@ -423,6 +423,7 @@ public class Simulator {
             PassengerMovement passengerMovement = passenger.getPassengerMovement();
 
             // Look for train doors in this floor
+            // TODO: change
             TrainDoor trainDoor = floor.getTrainDoors().get(0);
 
             passengerMovement.setGoalAmenity(trainDoor);
@@ -452,7 +453,6 @@ public class Simulator {
         STAIRS_AND_ELEVATORS,
         CONCOURSE_AMENITIES,
         PLATFORM_AMENITIES,
-        FLOORS_AND_FLOOR_FIELDS,
         WALLS
     }
 

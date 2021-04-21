@@ -42,6 +42,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
@@ -73,13 +74,6 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Pane overlay;
 
-    // Save tab variables
-    @FXML
-    private Button loadStationButton;
-
-    @FXML
-    private Button saveStationButton;
-
     // Build tab variables
     @FXML
     private ChoiceBox<Simulator.BuildState> buildModeChoiceBox;
@@ -109,6 +103,9 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private Button saveStationGateButton;
+
+    @FXML
+    private ImageView deleteImageView;
 
     @FXML
     private Button deleteStationGateButton;
@@ -275,13 +272,22 @@ public class MainScreenController extends ScreenController {
     private Text stationNameText;
 
     @FXML
+    private Button addFloorBelowButton;
+
+    @FXML
     private Button floorBelowButton;
 
     @FXML
     private Text floorNumberText;
 
     @FXML
+    private Button deleteFloorButton;
+
+    @FXML
     private Button floorAboveButton;
+
+    @FXML
+    private Button addFloorAboveButton;
 
     @FXML
     private Text promptText;
@@ -333,17 +339,15 @@ public class MainScreenController extends ScreenController {
     public void initialize() {
         // Initialize all UI elements and label references
         InitializeMainScreenService.initializeTopBar(
+                addFloorBelowButton,
                 floorBelowButton,
-                floorAboveButton
+                deleteFloorButton,
+                floorAboveButton,
+                addFloorAboveButton
         );
 
         InitializeMainScreenService.initializeSidebar(
                 sidebar
-        );
-
-        InitializeMainScreenService.initializeFileTab(
-                loadStationButton,
-                saveStationButton
         );
 
         InitializeMainScreenService.initializeBuildTab(
@@ -1019,6 +1023,10 @@ public class MainScreenController extends ScreenController {
 
                 break;
         }
+
+        // Hence, the simulator won't have this amenity anymore
+        Main.simulator.setCurrentAmenity(null);
+        Main.simulator.setCurrentClass(null);
     }
 
     @FXML
@@ -1802,8 +1810,13 @@ public class MainScreenController extends ScreenController {
         if (amenityToDelete instanceof ElevatorShaft) {
             ElevatorShaft elevatorShaft = (ElevatorShaft) amenityToDelete;
 
-            ((ElevatorPortal) elevatorShaft.getUpperPortal()).deleteAllFloorFields();
-            ((ElevatorPortal) elevatorShaft.getLowerPortal()).deleteAllFloorFields();
+            if (elevatorShaft.getUpperPortal() != null) {
+                ((ElevatorPortal) elevatorShaft.getUpperPortal()).deleteAllFloorFields();
+            }
+
+            if (elevatorShaft.getLowerPortal() != null) {
+                ((ElevatorPortal) elevatorShaft.getLowerPortal()).deleteAllFloorFields();
+            }
         }
 
         switch (buildSubcategory) {
@@ -2609,8 +2622,24 @@ public class MainScreenController extends ScreenController {
                                             Main.simulator.getProvisionalPortalShaft().setUpperPortal(
                                                     stairPortalToAdd
                                             );
+
+                                            stairPortalToAdd.setPair(
+                                                    Main.simulator.getProvisionalPortalShaft().getLowerPortal()
+                                            );
+
+                                            Main.simulator.getProvisionalPortalShaft().getLowerPortal().setPair(
+                                                    stairPortalToAdd
+                                            );
                                         } else {
                                             Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                    stairPortalToAdd
+                                            );
+
+                                            stairPortalToAdd.setPair(
+                                                    Main.simulator.getProvisionalPortalShaft().getUpperPortal()
+                                            );
+
+                                            Main.simulator.getProvisionalPortalShaft().getUpperPortal().setPair(
                                                     stairPortalToAdd
                                             );
                                         }
@@ -2861,8 +2890,24 @@ public class MainScreenController extends ScreenController {
                                             Main.simulator.getProvisionalPortalShaft().setUpperPortal(
                                                     escalatorPortalToAdd
                                             );
+
+                                            escalatorPortalToAdd.setPair(
+                                                    Main.simulator.getProvisionalPortalShaft().getLowerPortal()
+                                            );
+
+                                            Main.simulator.getProvisionalPortalShaft().getLowerPortal().setPair(
+                                                    escalatorPortalToAdd
+                                            );
                                         } else {
                                             Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                    escalatorPortalToAdd
+                                            );
+
+                                            escalatorPortalToAdd.setPair(
+                                                    Main.simulator.getProvisionalPortalShaft().getUpperPortal()
+                                            );
+
+                                            Main.simulator.getProvisionalPortalShaft().getUpperPortal().setPair(
                                                     escalatorPortalToAdd
                                             );
                                         }
@@ -3113,8 +3158,24 @@ public class MainScreenController extends ScreenController {
                                             Main.simulator.getProvisionalPortalShaft().setUpperPortal(
                                                     elevatorPortalToAdd
                                             );
+
+                                            elevatorPortalToAdd.setPair(
+                                                    Main.simulator.getProvisionalPortalShaft().getLowerPortal()
+                                            );
+
+                                            Main.simulator.getProvisionalPortalShaft().getLowerPortal().setPair(
+                                                    elevatorPortalToAdd
+                                            );
                                         } else {
                                             Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                    elevatorPortalToAdd
+                                            );
+
+                                            elevatorPortalToAdd.setPair(
+                                                    Main.simulator.getProvisionalPortalShaft().getUpperPortal()
+                                            );
+
+                                            Main.simulator.getProvisionalPortalShaft().getUpperPortal().setPair(
                                                     elevatorPortalToAdd
                                             );
                                         }
@@ -3279,30 +3340,33 @@ public class MainScreenController extends ScreenController {
                                     if (GraphicsController.validTicketBoothDraw) {
                                         Patch extraPatch = GraphicsController.extraPatch;
 
-                                        // Prepare the amenities that will be placed on the station
-                                        TicketBooth ticketBoothToAdd
-                                                = TicketBooth.ticketBoothFactory.create(currentPatch);
+                                        // Also check the extra patch for floor fields
+                                        if (extraPatch != null && extraPatch.getFloorFieldValues().isEmpty()) {
+                                            // Prepare the amenities that will be placed on the station
+                                            TicketBooth ticketBoothToAdd
+                                                    = TicketBooth.ticketBoothFactory.create(currentPatch);
 
-                                        TicketBoothTransactionArea ticketBoothTransactionAreaToAdd
-                                                = TicketBoothTransactionArea.ticketBoothTransactionAreaFactory
-                                                .create(
-                                                        extraPatch,
-                                                        ticketBoothEnableCheckBox.isSelected(),
-                                                        ticketBoothIntervalSpinner.getValue(),
-                                                        ticketBoothToAdd,
-                                                        ticketBoothModeChoiceBox.getValue()
-                                                );
+                                            TicketBoothTransactionArea ticketBoothTransactionAreaToAdd
+                                                    = TicketBoothTransactionArea.ticketBoothTransactionAreaFactory
+                                                    .create(
+                                                            extraPatch,
+                                                            ticketBoothEnableCheckBox.isSelected(),
+                                                            ticketBoothIntervalSpinner.getValue(),
+                                                            ticketBoothToAdd,
+                                                            ticketBoothModeChoiceBox.getValue()
+                                                    );
 
-                                        ticketBoothToAdd.setTicketBoothTransactionArea(
-                                                ticketBoothTransactionAreaToAdd
-                                        );
+                                            ticketBoothToAdd.setTicketBoothTransactionArea(
+                                                    ticketBoothTransactionAreaToAdd
+                                            );
 
-                                        // Set the amenities on their respective patches
-                                        currentPatch.setAmenity(ticketBoothToAdd);
-                                        extraPatch.setAmenity(ticketBoothTransactionAreaToAdd);
+                                            // Set the amenities on their respective patches
+                                            currentPatch.setAmenity(ticketBoothToAdd);
+                                            extraPatch.setAmenity(ticketBoothTransactionAreaToAdd);
 
-                                        // Add this station gate to the list of all ticket booths on this floor
-                                        Main.simulator.getCurrentFloor().getTicketBooths().add(ticketBoothToAdd);
+                                            // Add this station gate to the list of all ticket booths on this floor
+                                            Main.simulator.getCurrentFloor().getTicketBooths().add(ticketBoothToAdd);
+                                        }
                                     }
                                 }
                             } else {

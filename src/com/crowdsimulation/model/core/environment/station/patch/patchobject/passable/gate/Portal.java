@@ -10,6 +10,9 @@ public abstract class Portal extends Gate {
     // Denotes the location of this portal
     private PortalLocation portalLocation;
 
+    // Denotes the pair (other end) of this portal
+    private Portal pair;
+
     protected Portal(Patch patch, boolean enabled, Floor floorServed) {
         super(patch, enabled);
 
@@ -26,6 +29,14 @@ public abstract class Portal extends Gate {
 
     public void setPortalLocation(PortalLocation portalLocation) {
         this.portalLocation = portalLocation;
+    }
+
+    public Portal getPair() {
+        return pair;
+    }
+
+    public void setPair(Portal pair) {
+        this.pair = pair;
     }
 
     // Portal factory
