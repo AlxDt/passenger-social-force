@@ -22,8 +22,8 @@ import java.util.*;
 
 public class Station extends BaseStationObject implements Environment {
     // Denotes the dimensions of this station
-    public static final int ROWS = 60;
-    public static final int COLUMNS = 106;
+    public static final int ROWS = 100;
+    public static final int COLUMNS = 220;
 
     // Contains binding values for the number of floors this station has
     // The name of the station

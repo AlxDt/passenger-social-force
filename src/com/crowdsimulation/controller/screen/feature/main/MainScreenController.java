@@ -64,6 +64,9 @@ public class MainScreenController extends ScreenController {
     @FXML
     private StackPane interfaceStackPane;
 
+    @FXML
+    private ScrollPane scrollPane;
+
     // Canvas variables
     @FXML
     private Canvas backgroundCanvas;
@@ -443,7 +446,7 @@ public class MainScreenController extends ScreenController {
                 Station station = loadStation(stationFile);
 
                 // Load the station to the simulator
-                initializeStation(station,false);
+                initializeStation(station, false);
             } catch (IOException | ClassNotFoundException e) {
                 AlertController.showSimpleAlert(
                         "File opening failed",

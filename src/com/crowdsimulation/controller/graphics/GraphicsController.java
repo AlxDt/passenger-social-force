@@ -27,6 +27,7 @@ import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -42,6 +43,7 @@ import java.util.Map;
 
 public class GraphicsController extends Controller {
     private static final HashMap<Class<?>, Color> PATCH_COLORS = new HashMap<>();
+    private static final HashMap<Class<?>, Image> PATCH_SPRITES = new HashMap<>();
     private static final int FLOOR_FIELD_COLOR_HUE = 115;
 
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
@@ -91,6 +93,10 @@ public class GraphicsController extends Controller {
         PATCH_COLORS.put(Turnstile.class, Color.ORANGE); // Turnstile
 
         PATCH_COLORS.put(Wall.class, Color.BLACK); // Wall
+
+        // The designates sprites of the amenities
+        PATCH_SPRITES.put(StationGate.class, new Image("com/crowdsimulation/view/image/amenity/station_gate.png"));
+        PATCH_SPRITES.put(Security.class, new Image("com/crowdsimulation/view/image/amenity/security.png"));
     }
 
     // Send a request to draw the station view on the canvas
@@ -144,6 +150,7 @@ public class GraphicsController extends Controller {
                     // Draw graphics corresponding to whatever is in the content of the patch
                     // If the patch has no amenity on it, just draw a blank patch
                     Amenity patchAmenity = currentPatch.getAmenity();
+                    Image patchSprite = null;
                     Color patchColor;
 
                     if (patchAmenity == null) {
@@ -209,6 +216,7 @@ public class GraphicsController extends Controller {
                     } else {
                         // There is an amenity on this patch, so draw it according to its corresponding color
                         patchColor = PATCH_COLORS.get(patchAmenity.getClass());
+                        patchSprite = PATCH_SPRITES.get(patchAmenity.getClass());
 
                         // If floor field drawing is on, only color amenities which are of the current class
                         if (Main.simulator.isFloorFieldDrawing()) {
@@ -229,7 +237,18 @@ public class GraphicsController extends Controller {
                     backgroundGraphicsContext.setFill(patchColor);
 
                     // Draw the patch
-                    backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
+                    if (patchAmenity instanceof StationGate
+                            || patchAmenity instanceof Security) {
+                        backgroundGraphicsContext.drawImage(
+                                patchSprite,
+                                column * tileSize,
+                                row * tileSize,
+                                tileSize,
+                                tileSize
+                        );
+                    } else {
+                        backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
+                    }
 
                     // If this amenity is a portal, draw the floor it connects to
                     if (patchAmenity instanceof Portal) {
@@ -502,6 +521,9 @@ public class GraphicsController extends Controller {
                 }
 
                 MainScreenController.normalFloorFieldController.setIntensity(newValue);
+
+                // Prevent the scroll wheel from also scrolling the view
+                event.consume();
             }
         });
 
