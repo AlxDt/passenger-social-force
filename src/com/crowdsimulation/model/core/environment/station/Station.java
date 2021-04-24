@@ -6,7 +6,6 @@ import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
@@ -21,13 +20,13 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import java.util.*;
 
 public class Station extends BaseStationObject implements Environment {
-    // Denotes the dimensions of this station
-    public static final int ROWS = 100;
-    public static final int COLUMNS = 220;
-
     // Contains binding values for the number of floors this station has
     // The name of the station
     private String name;
+
+    // Denotes the dimensions of this station
+    private final int rows;
+    private final int columns;
 
     // Each station contains a list of floors
     private final List<Floor> floors;
@@ -41,11 +40,12 @@ public class Station extends BaseStationObject implements Environment {
     // The list of passengers in this station
     private final List<Passenger> passengersInStation;
 
-    // TODO: Revise temporary constructor
-    public Station() {
-        // TODO: Load station from file
+    public Station(int rows, int columns) {
         this.name = "New station";
         this.floors = new ArrayList<>();
+
+        this.rows = rows;
+        this.columns = columns;
 
         this.stairShafts = new ArrayList<>();
         this.escalatorShafts = new ArrayList<>();
@@ -53,9 +53,8 @@ public class Station extends BaseStationObject implements Environment {
 
         this.passengersInStation = new ArrayList<>();
 
-        // TODO: Remove ad-hoc adding when implementation is made to load from file
         // Initially, the station has one floor
-        Floor.addFloor(this, this.floors, 0, Station.ROWS, Station.COLUMNS);
+        Floor.addFloor(this, this.floors, 0, rows, columns);
     }
 
     public String getName() {
@@ -64,6 +63,14 @@ public class Station extends BaseStationObject implements Environment {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getRows() {
+        return rows;
+    }
+
+    public int getColumns() {
+        return columns;
     }
 
     public List<Floor> getFloors() {

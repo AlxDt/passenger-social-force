@@ -39,11 +39,11 @@ import com.crowdsimulation.model.simulator.Simulator;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -54,6 +54,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainScreenController extends ScreenController {
+    public static final String[] INPUT_KEYS = {"blank_station", "rows", "columns"};
+
     // Operational variables
     @FXML
     private TabPane sidebar;
@@ -75,7 +77,10 @@ public class MainScreenController extends ScreenController {
     private Canvas foregroundCanvas;
 
     @FXML
-    private Pane overlay;
+    private Canvas markingsCanvas;
+
+    @FXML
+    private Group canvasGroup;
 
     // Build tab variables
     @FXML
@@ -301,6 +306,10 @@ public class MainScreenController extends ScreenController {
     // The file chooser for saving and loading
     private FileChooser fileChooser;
 
+    // Denotes whether the listeners for the drawing interface has already been drawn, in order to prevent its
+    // double-drawing
+    public static boolean listenersDrawn;
+
     public MainScreenController() {
         try {
             // Display the elevator setup prompt
@@ -431,8 +440,55 @@ public class MainScreenController extends ScreenController {
                 speedSlider
         );
 
-        // Initially, load a dummy station
-        initializeStation(new Station(), true);
+        InitializeMainScreenService.initializeScrollPane(
+                scrollPane,
+                interfaceStackPane
+        );
+    }
+
+    public void performChoice() {
+        // Depending on the mode chosen by the user in the window before this, either start with a blank station, or
+        // load an already existing one
+        if ((boolean) this.getWindowInput().get(MainScreenController.INPUT_KEYS[0])) {
+            Main.hasMadeChoice = true;
+
+            int rows = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[1]);
+            int columns = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[2]);
+
+            // Initialize the blank station
+            Station blankStation = new Station(rows, columns);
+            initializeStation(blankStation, !listenersDrawn);
+
+            // Listeners have already been drawn
+            if (!listenersDrawn) {
+                MainScreenController.listenersDrawn = true;
+            }
+        } else {
+            loadStationAction();
+        }
+    }
+
+    @Override
+    public void setElements() {
+        // Return to normal zoom size
+        interfaceStackPane.setScaleX(1.0);
+        interfaceStackPane.setScaleY(1.0);
+
+        // Set the canvas size, depending on the given row and column size
+        double rowsScaled = Main.simulator.getStation().getRows() * GraphicsController.tileSize;
+        double columnsScaled = Main.simulator.getStation().getColumns() * GraphicsController.tileSize;
+
+        interfaceStackPane.setPrefWidth(columnsScaled);
+        interfaceStackPane.setPrefHeight(rowsScaled);
+
+        backgroundCanvas.setWidth(columnsScaled);
+        backgroundCanvas.setHeight(rowsScaled);
+
+        foregroundCanvas.setWidth(columnsScaled);
+        foregroundCanvas.setHeight(rowsScaled);
+
+        markingsCanvas.setWidth(columnsScaled);
+        markingsCanvas.setHeight(rowsScaled);
     }
 
     @FXML
@@ -446,7 +502,15 @@ public class MainScreenController extends ScreenController {
                 Station station = loadStation(stationFile);
 
                 // Load the station to the simulator
-                initializeStation(station, false);
+                initializeStation(station, !MainScreenController.listenersDrawn);
+
+                // Regardless, the first choice has already been made
+                Main.hasMadeChoice = true;
+
+                // Listeners have already been drawn
+                if (!listenersDrawn) {
+                    MainScreenController.listenersDrawn = true;
+                }
             } catch (IOException | ClassNotFoundException e) {
                 AlertController.showSimpleAlert(
                         "File opening failed",
@@ -1045,8 +1109,8 @@ public class MainScreenController extends ScreenController {
                 currentStationFloors,
                 currentFloor,
                 false,
-                Station.ROWS,
-                Station.COLUMNS
+                currentFloor.getRows(),
+                currentFloor.getColumns()
         );
 
         // Switch to that new floor
@@ -1074,8 +1138,8 @@ public class MainScreenController extends ScreenController {
                 currentStationFloors,
                 currentFloor,
                 true,
-                Station.ROWS,
-                Station.COLUMNS
+                currentFloor.getRows(),
+                currentFloor.getColumns()
         );
 
         // Switch to that new floor
@@ -1206,7 +1270,7 @@ public class MainScreenController extends ScreenController {
         }
     }
 
-    private void initializeStation(Station station, boolean drawListeners) {
+    public void initializeStation(Station station, boolean drawListeners) {
         // Reset the simulator to its initial settings
         Main.simulator.resetToDefaultConfiguration(station);
 
@@ -4095,7 +4159,6 @@ public class MainScreenController extends ScreenController {
         // Draw each mouse listener along with their corresponding actions
         GraphicsController.requestDrawListeners(
                 interfaceStackPane,
-                overlay,
                 currentFloor
         );
     }

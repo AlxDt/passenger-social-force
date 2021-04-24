@@ -2,8 +2,11 @@ package com.crowdsimulation.controller;
 
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
+import com.crowdsimulation.controller.screen.feature.main.WelcomeController;
+import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
@@ -15,7 +18,8 @@ public class Main extends Application {
     // Keep a reference to the main controller
     public static MainScreenController mainScreenController;
 
-//    public static final int DELAY_IN_MS = 50;
+    // Denotes whether a choice was mad by the user
+    public static boolean hasMadeChoice = false;
 
     public static void main(String[] args) {
         launch(args);
@@ -31,19 +35,74 @@ public class Main extends Application {
         // time so it's better to bring the interface up after the database connection has been fulfilled (otherwise
         // there will be a few seconds of unresponsiveness from the interface until the database connection is
         // fulfilled
-        FXMLLoader loader = ScreenController.getLoader(
+        FXMLLoader mainInterfaceLoader = ScreenController.getLoader(
                 getClass(),
                 "/com/crowdsimulation/view/MainInterface.fxml");
-        Parent root = loader.load();
+        Parent mainRoot = mainInterfaceLoader.load();
 
-        MainScreenController mainController = loader.getController();
-        mainController.showWindow(
-                root,
-                "Station editor",
-                false,
-                false);
-
+        MainScreenController mainController = mainInterfaceLoader.getController();
         Main.mainScreenController = mainController;
+
+        // Make the user choose whether to start from a blank station or to load an existing station
+        FXMLLoader welcomeInterfaceLoader = ScreenController.getLoader(
+                getClass(),
+                "/com/crowdsimulation/view/WelcomeInterface.fxml");
+        Parent welcomeRoot = welcomeInterfaceLoader.load();
+
+        WelcomeController welcomeController = welcomeInterfaceLoader.getController();
+        welcomeController.setElements();
+
+        while (true) {
+            // Reset all necessary variables
+            welcomeController.setClosedWithAction(false);
+            Main.hasMadeChoice = false;
+
+            // Show the action-choosing window
+            welcomeController.showWindow(
+                    welcomeRoot,
+                    "Choose an action",
+                    true,
+                    false
+            );
+
+            // Determine whether to open a blank station with the specified rows and columns, or to load an existing
+            // station
+            if (welcomeController.isClosedWithAction()) {
+                boolean isBlankStation
+                        = (boolean) welcomeController.getWindowOutput().get(WelcomeController.OUTPUT_KEYS[0]);
+
+                mainController.getWindowInput().put(MainScreenController.INPUT_KEYS[0], isBlankStation);
+
+                if (isBlankStation) {
+                    int rows = (int) welcomeController.getWindowOutput().get(WelcomeController.OUTPUT_KEYS[1]);
+                    int columns = (int) welcomeController.getWindowOutput().get(WelcomeController.OUTPUT_KEYS[2]);
+
+                    mainController.getWindowInput().put(MainScreenController.INPUT_KEYS[1], rows);
+                    mainController.getWindowInput().put(MainScreenController.INPUT_KEYS[2], columns);
+                }
+            } else if (!welcomeController.isClosedWithAction()) {
+                // No choice was made, end the program
+                break;
+            }
+
+            // Prepare the elements needed for showing the main window
+            mainController.performChoice();
+
+            // Then set the adjust the canvas size accordingly
+            mainController.setElements();
+
+            // If, at this point, no choice has been made yet (the file dialog has been closed), end end the program
+            if (!Main.hasMadeChoice) {
+                break;
+            }
+
+            // Finally, show the window
+            mainController.showWindow(
+                    mainRoot,
+                    "Station editor",
+                    true,
+                    false);
+        }
     }
 
     // Initializes the simulator

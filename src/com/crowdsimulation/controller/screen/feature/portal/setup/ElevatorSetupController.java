@@ -72,6 +72,7 @@ public class ElevatorSetupController extends PortalSetupController {
         stage.close();
     }
 
+    @Override
     public void setElements() {
         InitializeElevatorSetupService.initializeElevatorSetup(
                 elevatorEnableCheckbox,

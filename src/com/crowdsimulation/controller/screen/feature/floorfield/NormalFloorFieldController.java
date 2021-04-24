@@ -95,6 +95,7 @@ public class NormalFloorFieldController extends ScreenController {
         Main.mainScreenController.deleteFloorFieldAction();
     }
 
+    @Override
     public void setElements() {
         InitializeNormalFloorFieldService.initializeNormalFloorField(
                 promptText,

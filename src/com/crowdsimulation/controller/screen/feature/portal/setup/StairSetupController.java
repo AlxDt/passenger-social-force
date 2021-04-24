@@ -55,6 +55,7 @@ public class StairSetupController extends PortalSetupController {
         stage.close();
     }
 
+    @Override
     public void setElements() {
         InitializeStairSetupService.initializeStairSetup(
                 promptText,

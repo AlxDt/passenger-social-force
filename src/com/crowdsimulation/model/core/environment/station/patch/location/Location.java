@@ -2,10 +2,16 @@ package com.crowdsimulation.model.core.environment.station.patch.location;
 
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
+import com.crowdsimulation.model.core.environment.station.Station;
 
 public abstract class Location extends BaseStationObject implements Environment {
     // Convert the given continuous screen coordinates to a discrete row and column
-    public static MatrixPosition screenCoordinatesToMatrixPosition(double x, double y, double tileSize) {
+    public static MatrixPosition screenCoordinatesToMatrixPosition(
+            Station station,
+            double x,
+            double y,
+            double tileSize
+    ) {
         // Get the raw position of the mouse click
         double rawX = x;
         double rawY = y;
@@ -21,7 +27,7 @@ public abstract class Location extends BaseStationObject implements Environment 
         MatrixPosition matrixPosition = new MatrixPosition(truncatedY, truncatedX);
 
         // Only return the position when it is in bounds
-        if (MatrixPosition.inBounds(matrixPosition)) {
+        if (MatrixPosition.inBounds(matrixPosition, station)) {
             return matrixPosition;
         } else {
             return null;

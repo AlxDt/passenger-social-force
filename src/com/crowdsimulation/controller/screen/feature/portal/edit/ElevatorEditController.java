@@ -73,6 +73,7 @@ public class ElevatorEditController extends PortalEditController {
         stage.close();
     }
 
+    @Override
     public void setElements() {
         InitializeElevatorEditService.initializeElevatorEdit(
                 promptText,

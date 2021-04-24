@@ -47,7 +47,7 @@ public abstract class ScreenController extends Controller {
                 interfaceLocation));
     }
 
-    public void showWindow(Parent loadedRoot, String title, boolean isDialog, boolean isAlwaysOnTop) {
+    public void showWindow(Parent loadedRoot, String title, boolean showAndWait, boolean isAlwaysOnTop) {
         Scene scene = loadedRoot.getScene();
 
         if (scene == null) {
@@ -76,7 +76,7 @@ public abstract class ScreenController extends Controller {
             stage.setY(this.y);
         }
 
-        if (isDialog) {
+        if (showAndWait) {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
         } else {
@@ -120,6 +120,8 @@ public abstract class ScreenController extends Controller {
     public void setY(Double y) {
         this.y = y;
     }
+
+    public abstract void setElements();
 
     // For what stages need to do when the window is closed
     protected abstract void closeAction();

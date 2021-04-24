@@ -56,6 +56,7 @@ public class EscalatorSetupController extends PortalSetupController {
         stage.close();
     }
 
+    @Override
     public void setElements() {
         InitializeEscalatorSetupService.initializeEscalatorSetup(
                 escalatorEnableCheckBox,

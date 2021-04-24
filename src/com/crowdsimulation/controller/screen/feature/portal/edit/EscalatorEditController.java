@@ -57,6 +57,7 @@ public class EscalatorEditController extends PortalEditController {
         stage.close();
     }
 
+    @Override
     public void setElements() {
         InitializeEscalatorEditService.initializeEscalatorEdit(
                 promptText,

@@ -23,18 +23,14 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
-import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 
 import java.io.IOException;
@@ -47,13 +43,13 @@ public class GraphicsController extends Controller {
     private static final int FLOOR_FIELD_COLOR_HUE = 115;
 
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
+
     private static Patch markedPatch;
+
     private static boolean showTooltip;
     private static Tooltip tooltip;
 
     public static TicketBoothTransactionArea.DrawOrientation drawTicketBoothOrientation;
-    public static Group extraGroup;
-    public static Rectangle extraRectangle;
     public static Patch extraPatch;
     public static boolean validTicketBoothDraw;
 
@@ -69,8 +65,6 @@ public class GraphicsController extends Controller {
         GraphicsController.tooltip = new Tooltip(GraphicsController.TOOLTIP_TEMPLATE);
 
         GraphicsController.drawTicketBoothOrientation = TicketBoothTransactionArea.DrawOrientation.UP;
-        GraphicsController.extraGroup = null;
-        GraphicsController.extraRectangle = null;
         GraphicsController.extraPatch = null;
         GraphicsController.validTicketBoothDraw = true;
 
@@ -111,10 +105,10 @@ public class GraphicsController extends Controller {
     }
 
     // Send a request to draw the mouse listeners on top of the canvases
-    public static void requestDrawListeners(StackPane canvases, Pane overlay, Floor floor) {
+    public static void requestDrawListeners(StackPane canvases, Floor floor) {
         javafx.application.Platform.runLater(() -> {
             // Tell the JavaFX thread that we'd like to draw on the canvas
-            drawListeners(canvases, overlay, floor);
+            drawListeners(canvases, floor);
         });
     }
 
@@ -123,17 +117,21 @@ public class GraphicsController extends Controller {
         // Get the canvases and their graphics contexts
         final Canvas backgroundCanvas = (Canvas) canvases.getChildren().get(0);
         final Canvas foregroundCanvas = (Canvas) canvases.getChildren().get(1);
+        final Canvas markingsCanvas = (Canvas) canvases.getChildren().get(2);
 
         final GraphicsContext backgroundGraphicsContext = backgroundCanvas.getGraphicsContext2D();
         final GraphicsContext foregroundGraphicsContext = foregroundCanvas.getGraphicsContext2D();
+        final GraphicsContext markingsGraphicsContext = markingsCanvas.getGraphicsContext2D();
 
         // Get the height and width of the canvases
         final double canvasWidth = backgroundCanvas.getWidth();
         final double canvasHeight = backgroundCanvas.getHeight();
 
-        // Clear everything in the foreground canvas, if all dynamic elements are to be drawn
+        // Clear everything in the respective canvas
         if (!background) {
             foregroundGraphicsContext.clearRect(0, 0, canvasWidth, canvasHeight);
+        } else {
+            backgroundGraphicsContext.clearRect(0, 0, canvasWidth, canvasHeight);
         }
 
         backgroundGraphicsContext.setFont(new Font(9.0));
@@ -286,6 +284,9 @@ public class GraphicsController extends Controller {
         // said amenity
         final double CIRCLE_DIAMETER = 100.0;
 
+        backgroundGraphicsContext.setStroke(Color.BLACK);
+        backgroundGraphicsContext.setLineWidth(1.0);
+
         Amenity currentAmenity = Main.simulator.getCurrentAmenity();
 
         if (currentAmenity != null
@@ -305,9 +306,10 @@ public class GraphicsController extends Controller {
 
     // Draw the mouse listeners over the canvases
     // These listeners allows the user to graphically interact with the station amenities
-    private static void drawListeners(StackPane canvases, Pane overlay, Floor floor) {
-        // Get the background canvas
+    private static void drawListeners(StackPane canvases, Floor floor) {
+        // Get the background and markings canvases
         final Canvas backgroundCanvas = (Canvas) canvases.getChildren().get(0);
+        final Canvas markingsCanvas = (Canvas) canvases.getChildren().get(2);
 
         // Draw listeners for the canvas (used for the detection of the orientation when drawing ticket booths)
         backgroundCanvas.getScene().setOnKeyPressed(e -> {
@@ -418,12 +420,23 @@ public class GraphicsController extends Controller {
                     }
 
                     break;
+                // Add floor field shortcut keys
+                case F:
+                    if (
+                            Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE
+                                    && !Main.simulator.isPortalDrawing()
+                                    && !Main.simulator.isFloorFieldDrawing()
+                                    && (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.SECURITY
+                                    || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
+                                    || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TURNSTILE
+                                    || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ELEVATOR)
+                    ) {
+                        Main.mainScreenController.addFloorFieldsAction();
+                    }
+
+                    break;
             }
         });
-
-        // Initialize the crosshair matrix to be used as markers when the user hovers over a patch
-        final Group[][] crosshairs
-                = new Group[Main.simulator.getCurrentFloor().getRows()][Main.simulator.getCurrentFloor().getColumns()];
 
         backgroundCanvas.addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
             // If there are no subcategories, erase all markings
@@ -431,7 +444,7 @@ public class GraphicsController extends Controller {
             Patch currentPatch = retrievePatchFromMouseClick(event);
 
             if (currentPatch != null) {
-                updateMarkings(backgroundCanvas, crosshairs, currentPatch);
+                updateMarkings(backgroundCanvas, markingsCanvas, currentPatch);
             }
         });
 
@@ -442,26 +455,22 @@ public class GraphicsController extends Controller {
                 // Get the patch coordinates from the mouse click coordinates
                 Patch currentPatch = retrievePatchFromMouseClick(event);
 
-                // Special case: if a ticket booth is currently being drawn get the extra patch as well, assuming
-                // a valid ticket booth drawing spot
-                adjustIfTicketBooth();
+                // Set the amenity on the patch as the current amenity of the simulation, if within bounds
+                if (currentPatch != null) {
+                    Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
 
-                // Set the amenity on the patch as the current amenity of the simulation
-                assert currentPatch != null;
+                    // Actions for left click
+                    if (event.getButton() == MouseButton.PRIMARY) {
+                        // Commence building or editing on that patch
+                        try {
+                            Main.mainScreenController.buildOrEdit(currentPatch);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
-                Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
-
-                // Actions for left click
-                if (event.getButton() == MouseButton.PRIMARY) {
-                    // Commence building or editing on that patch
-                    try {
-                        Main.mainScreenController.buildOrEdit(currentPatch);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        // Redraw the station view
+                        drawStationView(canvases, floor, true);
                     }
-
-                    // Redraw the station view
-                    drawStationView(canvases, floor, true);
                 }
             }
         });
@@ -477,11 +486,7 @@ public class GraphicsController extends Controller {
                     // Only proceed when the mouse is dragged within bounds
                     if (currentPatch != null) {
                         // Update the visual markings
-                        updateMarkings(backgroundCanvas, crosshairs, currentPatch);
-
-                        // Special case: if a ticket booth is currently being drawn get the extra patch as well, assuming
-                        // a valid ticket booth drawing spot
-                        adjustIfTicketBooth();
+                        updateMarkings(backgroundCanvas, markingsCanvas, currentPatch);
 
                         // Set the amenity on the patch as the current amenity of the simulation
                         Main.simulator.setCurrentAmenity(currentPatch.getAmenity());
@@ -526,54 +531,18 @@ public class GraphicsController extends Controller {
                 event.consume();
             }
         });
-
-        // Prepare the information displayed in each patch
-        for (int row = 0; row < Main.simulator.getCurrentFloor().getRows(); row++) {
-            for (int column = 0; column < Main.simulator.getCurrentFloor().getColumns(); column++) {
-                // Create the rectangle
-                Rectangle rectangle = new Rectangle(column * tileSize, row * tileSize, tileSize, tileSize);
-                rectangle.setFill(Color.LIGHTGRAY);
-
-                rectangle.getProperties().put("row", row);
-                rectangle.getProperties().put("column", column);
-
-                // Create the horizontal line
-                Line horizontalLine = new Line();
-
-                horizontalLine.setStartX(0);
-                horizontalLine.setStartY(row * tileSize + tileSize * 0.5);
-
-                horizontalLine.setEndX(backgroundCanvas.getWidth());
-                horizontalLine.setEndY(row * tileSize + tileSize * 0.5);
-
-                // Create the vertical line
-                Line verticalLine = new Line();
-
-                verticalLine.setStartX(column * tileSize + tileSize * 0.5);
-                verticalLine.setStartY(0);
-
-                verticalLine.setEndX(column * tileSize + tileSize * 0.5);
-                verticalLine.setEndY(backgroundCanvas.getHeight());
-
-                // Individually initialize each crosshair in the matrix
-                Group crosshair = new Group(rectangle, horizontalLine, verticalLine);
-
-                crosshair.setOpacity(0.0);
-                crosshair.setMouseTransparent(false);
-
-                crosshairs[row][column] = crosshair;
-
-                overlay.getChildren().add(crosshair);
-            }
-        }
     }
 
-    private static void updateMarkings(Canvas backgroundCanvas, Group[][] crosshairs, Patch currentPatch) {
+    private static void updateMarkings(Canvas backgroundCanvas, Canvas markingsCanvas, Patch currentPatch) {
         // If there are no subcategories, erase all markings
         if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
             // Show the tooltip if drawing is active
             if (!GraphicsController.showTooltip) {
                 GraphicsController.showTooltip = true;
+
+                GraphicsController.tooltip.setX(currentPatch.getMatrixPosition().getColumn() + tileSize * 2.0);
+                GraphicsController.tooltip.setY(currentPatch.getMatrixPosition().getRow() + tileSize * 2.0);
+
                 Tooltip.install(backgroundCanvas, GraphicsController.tooltip);
             }
 
@@ -584,11 +553,11 @@ public class GraphicsController extends Controller {
                 // Light this patch up
                 GraphicsController.markedPatch = currentPatch;
 
-                markPatch(crosshairs, currentPatch);
+                markPatch(markingsCanvas, currentPatch);
             } else {
                 if (GraphicsController.markedPatch != currentPatch) {
                     // Unmark the previously marked patch
-                    unmarkPatch(crosshairs, GraphicsController.markedPatch);
+                    unmarkPatch(markingsCanvas);
 
                     // Update the tooltip content
                     updateTooltip(currentPatch);
@@ -596,13 +565,13 @@ public class GraphicsController extends Controller {
                     // Then mark this patch
                     GraphicsController.markedPatch = currentPatch;
 
-                    markPatch(crosshairs, currentPatch);
+                    markPatch(markingsCanvas, currentPatch);
                 }
             }
         } else {
-            // Erase crosshair
+            // Erase marking
             if (GraphicsController.markedPatch != null) {
-                unmarkPatch(crosshairs, GraphicsController.markedPatch);
+                unmarkPatch(markingsCanvas);
 
                 GraphicsController.markedPatch = null;
             }
@@ -640,27 +609,10 @@ public class GraphicsController extends Controller {
         GraphicsController.tooltip.setY(currentPatch.getPatchCenterCoordinates().getY() * tileSize);
     }
 
-    private static void adjustIfTicketBooth() {
-        // Special case: if a ticket booth is currently being drawn get the extra patch as well, assuming
-        // a valid ticket booth drawing spot
-        if (
-                GraphicsController.validTicketBoothDraw
-                        && Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
-                        && extraRectangle != null
-        ) {
-            int extraPatchRow = (int) GraphicsController.extraRectangle.getProperties().get("row");
-            int extraPatchColumn = (int) GraphicsController.extraRectangle.getProperties().get("column");
-
-            GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                    extraPatchRow,
-                    extraPatchColumn
-            );
-        }
-    }
-
     private static Patch retrievePatchFromMouseClick(MouseEvent event) {
         // Get the patch coordinates from the mouse click coordinates
         MatrixPosition matrixPosition = Location.screenCoordinatesToMatrixPosition(
+                Main.simulator.getStation(),
                 event.getX(),
                 event.getY(),
                 tileSize
@@ -675,30 +627,55 @@ public class GraphicsController extends Controller {
         }
     }
 
-    private static void markPatch(Group[][] crosshairs, Patch patch) {
-        // Retrieve the crosshair at that patch location
+    private static void markPatch(Canvas markingsCanvas, Patch patch) {
+        GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
+
+        Color markingColor = Color.hsb(0, 0, 0.25, 0.5);
+        Color extraMarkingColor = Color.hsb(0, 0, 0.5, 0.5);
+        Color strokeColor = Color.hsb(0, 0, 0.25, 0.1);
+
+        // Draw the marking at that patch location
         int row = patch.getMatrixPosition().getRow();
         int column = patch.getMatrixPosition().getColumn();
 
-        Group crosshair = crosshairs[row][column];
+        graphicsContext.setFill(markingColor);
+        graphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
 
-        crosshair.setOpacity(0.5);
+        graphicsContext.setStroke(strokeColor);
+        graphicsContext.setLineWidth(tileSize);
+
+        graphicsContext.strokeLine(
+                0,
+                row * tileSize + tileSize * 0.5,
+                markingsCanvas.getWidth(),
+                row * tileSize + tileSize * 0.5
+        );
+        graphicsContext.strokeLine(
+                column * tileSize + tileSize * 0.5,
+                0,
+                column * tileSize + tileSize * 0.5,
+                markingsCanvas.getHeight()
+        );
 
         if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                 && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
+            graphicsContext.setFill(extraMarkingColor);
+
             switch (GraphicsController.drawTicketBoothOrientation) {
                 case UP:
                     if (row - 1 >= 0) {
-                        Group extraCrosshair = crosshairs[row - 1][column];
-                        extraCrosshair.setOpacity(1.0);
+                        graphicsContext.fillRect(
+                                column * tileSize,
+                                (row - 1) * tileSize,
+                                tileSize,
+                                tileSize
+                        );
 
                         GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
                                 row - 1,
                                 column
                         );
 
-                        GraphicsController.extraRectangle = (Rectangle) extraCrosshair.getChildren().get(0);
-                        GraphicsController.extraGroup = extraCrosshair;
                         GraphicsController.validTicketBoothDraw
                                 = patch.getAmenity() == null
                                 && extraPatch.getAmenity() == null
@@ -711,18 +688,23 @@ public class GraphicsController extends Controller {
                     break;
                 case RIGHT:
                     if (column + 1 < Main.simulator.getCurrentFloor().getColumns()) {
-                        Group extraCrosshair = crosshairs[row][column + 1];
-                        extraCrosshair.setOpacity(1.0);
+                        graphicsContext.fillRect(
+                                (column + 1) * tileSize,
+                                row * tileSize,
+                                tileSize,
+                                tileSize
+                        );
 
                         GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
                                 row,
                                 column + 1
                         );
 
-                        GraphicsController.extraRectangle = (Rectangle) extraCrosshair.getChildren().get(0);
-                        GraphicsController.extraGroup = extraCrosshair;
                         GraphicsController.validTicketBoothDraw
-                                = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                = patch.getAmenity() == null
+                                && extraPatch.getAmenity() == null
+                                && patch.getFloorFieldValues().isEmpty()
+                                && extraPatch.getFloorFieldValues().isEmpty();
                     } else {
                         GraphicsController.validTicketBoothDraw = false;
                     }
@@ -730,18 +712,23 @@ public class GraphicsController extends Controller {
                     break;
                 case DOWN:
                     if (row + 1 < Main.simulator.getCurrentFloor().getRows()) {
-                        Group extraCrosshair = crosshairs[row + 1][column];
-                        extraCrosshair.setOpacity(1.0);
+                        graphicsContext.fillRect(
+                                column * tileSize,
+                                (row + 1) * tileSize,
+                                tileSize,
+                                tileSize
+                        );
 
                         GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
                                 row + 1,
                                 column
                         );
 
-                        GraphicsController.extraRectangle = (Rectangle) extraCrosshair.getChildren().get(0);
-                        GraphicsController.extraGroup = extraCrosshair;
                         GraphicsController.validTicketBoothDraw
-                                = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                = patch.getAmenity() == null
+                                && extraPatch.getAmenity() == null
+                                && patch.getFloorFieldValues().isEmpty()
+                                && extraPatch.getFloorFieldValues().isEmpty();
                     } else {
                         GraphicsController.validTicketBoothDraw = false;
                     }
@@ -749,18 +736,23 @@ public class GraphicsController extends Controller {
                     break;
                 case LEFT:
                     if (column - 1 >= 0) {
-                        Group extraCrosshair = crosshairs[row][column - 1];
-                        extraCrosshair.setOpacity(1.0);
+                        graphicsContext.fillRect(
+                                (column - 1) * tileSize,
+                                row * tileSize,
+                                tileSize,
+                                tileSize
+                        );
 
                         GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
                                 row,
                                 column - 1
                         );
 
-                        GraphicsController.extraRectangle = (Rectangle) extraCrosshair.getChildren().get(0);
-                        GraphicsController.extraGroup = extraCrosshair;
                         GraphicsController.validTicketBoothDraw
-                                = patch.getAmenity() == null && extraPatch.getAmenity() == null;
+                                = patch.getAmenity() == null
+                                && extraPatch.getAmenity() == null
+                                && patch.getFloorFieldValues().isEmpty()
+                                && extraPatch.getFloorFieldValues().isEmpty();
                     } else {
                         GraphicsController.validTicketBoothDraw = false;
                     }
@@ -770,17 +762,8 @@ public class GraphicsController extends Controller {
         }
     }
 
-    private static void unmarkPatch(Group[][] crosshairs, Patch patch) {
-        // Retrieve the crosshair at that patch location
-        int row = patch.getMatrixPosition().getRow();
-        int column = patch.getMatrixPosition().getColumn();
-
-        Group crosshair = crosshairs[row][column];
-
-        crosshair.setOpacity(0.0);
-
-        if (extraGroup != null) {
-            extraGroup.setOpacity(0.0);
-        }
+    private static void unmarkPatch(Canvas markingsCanvas) {
+        GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
+        graphicsContext.clearRect(0, 0, markingsCanvas.getWidth(), markingsCanvas.getHeight());
     }
 }

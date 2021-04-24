@@ -12,9 +12,12 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
-import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.StackPane;
 
 import java.util.List;
 
@@ -791,6 +794,58 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 // Running to not running (pause simulation)
                 // The simulation will now be pausing
                 Main.simulator.getRunning().set(false);
+            }
+        });
+    }
+
+    public static void initializeScrollPane(
+            ScrollPane scrollPane,
+            StackPane stackPane
+    ) {
+        // The canvas should only be pannable by the mouse when there are no subcategories selected
+        scrollPane.pannableProperty().bind(
+                Bindings.equal(
+                        Main.simulator.buildSubcategoryProperty(),
+                        Simulator.BuildSubcategory.NONE
+                )
+        );
+
+        scrollPane.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            final KeyCombination zoomInCombination
+                    = new KeyCodeCombination(KeyCode.EQUALS, KeyCombination.CONTROL_DOWN);
+            final KeyCombination zoomOutCombination
+                    = new KeyCodeCombination(KeyCode.MINUS, KeyCombination.CONTROL_DOWN);
+            final KeyCombination normalZoomCombination
+                    = new KeyCodeCombination(KeyCode.DIGIT0, KeyCombination.CONTROL_DOWN);
+
+            if (zoomInCombination.match(event)) {
+                double newScaleX = stackPane.getScaleX() * 1.25;
+                double newScaleY = stackPane.getScaleY() * 1.25;
+
+                if (newScaleX < 1.0 || newScaleY < 1.0) {
+                    stackPane.setScaleX(newScaleX);
+                    stackPane.setScaleY(newScaleY);
+                } else {
+                    stackPane.setScaleX(1.0);
+                    stackPane.setScaleY(1.0);
+                }
+            } else if (zoomOutCombination.match(event)) {
+                double newScaleX = stackPane.getScaleX() * 0.75;
+                double newScaleY = stackPane.getScaleY() * 0.75;
+
+                stackPane.setScaleX(newScaleX);
+                stackPane.setScaleY(newScaleY);
+
+                if (newScaleX >= 0.3 && newScaleY >= 0.3) {
+                    stackPane.setScaleX(newScaleX);
+                    stackPane.setScaleY(newScaleY);
+                } else {
+                    stackPane.setScaleX(0.3);
+                    stackPane.setScaleY(0.3);
+                }
+            } else if (normalZoomCombination.match(event)) {
+                stackPane.setScaleX(1.0);
+                stackPane.setScaleY(1.0);
             }
         });
     }

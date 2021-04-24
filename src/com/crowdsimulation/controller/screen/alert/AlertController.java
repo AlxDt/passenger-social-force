@@ -32,6 +32,11 @@ public class AlertController extends ScreenController {
     }
 
     @Override
+    public void setElements() {
+
+    }
+
+    @Override
     protected void closeAction() {
 
     }
