@@ -80,9 +80,9 @@
                      <children>
                         <StackPane fx:id="interfaceStackPane" prefHeight="1000.0" prefWidth="2200.0">
                            <children>
-                              <Canvas fx:id="backgroundCanvas" height="1000.0" width="2200.0" />
-                              <Canvas fx:id="foregroundCanvas" height="1000.0" mouseTransparent="true" width="2200.0" />
-                              <Canvas fx:id="markingsCanvas" height="1000.0" mouseTransparent="true" width="2200.0" />
+                              <Canvas fx:id="backgroundCanvas" height="2000.0" width="4400.0" />
+                              <Canvas fx:id="foregroundCanvas" height="2000.0" mouseTransparent="true" width="4400.0" />
+                              <Canvas fx:id="markingsCanvas" height="2000.0" mouseTransparent="true" width="4400.0" />
                            </children>
                         </StackPane>
                      </children>
@@ -148,8 +148,12 @@
                                                                   <Spinner fx:id="stationGateSpawnSpinner" prefHeight="25.0" prefWidth="76.0" />
                                                                </children>
                                                             </HBox>
-                                                            <Button fx:id="saveStationGateButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Save" />
-                                                            <Button fx:id="deleteStationGateButton" cancelButton="true" layoutX="10.0" layoutY="142.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                            <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
+                                                               <children>
+                                                                  <Button fx:id="saveStationGateButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Save" />
+                                                                  <Button fx:id="deleteStationGateButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                               </children>
+                                                            </HBox>
                                                          </children>
                                                       </VBox>
                                                    </children>
@@ -178,8 +182,12 @@
                                                                   <Spinner fx:id="securityIntervalSpinner" prefHeight="25.0" prefWidth="132.0" />
                                                                </children>
                                                             </HBox>
-                                                            <Button fx:id="saveSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Save" />
-                                                            <Button fx:id="deleteSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                            <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
+                                                               <children>
+                                                                  <Button fx:id="saveSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Save" />
+                                                                  <Button fx:id="deleteSecurityButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                               </children>
+                                                            </HBox>
                                                             <Button fx:id="addFloorFieldsSecurityButton" cancelButton="true" layoutX="10.0" layoutY="99.0" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="200.0" text="Add floor field" />
                                                          </children>
                                                       </VBox>
@@ -202,13 +210,13 @@
                                                       <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
                                                          <children>
                                                             <Button fx:id="addStairButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="100.0" text="Add" />
-                                                            <Button fx:id="editStairButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="78.0" text="Edit" />
+                                                            <Button fx:id="editStairButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="100.0" text="Edit" />
                                                             <Button fx:id="deleteStairButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="100.0" text="Delete" />
                                                          </children>
                                                       </HBox>
                                                       <VBox alignment="CENTER" prefHeight="38.0" prefWidth="199.0" spacing="10.0">
                                                          <children>
-                                                            <Button fx:id="flipStairButton" cancelButton="true" layoutX="10.0" layoutY="80.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Flip graphic" />
+                                                            <Button fx:id="flipStairButton" cancelButton="true" layoutX="10.0" layoutY="80.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Flip escalator" />
                                                          </children>
                                                       </VBox>
                                                    </children>
@@ -228,7 +236,7 @@
                                                       </HBox>
                                                       <VBox alignment="CENTER" prefHeight="39.0" prefWidth="199.0" spacing="10.0">
                                                          <children>
-                                                            <Button fx:id="flipEscalatorButton" cancelButton="true" layoutX="10.0" layoutY="80.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Flip graphic" />
+                                                            <Button fx:id="flipEscalatorButton" cancelButton="true" layoutX="10.0" layoutY="80.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Flip escalator" />
                                                          </children>
                                                       </VBox>
                                                    </children>
@@ -286,10 +294,14 @@
                                                                   <Spinner fx:id="ticketBoothIntervalSpinner" prefHeight="25.0" prefWidth="63.0" />
                                                                </children>
                                                             </HBox>
-                                                            <Button fx:id="saveTicketBoothButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
-                                                            <Button fx:id="deleteTicketBoothButton" cancelButton="true" layoutX="10.0" layoutY="142.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                            <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
+                                                               <children>
+                                                                  <Button fx:id="saveTicketBoothButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
+                                                                  <Button fx:id="deleteTicketBoothButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                               </children>
+                                                            </HBox>
                                                             <Button fx:id="addFloorFieldsTicketBoothButton" cancelButton="true" layoutX="10.0" layoutY="142.0" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
-                                                            <Button fx:id="flipTicketBoothButton" cancelButton="true" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Change graphic" />
+                                                            <Button fx:id="flipTicketBoothButton" cancelButton="true" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Toggle manual/automatic booth" />
                                                          </children>
                                                       </VBox>
                                                    </children>
@@ -324,8 +336,12 @@
                                                                   <Spinner fx:id="turnstileIntervalSpinner" prefHeight="25.0" prefWidth="200.0" />
                                                                </children>
                                                             </HBox>
-                                                            <Button fx:id="saveTurnstileButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
-                                                            <Button fx:id="deleteTurnstileButton" cancelButton="true" layoutX="10.0" layoutY="134.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                            <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
+                                                               <children>
+                                                                  <Button fx:id="saveTurnstileButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
+                                                                  <Button fx:id="deleteTurnstileButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                               </children>
+                                                            </HBox>
                                                             <Button fx:id="addFloorFieldsTurnstileButton" cancelButton="true" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
                                                          </children>
                                                       </VBox>
@@ -364,8 +380,12 @@
                                                                   <ListView fx:id="trainDoorCarriageListView" fixedCellSize="30.0" prefHeight="17.0" prefWidth="138.0" />
                                                                </children>
                                                             </HBox>
-                                                            <Button fx:id="saveTrainDoorButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
-                                                            <Button fx:id="deleteTrainDoorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                            <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
+                                                               <children>
+                                                                  <Button fx:id="saveTrainDoorButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
+                                                                  <Button fx:id="deleteTrainDoorButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                               </children>
+                                                            </HBox>
                                                             <Button fx:id="addFloorFieldsTrainDoorButton" cancelButton="true" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
                                                          </children>
                                                       </VBox>

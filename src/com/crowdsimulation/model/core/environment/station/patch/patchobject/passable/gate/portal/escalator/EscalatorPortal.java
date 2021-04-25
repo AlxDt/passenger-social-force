@@ -67,6 +67,6 @@ public class EscalatorPortal extends Portal {
 
     @Override
     public String toString() {
-        return "Escalator portal";
+        return "Escalator";
     }
 }

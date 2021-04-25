@@ -14,6 +14,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amen
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
@@ -73,10 +74,10 @@ public class GraphicsController extends Controller {
     }
 
     // Send a request to draw the mouse listeners on top of the canvases
-    public static void requestDrawListeners(StackPane canvases, Floor floor) {
+    public static void requestDrawListeners(StackPane canvases) {
         javafx.application.Platform.runLater(() -> {
             // Tell the JavaFX thread that we'd like to draw on the canvas
-            drawListeners(canvases, floor);
+            drawListeners(canvases);
         });
     }
 
@@ -174,8 +175,15 @@ public class GraphicsController extends Controller {
                         } else {
                             // Draw a de-saturated version of the first portal here
                             drawGraphicTransparently = true;
-                            firstPortalImage
-                                    = new Image("com/crowdsimulation/view/image/amenity/escalator_blank.png");
+
+                            if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ESCALATOR) {
+                                firstPortalImage
+                                        = new Image("com/crowdsimulation/view/image/amenity/escalator_blank.png");
+                            } else {
+                                firstPortalImage = AmenityGraphic.AMENITY_GRAPHICS.get(
+                                        Main.simulator.getCurrentClass()
+                                ).get(0);
+                            }
                         }
                     } else {
                         // There is an amenity on this patch, so draw it according to its corresponding color
@@ -246,7 +254,7 @@ public class GraphicsController extends Controller {
 
         // If this amenity is also the currently selected amenity in the simulator, draw a circle around
         // said amenity
-        final double CIRCLE_DIAMETER = 100.0;
+        final double CIRCLE_DIAMETER = 250.0;
 
         backgroundGraphicsContext.setStroke(Color.BLACK);
         backgroundGraphicsContext.setLineWidth(1.0);
@@ -270,7 +278,7 @@ public class GraphicsController extends Controller {
 
     // Draw the mouse listeners over the canvases
     // These listeners allows the user to graphically interact with the station amenities
-    private static void drawListeners(StackPane canvases, Floor floor) {
+    private static void drawListeners(StackPane canvases) {
         // Get the background and markings canvases
         final Canvas backgroundCanvas = (Canvas) canvases.getChildren().get(0);
         final Canvas markingsCanvas = (Canvas) canvases.getChildren().get(2);
@@ -433,7 +441,7 @@ public class GraphicsController extends Controller {
                         }
 
                         // Redraw the station view
-                        drawStationView(canvases, floor, true);
+                        drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
                     }
                 }
             }
@@ -467,7 +475,7 @@ public class GraphicsController extends Controller {
                                 }
 
                                 // Redraw the station view
-                                drawStationView(canvases, floor, true);
+                                drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
                             }
                         }
                     }
@@ -559,10 +567,20 @@ public class GraphicsController extends Controller {
 
         Amenity amenity = currentPatch.getAmenity();
 
+        // Show the amenity (or "empty patch", if there aren't any)
         if (amenity == null) {
             newText = newText.replace("%p", "Empty patch");
         } else {
             newText = newText.replace("%p", amenity.toString());
+        }
+
+        // If the amenity is a portal, show what floor it connects to
+        if (amenity instanceof Portal) {
+            Floor floorServed = ((Portal) amenity).getPair().getFloorServed();
+            int numberFloorServed = Main.simulator.getStation().getFloors().indexOf(floorServed) + 1;
+
+            newText = newText + "\n"
+                    + "Connects to floor #" + numberFloorServed;
         }
 
         GraphicsController.tooltip.setText(newText);

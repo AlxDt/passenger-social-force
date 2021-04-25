@@ -12,7 +12,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-
 <HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="180.0" prefWidth="550.0" spacing="10.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.crowdsimulation.controller.screen.feature.main.WelcomeController">
    <children>
       <VBox alignment="BOTTOM_CENTER" prefHeight="150.0" prefWidth="243.0" spacing="10.0">
@@ -28,7 +27,7 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Label fx:id="rowLabel" text="Rows (10 to 100):" />
+                  <Label fx:id="rowLabel" text="Rows (25 to 100):" />
                   <Spinner fx:id="rowSpinner" prefHeight="25.0" prefWidth="79.0" GridPane.columnIndex="1">
                      <GridPane.margin>
                         <Insets left="20.0" />

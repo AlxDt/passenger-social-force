@@ -67,6 +67,6 @@ public class StairPortal extends Portal {
 
     @Override
     public String toString() {
-        return "Stair portal";
+        return "Stair";
     }
 }

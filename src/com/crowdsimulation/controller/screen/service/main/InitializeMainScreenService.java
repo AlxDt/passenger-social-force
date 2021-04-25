@@ -843,27 +843,14 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 double newScaleX = stackPane.getScaleX() * 1.25;
                 double newScaleY = stackPane.getScaleY() * 1.25;
 
-                if (newScaleX < 1.0 || newScaleY < 1.0) {
-                    stackPane.setScaleX(newScaleX);
-                    stackPane.setScaleY(newScaleY);
-                } else {
-                    stackPane.setScaleX(1.0);
-                    stackPane.setScaleY(1.0);
-                }
+                stackPane.setScaleX(newScaleX);
+                stackPane.setScaleY(newScaleY);
             } else if (zoomOutCombination.match(event)) {
                 double newScaleX = stackPane.getScaleX() * 0.75;
                 double newScaleY = stackPane.getScaleY() * 0.75;
 
                 stackPane.setScaleX(newScaleX);
                 stackPane.setScaleY(newScaleY);
-
-                if (newScaleX >= 0.3 && newScaleY >= 0.3) {
-                    stackPane.setScaleX(newScaleX);
-                    stackPane.setScaleY(newScaleY);
-                } else {
-                    stackPane.setScaleX(0.3);
-                    stackPane.setScaleY(0.3);
-                }
             } else if (normalZoomCombination.match(event)) {
                 stackPane.setScaleX(1.0);
                 stackPane.setScaleY(1.0);

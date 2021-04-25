@@ -15,11 +15,14 @@ public class InitializeWelcomeService extends InitializeScreenService {
             Button createBlankStationButton,
             Button loadStationButton
     ) {
-        final int minimumRows = 10;
+        final int minimumRows = 25;
         final int maximumRows = 100;
 
         final int minimumColumns = 106;
         final int maximumColumns = 220;
+
+        final int defaultRows = 60;
+        final int defaultColumns = minimumColumns;
 
         rowLabel.setLabelFor(rowSpinner);
         rowSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(
@@ -27,7 +30,7 @@ public class InitializeWelcomeService extends InitializeScreenService {
         ));
 
         rowSpinner.setEditable(true);
-        rowSpinner.getValueFactory().setValue(60);
+        rowSpinner.getValueFactory().setValue(defaultRows);
 
         // A hacky way to commit the typed value when focus is lost from the spinner
         rowSpinner.focusedProperty().addListener((observable, oldValue, newValue) -> {
@@ -42,7 +45,7 @@ public class InitializeWelcomeService extends InitializeScreenService {
         ));
 
         columnSpinner.setEditable(true);
-        columnSpinner.getValueFactory().setValue(106);
+        columnSpinner.getValueFactory().setValue(defaultColumns);
 
         // A hacky way to commit the typed value when focus is lost from the spinner
         columnSpinner.focusedProperty().addListener((observable, oldValue, newValue) -> {

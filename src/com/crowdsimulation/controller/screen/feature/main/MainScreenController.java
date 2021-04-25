@@ -4306,7 +4306,7 @@ public class MainScreenController extends ScreenController {
 
         // Then draw the mouse listeners over the station view
         if (drawListeners) {
-            drawListeners(Main.simulator.getCurrentFloor());
+            drawListeners();
         }
     }
 
@@ -4331,11 +4331,10 @@ public class MainScreenController extends ScreenController {
     }
 
     // Draw the mouse listeners
-    private void drawListeners(Floor currentFloor) {
+    private void drawListeners() {
         // Draw each mouse listener along with their corresponding actions
         GraphicsController.requestDrawListeners(
-                interfaceStackPane,
-                currentFloor
+                interfaceStackPane
         );
     }
 }
