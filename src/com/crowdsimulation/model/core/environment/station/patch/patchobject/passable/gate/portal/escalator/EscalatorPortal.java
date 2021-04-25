@@ -1,11 +1,11 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator;
 
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.EscalatorGraphic;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
-
-import java.util.List;
+import javafx.scene.image.Image;
 
 public class EscalatorPortal extends Portal {
     // Denotes the escalator shaft which contains this escalator portal
@@ -13,6 +13,9 @@ public class EscalatorPortal extends Portal {
 
     // Factory for escalator portal creation
     public static final EscalatorPortalFactory escalatorPortalFactory;
+
+    // Handles how this escalator portal is displayed
+    private final EscalatorGraphic escalatorGraphic;
 
     static {
         escalatorPortalFactory = new EscalatorPortalFactory();
@@ -27,10 +30,22 @@ public class EscalatorPortal extends Portal {
         super(patch, enabled, floorServed);
 
         this.escalatorShaft = escalatorShaft;
+
+        this.escalatorGraphic = new EscalatorGraphic(this);
     }
 
     public EscalatorShaft getEscalatorShaft() {
         return escalatorShaft;
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.escalatorGraphic;
+    }
+
+    @Override
+    public Image getGraphic() {
+        return this.escalatorGraphic.getGraphic();
     }
 
     // Escalator portal factory

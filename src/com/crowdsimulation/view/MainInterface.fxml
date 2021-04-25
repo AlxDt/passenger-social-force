@@ -199,11 +199,16 @@
                                              <content>
                                                 <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
                                                    <children>
-                                                      <VBox alignment="CENTER" prefHeight="50.0" prefWidth="200.0" spacing="10.0">
+                                                      <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
                                                          <children>
-                                                            <Button fx:id="addStairButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add stairs" />
-                                                            <Button fx:id="editStairButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit stairs" />
-                                                            <Button fx:id="deleteStairButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete stairs" />
+                                                            <Button fx:id="addStairButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="100.0" text="Add" />
+                                                            <Button fx:id="editStairButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="78.0" text="Edit" />
+                                                            <Button fx:id="deleteStairButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="100.0" text="Delete" />
+                                                         </children>
+                                                      </HBox>
+                                                      <VBox alignment="CENTER" prefHeight="38.0" prefWidth="199.0" spacing="10.0">
+                                                         <children>
+                                                            <Button fx:id="flipStairButton" cancelButton="true" layoutX="10.0" layoutY="80.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Flip graphic" />
                                                          </children>
                                                       </VBox>
                                                    </children>
@@ -214,11 +219,16 @@
                                              <content>
                                                 <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
                                                    <children>
-                                                      <VBox alignment="CENTER" prefHeight="50.0" prefWidth="199.0" spacing="10.0">
+                                                      <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
                                                          <children>
-                                                            <Button fx:id="addEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add escalator" />
-                                                            <Button fx:id="editEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit escalator" />
-                                                            <Button fx:id="deleteEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete escalator" />
+                                                            <Button fx:id="addEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add" />
+                                                            <Button fx:id="editEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit" />
+                                                            <Button fx:id="deleteEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                         </children>
+                                                      </HBox>
+                                                      <VBox alignment="CENTER" prefHeight="39.0" prefWidth="199.0" spacing="10.0">
+                                                         <children>
+                                                            <Button fx:id="flipEscalatorButton" cancelButton="true" layoutX="10.0" layoutY="80.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Flip graphic" />
                                                          </children>
                                                       </VBox>
                                                    </children>
@@ -229,11 +239,15 @@
                                              <content>
                                                 <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
                                                    <children>
-                                                      <VBox alignment="CENTER" prefHeight="70.0" prefWidth="200.0" spacing="10.0">
+                                                      <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
                                                          <children>
-                                                            <Button fx:id="addElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add elevator" />
-                                                            <Button fx:id="editElevatorButton" cancelButton="true" layoutX="10.0" layoutY="107.0" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit elevator" />
-                                                            <Button fx:id="deleteElevatorButton" cancelButton="true" layoutX="10.0" layoutY="15.0" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete elevator" />
+                                                            <Button fx:id="addElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addPortalAction" prefHeight="25.0" prefWidth="199.0" text="Add" />
+                                                            <Button fx:id="editElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#editPortalAction" prefHeight="25.0" prefWidth="199.0" text="Edit" />
+                                                            <Button fx:id="deleteElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                         </children>
+                                                      </HBox>
+                                                      <VBox alignment="CENTER" prefHeight="35.0" prefWidth="199.0" spacing="10.0">
+                                                         <children>
                                                             <Button fx:id="addFloorFieldsElevatorButton" cancelButton="true" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
                                                          </children>
                                                       </VBox>
@@ -275,6 +289,7 @@
                                                             <Button fx:id="saveTicketBoothButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
                                                             <Button fx:id="deleteTicketBoothButton" cancelButton="true" layoutX="10.0" layoutY="142.0" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                             <Button fx:id="addFloorFieldsTicketBoothButton" cancelButton="true" layoutX="10.0" layoutY="142.0" mnemonicParsing="false" onAction="#addFloorFieldsAction" prefHeight="25.0" prefWidth="199.0" text="Add floor field" />
+                                                            <Button fx:id="flipTicketBoothButton" cancelButton="true" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Change graphic" />
                                                          </children>
                                                       </VBox>
                                                    </children>

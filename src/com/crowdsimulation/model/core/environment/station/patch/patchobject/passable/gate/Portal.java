@@ -41,7 +41,6 @@ public abstract class Portal extends Gate {
 
     // Portal factory
     public static abstract class PortalFactory extends GateFactory {
-
     }
 
     // Denotes the two locations that the portal may be in

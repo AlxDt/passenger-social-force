@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics;
 
 import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -10,18 +11,10 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.location.Location;
 import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -31,15 +24,11 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 public class GraphicsController extends Controller {
-    private static final HashMap<Class<?>, Color> PATCH_COLORS = new HashMap<>();
-    private static final HashMap<Class<?>, Image> PATCH_SPRITES = new HashMap<>();
     private static final int FLOOR_FIELD_COLOR_HUE = 115;
 
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
@@ -70,27 +59,6 @@ public class GraphicsController extends Controller {
 
         GraphicsController.floorNextPortal = null;
         GraphicsController.firstPortalDrawnPosition = null;
-
-        // The designated colors of the patch amenities (or lack thereof)
-        PATCH_COLORS.put(null, Color.WHITE); // Empty patch
-
-        PATCH_COLORS.put(StationGate.class, Color.BLUE); // Station gate
-        PATCH_COLORS.put(TrainDoor.class, Color.RED); // Train door
-
-        PATCH_COLORS.put(StairPortal.class, Color.VIOLET); // Stairs
-        PATCH_COLORS.put(EscalatorPortal.class, Color.DARKVIOLET); // Escalator
-        PATCH_COLORS.put(ElevatorPortal.class, Color.DEEPPINK); // Elevator
-
-        PATCH_COLORS.put(Security.class, Color.DEEPSKYBLUE); // Security gate
-        PATCH_COLORS.put(TicketBooth.class, Color.GREEN); // Ticket booth
-        PATCH_COLORS.put(TicketBoothTransactionArea.class, Color.GRAY); // Ticket booth transaction area
-        PATCH_COLORS.put(Turnstile.class, Color.ORANGE); // Turnstile
-
-        PATCH_COLORS.put(Wall.class, Color.BLACK); // Wall
-
-        // The designates sprites of the amenities
-        PATCH_SPRITES.put(StationGate.class, new Image("com/crowdsimulation/view/image/amenity/station_gate.png"));
-        PATCH_SPRITES.put(Security.class, new Image("com/crowdsimulation/view/image/amenity/security.png"));
     }
 
     // Send a request to draw the station view on the canvas
@@ -134,11 +102,13 @@ public class GraphicsController extends Controller {
             backgroundGraphicsContext.clearRect(0, 0, canvasWidth, canvasHeight);
         }
 
-        backgroundGraphicsContext.setFont(new Font(9.0));
+        boolean drawGraphicTransparently;
 
         // Draw all the patches of this floor
         for (int row = 0; row < floor.getRows(); row++) {
             for (int column = 0; column < floor.getColumns(); column++) {
+                drawGraphicTransparently = false;
+
                 // Get the current patch
                 Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(row, column);
 
@@ -148,14 +118,15 @@ public class GraphicsController extends Controller {
                     // Draw graphics corresponding to whatever is in the content of the patch
                     // If the patch has no amenity on it, just draw a blank patch
                     Amenity patchAmenity = currentPatch.getAmenity();
-                    Image patchSprite = null;
-                    Color patchColor;
+                    Color patchColor = null;
+                    Image firstPortalImage = null;
 
                     if (patchAmenity == null) {
                         // Draw the marker for first portal reference, if any has been drawn
                         if (!currentPatch.getMatrixPosition().equals(GraphicsController.firstPortalDrawnPosition)) {
-                            // There isn't an amenity on this patch, so just use the color corresponding to a blank patch
-                            patchColor = PATCH_COLORS.get(null);
+                            // There isn't an amenity on this patch, so just use the color corresponding to a blank
+                            // patch
+                            patchColor = Color.WHITE;
 
                             // Show the floor fields of the current target with the current floor field state
                             Queueable target = Main.simulator.getCurrentFloorFieldTarget();
@@ -202,65 +173,58 @@ public class GraphicsController extends Controller {
                             }
                         } else {
                             // Draw a de-saturated version of the first portal here
-                            patchColor = PATCH_COLORS.get(Main.simulator.getFirstPortal().getClass());
-                            double hue = patchColor.getHue();
-
-                            patchColor = Color.hsb(
-                                    hue,
-                                    0.1,
-                                    1.0
-                            );
+                            drawGraphicTransparently = true;
+                            firstPortalImage
+                                    = new Image("com/crowdsimulation/view/image/amenity/escalator_blank.png");
                         }
                     } else {
                         // There is an amenity on this patch, so draw it according to its corresponding color
-                        patchColor = PATCH_COLORS.get(patchAmenity.getClass());
-                        patchSprite = PATCH_SPRITES.get(patchAmenity.getClass());
-
                         // If floor field drawing is on, only color amenities which are of the current class
                         if (Main.simulator.isFloorFieldDrawing()) {
                             // Only color the current amenity - unsaturate the rest
                             if (!patchAmenity.equals(Main.simulator.getCurrentFloorFieldTarget())) {
-                                double hue = patchColor.getHue();
-
-                                patchColor = Color.hsb(
-                                        hue,
-                                        0.15,
-                                        1.0
-                                );
+                                drawGraphicTransparently = true;
                             }
                         }
                     }
 
-                    // Set the color
-                    backgroundGraphicsContext.setFill(patchColor);
-
                     // Draw the patch
-                    if (patchAmenity instanceof StationGate
-                            || patchAmenity instanceof Security) {
-                        backgroundGraphicsContext.drawImage(
-                                patchSprite,
-                                column * tileSize,
-                                row * tileSize,
-                                tileSize,
-                                tileSize
-                        );
-                    } else {
+                    if (patchAmenity == null && patchColor != null) {
+                        backgroundGraphicsContext.setFill(patchColor);
                         backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
-                    }
+                    } else {
+                        if (!(patchAmenity instanceof Wall)) {
+                            backgroundGraphicsContext.setFill(Color.WHITE);
+                            backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
 
-                    // If this amenity is a portal, draw the floor it connects to
-                    if (patchAmenity instanceof Portal) {
-                        Portal pair = ((Portal) patchAmenity).getPair();
+                            // Add transparency if needed
+                            if (drawGraphicTransparently) {
+                                backgroundGraphicsContext.setGlobalAlpha(0.2);
+                            }
 
-                        if (pair != null) {
-                            Floor pairFloorServed = pair.getFloorServed();
-                            int pairFloorNumber = Main.simulator.getStation().getFloors().indexOf(pairFloorServed) + 1;
+                            Image graphic;
 
-                            backgroundGraphicsContext.strokeText(
-                                    String.valueOf(pairFloorNumber),
-                                    column * tileSize + tileSize * 0.25,
-                                    row * tileSize - tileSize * 0.2
+                            if (patchAmenity == null) {
+                                graphic = firstPortalImage;
+                            } else {
+                                graphic = ((Drawable) patchAmenity).getGraphic();
+                            }
+
+                            backgroundGraphicsContext.drawImage(
+                                    graphic,
+                                    column * tileSize,
+                                    row * tileSize,
+                                    tileSize,
+                                    tileSize
                             );
+
+                            // Reset transparency if previously added
+                            if (drawGraphicTransparently) {
+                                backgroundGraphicsContext.setGlobalAlpha(1.0);
+                            }
+                        } else {
+                            backgroundGraphicsContext.setFill(Color.BLACK);
+                            backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
                         }
                     }
                 } else {
@@ -539,9 +503,6 @@ public class GraphicsController extends Controller {
             // Show the tooltip if drawing is active
             if (!GraphicsController.showTooltip) {
                 GraphicsController.showTooltip = true;
-
-                GraphicsController.tooltip.setX(currentPatch.getMatrixPosition().getColumn() + tileSize * 2.0);
-                GraphicsController.tooltip.setY(currentPatch.getMatrixPosition().getRow() + tileSize * 2.0);
 
                 Tooltip.install(backgroundCanvas, GraphicsController.tooltip);
             }

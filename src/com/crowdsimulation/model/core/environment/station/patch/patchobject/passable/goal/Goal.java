@@ -2,10 +2,11 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
-public abstract class Goal extends NonObstacle implements Queueable {
+public abstract class Goal extends NonObstacle implements Queueable, Drawable {
     // Denotes the textual identifier of this goal
     private String goalId;
 

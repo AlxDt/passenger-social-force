@@ -1,5 +1,7 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator;
 
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -7,6 +9,7 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.Queue
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
+import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +26,9 @@ public class ElevatorPortal extends Portal implements Queueable {
 
     // Factory for elevator portal creation
     public static final ElevatorPortalFactory elevatorPortalFactory;
+
+    // Handles how this elevator portal is displayed
+    private SingularGraphic elevatorPortalGraphic;
 
     static {
         elevatorPortalFactory = new ElevatorPortalFactory();
@@ -53,6 +59,8 @@ public class ElevatorPortal extends Portal implements Queueable {
 
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.elevatorPortalFloorFieldState, queueingFloorField);
+
+        this.elevatorPortalGraphic = new SingularGraphic(this);
     }
 
     public ElevatorShaft getElevatorShaft() {
@@ -131,6 +139,16 @@ public class ElevatorPortal extends Portal implements Queueable {
         for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
             deleteFloorField(floorFieldState);
         }
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.elevatorPortalGraphic;
+    }
+
+    @Override
+    public Image getGraphic() {
+        return this.elevatorPortalGraphic.getGraphic();
     }
 
     // Elevator portal factory

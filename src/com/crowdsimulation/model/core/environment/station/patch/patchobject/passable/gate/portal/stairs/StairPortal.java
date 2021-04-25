@@ -1,11 +1,11 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs;
 
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.StairGraphic;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
-
-import java.util.List;
+import javafx.scene.image.Image;
 
 public class StairPortal extends Portal {
     // Denotes the stair shaft which contains this stair portal
@@ -13,6 +13,9 @@ public class StairPortal extends Portal {
 
     // Factory for stair portal creation
     public static final StairPortalFactory stairPortalFactory;
+
+    // Handles how this stair portal is displayed
+    private StairGraphic stairGraphic;
 
     static {
         stairPortalFactory = new StairPortalFactory();
@@ -27,10 +30,22 @@ public class StairPortal extends Portal {
         super(patch, enabled, floorServed);
 
         this.stairShaft = stairShaft;
+
+        this.stairGraphic = new StairGraphic(this);
     }
 
     public StairShaft getStairShaft() {
         return stairShaft;
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.stairGraphic;
+    }
+
+    @Override
+    public Image getGraphic() {
+        return this.stairGraphic.getGraphic();
     }
 
     // Stair portal factory

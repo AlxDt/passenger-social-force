@@ -1,9 +1,12 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable;
 
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,9 @@ public class Security extends BlockableAmenity {
 
     // Factory for security gate creation
     public static final SecurityFactory securityFactory;
+
+    // Handles how this security is displayed
+    private final SingularGraphic securityGraphic;
 
     static {
         securityFactory = new SecurityFactory();
@@ -48,6 +54,8 @@ public class Security extends BlockableAmenity {
 
         // Using the floor field state defined earlier, create the floor field
         this.getQueueObject().getFloorFields().put(this.securityFloorFieldState, queueingFloorField);
+
+        this.securityGraphic = new SingularGraphic(this);
     }
 
     public boolean isBlockEntry() {
@@ -111,6 +119,16 @@ public class Security extends BlockableAmenity {
         for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
             deleteFloorField(floorFieldState);
         }
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.securityGraphic;
+    }
+
+    @Override
+    public Image getGraphic() {
+        return this.securityGraphic.getGraphic();
     }
 
     // Security factory

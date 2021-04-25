@@ -1,7 +1,10 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import javafx.scene.image.Image;
 
 public class StationGate extends Gate {
     // Denotes the chance of generating a passenger per second
@@ -12,6 +15,9 @@ public class StationGate extends Gate {
 
     // Factory for station gate creation
     public static final StationGateFactory stationGateFactory;
+
+    // Handles how the station gate is displayed
+    private final SingularGraphic stationGateGraphic;
 
     static {
         stationGateFactory = new StationGateFactory();
@@ -27,6 +33,8 @@ public class StationGate extends Gate {
 
         this.chancePerSecond = chancePerSecond;
         this.stationGateMode = stationGateMode;
+
+        this.stationGateGraphic = new SingularGraphic(this);
     }
 
     public double getChancePerSecond() {
@@ -53,6 +61,16 @@ public class StationGate extends Gate {
     @Override
     public Passenger spawnPassenger() {
         return Passenger.passengerFactory.create(this);
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.stationGateGraphic;
+    }
+
+    @Override
+    public Image getGraphic() {
+        return this.stationGateGraphic.getGraphic();
     }
 
     // Station gate factory

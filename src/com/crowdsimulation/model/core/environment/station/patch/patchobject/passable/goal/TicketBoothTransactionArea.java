@@ -1,11 +1,14 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal;
 
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
+import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +28,9 @@ public class TicketBoothTransactionArea extends Goal {
 
     // Factory for ticket booth transaction area creation
     public static final TicketBoothTransactionAreaFactory ticketBoothTransactionAreaFactory;
+
+    // Handles how this ticket booth transaction area is displayed
+    private final SingularGraphic ticketBoothTransactionAreaGraphic;
 
     static {
         ticketBoothTransactionAreaFactory = new TicketBoothTransactionAreaFactory();
@@ -60,6 +66,8 @@ public class TicketBoothTransactionArea extends Goal {
 
         // Using the floor field state defined earlier, create the floor field
         this.getQueueObject().getFloorFields().put(this.ticketBoothTransactionAreaFloorFieldState, queueingFloorField);
+
+        this.ticketBoothTransactionAreaGraphic = new SingularGraphic(this);
     }
 
     public TicketBooth getTicketBooth() {
@@ -139,6 +147,16 @@ public class TicketBoothTransactionArea extends Goal {
         for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
             deleteFloorField(floorFieldState);
         }
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.ticketBoothTransactionAreaGraphic;
+    }
+
+    @Override
+    public Image getGraphic() {
+        return this.ticketBoothTransactionAreaGraphic.getGraphic();
     }
 
     // Ticket booth transaction area factory

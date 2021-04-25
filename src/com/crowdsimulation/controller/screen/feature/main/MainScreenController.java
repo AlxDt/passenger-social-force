@@ -2,6 +2,9 @@ package com.crowdsimulation.controller.screen.feature.main;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.controller.graphics.amenity.EscalatorGraphic;
+import com.crowdsimulation.controller.graphics.amenity.StairGraphic;
+import com.crowdsimulation.controller.graphics.amenity.TicketBoothGraphic;
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.alert.AlertController;
 import com.crowdsimulation.controller.screen.feature.floorfield.NormalFloorFieldController;
@@ -19,6 +22,7 @@ import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
@@ -151,6 +155,9 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Button deleteStairButton;
 
+    @FXML
+    private Button flipStairButton;
+
     // Escalator
     @FXML
     private Button addEscalatorButton;
@@ -160,6 +167,9 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private Button deleteEscalatorButton;
+
+    @FXML
+    private Button flipEscalatorButton;
 
     // Elevator
     @FXML
@@ -199,6 +209,9 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private Button addFloorFieldsTicketBoothButton;
+
+    @FXML
+    private Button flipTicketBoothButton;
 
     // Turnstile
     @FXML
@@ -388,10 +401,12 @@ public class MainScreenController extends ScreenController {
                 addStairButton,
                 editStairButton,
                 deleteStairButton,
+                flipStairButton,
                 // Escalator
                 addEscalatorButton,
                 editEscalatorButton,
                 deleteEscalatorButton,
+                flipEscalatorButton,
                 // Elevator
                 addElevatorButton,
                 editElevatorButton,
@@ -407,6 +422,7 @@ public class MainScreenController extends ScreenController {
                 saveTicketBoothButton,
                 deleteTicketBoothButton,
                 addFloorFieldsTicketBoothButton,
+                flipTicketBoothButton,
                 // Turnstile
                 turnstileEnableCheckBox,
                 turnstileBlockPassengerCheckBox,
@@ -925,6 +941,9 @@ public class MainScreenController extends ScreenController {
 
                 break;
         }
+
+        // Redraw the interface
+        drawInterface(false);
     }
 
     @FXML
@@ -1255,6 +1274,16 @@ public class MainScreenController extends ScreenController {
 
         // Commence adding the floor fields
         addFloorFields();
+    }
+
+    @FXML
+    // Flip graphic
+    public void flipAction() {
+        // Flip the current amenity
+        flipAmenityInFloor(Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE);
+
+        // Redraw interface
+        drawInterface(false);
     }
 
     public StackPane getInterfaceStackPane() {
@@ -1588,6 +1617,21 @@ public class MainScreenController extends ScreenController {
                 lowerPortalEscalator.setEnabled(escalatorShaftToEdit.isEnabled());
                 upperPortalEscalator.setEnabled(escalatorShaftToEdit.isEnabled());
 
+                // Update the graphic along with the direction of the shaft
+                EscalatorGraphic lowerEscalatorGraphic
+                        = (EscalatorGraphic) lowerPortalEscalator.getGraphicObject();
+
+                lowerEscalatorGraphic.setGraphicToDirection(
+                        escalatorShaftToEdit.getEscalatorDirection()
+                );
+
+                EscalatorGraphic upperEscalatorGraphic
+                        = (EscalatorGraphic) upperPortalEscalator.getGraphicObject();
+
+                upperEscalatorGraphic.setGraphicToDirection(
+                        escalatorShaftToEdit.getEscalatorDirection()
+                );
+
                 break;
             case ELEVATOR:
                 ElevatorShaft elevatorShaftToEdit = (ElevatorShaft) amenityToSave;
@@ -1709,17 +1753,23 @@ public class MainScreenController extends ScreenController {
                 StairShaft stairShaftReference = (StairShaft) portalShaft;
 
                 for (StairShaft stairShaftToEdit : Main.simulator.getStation().getStairShafts()) {
-                    // Mirror each stair shaft to the reference shaft
-                    stairShaftToEdit.setEnabled(stairShaftReference.isEnabled());
-                    stairShaftToEdit.setMoveTime(stairShaftReference.getMoveTime());
-
                     // Retrieve portal components
                     Portal lowerPortal = stairShaftToEdit.getLowerPortal();
                     Portal upperPortal = stairShaftToEdit.getUpperPortal();
 
-                    // Apply the changes from the stair shaft to these portals
-                    lowerPortal.setEnabled(stairShaftReference.isEnabled());
-                    upperPortal.setEnabled(stairShaftReference.isEnabled());
+                    // Only edit stairs that are in this floor
+                    if (
+                            lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                                    || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                    ) {
+                        // Mirror each stair shaft to the reference shaft
+                        stairShaftToEdit.setEnabled(stairShaftReference.isEnabled());
+                        stairShaftToEdit.setMoveTime(stairShaftReference.getMoveTime());
+
+                        // Apply the changes from the stair shaft to these portals
+                        lowerPortal.setEnabled(stairShaftReference.isEnabled());
+                        upperPortal.setEnabled(stairShaftReference.isEnabled());
+                    }
                 }
 
                 break;
@@ -1728,18 +1778,39 @@ public class MainScreenController extends ScreenController {
                 EscalatorShaft escalatorShaftReference = (EscalatorShaft) portalShaft;
 
                 for (EscalatorShaft elevatorShaftToEdit : Main.simulator.getStation().getEscalatorShafts()) {
-                    // Mirror each escalator shaft to the reference shaft
-                    elevatorShaftToEdit.setEnabled(escalatorShaftReference.isEnabled());
-                    elevatorShaftToEdit.setMoveTime(escalatorShaftReference.getMoveTime());
-                    elevatorShaftToEdit.setEscalatorDirection(escalatorShaftReference.getEscalatorDirection());
-
                     // Retrieve portal components
                     Portal lowerPortal = elevatorShaftToEdit.getLowerPortal();
                     Portal upperPortal = elevatorShaftToEdit.getUpperPortal();
 
-                    // Apply the changes from the escalator shaft to these portals
-                    lowerPortal.setEnabled(escalatorShaftReference.isEnabled());
-                    upperPortal.setEnabled(escalatorShaftReference.isEnabled());
+                    // Only edit escalators that are in this floor
+                    if (
+                            lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                                    || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                    ) {
+                        // Mirror each escalator shaft to the reference shaft
+                        elevatorShaftToEdit.setEnabled(escalatorShaftReference.isEnabled());
+                        elevatorShaftToEdit.setMoveTime(escalatorShaftReference.getMoveTime());
+                        elevatorShaftToEdit.setEscalatorDirection(escalatorShaftReference.getEscalatorDirection());
+
+                        // Apply the changes from the escalator shaft to these portals
+                        lowerPortal.setEnabled(escalatorShaftReference.isEnabled());
+                        upperPortal.setEnabled(escalatorShaftReference.isEnabled());
+
+                        // Update the graphic along with the direction of the shaft
+                        EscalatorGraphic lowerEscalatorGraphic
+                                = (EscalatorGraphic) lowerPortal.getGraphicObject();
+
+                        lowerEscalatorGraphic.setGraphicToDirection(
+                                escalatorShaftReference.getEscalatorDirection()
+                        );
+
+                        EscalatorGraphic upperEscalatorGraphic
+                                = (EscalatorGraphic) upperPortal.getGraphicObject();
+
+                        upperEscalatorGraphic.setGraphicToDirection(
+                                escalatorShaftReference.getEscalatorDirection()
+                        );
+                    }
                 }
 
                 break;
@@ -1748,20 +1819,26 @@ public class MainScreenController extends ScreenController {
                 ElevatorShaft elevatorShaftReference = (ElevatorShaft) portalShaft;
 
                 for (ElevatorShaft elevatorShaftToEdit : Main.simulator.getStation().getElevatorShafts()) {
-                    // Mirror each elevator shaft to the reference shaft
-                    elevatorShaftToEdit.setEnabled(elevatorShaftReference.isEnabled());
-                    elevatorShaftToEdit.setOpenDelayTime(elevatorShaftReference.getOpenDelayTime());
-                    elevatorShaftToEdit.setDoorOpenTime(elevatorShaftReference.getDoorOpenTime());
-                    elevatorShaftToEdit.setMoveTime(elevatorShaftReference.getMoveTime());
-                    elevatorShaftToEdit.setElevatorDirection(elevatorShaftReference.getElevatorDirection());
-
                     // Retrieve portal components
                     Portal lowerPortal = elevatorShaftToEdit.getLowerPortal();
                     Portal upperPortal = elevatorShaftToEdit.getUpperPortal();
 
-                    // Apply the changes from the elevator shaft to these portals
-                    lowerPortal.setEnabled(elevatorShaftReference.isEnabled());
-                    upperPortal.setEnabled(elevatorShaftReference.isEnabled());
+                    // Only edit elevators in this floor
+                    if (
+                            lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                                    || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                    ) {
+                        // Mirror each elevator shaft to the reference shaft
+                        elevatorShaftToEdit.setEnabled(elevatorShaftReference.isEnabled());
+                        elevatorShaftToEdit.setOpenDelayTime(elevatorShaftReference.getOpenDelayTime());
+                        elevatorShaftToEdit.setDoorOpenTime(elevatorShaftReference.getDoorOpenTime());
+                        elevatorShaftToEdit.setMoveTime(elevatorShaftReference.getMoveTime());
+                        elevatorShaftToEdit.setElevatorDirection(elevatorShaftReference.getElevatorDirection());
+
+                        // Apply the changes from the elevator shaft to these portals
+                        lowerPortal.setEnabled(elevatorShaftReference.isEnabled());
+                        upperPortal.setEnabled(elevatorShaftReference.isEnabled());
+                    }
                 }
 
                 break;
@@ -2201,6 +2278,82 @@ public class MainScreenController extends ScreenController {
         // Then reset simulator variables
         Main.simulator.setCurrentAmenity(null);
         Main.simulator.setCurrentClass(null);
+    }
+
+    private void flipAmenityInFloor(boolean singleAmenity) {
+        // Distinguish whether only a single amenity will be flipped or not
+        if (singleAmenity) {
+            flipSingleAmenityInFloor(Main.simulator.getCurrentAmenity());
+        } else {
+            flipAllAmenitiesInFloor();
+        }
+    }
+
+    // Flip a single amenity
+    private void flipSingleAmenityInFloor(Amenity amenity) {
+        Drawable drawable = (Drawable) amenity;
+
+        if (drawable instanceof TicketBoothTransactionArea) {
+            TicketBooth ticketBooth = ((TicketBoothTransactionArea) drawable).getTicketBooth();
+
+            ((TicketBoothGraphic) ticketBooth.getGraphicObject()).flip();
+        } else if (drawable instanceof StairPortal) {
+            ((StairGraphic) drawable.getGraphicObject()).flip();
+        } else if (drawable instanceof EscalatorPortal) {
+            ((EscalatorGraphic) drawable.getGraphicObject()).flip();
+        }
+    }
+
+    // Flip all amenities
+    private void flipAllAmenitiesInFloor() {
+        switch (Main.simulator.getBuildSubcategory()) {
+            case TICKET_BOOTH:
+                for (TicketBooth ticketBoothToFlip : Main.simulator.getCurrentFloor().getTicketBooths()) {
+                    flipSingleAmenityInFloor(ticketBoothToFlip.getTicketBoothTransactionArea());
+                }
+
+                break;
+            case STAIRS:
+                for (StairShaft stairShaftToFlip : Main.simulator.getStation().getStairShafts()) {
+                    // Retrieve portal components
+                    Portal lowerPortal = stairShaftToFlip.getLowerPortal();
+                    Portal upperPortal = stairShaftToFlip.getUpperPortal();
+
+                    // Only flip stairs that are in this floor
+                    if (
+                            lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                                    || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                    ) {
+                        if (lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()) {
+                            flipSingleAmenityInFloor(lowerPortal);
+                        } else {
+                            flipSingleAmenityInFloor(upperPortal);
+                        }
+                    }
+                }
+
+                break;
+            case ESCALATOR:
+                for (EscalatorShaft escalatorShaftToFlip : Main.simulator.getStation().getEscalatorShafts()) {
+                    // Retrieve portal components
+                    Portal lowerPortal = escalatorShaftToFlip.getLowerPortal();
+                    Portal upperPortal = escalatorShaftToFlip.getUpperPortal();
+
+                    // Only flip escalators that are in this floor
+                    if (
+                            lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                                    || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                    ) {
+                        if (lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()) {
+                            flipSingleAmenityInFloor(lowerPortal);
+                        } else {
+                            flipSingleAmenityInFloor(upperPortal);
+                        }
+                    }
+                }
+
+                break;
+        }
     }
 
     public static Simulator.BuildCategory getBuildCategory(SingleSelectionModel<Tab> currentTabSelectionModel) {
@@ -2853,6 +3006,16 @@ public class MainScreenController extends ScreenController {
                                                         (EscalatorShaft) Main.simulator.getProvisionalPortalShaft()
                                                 );
 
+                                                // Match the graphic of the escalator portals with the direction of the
+                                                // escalator
+                                                EscalatorGraphic escalatorGraphic
+                                                        = (EscalatorGraphic) escalatorPortalToAdd.getGraphicObject();
+
+                                                escalatorGraphic.setGraphicToDirection(
+                                                        ((EscalatorShaft) Main.simulator.getProvisionalPortalShaft())
+                                                                .getEscalatorDirection()
+                                                );
+
                                                 // Set the amenity on that patch
                                                 currentPatch.setAmenity(escalatorPortalToAdd);
 
@@ -2948,6 +3111,16 @@ public class MainScreenController extends ScreenController {
                                                 (EscalatorShaft) Main.simulator.getProvisionalPortalShaft()
                                         );
 
+                                        // Match the graphic of the escalator portals with the direction of the
+                                        // escalator
+                                        EscalatorGraphic escalatorGraphic
+                                                = (EscalatorGraphic) escalatorPortalToAdd.getGraphicObject();
+
+                                        escalatorGraphic.setGraphicToDirection(
+                                                ((EscalatorShaft) Main.simulator.getProvisionalPortalShaft())
+                                                        .getEscalatorDirection()
+                                        );
+
                                         // Set the amenity on that patch
                                         currentPatch.setAmenity(escalatorPortalToAdd);
 
@@ -2979,9 +3152,12 @@ public class MainScreenController extends ScreenController {
                                             );
                                         }
 
+                                        EscalatorShaft escalatorShaft
+                                                = (EscalatorShaft) Main.simulator.getProvisionalPortalShaft();
+
                                         // Register the provisional shaft to the station
                                         Main.simulator.getStation().getEscalatorShafts().add(
-                                                (EscalatorShaft) Main.simulator.getProvisionalPortalShaft()
+                                                escalatorShaft
                                         );
 
                                         // Finish adding the portal

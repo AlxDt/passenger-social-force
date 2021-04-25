@@ -1,10 +1,13 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +19,14 @@ public class TrainDoor extends Gate implements Queueable {
     // Denotes the queueing object associated with all goals like this
     private final QueueObject queueObject;
 
-    // Denotes the floor field state needed to access the floor fields of this security gate
+    // Denotes the floor field state needed to access the floor fields of this train door
     private final QueueingFloorField.FloorFieldState trainDoorFloorFieldState;
 
     // Factory for train door creation
     public static final TrainDoorFactory trainDoorFactory;
+
+    // Handles how the train door is displayed
+    private final SingularGraphic trainDoorGraphic;
 
     static {
         trainDoorFactory = new TrainDoorFactory();
@@ -54,6 +60,8 @@ public class TrainDoor extends Gate implements Queueable {
 
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.trainDoorFloorFieldState, queueingFloorField);
+
+        this.trainDoorGraphic = new SingularGraphic(this);
     }
 
     public TrainDoorPlatform getPlatform() {
@@ -130,6 +138,16 @@ public class TrainDoor extends Gate implements Queueable {
     @Override
     public String toString() {
         return "Train boarding area";
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.trainDoorGraphic;
+    }
+
+    @Override
+    public Image getGraphic() {
+        return this.trainDoorGraphic.getGraphic();
     }
 
     // Train door factory

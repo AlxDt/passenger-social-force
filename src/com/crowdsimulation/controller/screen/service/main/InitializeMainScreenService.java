@@ -162,10 +162,12 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button addStairButton,
             Button editStairButton,
             Button deleteStairButton,
+            Button flipStairButton,
             // Escalator
             Button addEscalatorButton,
             Button editEscalatorButton,
             Button deleteEscalatorButton,
+            Button flipEscalatorButton,
             // Elevator
             Button addElevatorButton,
             Button editElevatorButton,
@@ -181,6 +183,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button saveTicketBoothButton,
             Button deleteTicketBoothButton,
             Button addFloorFieldsTicketBoothButton,
+            Button flipTicketBoothButton,
             // Turnstile
             CheckBox turnstileEnableCheckBox,
             CheckBox turnstileBlockPassengerCheckBox,
@@ -235,9 +238,11 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 addStairButton,
                 editStairButton,
                 deleteStairButton,
+                flipStairButton,
                 addEscalatorButton,
                 editEscalatorButton,
                 deleteEscalatorButton,
+                flipEscalatorButton,
                 addElevatorButton,
                 editElevatorButton,
                 deleteElevatorButton,
@@ -253,6 +258,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 saveTicketBoothButton,
                 deleteTicketBoothButton,
                 addFloorFieldsTicketBoothButton,
+                flipTicketBoothButton,
                 turnstileEnableCheckBox,
                 turnstileBlockPassengerCheckBox,
                 turnstileDirectionLabel,
@@ -444,9 +450,11 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button addStairButton,
             Button editStairButton,
             Button deleteStairButton,
+            Button flipStairButton,
             Button addEscalatorButton,
             Button editEscalatorButton,
             Button deleteEscalatorButton,
+            Button flipEscalatorButton,
             Button addElevatorButton,
             Button editElevatorButton,
             Button deleteElevatorButton,
@@ -455,13 +463,15 @@ public class InitializeMainScreenService extends InitializeScreenService {
         initializeStairs(
                 addStairButton,
                 editStairButton,
-                deleteStairButton
+                deleteStairButton,
+                flipStairButton
         );
 
         initializeEscalators(
                 addEscalatorButton,
                 editEscalatorButton,
-                deleteEscalatorButton
+                deleteEscalatorButton,
+                flipEscalatorButton
         );
 
         initializeElevators(
@@ -476,24 +486,30 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeStairs(
             Button addStairButton,
             Button editStairButton,
-            Button deleteStairButton
+            Button deleteStairButton,
+            Button flipStairButton
     ) {
         addStairButton.disableProperty().bind(InitializeMainScreenService.DRAW_ONLY_BINDING);
 
         editStairButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteStairButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        flipStairButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the escalators controls
     private static void initializeEscalators(
             Button addEscalatorButton,
             Button editEscalatorButton,
-            Button deleteEscalatorButton
+            Button deleteEscalatorButton,
+            Button flipEscalatorButton
     ) {
         addEscalatorButton.disableProperty().bind(InitializeMainScreenService.DRAW_ONLY_BINDING);
 
         editEscalatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteEscalatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        flipEscalatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the elevators controls
@@ -521,6 +537,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button saveTicketBoothButton,
             Button deleteTicketBoothButton,
             Button addFloorFieldsTicketBoothButton,
+            Button flipTicketBoothButton,
             CheckBox turnstileEnableCheckBox,
             CheckBox turnstileBlockPassengerCheckBox,
             Label turnstileDirectionLabel,
@@ -539,7 +556,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 ticketBoothIntervalSpinner,
                 saveTicketBoothButton,
                 deleteTicketBoothButton,
-                addFloorFieldsTicketBoothButton
+                addFloorFieldsTicketBoothButton,
+                flipTicketBoothButton
         );
 
         initializeTurnstile(
@@ -564,7 +582,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
             Button deleteTicketBoothButton,
-            Button addFloorFieldsTicketBoothButton
+            Button addFloorFieldsTicketBoothButton,
+            Button flipTicketBoothButton
     ) {
         ticketBoothModeLabel.setLabelFor(ticketBoothModeChoiceBox);
 
@@ -594,6 +613,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
         addFloorFieldsTicketBoothButton.disableProperty().bind(
                 InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING
         );
+
+        flipTicketBoothButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the turnstile controls

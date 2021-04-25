@@ -1,9 +1,12 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable;
 
+import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +21,9 @@ public class Turnstile extends BlockableAmenity {
 
     // Factory for turnstile creation
     public static final TurnstileFactory turnstileFactory;
+
+    // Handles how this turnstile is displayed
+    private SingularGraphic turnstileGraphic;
 
     static {
         turnstileFactory = new TurnstileFactory();
@@ -60,6 +66,8 @@ public class Turnstile extends BlockableAmenity {
         // Using the floor field states defined earlier, create the floor fields
         this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateBoarding, floorFieldBoarding);
         this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateAlighting, floorFieldAlighting);
+
+        this.turnstileGraphic = new SingularGraphic(this);
     }
 
     public TurnstileMode getTurnstileMode() {
@@ -141,6 +149,16 @@ public class Turnstile extends BlockableAmenity {
         for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
             deleteFloorField(floorFieldState);
         }
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.turnstileGraphic;
+    }
+
+    @Override
+    public Image getGraphic() {
+        return this.turnstileGraphic.getGraphic();
     }
 
     // Turnstile factory

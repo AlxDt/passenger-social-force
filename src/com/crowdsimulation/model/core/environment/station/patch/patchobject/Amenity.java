@@ -17,6 +17,6 @@ public abstract class Amenity extends PatchObject implements Environment {
     }
 
     // Template class for amenity factories
-    public static class AmenityFactory extends BaseStationObject.StationObjectFactory {
+    public abstract static class AmenityFactory extends BaseStationObject.StationObjectFactory {
     }
 }
