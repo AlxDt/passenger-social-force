@@ -66,10 +66,27 @@ public class GraphicsController extends Controller {
     public static void requestDrawStationView(
             StackPane canvases,
             Floor floor,
-            boolean background) {
+            boolean background
+    ) {
         javafx.application.Platform.runLater(() -> {
             // Tell the JavaFX thread that we'd like to draw on the canvas
             drawStationView(canvases, floor, background);
+        });
+    }
+
+    // Send a request to draw part of the station view on the canvas
+    public static void requestDrawPartialStationView(
+            StackPane canvases,
+            Floor floor,
+            int rowStart,
+            int columnStart,
+            int rowEnd,
+            int columnEnd,
+            boolean background
+    ) {
+        javafx.application.Platform.runLater(() -> {
+            // Tell the JavaFX thread that we'd like to draw on the canvas
+            drawStationView(canvases, floor, rowStart, columnStart, rowEnd, columnEnd, background);
         });
     }
 
@@ -81,8 +98,16 @@ public class GraphicsController extends Controller {
         });
     }
 
-    // Draw all that is needed on the station view on the canvases
-    private static void drawStationView(StackPane canvases, Floor floor, boolean background) {
+    // Draw all that is requested on the station view on the canvases
+    private static void drawStationView(
+            StackPane canvases,
+            Floor floor,
+            int rowStart,
+            int columnStart,
+            int rowEnd,
+            int columnEnd,
+            boolean background
+            ) {
         // Get the canvases and their graphics contexts
         final Canvas backgroundCanvas = (Canvas) canvases.getChildren().get(0);
         final Canvas foregroundCanvas = (Canvas) canvases.getChildren().get(1);
@@ -98,20 +123,30 @@ public class GraphicsController extends Controller {
 
         // Clear everything in the respective canvas
         if (!background) {
-            foregroundGraphicsContext.clearRect(0, 0, canvasWidth, canvasHeight);
+            foregroundGraphicsContext.clearRect(
+                    rowStart * tileSize,
+                    columnStart * tileSize,
+                    rowEnd * tileSize,
+                    columnEnd * tileSize
+            );
         } else {
-            backgroundGraphicsContext.clearRect(0, 0, canvasWidth, canvasHeight);
+            backgroundGraphicsContext.clearRect(
+                    rowStart * tileSize,
+                    columnStart * tileSize,
+                    rowEnd * tileSize,
+                    columnEnd * tileSize
+            );
         }
 
         boolean drawGraphicTransparently;
 
         // Draw all the patches of this floor
-        for (int row = 0; row < floor.getRows(); row++) {
-            for (int column = 0; column < floor.getColumns(); column++) {
+        for (int row = rowStart; row < rowEnd; row++) {
+            for (int column = columnStart; column < columnEnd; column++) {
                 drawGraphicTransparently = false;
 
                 // Get the current patch
-                Patch currentPatch = Main.simulator.getCurrentFloor().getPatch(row, column);
+                Patch currentPatch = floor.getPatch(row, column);
 
                 // Draw only the background (the environment) if requested
                 // Draw only the foreground (the passengers) if otherwise
@@ -239,7 +274,7 @@ public class GraphicsController extends Controller {
                     // Draw passengers, if any
                     final double passengerDiameter = tileSize * 0.5;
 
-                    for (Passenger passenger : Main.simulator.getCurrentFloor().getPassengersInFloor()) {
+                    for (Passenger passenger : floor.getPassengersInFloor()) {
                         // TODO: Draw passengers
                         foregroundGraphicsContext.fillOval(
                                 passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerDiameter * 0.5,
@@ -274,6 +309,20 @@ public class GraphicsController extends Controller {
                     CIRCLE_DIAMETER
             );
         }
+    }
+
+    // Draw all that is needed on the station view on the canvases
+    private static void drawStationView(StackPane canvases, Floor floor, boolean background) {
+        // Draw the entire station view
+        drawStationView(
+                canvases,
+                floor,
+                0,
+                0,
+                floor.getRows(),
+                floor.getColumns(),
+                background
+        );
     }
 
     // Draw the mouse listeners over the canvases

@@ -4310,12 +4310,51 @@ public class MainScreenController extends ScreenController {
         }
     }
 
+    // Draw the interface partially
+    private void drawPartialInterface(
+            int rowStart,
+            int columnStart,
+            int rowEnd,
+            int columnEnd
+    ) {
+        // Initially draw the station environment, showing the current floor
+        drawPartialStationViewFloorBackground(
+                Main.simulator.getCurrentFloor(),
+                rowStart,
+                columnStart,
+                rowEnd,
+                columnEnd
+        );
+
+        // TODO: Then draw the passengers in the station
+    }
+
     // Draw the station view background given a current floor
     private void drawStationViewFloorBackground(Floor currentFloor) {
         // Draw each station in the train system onto its respective tab
         GraphicsController.requestDrawStationView(
                 interfaceStackPane,
                 currentFloor,
+                true
+        );
+    }
+
+    // Draw the station view background given a current floor
+    private void drawPartialStationViewFloorBackground(
+            Floor currentFloor,
+            int rowStart,
+            int columnStart,
+            int rowEnd,
+            int columnEnd
+    ) {
+        // Draw each station in the train system onto its respective tab
+        GraphicsController.requestDrawPartialStationView(
+                interfaceStackPane,
+                currentFloor,
+                rowStart,
+                columnStart,
+                rowEnd,
+                columnEnd,
                 true
         );
     }
