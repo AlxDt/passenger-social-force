@@ -1,14 +1,17 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator;
 
-import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import javafx.scene.image.Image;
 
 import java.util.ArrayList;
@@ -28,19 +31,217 @@ public class ElevatorPortal extends Portal implements Queueable {
     public static final ElevatorPortalFactory elevatorPortalFactory;
 
     // Handles how this elevator portal is displayed
-    private SingularGraphic elevatorPortalGraphic;
+    private final SingularGraphic elevatorPortalGraphic;
+
+    // Denotes the footprint of this amenity when being drawn
+    public static final AmenityFootprint elevatorPortalFootprint;
 
     static {
         elevatorPortalFactory = new ElevatorPortalFactory();
+
+        // Initialize this amenity's footprints
+        elevatorPortalFootprint = new AmenityFootprint();
+
+        // Up view
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN10;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN11;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock01;
+
+        AmenityFootprint.Rotation upView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
+
+        upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                ElevatorPortal.class,
+                true,
+                false
+        );
+
+        upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                0,
+                ElevatorPortal.class,
+                false,
+                true
+        );
+
+        upBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                1,
+                ElevatorPortal.class,
+                false,
+                false
+        );
+
+        upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                1,
+                ElevatorPortal.class,
+                true,
+                false
+        );
+
+        upView.getAmenityBlockTemplates().add(upBlock00);
+        upView.getAmenityBlockTemplates().add(upBlockN10);
+        upView.getAmenityBlockTemplates().add(upBlockN11);
+        upView.getAmenityBlockTemplates().add(upBlock01);
+
+        elevatorPortalFootprint.addRotation(upView);
+
+        // Right view
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock01;
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock10;
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock11;
+
+        AmenityFootprint.Rotation rightView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
+
+        rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                ElevatorPortal.class,
+                true,
+                true
+        );
+
+        rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                1,
+                ElevatorPortal.class,
+                false,
+                false
+        );
+
+        rightBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                0,
+                ElevatorPortal.class,
+                true,
+                false
+        );
+
+        rightBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                1,
+                ElevatorPortal.class,
+                false,
+                false
+        );
+
+        rightView.getAmenityBlockTemplates().add(rightBlock00);
+        rightView.getAmenityBlockTemplates().add(rightBlock01);
+        rightView.getAmenityBlockTemplates().add(rightBlock10);
+        rightView.getAmenityBlockTemplates().add(rightBlock11);
+
+        elevatorPortalFootprint.addRotation(rightView);
+
+        // Down view
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock0N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock1N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock10;
+
+        AmenityFootprint.Rotation downView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
+
+        downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                ElevatorPortal.class,
+                true,
+                false
+        );
+
+        downBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                -1,
+                ElevatorPortal.class,
+                true,
+                true
+        );
+
+        downBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                -1,
+                ElevatorPortal.class,
+                false,
+                false
+        );
+
+        downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                0,
+                ElevatorPortal.class,
+                false,
+                false
+        );
+
+        downView.getAmenityBlockTemplates().add(downBlock00);
+        downView.getAmenityBlockTemplates().add(downBlock0N1);
+        downView.getAmenityBlockTemplates().add(downBlock1N1);
+        downView.getAmenityBlockTemplates().add(downBlock10);
+
+        elevatorPortalFootprint.addRotation(downView);
+
+        // Left view
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlockN1N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlockN10;
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlock0N1;
+
+        AmenityFootprint.Rotation leftView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
+
+        leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                ElevatorPortal.class,
+                true,
+                false
+        );
+
+        leftBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                -1,
+                ElevatorPortal.class,
+                false,
+                true
+        );
+
+        leftBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                0,
+                ElevatorPortal.class,
+                true,
+                false
+        );
+
+        leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                -1,
+                ElevatorPortal.class,
+                false,
+                false
+        );
+
+        leftView.getAmenityBlockTemplates().add(leftBlock00);
+        leftView.getAmenityBlockTemplates().add(leftBlockN1N1);
+        leftView.getAmenityBlockTemplates().add(leftBlockN10);
+        leftView.getAmenityBlockTemplates().add(leftBlock0N1);
+
+        elevatorPortalFootprint.addRotation(leftView);
     }
 
     protected ElevatorPortal(
-            Patch patch,
+            List<AmenityBlock> amenityBlocks,
             boolean enabled,
             Floor floorServed,
             ElevatorShaft elevatorShaft
     ) {
-        super(patch, enabled, floorServed);
+        super(amenityBlocks, enabled, floorServed);
 
         this.elevatorShaft = elevatorShaft;
 
@@ -151,25 +352,54 @@ public class ElevatorPortal extends Portal implements Queueable {
         return this.elevatorPortalGraphic.getGraphic();
     }
 
+    @Override
+    public String toString() {
+        return "Elevator";
+    }
+
+    // Elevator portal block
+    public static class ElevatorPortalBlock extends Amenity.AmenityBlock {
+        public static ElevatorPortal.ElevatorPortalBlock.ElevatorPortalBlockFactory elevatorPortalBlockFactory;
+
+        static {
+            elevatorPortalBlockFactory = new ElevatorPortal.ElevatorPortalBlock.ElevatorPortalBlockFactory();
+        }
+
+        private ElevatorPortalBlock(Patch patch, boolean attractor, boolean hasGraphic) {
+            super(patch, attractor, hasGraphic);
+        }
+
+        // Elevator portal block factory
+        public static class ElevatorPortalBlockFactory extends Amenity.AmenityBlock.AmenityBlockFactory {
+            @Override
+            public ElevatorPortal.ElevatorPortalBlock create(
+                    Patch patch,
+                    boolean attractor,
+                    boolean hasGraphic
+            ) {
+                return new ElevatorPortal.ElevatorPortalBlock(
+                        patch,
+                        attractor,
+                        hasGraphic
+                );
+            }
+        }
+    }
+
     // Elevator portal factory
     public static class ElevatorPortalFactory extends PortalFactory {
         public ElevatorPortal create(
-                Patch patch,
+                List<AmenityBlock> amenityBlocks,
                 boolean enabled,
                 Floor floorServed,
                 ElevatorShaft elevatorShaft
         ) {
             return new ElevatorPortal(
-                    patch,
+                    amenityBlocks,
                     enabled,
                     floorServed,
                     elevatorShaft
             );
         }
-    }
-
-    @Override
-    public String toString() {
-        return "Elevator";
     }
 }

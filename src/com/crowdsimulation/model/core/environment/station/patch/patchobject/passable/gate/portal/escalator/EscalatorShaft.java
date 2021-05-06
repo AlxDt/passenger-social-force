@@ -8,12 +8,11 @@ public class EscalatorShaft extends PortalShaft {
     private EscalatorDirection escalatorDirection;
 
     protected EscalatorShaft(
-            Patch patch,
             boolean enabled,
             int moveTime,
             EscalatorDirection escalatorDirection
     ) {
-        super(patch, enabled, moveTime);
+        super(null, enabled, moveTime);
 
         this.escalatorDirection = escalatorDirection;
     }
@@ -21,13 +20,11 @@ public class EscalatorShaft extends PortalShaft {
     // Escalator shaft factory
     public static class EscalatorShaftFactory extends PortalShaftFactory {
         public EscalatorShaft create(
-                Patch patch,
                 boolean enabled,
                 int moveTime,
                 EscalatorDirection escalatorDirection
         ) {
             return new EscalatorShaft(
-                    patch,
                     enabled,
                     moveTime,
                     escalatorDirection

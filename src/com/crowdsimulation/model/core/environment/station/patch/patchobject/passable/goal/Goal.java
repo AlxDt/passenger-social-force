@@ -6,6 +6,8 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Draw
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
+import java.util.List;
+
 public abstract class Goal extends NonObstacle implements Queueable, Drawable {
     // Denotes the textual identifier of this goal
     private String goalId;
@@ -25,8 +27,8 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
     // Denotes the queueing object associated with all goals like this
     private final QueueObject queueObject;
 
-    protected Goal(Patch patch, boolean enabled, int waitingTime, QueueObject queueObject) {
-        super(patch, enabled);
+    protected Goal(List<AmenityBlock> amenityBlocks, boolean enabled, int waitingTime, QueueObject queueObject) {
+        super(amenityBlocks, enabled);
 
         this.goalId = null;
         this.waitingTime = waitingTime;

@@ -3,7 +3,7 @@ package com.crowdsimulation.model.core.agent.passenger.movement;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
@@ -25,7 +25,7 @@ public class RoutePlan {
 
         boardingPlanList.add(StationGate.class);
         boardingPlanList.add(Security.class);
-        boardingPlanList.add(TicketBoothTransactionArea.class);
+        boardingPlanList.add(TicketBooth.class);
         boardingPlanList.add(Turnstile.class);
         boardingPlanList.add(TrainDoor.class);
 

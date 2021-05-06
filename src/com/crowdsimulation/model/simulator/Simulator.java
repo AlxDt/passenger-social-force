@@ -18,7 +18,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -40,7 +40,7 @@ public class Simulator {
 
     // Denotes the current build category within the current build category
     private final SimpleObjectProperty<BuildSubcategory> buildSubcategory;
-    private final SimpleObjectProperty<Class> buildSubcategoryClass;
+    private final SimpleObjectProperty<Class<? extends Amenity>> buildSubcategoryClass;
 
     // Denotes the current state mostly while the program is in building mode
     private final SimpleObjectProperty<BuildState> buildState;
@@ -50,14 +50,14 @@ public class Simulator {
     private Station station;
 
     // Denotes the index of the floor displayed
-    private SimpleIntegerProperty currentFloorIndex;
+    private final SimpleIntegerProperty currentFloorIndex;
 
     // Denotes the floor currently displayed
     private Floor currentFloor;
 
     // Denotes the current amenity and classes being drawn or edited
     private final SimpleObjectProperty<Amenity> currentAmenity;
-    private final SimpleObjectProperty<Class> currentClass;
+    private final SimpleObjectProperty<Class<? extends Amenity>> currentClass;
 
     // Miscellaneous variables
     private final SimpleBooleanProperty portalDrawing;
@@ -143,11 +143,11 @@ public class Simulator {
         return buildSubcategory.get();
     }
 
-    public Class getBuildSubcategoryClass() {
+    public Class<? extends Amenity> getBuildSubcategoryClass() {
         return buildSubcategoryClass.get();
     }
 
-    public SimpleObjectProperty<Class> buildSubcategoryClassProperty() {
+    public SimpleObjectProperty<Class<? extends Amenity>> buildSubcategoryClassProperty() {
         return buildSubcategoryClass;
     }
 
@@ -218,15 +218,15 @@ public class Simulator {
         this.currentAmenity.set(currentAmenity);
     }
 
-    public SimpleObjectProperty<Class> currentClassProperty() {
+    public SimpleObjectProperty<Class<? extends Amenity>> currentClassProperty() {
         return currentClass;
     }
 
-    public Class getCurrentClass() {
+    public Class<? extends Amenity> getCurrentClass() {
         return currentClass.get();
     }
 
-    public void setCurrentClass(Class currentClass) {
+    public void setCurrentClass(Class<? extends Amenity> currentClass) {
         this.currentClass.set(currentClass);
     }
 
@@ -333,7 +333,7 @@ public class Simulator {
     }
 
     // Convert a build subcategory to its corresponding class
-    private static Class buildSubcategoryToClass(BuildSubcategory buildSubcategory) {
+    private static Class<? extends Amenity> buildSubcategoryToClass(BuildSubcategory buildSubcategory) {
         switch (buildSubcategory) {
             case STATION_ENTRANCE_EXIT:
                 return StationGate.class;
@@ -346,7 +346,7 @@ public class Simulator {
             case ELEVATOR:
                 return ElevatorPortal.class;
             case TICKET_BOOTH:
-                return TicketBoothTransactionArea.class;
+                return TicketBooth.class;
             case TURNSTILE:
                 return Turnstile.class;
             case TRAIN_BOARDING_AREA:

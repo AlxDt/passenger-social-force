@@ -1,13 +1,16 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
+import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 
+import java.util.List;
+
 public abstract class Gate extends NonObstacle implements Drawable {
-    protected Gate(Patch patch, boolean enabled) {
-        super(patch, enabled);
+    protected Gate(List<AmenityBlock> amenityBlocks, boolean enabled) {
+        super(amenityBlocks, enabled);
     }
 
     // Spawn a passenger in this position
@@ -16,6 +19,6 @@ public abstract class Gate extends NonObstacle implements Drawable {
     }
 
     // Gate factory
-    public static abstract class GateFactory extends AmenityFactory {
+    public static abstract class GateFactory extends NonObstacleFactory {
     }
 }

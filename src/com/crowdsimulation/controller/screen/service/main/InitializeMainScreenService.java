@@ -1,11 +1,12 @@
 package com.crowdsimulation.controller.screen.service.main;
 
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.controller.screen.service.InitializeScreenService;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.beans.binding.Bindings;
@@ -13,12 +14,16 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 
+import java.awt.*;
 import java.util.List;
 
 public class InitializeMainScreenService extends InitializeScreenService {
@@ -177,7 +182,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             // Ticket booth
             CheckBox ticketBoothEnableCheckBox,
             Label ticketBoothModeLabel,
-            ChoiceBox<TicketBoothTransactionArea.TicketBoothType> ticketBoothModeChoiceBox,
+            ChoiceBox<TicketBooth.TicketBoothType> ticketBoothModeChoiceBox,
             Label ticketBoothIntervalLabel,
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
@@ -531,7 +536,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeConcourseAmenities(
             CheckBox ticketBoothEnableCheckBox,
             Label ticketBoothModeLabel,
-            ChoiceBox<TicketBoothTransactionArea.TicketBoothType> ticketBoothModeChoiceBox,
+            ChoiceBox<TicketBooth.TicketBoothType> ticketBoothModeChoiceBox,
             Label ticketBoothIntervalLabel,
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
@@ -577,7 +582,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeTicketBooth(
             CheckBox ticketBoothEnableCheckBox,
             Label ticketBoothModeLabel,
-            ChoiceBox<TicketBoothTransactionArea.TicketBoothType> ticketBoothModeChoiceBox,
+            ChoiceBox<TicketBooth.TicketBoothType> ticketBoothModeChoiceBox,
             Label ticketBoothIntervalLabel,
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
@@ -588,9 +593,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
         ticketBoothModeLabel.setLabelFor(ticketBoothModeChoiceBox);
 
         ticketBoothModeChoiceBox.setItems(FXCollections.observableArrayList(
-                TicketBoothTransactionArea.TicketBoothType.SINGLE_JOURNEY,
-                TicketBoothTransactionArea.TicketBoothType.STORED_VALUE,
-                TicketBoothTransactionArea.TicketBoothType.ALL_TICKET_TYPES
+                TicketBooth.TicketBoothType.SINGLE_JOURNEY,
+                TicketBooth.TicketBoothType.STORED_VALUE,
+                TicketBooth.TicketBoothType.ALL_TICKET_TYPES
         ));
         ticketBoothModeChoiceBox.getSelectionModel().select(0);
 
@@ -760,6 +765,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                         );
 
                         Main.mainScreenController.updatePromptText();
+                        GraphicsController.updateCurrentAmenityFootprint();
                     } else {
                         // If not, just check if this pane is the previous subcategory and the new subcategory is null
                         // The previous state was either from an expanded subcategory or has been replaced with another
@@ -770,6 +776,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                             );
 
                             Main.mainScreenController.updatePromptText();
+                            GraphicsController.updateCurrentAmenityFootprint();
                         }
                     }
                 });
@@ -786,6 +793,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                         );
 
                         Main.mainScreenController.updatePromptText();
+                        GraphicsController.updateCurrentAmenityFootprint();
                     }
                 });
             }

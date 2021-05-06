@@ -1,11 +1,15 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable;
 
-import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.editor.SecurityEditor;
+import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import javafx.scene.image.Image;
 
 import java.util.ArrayList;
@@ -24,18 +28,47 @@ public class Security extends BlockableAmenity {
     // Handles how this security is displayed
     private final SingularGraphic securityGraphic;
 
+    // Denotes the footprint of this amenity when being drawn
+    public static final AmenityFootprint securityFootprint;
+
+    // Denotes the editor of this amenity
+    public static final SecurityEditor securityEditor;
+
     static {
         securityFactory = new SecurityFactory();
+
+        // Initialize this amenity's footprints
+        securityFootprint = new AmenityFootprint();
+
+        // Up view
+        AmenityFootprint.Rotation upView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
+
+        AmenityFootprint.Rotation.AmenityBlockTemplate block00
+                = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                Security.class,
+                true,
+                true
+        );
+
+        upView.getAmenityBlockTemplates().add(block00);
+
+        securityFootprint.addRotation(upView);
+
+        // Initialize the editor
+        securityEditor = new SecurityEditor();
     }
 
     protected Security(
-            Patch patch,
+            List<AmenityBlock> amenityBlocks,
             boolean enabled,
             int waitingTime,
             boolean blockPassengers
     ) {
         super(
-                patch,
+                amenityBlocks,
                 enabled,
                 waitingTime,
                 new QueueObject(),
@@ -131,16 +164,45 @@ public class Security extends BlockableAmenity {
         return this.securityGraphic.getGraphic();
     }
 
+    // Security block
+    public static class SecurityBlock extends Amenity.AmenityBlock {
+        public static SecurityBlockFactory securityBlockFactory;
+
+        static {
+            securityBlockFactory = new SecurityBlockFactory();
+        }
+
+        private SecurityBlock(Patch patch, boolean attractor, boolean hasGraphic) {
+            super(patch, attractor, hasGraphic);
+        }
+
+        // Security block factory
+        public static class SecurityBlockFactory extends Amenity.AmenityBlock.AmenityBlockFactory {
+            @Override
+            public Security.SecurityBlock create(
+                    Patch patch,
+                    boolean attractor,
+                    boolean hasGraphic
+            ) {
+                return new SecurityBlock(
+                        patch,
+                        attractor,
+                        hasGraphic
+                );
+            }
+        }
+    }
+
     // Security factory
     public static class SecurityFactory extends GoalFactory {
         public Security create(
-                Patch patch,
+                List<AmenityBlock> amenityBlocks,
                 boolean enabled,
                 int waitingTime,
                 boolean blockPassengers
         ) {
             return new Security(
-                    patch,
+                    amenityBlocks,
                     enabled,
                     waitingTime,
                     blockPassengers

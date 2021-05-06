@@ -4,14 +4,14 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
+import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
-import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
-import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,11 +46,6 @@ public class Floor extends BaseStationObject implements Environment {
     // Factory for floor creation
     private static final Floor.FloorFactory floorFactory;
 
-/*    private final List<Patch> starts;
-    private final List<List<Patch>> goals;
-    private final List<Patch> obstacles;
-    private final List<Passenger> passengers;*/
-
     static {
         // Initialize factories
         floorFactory = new FloorFactory();
@@ -79,16 +74,6 @@ public class Floor extends BaseStationObject implements Environment {
 
         // Initialize the passenger list
         this.passengersInFloor = new ArrayList<>();
-
-/*        // Initialize empty start and end patches
-        this.starts = new ArrayList<>();
-        this.goals = new ArrayList<>();
-
-        // Initialize the empty list of obstacles
-        this.obstacles = new ArrayList<>();
-
-        // Initialize the passenger list
-        this.passengers = new ArrayList<>();*/
     }
 
     private void initializePatches() {

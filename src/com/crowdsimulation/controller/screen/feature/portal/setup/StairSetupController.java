@@ -43,7 +43,6 @@ public class StairSetupController extends PortalSetupController {
                 new StairShaft.StairShaftFactory();
 
         StairShaft stairShaft = stairShaftFactory.create(
-                null,
                 enabled,
                 moveTime
         );

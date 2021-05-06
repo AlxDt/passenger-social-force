@@ -1,10 +1,15 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
-import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.editor.StationGateEditor;
+import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import javafx.scene.image.Image;
+
+import java.util.List;
 
 public class StationGate extends Gate {
     // Denotes the chance of generating a passenger per second
@@ -19,17 +24,46 @@ public class StationGate extends Gate {
     // Handles how the station gate is displayed
     private final SingularGraphic stationGateGraphic;
 
+    // Denotes the footprint of this amenity when being drawn
+    public static final AmenityFootprint stationGateFootprint;
+
+    // Denotes the editor of this amenity
+    public static final StationGateEditor stationGateEditor;
+
     static {
         stationGateFactory = new StationGateFactory();
+
+        // Initialize this amenity's footprints
+        stationGateFootprint = new AmenityFootprint();
+
+        // Up view
+        AmenityFootprint.Rotation upView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
+
+        AmenityFootprint.Rotation.AmenityBlockTemplate block00
+                = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                StationGate.class,
+                true,
+                true
+        );
+
+        upView.getAmenityBlockTemplates().add(block00);
+
+        stationGateFootprint.addRotation(upView);
+
+        // Initialize the editor
+        stationGateEditor = new StationGateEditor();
     }
 
     protected StationGate(
-            Patch patch,
+            List<AmenityBlock> amenityBlocks,
             boolean enabled,
             double chancePerSecond,
             StationGateMode stationGateMode
     ) {
-        super(patch, enabled);
+        super(amenityBlocks, enabled);
 
         this.chancePerSecond = chancePerSecond;
         this.stationGateMode = stationGateMode;
@@ -73,16 +107,45 @@ public class StationGate extends Gate {
         return this.stationGateGraphic.getGraphic();
     }
 
+    // Station gate block
+    public static class StationGateBlock extends Amenity.AmenityBlock {
+        public static StationGateBlockFactory stationGateBlockFactory;
+
+        static {
+            stationGateBlockFactory = new StationGateBlockFactory();
+        }
+
+        private StationGateBlock(Patch patch, boolean attractor, boolean hasGraphic) {
+            super(patch, attractor, hasGraphic);
+        }
+
+        // Station gate block factory
+        public static class StationGateBlockFactory extends Amenity.AmenityBlock.AmenityBlockFactory {
+            @Override
+            public StationGateBlock create(
+                    Patch patch,
+                    boolean attractor,
+                    boolean hasGraphic
+            ) {
+                return new StationGateBlock(
+                        patch,
+                        attractor,
+                        hasGraphic
+                );
+            }
+        }
+    }
+
     // Station gate factory
     public static class StationGateFactory extends GateFactory {
         public StationGate create(
-                Patch patch,
+                List<AmenityBlock> amenityBlocks,
                 boolean enabled,
                 double chancePerSecond,
                 StationGateMode stationGateMode
         ) {
             return new StationGate(
-                    patch,
+                    amenityBlocks,
                     enabled,
                     chancePerSecond,
                     stationGateMode

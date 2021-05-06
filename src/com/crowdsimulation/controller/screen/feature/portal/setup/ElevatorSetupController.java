@@ -57,7 +57,6 @@ public class ElevatorSetupController extends PortalSetupController {
                 new ElevatorShaft.ElevatorShaftFactory();
 
         ElevatorShaft elevatorShaft = elevatorShaftFactory.create(
-                null,
                 enabled,
                 moveTime,
                 delayTime,

@@ -94,7 +94,6 @@ public class EscalatorEditController extends PortalEditController {
             EscalatorShaft.EscalatorShaftFactory escalatorShaftFactory = new EscalatorShaft.EscalatorShaftFactory();
 
             this.escalatorShaft = escalatorShaftFactory.create(
-                    null,
                     false,
                     -1,
                     null

@@ -3,6 +3,8 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
+import java.util.List;
+
 public abstract class Portal extends Gate {
     // Denotes the floor that this portal serves
     private final Floor floorServed;
@@ -13,8 +15,8 @@ public abstract class Portal extends Gate {
     // Denotes the pair (other end) of this portal
     private Portal pair;
 
-    protected Portal(Patch patch, boolean enabled, Floor floorServed) {
-        super(patch, enabled);
+    protected Portal(List<AmenityBlock> amenityBlocks, boolean enabled, Floor floorServed) {
+        super(amenityBlocks, enabled);
 
         this.floorServed = floorServed;
     }

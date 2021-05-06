@@ -1,11 +1,13 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable;
 
-import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import javafx.scene.image.Image;
 
 import java.util.ArrayList;
@@ -15,7 +17,7 @@ public class Turnstile extends BlockableAmenity {
     // Denotes the current mode of this turnstile
     private TurnstileMode turnstileMode;
 
-    // Denotes the floor field states needed to access the floor fields of this security gate
+    // Denotes the floor field states needed to access the floor fields of this turnstile
     private final QueueingFloorField.FloorFieldState turnstileFloorFieldStateBoarding;
     private final QueueingFloorField.FloorFieldState turnstileFloorFieldStateAlighting;
 
@@ -23,21 +25,219 @@ public class Turnstile extends BlockableAmenity {
     public static final TurnstileFactory turnstileFactory;
 
     // Handles how this turnstile is displayed
-    private SingularGraphic turnstileGraphic;
+    private final SingularGraphic turnstileGraphic;
+
+    // Denotes the footprint of this amenity when being drawn
+    public static final AmenityFootprint turnstileFootprint;
 
     static {
         turnstileFactory = new TurnstileFactory();
+
+        // Initialize this amenity's footprints
+        turnstileFootprint = new AmenityFootprint();
+
+        // Up view
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN1N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN10;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN11;
+
+        AmenityFootprint.Rotation upView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
+
+        upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                Turnstile.class,
+                true,
+                false
+        );
+
+        upBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                -1,
+                Turnstile.class,
+                false,
+                true
+        );
+
+        upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                0,
+                Turnstile.class,
+                false,
+                false
+        );
+
+        upBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                1,
+                Turnstile.class,
+                false,
+                false
+        );
+
+        upView.getAmenityBlockTemplates().add(upBlock00);
+        upView.getAmenityBlockTemplates().add(upBlockN1N1);
+        upView.getAmenityBlockTemplates().add(upBlockN10);
+        upView.getAmenityBlockTemplates().add(upBlockN11);
+
+        turnstileFootprint.addRotation(upView);
+
+        // Right view
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlockN11;
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock01;
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock11;
+
+        AmenityFootprint.Rotation rightView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
+
+        rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                Turnstile.class,
+                true,
+                false
+        );
+
+        rightBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                1,
+                Turnstile.class,
+                false,
+                true
+        );
+
+        rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                1,
+                Turnstile.class,
+                false,
+                false
+        );
+
+        rightBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                1,
+                Turnstile.class,
+                false,
+                false
+        );
+
+        rightView.getAmenityBlockTemplates().add(rightBlock00);
+        rightView.getAmenityBlockTemplates().add(rightBlockN11);
+        rightView.getAmenityBlockTemplates().add(rightBlock01);
+        rightView.getAmenityBlockTemplates().add(rightBlock11);
+
+        turnstileFootprint.addRotation(rightView);
+
+        // Down view
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock1N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock10;
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock11;
+
+        AmenityFootprint.Rotation downView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
+
+        downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                Turnstile.class,
+                true,
+                false
+        );
+
+        downBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                -1,
+                Turnstile.class,
+                false,
+                true
+        );
+
+        downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                0,
+                Turnstile.class,
+                false,
+                false
+        );
+
+        downBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                1,
+                Turnstile.class,
+                false,
+                false
+        );
+
+        downView.getAmenityBlockTemplates().add(downBlock00);
+        downView.getAmenityBlockTemplates().add(downBlock1N1);
+        downView.getAmenityBlockTemplates().add(downBlock10);
+        downView.getAmenityBlockTemplates().add(downBlock11);
+
+        turnstileFootprint.addRotation(downView);
+
+        // Left view
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlockN1N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlock0N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlock1N1;
+
+        AmenityFootprint.Rotation leftView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
+
+        leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                Turnstile.class,
+                true,
+                false
+        );
+
+        leftBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                -1,
+                -1,
+                Turnstile.class,
+                false,
+                true
+        );
+
+        leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                -1,
+                Turnstile.class,
+                false,
+                false
+        );
+
+        leftBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                1,
+                -1,
+                Turnstile.class,
+                false,
+                false
+        );
+
+        leftView.getAmenityBlockTemplates().add(leftBlock00);
+        leftView.getAmenityBlockTemplates().add(leftBlockN1N1);
+        leftView.getAmenityBlockTemplates().add(leftBlock0N1);
+        leftView.getAmenityBlockTemplates().add(leftBlock1N1);
+
+        turnstileFootprint.addRotation(leftView);
     }
 
     protected Turnstile(
-            Patch patch,
+            List<AmenityBlock> amenityBlocks,
             boolean enabled,
             int waitingTime,
             boolean blockEntry,
             TurnstileMode turnstileMode
     ) {
         super(
-                patch,
+                amenityBlocks,
                 enabled,
                 waitingTime,
                 new QueueObject(),
@@ -161,17 +361,46 @@ public class Turnstile extends BlockableAmenity {
         return this.turnstileGraphic.getGraphic();
     }
 
+    // Turnstile block
+    public static class TurnstileBlock extends Amenity.AmenityBlock {
+        public static Turnstile.TurnstileBlock.TurnstileBlockFactory turnstileBlockFactory;
+
+        static {
+            turnstileBlockFactory = new Turnstile.TurnstileBlock.TurnstileBlockFactory();
+        }
+
+        private TurnstileBlock(Patch patch, boolean attractor, boolean hasGraphic) {
+            super(patch, attractor, hasGraphic);
+        }
+
+        // Turnstile block factory
+        public static class TurnstileBlockFactory extends Amenity.AmenityBlock.AmenityBlockFactory {
+            @Override
+            public Turnstile.TurnstileBlock create(
+                    Patch patch,
+                    boolean attractor,
+                    boolean hasGraphic
+            ) {
+                return new Turnstile.TurnstileBlock(
+                        patch,
+                        attractor,
+                        hasGraphic
+                );
+            }
+        }
+    }
+
     // Turnstile factory
     public static class TurnstileFactory extends GoalFactory {
         public Turnstile create(
-                Patch patch,
+                List<AmenityBlock> amenityBlocks,
                 boolean enabled,
                 int waitingTime,
                 boolean blockEntry,
                 TurnstileMode turnstileMode
         ) {
             return new Turnstile(
-                    patch,
+                    amenityBlocks,
                     enabled,
                     waitingTime,
                     blockEntry,

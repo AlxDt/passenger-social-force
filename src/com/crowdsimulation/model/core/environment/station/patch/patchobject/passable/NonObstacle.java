@@ -3,12 +3,14 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
+import java.util.List;
+
 public abstract class NonObstacle extends Amenity {
     // Denotes whether this passable patch object is enabled or not (passengers cannot pass through it)
     protected boolean enabled;
 
-    public NonObstacle(Patch patch, boolean enabled) {
-        super(patch);
+    public NonObstacle(List<AmenityBlock> amenityBlocks, boolean enabled) {
+        super(amenityBlocks);
 
         this.enabled = enabled;
     }
@@ -19,5 +21,9 @@ public abstract class NonObstacle extends Amenity {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    // Non-obstacle factory
+    public static abstract class NonObstacleFactory extends AmenityFactory {
     }
 }

@@ -1,9 +1,12 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Obstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
+
+import java.util.List;
 
 public class PortalShaft extends NonObstacle {
     // Denotes the lower and upper portals of this shaft
@@ -13,8 +16,8 @@ public class PortalShaft extends NonObstacle {
     // Denotes the time (s) needed to move the passengers from one end of the shaft to another
     private int moveTime;
 
-    protected PortalShaft(Patch patch, boolean enabled, int moveTime) {
-        super(patch, enabled);
+    protected PortalShaft(List<AmenityBlock> amenityBlocks, boolean enabled, int moveTime) {
+        super(amenityBlocks, enabled);
 
         this.moveTime = moveTime;
     }

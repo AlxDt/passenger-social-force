@@ -5,7 +5,6 @@ import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement
 import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
@@ -13,7 +12,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBoothTransactionArea;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
@@ -119,7 +118,7 @@ public class Station extends BaseStationObject implements Environment {
             }
 
             for (TicketBooth ticketBooth : ticketBooths) {
-                if (!ticketBooth.getTicketBoothTransactionArea().isFloorFieldsComplete()) {
+                if (!ticketBooth.isFloorFieldsComplete()) {
                     return false;
                 }
             }
@@ -251,12 +250,8 @@ public class Station extends BaseStationObject implements Environment {
             amenityList.addAll(currentFloor.getStationGates());
         } else if (nextAmenity == Security.class) {
             amenityList.addAll(currentFloor.getSecurities());
-        } else if (nextAmenity == TicketBoothTransactionArea.class) {
-            List<TicketBooth> ticketBooths = currentFloor.getTicketBooths();
-
-            for (TicketBooth ticketBooth : ticketBooths) {
-                amenityList.add(ticketBooth.getTicketBoothTransactionArea());
-            }
+        } else if (nextAmenity == TicketBooth.class) {
+            amenityList.addAll(currentFloor.getTicketBooths());
         } else if (nextAmenity == Turnstile.class) {
             amenityList.addAll(currentFloor.getTurnstiles());
         } else if (nextAmenity == TrainDoor.class) {

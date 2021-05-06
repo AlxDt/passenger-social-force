@@ -235,7 +235,7 @@ public class PassengerMovement {
 
     // Get the future position of this passenger given a goal and a heading
     public Coordinates getFuturePosition(Amenity goal, double heading, double walkingDistance) {
-        // Check if the distance between this passenger and its goal
+/*        // Check if the distance between this passenger and its goal
         double distanceToGoal = Coordinates.distance(this.position, goal.getPatch().getPatchCenterCoordinates());
 
         // If the distance between this passenger and the goal is less than the distance this passenger covers every
@@ -267,7 +267,9 @@ public class PassengerMovement {
 
             // Then set the position of this passenger to the new coordinates
             return new Coordinates(newX, newY);
-        }
+        }*/
+        // TODO: remove return null
+        return null;
     }
 
     // Make the passenger move given the currently set heading and walking distance

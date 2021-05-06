@@ -86,7 +86,6 @@ public class StairEditController extends PortalEditController {
             StairShaft.StairShaftFactory stairShaftFactory = new StairShaft.StairShaftFactory();
 
             this.stairShaft = stairShaftFactory.create(
-                    null,
                     false,
                     -1
             );

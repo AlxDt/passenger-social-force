@@ -43,7 +43,6 @@ public class EscalatorSetupController extends PortalSetupController {
                 = new EscalatorShaft.EscalatorShaftFactory();
 
         EscalatorShaft escalatorShaft = escalatorShaftFactory.create(
-                null,
                 enabled,
                 moveTime,
                 escalatorDirection

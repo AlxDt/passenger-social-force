@@ -4,8 +4,8 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
 
 public class StairShaft extends PortalShaft {
-    protected StairShaft(Patch patch, boolean enabled, int moveTime) {
-        super(patch, enabled, moveTime);
+    protected StairShaft(boolean enabled, int moveTime) {
+        super(null, enabled, moveTime);
     }
 
     // Factory for stair shaft creation
@@ -17,9 +17,8 @@ public class StairShaft extends PortalShaft {
 
     // Stair shaft factory
     public static class StairShaftFactory extends PortalShaftFactory {
-        public StairShaft create(Patch patch, boolean enabled, int moveTime) {
+        public StairShaft create(boolean enabled, int moveTime) {
             return new StairShaft(
-                    patch,
                     enabled,
                     moveTime
             );

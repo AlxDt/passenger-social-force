@@ -46,7 +46,7 @@ public class Passenger extends PatchObject implements Agent {
         this.passengerMovement = new PassengerMovement(
                 gate,
                 this,
-                gate.getPatch().getPatchCenterCoordinates()
+                gate.getAttractors().get(0).getPatch().getPatchCenterCoordinates()
         );
     }
 

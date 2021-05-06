@@ -12,76 +12,15 @@ public abstract class FloorField extends BaseStationObject implements Environmen
     // Denotes the patches contained in this floor field
     private final List<Patch> associatedPatches;
 
-    /*    private double value;*/
-
     protected FloorField() {
         super();
 
-        /*//        this.value = 0.0;*/
         this.associatedPatches = new ArrayList<>();
-/*
-        this.goal = null;
-        this.apex = null;*/
     }
-
-/*    public double getValue() {
-        return value;
-    }
-
-    public void setValue(double value) {
-        this.value = value;
-    }
-
-    public Patch getGoal() {
-        return goal;
-    }
-
-    public void setGoal(Patch goal) {
-        this.goal = goal;
-    }*/
-
-/*    public FloorField(QueueObject goal, Patch apex) {
-        super();
-
-        this.associatedPatches = new ArrayList<>();
-
-        this.goal = goal;
-        this.apex = apex;
-    }*/
 
     public List<Patch> getAssociatedPatches() {
         return associatedPatches;
     }
-
-/*    public Patch getApex() {
-        return apex;
-    }
-
-    public QueueObject getGoal() {
-        return goal;
-    }
-
-    public void setApex(Patch apex) {
-        this.apex = apex;
-    }
-
-    public void setGoal(QueueObject goal) {
-        this.goal = goal;
-    }*/
-
-/*    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FloorField that = (FloorField) o;
-        return Double.compare(that.value, value) == 0 &&
-                Objects.equals(goal, that.goal);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value, goal);
-    }*/
 
     public static abstract class FloorFieldFactory extends StationObjectFactory {
 

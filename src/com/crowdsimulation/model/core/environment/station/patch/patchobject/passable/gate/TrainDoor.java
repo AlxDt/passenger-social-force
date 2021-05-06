@@ -1,12 +1,15 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
-import com.crowdsimulation.controller.graphics.amenity.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import javafx.scene.image.Image;
 
 import java.util.ArrayList;
@@ -28,17 +31,71 @@ public class TrainDoor extends Gate implements Queueable {
     // Handles how the train door is displayed
     private final SingularGraphic trainDoorGraphic;
 
+    // Denotes the footprint of this amenity when being drawn
+    public static final AmenityFootprint trainDoorFootprint;
+
     static {
         trainDoorFactory = new TrainDoorFactory();
+
+        // Initialize this amenity's footprints
+        trainDoorFootprint = new AmenityFootprint();
+
+        // Up view
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock01;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock02;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock03;
+
+        AmenityFootprint.Rotation upView
+                = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
+
+        upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                0,
+                TrainDoor.class,
+                true,
+                true
+        );
+
+        upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                1,
+                TrainDoor.class,
+                false,
+                false
+        );
+
+        upBlock02 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                2,
+                TrainDoor.class,
+                false,
+                false
+        );
+
+        upBlock03 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                0,
+                3,
+                TrainDoor.class,
+                true,
+                false
+        );
+
+        upView.getAmenityBlockTemplates().add(upBlock00);
+        upView.getAmenityBlockTemplates().add(upBlock01);
+        upView.getAmenityBlockTemplates().add(upBlock02);
+        upView.getAmenityBlockTemplates().add(upBlock03);
+
+        trainDoorFootprint.addRotation(upView);
     }
 
     protected TrainDoor(
-            Patch patch,
+            List<AmenityBlock> amenityBlocks,
             boolean enabled,
             TrainDoorPlatform platform,
             List<TrainDoorCarriage> trainDoorCarriagesSupported
     ) {
-        super(patch, enabled);
+        super(amenityBlocks, enabled);
 
         this.platform = platform;
         this.trainDoorCarriagesSupported = new ArrayList<>();
@@ -150,16 +207,45 @@ public class TrainDoor extends Gate implements Queueable {
         return this.trainDoorGraphic.getGraphic();
     }
 
+    // Train door block
+    public static class TrainDoorBlock extends Amenity.AmenityBlock {
+        public static TrainDoor.TrainDoorBlock.TrainDoorBlockFactory trainDoorBlockFactory;
+
+        static {
+            trainDoorBlockFactory = new TrainDoor.TrainDoorBlock.TrainDoorBlockFactory();
+        }
+
+        private TrainDoorBlock(Patch patch, boolean attractor, boolean hasGraphic) {
+            super(patch, attractor, hasGraphic);
+        }
+
+        // Train door block factory
+        public static class TrainDoorBlockFactory extends Amenity.AmenityBlock.AmenityBlockFactory {
+            @Override
+            public TrainDoor.TrainDoorBlock create(
+                    Patch patch,
+                    boolean attractor,
+                    boolean hasGraphic
+            ) {
+                return new TrainDoor.TrainDoorBlock(
+                        patch,
+                        attractor,
+                        hasGraphic
+                );
+            }
+        }
+    }
+
     // Train door factory
     public static class TrainDoorFactory extends GateFactory {
         public TrainDoor create(
-                Patch patch,
+                List<AmenityBlock> amenityBlocks,
                 boolean enabled,
                 TrainDoorPlatform platform,
                 List<TrainDoorCarriage> trainDoorCarriagesSupported
         ) {
             return new TrainDoor(
-                    patch,
+                    amenityBlocks,
                     enabled,
                     platform,
                     trainDoorCarriagesSupported

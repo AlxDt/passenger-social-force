@@ -29,14 +29,13 @@ public class ElevatorShaft extends PortalShaft {
     }
 
     protected ElevatorShaft(
-            Patch patch,
             boolean enabled,
             int moveTime,
             int openDelayTime,
             int doorOpenTime,
             ElevatorDirection initialElevatorDirection
     ) {
-        super(patch, enabled, moveTime);
+        super(null, enabled, moveTime);
 
         this.openDelayTime = openDelayTime;
         this.doorOpenTime = doorOpenTime;
@@ -87,7 +86,6 @@ public class ElevatorShaft extends PortalShaft {
     // Elevator shaft factory
     public static class ElevatorShaftFactory extends PortalShaftFactory {
         public ElevatorShaft create(
-                Patch patch,
                 boolean enabled,
                 int moveTime,
                 int openDelayTime,
@@ -95,7 +93,6 @@ public class ElevatorShaft extends PortalShaft {
                 ElevatorDirection initialElevatorDirection
         ) {
             return new ElevatorShaft(
-                    patch,
                     enabled,
                     moveTime,
                     openDelayTime,
