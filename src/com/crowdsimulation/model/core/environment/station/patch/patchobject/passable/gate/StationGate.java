@@ -3,30 +3,18 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.controller.graphics.amenity.editor.StationGateEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.StationGateGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import javafx.scene.image.Image;
 
 import java.util.List;
 
 public class StationGate extends Gate {
-    // Denotes the chance of generating a passenger per second
-    private double chancePerSecond;
-
-    // Denotes the mode of this station gate (whether it's entry/exit only, or both)
-    private StationGateMode stationGateMode;
-
     // Factory for station gate creation
     public static final StationGateFactory stationGateFactory;
-
-    // Handles how the station gate is displayed
-    private final SingularGraphic stationGateGraphic;
-
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint stationGateFootprint;
-
     // Denotes the editor of this amenity
     public static final StationGateEditor stationGateEditor;
 
@@ -42,6 +30,7 @@ public class StationGate extends Gate {
 
         AmenityFootprint.Rotation.AmenityBlockTemplate block00
                 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 StationGate.class,
@@ -57,6 +46,13 @@ public class StationGate extends Gate {
         stationGateEditor = new StationGateEditor();
     }
 
+    // Handles how the station gate is displayed
+    private final StationGateGraphic stationGateGraphic;
+    // Denotes the chance of generating a passenger per second
+    private double chancePerSecond;
+    // Denotes the mode of this station gate (whether it's entry/exit only, or both)
+    private StationGateMode stationGateMode;
+
     protected StationGate(
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
@@ -68,7 +64,7 @@ public class StationGate extends Gate {
         this.chancePerSecond = chancePerSecond;
         this.stationGateMode = stationGateMode;
 
-        this.stationGateGraphic = new SingularGraphic(this);
+        this.stationGateGraphic = new StationGateGraphic(this);
     }
 
     public double getChancePerSecond() {
@@ -103,8 +99,26 @@ public class StationGate extends Gate {
     }
 
     @Override
-    public Image getGraphic() {
-        return this.stationGateGraphic.getGraphic();
+    public String getGraphicURL() {
+        return this.stationGateGraphic.getGraphicURL();
+    }
+
+    // Lists the mode of this station gate (whether it's entry/exit only, or both)
+    public enum StationGateMode {
+        ENTRANCE("Entrance"),
+        EXIT("Exit"),
+        ENTRANCE_AND_EXIT("Entrance and exit");
+
+        private final String name;
+
+        private StationGateMode(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
     }
 
     // Station gate block
@@ -125,7 +139,8 @@ public class StationGate extends Gate {
             public StationGateBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
                 return new StationGateBlock(
                         patch,
@@ -150,24 +165,6 @@ public class StationGate extends Gate {
                     chancePerSecond,
                     stationGateMode
             );
-        }
-    }
-
-    // Lists the mode of this station gate (whether it's entry/exit only, or both)
-    public enum StationGateMode {
-        ENTRANCE("Entrance"),
-        EXIT("Exit"),
-        ENTRANCE_AND_EXIT("Entrance and exit");
-
-        private final String name;
-
-        private StationGateMode(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return this.name;
         }
     }
 }

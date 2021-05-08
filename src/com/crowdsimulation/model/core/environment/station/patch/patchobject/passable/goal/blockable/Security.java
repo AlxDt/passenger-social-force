@@ -3,34 +3,21 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.controller.graphics.amenity.editor.SecurityEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.SecurityGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Security extends BlockableAmenity {
-    // Denotes whether to block passengers from passing through
-    private boolean blockEntry;
-
-    // Denotes the floor field state needed to access the floor fields of this security gate
-    private final QueueingFloorField.FloorFieldState securityFloorFieldState;
-
     // Factory for security gate creation
     public static final SecurityFactory securityFactory;
-
-    // Handles how this security is displayed
-    private final SingularGraphic securityGraphic;
-
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint securityFootprint;
-
     // Denotes the editor of this amenity
     public static final SecurityEditor securityEditor;
 
@@ -46,6 +33,7 @@ public class Security extends BlockableAmenity {
 
         AmenityFootprint.Rotation.AmenityBlockTemplate block00
                 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 Security.class,
@@ -60,6 +48,13 @@ public class Security extends BlockableAmenity {
         // Initialize the editor
         securityEditor = new SecurityEditor();
     }
+
+    // Denotes the floor field state needed to access the floor fields of this security gate
+    private final QueueingFloorField.FloorFieldState securityFloorFieldState;
+    // Handles how this security is displayed
+    private final SecurityGraphic securityGraphic;
+    // Denotes whether to block passengers from passing through
+    private boolean blockEntry;
 
     protected Security(
             List<AmenityBlock> amenityBlocks,
@@ -88,7 +83,7 @@ public class Security extends BlockableAmenity {
         // Using the floor field state defined earlier, create the floor field
         this.getQueueObject().getFloorFields().put(this.securityFloorFieldState, queueingFloorField);
 
-        this.securityGraphic = new SingularGraphic(this);
+        this.securityGraphic = new SecurityGraphic(this);
     }
 
     public boolean isBlockEntry() {
@@ -160,8 +155,8 @@ public class Security extends BlockableAmenity {
     }
 
     @Override
-    public Image getGraphic() {
-        return this.securityGraphic.getGraphic();
+    public String getGraphicURL() {
+        return this.securityGraphic.getGraphicURL();
     }
 
     // Security block
@@ -182,7 +177,8 @@ public class Security extends BlockableAmenity {
             public Security.SecurityBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
                 return new SecurityBlock(
                         patch,

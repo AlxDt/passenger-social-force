@@ -1,14 +1,15 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable;
 
+import com.crowdsimulation.controller.graphics.amenity.editor.TurnstileEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GenericGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.TurnstileGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +26,13 @@ public class Turnstile extends BlockableAmenity {
     public static final TurnstileFactory turnstileFactory;
 
     // Handles how this turnstile is displayed
-    private final SingularGraphic turnstileGraphic;
+    private final TurnstileGraphic turnstileGraphic;
 
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint turnstileFootprint;
+
+    // Denotes the editor of this amenity
+    public static final TurnstileEditor turnstileEditor;
 
     static {
         turnstileFactory = new TurnstileFactory();
@@ -46,6 +50,7 @@ public class Turnstile extends BlockableAmenity {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
         upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 Turnstile.class,
@@ -54,6 +59,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         upBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 -1,
                 -1,
                 Turnstile.class,
@@ -62,6 +68,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 -1,
                 0,
                 Turnstile.class,
@@ -70,6 +77,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         upBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 -1,
                 1,
                 Turnstile.class,
@@ -94,6 +102,7 @@ public class Turnstile extends BlockableAmenity {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
 
         rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 0,
                 Turnstile.class,
@@ -102,6 +111,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         rightBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 -1,
                 1,
                 Turnstile.class,
@@ -110,6 +120,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 1,
                 Turnstile.class,
@@ -118,6 +129,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         rightBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 1,
                 1,
                 Turnstile.class,
@@ -142,6 +154,7 @@ public class Turnstile extends BlockableAmenity {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
 
         downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 0,
                 0,
                 Turnstile.class,
@@ -150,6 +163,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         downBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 1,
                 -1,
                 Turnstile.class,
@@ -158,6 +172,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 1,
                 0,
                 Turnstile.class,
@@ -166,6 +181,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         downBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 1,
                 1,
                 Turnstile.class,
@@ -190,6 +206,7 @@ public class Turnstile extends BlockableAmenity {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
 
         leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 0,
                 Turnstile.class,
@@ -198,6 +215,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         leftBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 -1,
                 -1,
                 Turnstile.class,
@@ -206,6 +224,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 -1,
                 Turnstile.class,
@@ -214,6 +233,7 @@ public class Turnstile extends BlockableAmenity {
         );
 
         leftBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 1,
                 -1,
                 Turnstile.class,
@@ -227,6 +247,9 @@ public class Turnstile extends BlockableAmenity {
         leftView.getAmenityBlockTemplates().add(leftBlock1N1);
 
         turnstileFootprint.addRotation(leftView);
+
+        // Initialize the editor
+        turnstileEditor = new TurnstileEditor();
     }
 
     protected Turnstile(
@@ -267,7 +290,7 @@ public class Turnstile extends BlockableAmenity {
         this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateBoarding, floorFieldBoarding);
         this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateAlighting, floorFieldAlighting);
 
-        this.turnstileGraphic = new SingularGraphic(this);
+        this.turnstileGraphic = new TurnstileGraphic(this);
     }
 
     public TurnstileMode getTurnstileMode() {
@@ -357,20 +380,40 @@ public class Turnstile extends BlockableAmenity {
     }
 
     @Override
-    public Image getGraphic() {
-        return this.turnstileGraphic.getGraphic();
+    public String getGraphicURL() {
+        return this.turnstileGraphic.getGraphicURL();
     }
 
     // Turnstile block
     public static class TurnstileBlock extends Amenity.AmenityBlock {
         public static Turnstile.TurnstileBlock.TurnstileBlockFactory turnstileBlockFactory;
 
+        private final int graphicXOffset;
+        private final int graphicYOffset;
+
         static {
             turnstileBlockFactory = new Turnstile.TurnstileBlock.TurnstileBlockFactory();
         }
 
-        private TurnstileBlock(Patch patch, boolean attractor, boolean hasGraphic) {
+        private TurnstileBlock(
+                Patch patch,
+                boolean attractor,
+                boolean hasGraphic,
+                int graphicXOffset,
+                int graphicYOffset
+        ) {
             super(patch, attractor, hasGraphic);
+
+            this.graphicXOffset = graphicXOffset;
+            this.graphicYOffset = graphicYOffset;
+        }
+
+        public int getGraphicXOffset() {
+            return graphicXOffset;
+        }
+
+        public int getGraphicYOffset() {
+            return graphicYOffset;
         }
 
         // Turnstile block factory
@@ -379,12 +422,27 @@ public class Turnstile extends BlockableAmenity {
             public Turnstile.TurnstileBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
+                int graphicXOffset = 0;
+                int graphicYOffset = 0;
+
+                AmenityFootprint.Rotation.Orientation turnstileOrientation = orientation[0];
+
+                // Make the necessary adjustments
+                if (turnstileOrientation == AmenityFootprint.Rotation.Orientation.DOWN) {
+                    graphicYOffset = -1;
+                } else if (turnstileOrientation == AmenityFootprint.Rotation.Orientation.RIGHT) {
+                    graphicXOffset = -1;
+                }
+
                 return new Turnstile.TurnstileBlock(
                         patch,
                         attractor,
-                        hasGraphic
+                        hasGraphic,
+                        graphicXOffset,
+                        graphicYOffset
                 );
             }
         }

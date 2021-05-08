@@ -38,6 +38,7 @@ public class StairPortal extends Portal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
         upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 StairPortal.class,
@@ -46,6 +47,7 @@ public class StairPortal extends Portal {
         );
 
         upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 -1,
                 0,
                 StairPortal.class,
@@ -66,6 +68,7 @@ public class StairPortal extends Portal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
 
         rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 0,
                 StairPortal.class,
@@ -74,6 +77,7 @@ public class StairPortal extends Portal {
         );
 
         rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 1,
                 StairPortal.class,
@@ -94,6 +98,7 @@ public class StairPortal extends Portal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
 
         downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 0,
                 0,
                 StairPortal.class,
@@ -102,6 +107,7 @@ public class StairPortal extends Portal {
         );
 
         downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 1,
                 0,
                 StairPortal.class,
@@ -122,6 +128,7 @@ public class StairPortal extends Portal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
 
         leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 0,
                 StairPortal.class,
@@ -130,6 +137,7 @@ public class StairPortal extends Portal {
         );
 
         leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 -1,
                 StairPortal.class,
@@ -166,8 +174,8 @@ public class StairPortal extends Portal {
     }
 
     @Override
-    public Image getGraphic() {
-        return this.stairGraphic.getGraphic();
+    public String getGraphicURL() {
+        return this.stairGraphic.getGraphicURL();
     }
 
     @Override
@@ -193,7 +201,8 @@ public class StairPortal extends Portal {
             public StairPortal.StairPortalBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
                 return new StairPortal.StairPortalBlock(
                         patch,

@@ -60,6 +60,18 @@ public class AmenityFootprint {
             return amenityBlockTemplates;
         }
 
+        public Orientation getOrientation() {
+            return orientation;
+        }
+
+        public boolean isVertical() {
+            return this.orientation == Orientation.UP || this.orientation == Orientation.DOWN;
+        }
+
+        public boolean isHorizontal() {
+            return this.orientation == Orientation.RIGHT || this.orientation == Orientation.LEFT;
+        }
+
         // Denotes the offset of a specific amenity block being drawn from the cursor
         public static class Offset {
             private final MatrixPosition offset;
@@ -81,24 +93,30 @@ public class AmenityFootprint {
             }
         }
 
-        // Denotes a placeholder where
         public static class AmenityBlockTemplate {
+            private final Orientation orientation;
             private final Offset offset;
             private final Class<? extends Amenity> amenityClass;
             private final boolean attractor;
             private final boolean hasGraphic;
 
             public AmenityBlockTemplate(
+                    Orientation orientation,
                     int rowOffset,
                     int columnOffset,
                     Class<? extends Amenity> amenityClass,
                     boolean attractor,
                     boolean hasGraphic
             ) {
+                this.orientation = orientation;
                 this.offset = new Offset(rowOffset, columnOffset);
                 this.amenityClass = amenityClass;
                 this.attractor = attractor;
                 this.hasGraphic = hasGraphic;
+            }
+
+            public Orientation getOrientation() {
+                return orientation;
             }
 
             public Offset getOffset() {
@@ -132,9 +150,9 @@ public class AmenityFootprint {
         // Denotes the possible orientations of an amenity being drawn
         public enum Orientation {
             UP,
+            RIGHT,
             DOWN,
-            LEFT,
-            RIGHT
+            LEFT
         }
     }
 }

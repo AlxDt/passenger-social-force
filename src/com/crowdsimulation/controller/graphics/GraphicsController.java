@@ -3,7 +3,6 @@ package com.crowdsimulation.controller.graphics;
 import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -42,18 +41,13 @@ public class GraphicsController extends Controller {
     private static final int FLOOR_FIELD_COLOR_HUE = 115;
 
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
-
-    private static Patch markedPatch;
-
-    private static boolean showTooltip;
-    private static Tooltip tooltip;
-
     public static Floor floorNextPortal;
     public static MatrixPosition firstPortalDrawnPosition;
-
     public static AmenityFootprint currentAmenityFootprint;
-
     public static double tileSize;
+    private static Patch markedPatch;
+    private static boolean showTooltip;
+    private static Tooltip tooltip;
 
     static {
         GraphicsController.markedPatch = null;
@@ -141,6 +135,14 @@ public class GraphicsController extends Controller {
                     rowEnd * tileSize,
                     columnEnd * tileSize
             );
+
+            backgroundGraphicsContext.setFill(Color.WHITE);
+            backgroundGraphicsContext.fillRect(
+                    0,
+                    0,
+                    backgroundCanvas.getWidth(),
+                    backgroundCanvas.getHeight()
+            );
         }
 
         boolean drawGraphicTransparently;
@@ -218,11 +220,21 @@ public class GraphicsController extends Controller {
 
                             if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ESCALATOR) {
                                 firstPortalImage
-                                        = new Image("com/crowdsimulation/view/image/amenity/escalator_blank.png");
-                            } else {
-                                firstPortalImage = AmenityGraphic.AMENITY_GRAPHICS.get(
-                                        Main.simulator.getCurrentClass()
-                                ).get(0);
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/escalator/single/blank/" +
+                                                "escalator_front.png"
+                                );
+                            } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.STAIRS) {
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/stair/single/front/" +
+                                                "stair_single_front.png"
+                                );
+                            } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ELEVATOR) {
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/elevator/front/elevator_front.png"
+                                );
                             }
                         }
                     } else {
@@ -239,44 +251,53 @@ public class GraphicsController extends Controller {
                     }
 
                     // Draw the patch
-                    if (patchAmenityBlock == null && patchColor != null) {
-                        backgroundGraphicsContext.setFill(patchColor);
-                        backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
-                    } else {
+                    if (patchAmenityBlock != null) {
                         Amenity patchAmenity = currentPatch.getAmenityBlock().getParent();
 
-                        if (!(patchAmenity instanceof Wall)) {
-                            backgroundGraphicsContext.setFill(Color.WHITE);
-                            backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
+                        Image graphic;
+
+                        if (patchAmenityBlock.hasGraphic()) {
+                            Drawable drawablePatchAmenity = (Drawable) patchAmenity;
 
                             // Add transparency if needed
                             if (drawGraphicTransparently) {
                                 backgroundGraphicsContext.setGlobalAlpha(0.2);
                             }
 
-                            Image graphic;
-
                             if (patchAmenity == null) {
                                 graphic = firstPortalImage;
                             } else {
-                                graphic = ((Drawable) patchAmenity).getGraphic();
+                                graphic = new Image(drawablePatchAmenity.getGraphicURL());
                             }
 
-                            backgroundGraphicsContext.drawImage(
-                                    graphic,
-                                    column * tileSize,
-                                    row * tileSize,
-                                    tileSize,
-                                    tileSize
-                            );
+                            if (drawablePatchAmenity instanceof Turnstile) {
+                                Turnstile.TurnstileBlock turnstileBlock = (Turnstile.TurnstileBlock) patchAmenityBlock;
+
+                                backgroundGraphicsContext.drawImage(
+                                        graphic,
+                                        column * tileSize + turnstileBlock.getGraphicXOffset() * tileSize,
+                                        row * tileSize + turnstileBlock.getGraphicYOffset() * tileSize,
+                                        tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                                .getColumnSpan(),
+                                        tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                                .getRowSpan()
+                                );
+                            } else {
+                                backgroundGraphicsContext.drawImage(
+                                        graphic,
+                                        column * tileSize,
+                                        row * tileSize,
+                                        tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                                .getColumnSpan(),
+                                        tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                                .getRowSpan()
+                                );
+                            }
 
                             // Reset transparency if previously added
                             if (drawGraphicTransparently) {
                                 backgroundGraphicsContext.setGlobalAlpha(1.0);
                             }
-                        } else {
-                            backgroundGraphicsContext.setFill(Color.BLACK);
-                            backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
                         }
                     }
                 } else {
@@ -286,8 +307,10 @@ public class GraphicsController extends Controller {
                     for (Passenger passenger : floor.getPassengersInFloor()) {
                         // TODO: Draw passengers
                         foregroundGraphicsContext.fillOval(
-                                passenger.getPassengerMovement().getPosition().getX() * tileSize - passengerDiameter * 0.5,
-                                passenger.getPassengerMovement().getPosition().getY() * tileSize - passengerDiameter * 0.5,
+                                passenger.getPassengerMovement().getPosition().getX()
+                                        * tileSize - passengerDiameter * 0.5,
+                                passenger.getPassengerMovement().getPosition().getY()
+                                        * tileSize - passengerDiameter * 0.5,
                                 passengerDiameter,
                                 passengerDiameter
                         );
@@ -343,32 +366,44 @@ public class GraphicsController extends Controller {
 
         // Draw listeners for the canvas (used for the detection of the orientation when drawing ticket booths)
         backgroundCanvas.getScene().setOnKeyPressed(e -> {
+            Patch currentPatch = GraphicsController.markedPatch;
+
             switch (e.getCode()) {
                 // Build mode-related shortcut keys
                 case DIGIT1:
-                    // Draw mode
-                    if (!Main.simulator.getRunning().get()
-                            && !Main.simulator.isFloorFieldDrawing()
-                            && !Main.simulator.isPortalDrawing()) {
-                        MainScreenController.switchBuildMode(Simulator.BuildState.DRAWING);
-                    }
-
-                    break;
                 case DIGIT2:
-                    // Edit one mode
+                case DIGIT3:
                     if (!Main.simulator.getRunning().get()
                             && !Main.simulator.isFloorFieldDrawing()
                             && !Main.simulator.isPortalDrawing()) {
-                        MainScreenController.switchBuildMode(Simulator.BuildState.EDITING_ONE);
+
+                        if (e.getCode() == KeyCode.DIGIT1) {
+                            // Draw mode
+                            if (!Main.simulator.getRunning().get()
+                                    && !Main.simulator.isFloorFieldDrawing()
+                                    && !Main.simulator.isPortalDrawing()) {
+                                MainScreenController.switchBuildMode(Simulator.BuildState.DRAWING);
+                            }
+                        } else if (e.getCode() == KeyCode.DIGIT2) {
+                            // Edit one mode
+                            if (!Main.simulator.getRunning().get()
+                                    && !Main.simulator.isFloorFieldDrawing()
+                                    && !Main.simulator.isPortalDrawing()) {
+                                MainScreenController.switchBuildMode(Simulator.BuildState.EDITING_ONE);
+                            }
+                        } else if (e.getCode() == KeyCode.DIGIT3) {
+                            // Edit all mode
+                            if (!Main.simulator.getRunning().get()
+                                    && !Main.simulator.isFloorFieldDrawing()
+                                    && !Main.simulator.isPortalDrawing()) {
+                                MainScreenController.switchBuildMode(Simulator.BuildState.EDITING_ALL);
+                            }
+                        }
                     }
 
-                    break;
-                case DIGIT3:
-                    // Edit all mode
-                    if (!Main.simulator.getRunning().get()
-                            && !Main.simulator.isFloorFieldDrawing()
-                            && !Main.simulator.isPortalDrawing()) {
-                        MainScreenController.switchBuildMode(Simulator.BuildState.EDITING_ALL);
+                    // Every time the keyboard is pressed, update the markings as if the mouse were moved
+                    if (currentPatch != null) {
+                        updateMarkings(backgroundCanvas, markingsCanvas, currentPatch, true);
                     }
 
                     break;
@@ -392,8 +427,6 @@ public class GraphicsController extends Controller {
                     }
 
                     // Every time the keyboard is pressed, update the markings as if the mouse were moved
-                    Patch currentPatch = GraphicsController.markedPatch;
-
                     if (currentPatch != null) {
                         updateMarkings(backgroundCanvas, markingsCanvas, currentPatch, true);
                     }
@@ -693,149 +726,49 @@ public class GraphicsController extends Controller {
         int cursorRow = patch.getMatrixPosition().getRow();
         int cursorColumn = patch.getMatrixPosition().getColumn();
 
-        // Draw the rectangles
-        // Get the footprint corresponding to the current class and the current rotation
-        if (GraphicsController.currentAmenityFootprint != null) {
-            // Draw rectangles in each offset in the footprint
-            for (AmenityFootprint.Rotation.AmenityBlockTemplate amenityBlockTemplate :
-                    GraphicsController.currentAmenityFootprint.getCurrentRotation().getAmenityBlockTemplates()) {
-                // Compute for the position of the patch using the offset data
-                int patchRow = cursorRow + amenityBlockTemplate.getOffset().getRowOffset();
-                int patchColumn = cursorColumn + amenityBlockTemplate.getOffset().getColumnOffset();
+        if (Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
+            // Draw the rectangles
+            // Get the footprint corresponding to the current class and the current rotation
+            if (GraphicsController.currentAmenityFootprint != null) {
+                // Draw rectangles in each offset in the footprint
+                for (AmenityFootprint.Rotation.AmenityBlockTemplate amenityBlockTemplate :
+                        GraphicsController.currentAmenityFootprint.getCurrentRotation().getAmenityBlockTemplates()) {
+                    // Compute for the position of the patch using the offset data
+                    int patchRow = cursorRow + amenityBlockTemplate.getOffset().getRowOffset();
+                    int patchColumn = cursorColumn + amenityBlockTemplate.getOffset().getColumnOffset();
 
-                // If there is an attractor on this patch, draw a lighter color - the darker colors are for
-                // non-attractor components
-                if (!amenityBlockTemplate.isAttractor()) {
-                    graphicsContext.setFill(markingColor);
-                } else {
-                    graphicsContext.setFill(extraMarkingColor);
+                    // If there is an attractor on this patch, draw a lighter color - the darker colors are for
+                    // non-attractor components
+                    if (!amenityBlockTemplate.isAttractor()) {
+                        graphicsContext.setFill(markingColor);
+                    } else {
+                        graphicsContext.setFill(extraMarkingColor);
+                    }
+
+                    // Draw the rectangle there
+                    graphicsContext.fillRect(patchColumn * tileSize, patchRow * tileSize, tileSize, tileSize);
                 }
-
-                // Draw the rectangle there
-                graphicsContext.fillRect(patchColumn * tileSize, patchRow * tileSize, tileSize, tileSize);
             }
+
+            // Draw the crosshairs
+            graphicsContext.setStroke(strokeColor);
+            graphicsContext.setLineWidth(tileSize);
+
+            graphicsContext.strokeLine(
+                    0,
+                    cursorRow * tileSize + tileSize * 0.5,
+                    markingsCanvas.getWidth(),
+                    cursorRow * tileSize + tileSize * 0.5
+            );
+            graphicsContext.strokeLine(
+                    cursorColumn * tileSize + tileSize * 0.5,
+                    0,
+                    cursorColumn * tileSize + tileSize * 0.5,
+                    markingsCanvas.getHeight()
+            );
+        } else {
+            graphicsContext.fillRect(cursorColumn * tileSize, cursorRow * tileSize, tileSize, tileSize);
         }
-
-        // Draw the crosshairs
-        graphicsContext.setStroke(strokeColor);
-        graphicsContext.setLineWidth(tileSize);
-
-        graphicsContext.strokeLine(
-                0,
-                cursorRow * tileSize + tileSize * 0.5,
-                markingsCanvas.getWidth(),
-                cursorRow * tileSize + tileSize * 0.5
-        );
-        graphicsContext.strokeLine(
-                cursorColumn * tileSize + tileSize * 0.5,
-                0,
-                cursorColumn * tileSize + tileSize * 0.5,
-                markingsCanvas.getHeight()
-        );
-
-/*        if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
-                && Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
-            graphicsContext.setFill(extraMarkingColor);
-
-            switch (GraphicsController.drawTicketBoothOrientation) {
-                case UP:
-                    if (row - 1 >= 0) {
-                        graphicsContext.fillRect(
-                                column * tileSize,
-                                (row - 1) * tileSize,
-                                tileSize,
-                                tileSize
-                        );
-
-                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                row - 1,
-                                column
-                        );
-
-                        GraphicsController.validTicketBoothDraw
-                                = patch.getAmenityBlock() == null
-                                && extraPatch.getAmenityBlock() == null
-                                && patch.getFloorFieldValues().isEmpty()
-                                && extraPatch.getFloorFieldValues().isEmpty();
-                    } else {
-                        GraphicsController.validTicketBoothDraw = false;
-                    }
-
-                    break;
-                case RIGHT:
-                    if (column + 1 < Main.simulator.getCurrentFloor().getColumns()) {
-                        graphicsContext.fillRect(
-                                (column + 1) * tileSize,
-                                row * tileSize,
-                                tileSize,
-                                tileSize
-                        );
-
-                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                row,
-                                column + 1
-                        );
-
-                        GraphicsController.validTicketBoothDraw
-                                = patch.getAmenityBlock() == null
-                                && extraPatch.getAmenityBlock() == null
-                                && patch.getFloorFieldValues().isEmpty()
-                                && extraPatch.getFloorFieldValues().isEmpty();
-                    } else {
-                        GraphicsController.validTicketBoothDraw = false;
-                    }
-
-                    break;
-                case DOWN:
-                    if (row + 1 < Main.simulator.getCurrentFloor().getRows()) {
-                        graphicsContext.fillRect(
-                                column * tileSize,
-                                (row + 1) * tileSize,
-                                tileSize,
-                                tileSize
-                        );
-
-                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                row + 1,
-                                column
-                        );
-
-                        GraphicsController.validTicketBoothDraw
-                                = patch.getAmenityBlock() == null
-                                && extraPatch.getAmenityBlock() == null
-                                && patch.getFloorFieldValues().isEmpty()
-                                && extraPatch.getFloorFieldValues().isEmpty();
-                    } else {
-                        GraphicsController.validTicketBoothDraw = false;
-                    }
-
-                    break;
-                case LEFT:
-                    if (column - 1 >= 0) {
-                        graphicsContext.fillRect(
-                                (column - 1) * tileSize,
-                                row * tileSize,
-                                tileSize,
-                                tileSize
-                        );
-
-                        GraphicsController.extraPatch = Main.simulator.getCurrentFloor().getPatch(
-                                row,
-                                column - 1
-                        );
-
-                        GraphicsController.validTicketBoothDraw
-                                = patch.getAmenityBlock() == null
-                                && extraPatch.getAmenityBlock() == null
-                                && patch.getFloorFieldValues().isEmpty()
-                                && extraPatch.getFloorFieldValues().isEmpty();
-                    } else {
-                        GraphicsController.validTicketBoothDraw = false;
-                    }
-
-                    break;
-            }
-        }*/
     }
 
     private static void unmarkPatch(Canvas markingsCanvas) {

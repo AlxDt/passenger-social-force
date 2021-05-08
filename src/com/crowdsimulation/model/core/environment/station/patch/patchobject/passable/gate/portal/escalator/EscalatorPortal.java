@@ -38,6 +38,7 @@ public class EscalatorPortal extends Portal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
         upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 EscalatorPortal.class,
@@ -46,6 +47,7 @@ public class EscalatorPortal extends Portal {
         );
 
         upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 -1,
                 0,
                 EscalatorPortal.class,
@@ -66,6 +68,7 @@ public class EscalatorPortal extends Portal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
 
         rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 0,
                 EscalatorPortal.class,
@@ -74,6 +77,7 @@ public class EscalatorPortal extends Portal {
         );
 
         rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 1,
                 EscalatorPortal.class,
@@ -94,6 +98,7 @@ public class EscalatorPortal extends Portal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
 
         downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 0,
                 0,
                 EscalatorPortal.class,
@@ -102,6 +107,7 @@ public class EscalatorPortal extends Portal {
         );
 
         downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 1,
                 0,
                 EscalatorPortal.class,
@@ -122,6 +128,7 @@ public class EscalatorPortal extends Portal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
 
         leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 0,
                 EscalatorPortal.class,
@@ -130,6 +137,7 @@ public class EscalatorPortal extends Portal {
         );
 
         leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 -1,
                 EscalatorPortal.class,
@@ -166,8 +174,8 @@ public class EscalatorPortal extends Portal {
     }
 
     @Override
-    public Image getGraphic() {
-        return this.escalatorGraphic.getGraphic();
+    public String getGraphicURL() {
+        return this.escalatorGraphic.getGraphicURL();
     }
 
     @Override
@@ -193,7 +201,8 @@ public class EscalatorPortal extends Portal {
             public EscalatorPortal.EscalatorPortalBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
                 return new EscalatorPortal.EscalatorPortalBlock(
                         patch,

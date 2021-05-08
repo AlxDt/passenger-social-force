@@ -119,10 +119,13 @@ public abstract class Amenity extends PatchObject implements Environment {
                 // Create the amenity block, then add it to the list
                 Patch patch = Main.simulator.getCurrentFloor().getPatch(row, column);
 
+                assert getAmenityBlockFactory(amenityBlockTemplate.getAmenityClass()) != null;
+
                 AmenityBlock amenityBlock = getAmenityBlockFactory(amenityBlockTemplate.getAmenityClass()).create(
                         patch,
                         amenityBlockTemplate.isAttractor(),
-                        amenityBlockTemplate.hasGraphic()
+                        amenityBlockTemplate.hasGraphic(),
+                        amenityBlockTemplate.getOrientation()
                 );
 
                 amenityBlocks.add(amenityBlock);
@@ -160,7 +163,8 @@ public abstract class Amenity extends PatchObject implements Environment {
             public abstract AmenityBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             );
         }
     }

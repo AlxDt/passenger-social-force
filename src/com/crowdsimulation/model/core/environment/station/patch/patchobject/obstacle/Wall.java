@@ -26,6 +26,7 @@ public class Wall extends Obstacle {
 
         AmenityFootprint.Rotation.AmenityBlockTemplate block00
                 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 Security.class,
@@ -65,7 +66,8 @@ public class Wall extends Obstacle {
             public Wall.WallBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
                 return new Wall.WallBlock(
                         patch,

@@ -1,38 +1,34 @@
 package com.crowdsimulation.controller.graphics.amenity.graphic;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 
-public class EscalatorGraphic extends AmenityGraphic implements Cyclable, Changeable {
-    private static final int ROW_SPAN_VERTICAL = 2;
+public class StationGateGraphic extends AmenityGraphic implements Cyclable, Changeable {
+    private static final int ROW_SPAN_VERTICAL = 1;
     private static final int COLUMN_SPAN_VERTICAL = 1;
 
     private static final int ROW_SPAN_HORIZONTAL = 1;
-    private static final int COLUMN_SPAN_HORIZONTAL = 2;
+    private static final int COLUMN_SPAN_HORIZONTAL = 1;
 
-    public EscalatorGraphic(EscalatorPortal escalatorPortal) {
+    public StationGateGraphic(StationGate stationGate) {
         super(
-                escalatorPortal,
+                stationGate,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
         );
-    }
 
-    public void setGraphicToDirection(EscalatorShaft.EscalatorDirection escalatorDirection) {
-        if (escalatorDirection == EscalatorShaft.EscalatorDirection.DOWN) {
+        if (stationGate.isEnabled()) {
             this.graphicIndex = 0;
         } else {
-            this.graphicIndex = 1;
+            this.graphicIndex = 2;
         }
     }
 
     @Override
-    public void change() {
-        // Indices 0 - 1: left-facing escalator
+    public void cycle() {
+        // Indices 0 - 1: Open station gate
         if (this.graphicIndex == 0 || this.graphicIndex == 1) {
             if (this.graphicIndex == 0) {
                 this.graphicIndex++;
@@ -40,7 +36,7 @@ public class EscalatorGraphic extends AmenityGraphic implements Cyclable, Change
                 this.graphicIndex--;
             }
         } else {
-            // Indices 2 - 3: right-facing escalator
+            // Indices 2 - 3: Closed station gate
             if (this.graphicIndex == 2) {
                 this.graphicIndex++;
             } else {
@@ -50,7 +46,7 @@ public class EscalatorGraphic extends AmenityGraphic implements Cyclable, Change
     }
 
     @Override
-    public void cycle() {
+    public void change() {
         // Cycle through the graphics list in steps of two
         this.graphicIndex = (this.graphicIndex + 2) % this.graphics.size();
     }

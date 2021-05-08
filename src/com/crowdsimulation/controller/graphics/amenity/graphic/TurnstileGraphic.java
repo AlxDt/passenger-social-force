@@ -2,18 +2,18 @@ package com.crowdsimulation.controller.graphics.amenity.graphic;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
-public class TicketBoothGraphic extends AmenityGraphic implements Cyclable {
+public class TurnstileGraphic extends AmenityGraphic {
     private static final int ROW_SPAN_VERTICAL = 2;
-    private static final int COLUMN_SPAN_VERTICAL = 1;
+    private static final int COLUMN_SPAN_VERTICAL = 3;
 
-    private static final int ROW_SPAN_HORIZONTAL = 1;
+    private static final int ROW_SPAN_HORIZONTAL = 3;
     private static final int COLUMN_SPAN_HORIZONTAL = 2;
 
-    public TicketBoothGraphic(TicketBooth ticketBooth) {
+    public TurnstileGraphic(Turnstile turnstile) {
         super(
-                ticketBooth,
+                turnstile,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
@@ -41,11 +41,5 @@ public class TicketBoothGraphic extends AmenityGraphic implements Cyclable {
 
                 break;
         }
-    }
-
-    @Override
-    public void cycle() {
-        // Cycle through the graphics list in steps of four
-        this.graphicIndex = (this.graphicIndex + 4) % this.graphics.size();
     }
 }

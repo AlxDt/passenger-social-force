@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal;
 
+import com.crowdsimulation.controller.graphics.amenity.editor.TicketBoothEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.TicketBoothGraphic;
@@ -9,7 +10,6 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import javafx.scene.image.Image;
 
 import java.util.ArrayList;
@@ -34,6 +34,9 @@ public class TicketBooth extends Goal {
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint ticketBoothFootprint;
 
+    // Denotes the editor of this amenity
+    public static final TicketBoothEditor ticketBoothEditor;
+
     static {
         ticketBoothFactory = new TicketBoothFactory();
 
@@ -48,6 +51,7 @@ public class TicketBooth extends Goal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
         upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 TicketBooth.class,
@@ -56,6 +60,7 @@ public class TicketBooth extends Goal {
         );
 
         upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 -1,
                 0,
                 TicketBooth.class,
@@ -76,6 +81,7 @@ public class TicketBooth extends Goal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
 
         rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 0,
                 TicketBooth.class,
@@ -84,6 +90,7 @@ public class TicketBooth extends Goal {
         );
 
         rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 1,
                 TicketBooth.class,
@@ -104,6 +111,7 @@ public class TicketBooth extends Goal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
 
         downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 0,
                 0,
                 TicketBooth.class,
@@ -112,6 +120,7 @@ public class TicketBooth extends Goal {
         );
 
         downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 1,
                 0,
                 TicketBooth.class,
@@ -132,25 +141,30 @@ public class TicketBooth extends Goal {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
 
         leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 0,
                 TicketBooth.class,
-                false,
-                true
+                true,
+                false
         );
 
         leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 -1,
                 TicketBooth.class,
                 true,
-                false
+                true
         );
 
         leftView.getAmenityBlockTemplates().add(leftBlock00);
         leftView.getAmenityBlockTemplates().add(leftBlock0N1);
 
         ticketBoothFootprint.addRotation(leftView);
+
+        // Initialize the editor
+        ticketBoothEditor = new TicketBoothEditor();
     }
 
     protected TicketBooth(
@@ -262,8 +276,8 @@ public class TicketBooth extends Goal {
     }
 
     @Override
-    public Image getGraphic() {
-        return this.ticketBoothGraphic.getGraphic();
+    public String getGraphicURL() {
+        return this.ticketBoothGraphic.getGraphicURL();
     }
 
     // Ticket booth block
@@ -284,7 +298,8 @@ public class TicketBooth extends Goal {
             public TicketBooth.TicketBoothBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
                 return new TicketBooth.TicketBoothBlock(
                         patch,

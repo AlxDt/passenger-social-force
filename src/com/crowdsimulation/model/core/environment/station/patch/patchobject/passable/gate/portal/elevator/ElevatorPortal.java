@@ -2,7 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GenericGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -11,8 +11,6 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
-import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +29,7 @@ public class ElevatorPortal extends Portal implements Queueable {
     public static final ElevatorPortalFactory elevatorPortalFactory;
 
     // Handles how this elevator portal is displayed
-    private final SingularGraphic elevatorPortalGraphic;
+    private final GenericGraphic elevatorPortalGraphic;
 
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint elevatorPortalFootprint;
@@ -52,6 +50,7 @@ public class ElevatorPortal extends Portal implements Queueable {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
         upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 ElevatorPortal.class,
@@ -60,6 +59,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 -1,
                 0,
                 ElevatorPortal.class,
@@ -68,6 +68,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         upBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 -1,
                 1,
                 ElevatorPortal.class,
@@ -76,6 +77,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 1,
                 ElevatorPortal.class,
@@ -100,6 +102,7 @@ public class ElevatorPortal extends Portal implements Queueable {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
 
         rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 0,
                 ElevatorPortal.class,
@@ -108,6 +111,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 0,
                 1,
                 ElevatorPortal.class,
@@ -116,6 +120,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         rightBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 1,
                 0,
                 ElevatorPortal.class,
@@ -124,6 +129,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         rightBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
                 1,
                 1,
                 ElevatorPortal.class,
@@ -148,6 +154,7 @@ public class ElevatorPortal extends Portal implements Queueable {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
 
         downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 0,
                 0,
                 ElevatorPortal.class,
@@ -156,6 +163,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         downBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 0,
                 -1,
                 ElevatorPortal.class,
@@ -164,6 +172,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         downBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 1,
                 -1,
                 ElevatorPortal.class,
@@ -172,6 +181,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
                 1,
                 0,
                 ElevatorPortal.class,
@@ -196,6 +206,7 @@ public class ElevatorPortal extends Portal implements Queueable {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
 
         leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 0,
                 ElevatorPortal.class,
@@ -204,6 +215,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         leftBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 -1,
                 -1,
                 ElevatorPortal.class,
@@ -212,6 +224,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         leftBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 -1,
                 0,
                 ElevatorPortal.class,
@@ -220,6 +233,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         );
 
         leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
                 0,
                 -1,
                 ElevatorPortal.class,
@@ -261,7 +275,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.elevatorPortalFloorFieldState, queueingFloorField);
 
-        this.elevatorPortalGraphic = new SingularGraphic(this);
+        this.elevatorPortalGraphic = new GenericGraphic(this);
     }
 
     public ElevatorShaft getElevatorShaft() {
@@ -348,8 +362,8 @@ public class ElevatorPortal extends Portal implements Queueable {
     }
 
     @Override
-    public Image getGraphic() {
-        return this.elevatorPortalGraphic.getGraphic();
+    public String getGraphicURL() {
+        return this.elevatorPortalGraphic.getGraphicURL();
     }
 
     @Override
@@ -375,7 +389,8 @@ public class ElevatorPortal extends Portal implements Queueable {
             public ElevatorPortal.ElevatorPortalBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
                 return new ElevatorPortal.ElevatorPortalBlock(
                         patch,

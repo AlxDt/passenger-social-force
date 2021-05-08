@@ -3,6 +3,9 @@ package com.crowdsimulation.controller.screen.feature.main;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.graphics.amenity.graphic.EscalatorGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.SecurityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.StationGateGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.TicketBoothGraphic;
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.alert.AlertController;
 import com.crowdsimulation.controller.screen.feature.floorfield.NormalFloorFieldController;
@@ -19,6 +22,7 @@ import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
@@ -116,6 +120,9 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Button deleteStationGateButton;
 
+    @FXML
+    private Button flipStationGateButton;
+
     // Security
     @FXML
     private CheckBox securityEnableCheckBox;
@@ -137,6 +144,9 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private Button addFloorFieldsSecurityButton;
+
+    @FXML
+    private Button flipSecurityButton;
 
     // Stairs and elevators
     // Stairs
@@ -382,6 +392,7 @@ public class MainScreenController extends ScreenController {
                 stationGateSpawnSpinner,
                 saveStationGateButton,
                 deleteStationGateButton,
+                flipStationGateButton,
                 // Security
                 securityEnableCheckBox,
                 securityBlockPassengerCheckBox,
@@ -390,6 +401,7 @@ public class MainScreenController extends ScreenController {
                 saveSecurityButton,
                 deleteSecurityButton,
                 addFloorFieldsSecurityButton,
+                flipSecurityButton,
                 // Stairs and elevators
                 // Stairs
                 addStairButton,
@@ -621,6 +633,9 @@ public class MainScreenController extends ScreenController {
         // Reset the current amenity and class to nulls to disable the save and delete buttons
         Main.simulator.setCurrentAmenity(null);
         Main.simulator.setCurrentClass(null);
+
+        // Redraw the interface
+        drawInterface(false);
     }
 
     @FXML
@@ -1557,12 +1572,19 @@ public class MainScreenController extends ScreenController {
             case STATION_ENTRANCE_EXIT:
                 StationGate stationGateToEdit = (StationGate) amenityToSave;
 
+                boolean wasEnabledPrior = stationGateToEdit.isEnabled();
+
                 StationGate.stationGateEditor.edit(
                         stationGateToEdit,
                         stationGateEnableCheckBox.isSelected(),
                         stationGateSpawnSpinner.getValue() / 100.0,
                         stationGateModeChoiceBox.getValue()
                 );
+
+                // Update the graphic if needed
+                if (wasEnabledPrior != stationGateEnableCheckBox.isSelected()) {
+                    ((StationGateGraphic) stationGateToEdit.getGraphicObject()).change();
+                }
 
                 break;
             case SECURITY:
@@ -1631,39 +1653,25 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case TICKET_BOOTH:
-                TicketBooth ticketBoothTransactionAreaToEdit
-                        = (TicketBooth) amenityToSave;
+                TicketBooth ticketBoothToEdit = (TicketBooth) amenityToSave;
 
-                ticketBoothTransactionAreaToEdit.setEnabled(
-                        ticketBoothEnableCheckBox.isSelected()
-                );
-
-                ticketBoothTransactionAreaToEdit.setTicketBoothType(
+                TicketBooth.ticketBoothEditor.edit(
+                        ticketBoothToEdit,
+                        ticketBoothEnableCheckBox.isSelected(),
+                        ticketBoothIntervalSpinner.getValue(),
                         ticketBoothModeChoiceBox.getValue()
-                );
-
-                ticketBoothTransactionAreaToEdit.setWaitingTime(
-                        ticketBoothIntervalSpinner.getValue()
                 );
 
                 break;
             case TURNSTILE:
                 Turnstile turnstileToEdit = (Turnstile) amenityToSave;
 
-                turnstileToEdit.setEnabled(
-                        turnstileEnableCheckBox.isSelected()
-                );
-
-                turnstileToEdit.setBlockEntry(
-                        turnstileBlockPassengerCheckBox.isSelected()
-                );
-
-                turnstileToEdit.setTurnstileMode(
+                Turnstile.turnstileEditor.edit(
+                        turnstileToEdit,
+                        turnstileEnableCheckBox.isSelected(),
+                        turnstileIntervalSpinner.getValue(),
+                        turnstileBlockPassengerCheckBox.isSelected(),
                         turnstileDirectionChoiceBox.getValue()
-                );
-
-                turnstileToEdit.setWaitingTime(
-                        turnstileIntervalSpinner.getValue()
                 );
 
                 break;
@@ -1701,24 +1709,14 @@ public class MainScreenController extends ScreenController {
             case STATION_ENTRANCE_EXIT:
                 // Edit all station gates
                 for (StationGate stationGateToEdit : Main.simulator.getCurrentFloor().getStationGates()) {
-                    StationGate.stationGateEditor.edit(
-                            stationGateToEdit,
-                            stationGateEnableCheckBox.isSelected(),
-                            stationGateSpawnSpinner.getValue() / 100.0,
-                            stationGateModeChoiceBox.getValue()
-                    );
+                    saveSingleAmenityInFloor(stationGateToEdit);
                 }
 
                 break;
             case SECURITY:
                 // Edit all securities
                 for (Security securityToEdit : Main.simulator.getCurrentFloor().getSecurities()) {
-                    Security.securityEditor.edit(
-                            securityToEdit,
-                            securityEnableCheckBox.isSelected(),
-                            securityIntervalSpinner.getValue(),
-                            securityBlockPassengerCheckBox.isSelected()
-                    );
+                    saveSingleAmenityInFloor(securityToEdit);
                 }
 
                 break;
@@ -1815,45 +1813,18 @@ public class MainScreenController extends ScreenController {
                     }
                 }
 
-                break;
+                break;*/
             case TICKET_BOOTH:
                 // Edit all ticket booths
-                for (OldTicketBooth ticketBoothToEdit : Main.simulator.getCurrentFloor().getTicketBooths()) {
-                    TicketBooth ticketBoothTransactionAreaToEdit
-                            = ticketBoothToEdit.getTicketBoothTransactionArea();
-
-                    ticketBoothTransactionAreaToEdit.setEnabled(
-                            ticketBoothEnableCheckBox.isSelected()
-                    );
-
-                    ticketBoothTransactionAreaToEdit.setTicketBoothType(
-                            ticketBoothModeChoiceBox.getValue()
-                    );
-
-                    ticketBoothTransactionAreaToEdit.setWaitingTime(
-                            ticketBoothIntervalSpinner.getValue()
-                    );
+                for (TicketBooth ticketBoothToEdit : Main.simulator.getCurrentFloor().getTicketBooths()) {
+                    saveSingleAmenityInFloor(ticketBoothToEdit);
                 }
 
                 break;
             case TURNSTILE:
                 // Edit all turnstiles
                 for (Turnstile turnstileToEdit : Main.simulator.getCurrentFloor().getTurnstiles()) {
-                    turnstileToEdit.setEnabled(
-                            turnstileEnableCheckBox.isSelected()
-                    );
-
-                    turnstileToEdit.setBlockEntry(
-                            turnstileBlockPassengerCheckBox.isSelected()
-                    );
-
-                    turnstileToEdit.setTurnstileMode(
-                            turnstileDirectionChoiceBox.getValue()
-                    );
-
-                    turnstileToEdit.setWaitingTime(
-                            turnstileIntervalSpinner.getValue()
-                    );
+                    saveSingleAmenityInFloor(turnstileToEdit);
                 }
 
                 break;
@@ -1882,7 +1853,7 @@ public class MainScreenController extends ScreenController {
                     );
                 }
 
-                break;*/
+                break;
         }
     }
 
@@ -1946,12 +1917,12 @@ public class MainScreenController extends ScreenController {
                 );
 
                 break;
-/*            case SECURITY:
-                Main.simulator.getCurrentFloor().getSecurities().remove(
+            case SECURITY:
+                Security.securityEditor.delete(
                         (Security) amenityToDelete
                 );
 
-                break;
+                break;/*
             case STAIRS:
                 StairShaft stairShaftToDelete = (StairShaft) amenityToDelete;
 
@@ -2038,13 +2009,13 @@ public class MainScreenController extends ScreenController {
                     portal.getPatch().setAmenity(null);
                 }
 
-                break;
+                break;*/
             case TICKET_BOOTH:
-                Main.simulator.getCurrentFloor().getTicketBooths().remove(
-                        ticketBoothToDelete
+                TicketBooth.ticketBoothEditor.delete(
+                        (TicketBooth) amenityToDelete
                 );
 
-                break;
+                break;/*
             case TURNSTILE:
                 Main.simulator.getCurrentFloor().getTurnstiles().remove(
                         (Turnstile) amenityToDelete
@@ -2125,14 +2096,14 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case TICKET_BOOTH:
-/*                List<OldTicketBooth> ticketBoothsCopy
+                List<TicketBooth> ticketBoothsCopy
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getTicketBooths());
 
-                for (OldTicketBooth ticketBooths : ticketBoothsCopy) {
-                    deleteSingleAmenityInFloor(ticketBooths.getTicketBoothTransactionArea(), buildSubcategory);
+                for (TicketBooth ticketBooth : ticketBoothsCopy) {
+                    deleteSingleAmenityInFloor(ticketBooth, buildSubcategory);
                 }
 
-                Main.simulator.getCurrentFloor().getTicketBooths().clear();*/
+                Main.simulator.getCurrentFloor().getTicketBooths().clear();
 
                 break;
             case TURNSTILE:
@@ -2267,9 +2238,17 @@ public class MainScreenController extends ScreenController {
 
     // Flip a single amenity
     private void flipSingleAmenityInFloor(Amenity amenity) {
-/*        Drawable drawable = (Drawable) amenity;
+        Drawable drawable = (Drawable) amenity;
 
-        if (drawable instanceof TicketBooth) {
+        if (drawable instanceof StationGate) {
+            ((StationGateGraphic) drawable.getGraphicObject()).cycle();
+        } else if (drawable instanceof Security) {
+            ((SecurityGraphic) drawable.getGraphicObject()).cycle();
+        } else if (drawable instanceof TicketBooth) {
+            ((TicketBoothGraphic) drawable.getGraphicObject()).cycle();
+        }
+
+        /*if (drawable instanceof TicketBooth) {
             OldTicketBooth ticketBooth = ((TicketBooth) drawable).getTicketBooth();
 
             ((TicketBoothGraphic) ticketBooth.getGraphicObject()).flip();
@@ -2282,10 +2261,28 @@ public class MainScreenController extends ScreenController {
 
     // Flip all amenities
     private void flipAllAmenitiesInFloor() {
-/*        switch (Main.simulator.getBuildSubcategory()) {
+        switch (Main.simulator.getBuildSubcategory()) {
+            case STATION_ENTRANCE_EXIT:
+                for (StationGate stationGate : Main.simulator.getCurrentFloor().getStationGates()) {
+                    flipSingleAmenityInFloor(stationGate);
+                }
+
+                break;
+            case SECURITY:
+                for (Security security : Main.simulator.getCurrentFloor().getSecurities()) {
+                    flipSingleAmenityInFloor(security);
+                }
+
+                break;
             case TICKET_BOOTH:
-                for (OldTicketBooth ticketBoothToFlip : Main.simulator.getCurrentFloor().getTicketBooths()) {
-                    flipSingleAmenityInFloor(ticketBoothToFlip.getTicketBoothTransactionArea());
+                for (TicketBooth ticketBooth : Main.simulator.getCurrentFloor().getTicketBooths()) {
+                    flipSingleAmenityInFloor(ticketBooth);
+                }
+
+                break;
+            case TURNSTILE:
+                for (Turnstile turnstile : Main.simulator.getCurrentFloor().getTurnstiles()) {
+                    flipSingleAmenityInFloor(turnstile);
                 }
 
                 break;
@@ -2329,7 +2326,7 @@ public class MainScreenController extends ScreenController {
                 }
 
                 break;
-        }*/
+        }
     }
 
     public static Simulator.BuildCategory getBuildCategory(SingleSelectionModel<Tab> currentTabSelectionModel) {
@@ -2642,7 +2639,7 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(StairPortal.class);
 
-                                // Only add amenities on patches which do not have floor fields
+                                // Only add amenities on patches which are empty and do not have floor field values on them
                                 // Otherwise, do nothing
                                 if (currentPatch.getFloorFieldValues().isEmpty()) {
                                     // If a first portal has already been added, add the second portal this
@@ -2909,7 +2906,7 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(EscalatorPortal.class);
 
-                                // Only add amenities on patches which do not have floor fields
+                                // Only add amenities on patches which are empty and do not have floor field values on them
                                 // Otherwise, do nothing
                                 if (currentPatch.getFloorFieldValues().isEmpty()) {
                                     // If a first portal has already been added, add the second portal this
@@ -3200,7 +3197,7 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(ElevatorPortal.class);
 
-                                // Only add amenities on patches which do not have floor fields
+                                // Only add amenities on patches which are empty and do not have floor field values on them
                                 // Otherwise, do nothing
                                 if (currentPatch.getFloorFieldValues().isEmpty()) {
                                     // If a first portal has already been added, add the second portal this
@@ -3522,7 +3519,7 @@ public class MainScreenController extends ScreenController {
                             break;
                     }
 
-                    break;
+                    break;*/
                 case TICKET_BOOTH:
                     switch (buildState) {
                         case DRAWING:
@@ -3530,42 +3527,12 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(TicketBooth.class);
 
-                                // Only add amenities on patches which do not have floor fields
-                                // Otherwise, do nothing
-                                if (currentPatch.getFloorFieldValues().isEmpty()) {
-                                    // Only add if the current location is valid
-                                    if (GraphicsController.validTicketBoothDraw) {
-                                        Patch extraPatch = GraphicsController.extraPatch;
-
-                                        // Also check the extra patch for floor fields
-                                        if (extraPatch != null && extraPatch.getFloorFieldValues().isEmpty()) {
-                                            // Prepare the amenities that will be placed on the station
-                                            OldTicketBooth ticketBoothToAdd
-                                                    = OldTicketBooth.ticketBoothFactory.create(currentPatch);
-
-                                            TicketBooth ticketBoothTransactionAreaToAdd
-                                                    = TicketBooth.ticketBoothFactory
-                                                    .create(
-                                                            extraPatch,
-                                                            ticketBoothEnableCheckBox.isSelected(),
-                                                            ticketBoothIntervalSpinner.getValue(),
-                                                            ticketBoothToAdd,
-                                                            ticketBoothModeChoiceBox.getValue()
-                                                    );
-
-                                            ticketBoothToAdd.setTicketBoothTransactionArea(
-                                                    ticketBoothTransactionAreaToAdd
-                                            );
-
-                                            // Set the amenities on their respective patches
-                                            currentPatch.setAmenityBlock(ticketBoothToAdd);
-                                            extraPatch.setAmenityBlock(ticketBoothTransactionAreaToAdd);
-
-                                            // Add this station gate to the list of all ticket booths on this floor
-                                            Main.simulator.getCurrentFloor().getTicketBooths().add(ticketBoothToAdd);
-                                        }
-                                    }
-                                }
+                                TicketBooth.ticketBoothEditor.draw(
+                                        currentPatch,
+                                        ticketBoothEnableCheckBox.isSelected(),
+                                        ticketBoothIntervalSpinner.getValue(),
+                                        ticketBoothModeChoiceBox.getValue()
+                                );
                             } else {
                                 // If clicked on an existing amenity, switch to editing mode, then open that
                                 // amenity's controls
@@ -3582,31 +3549,15 @@ public class MainScreenController extends ScreenController {
                             if (!Main.simulator.isFloorFieldDrawing()) {
                                 // Only edit if there is already a ticket booth or its transaction area on that
                                 // patch
-                                if (Main.simulator.getCurrentAmenity() instanceof OldTicketBooth
-                                        || Main.simulator.getCurrentAmenity()
-                                        instanceof TicketBooth) {
+                                if (Main.simulator.getCurrentAmenity() instanceof TicketBooth) {
                                     Main.simulator.setCurrentClass(TicketBooth.class);
 
-                                    TicketBooth ticketBoothTransactionAreaToEdit;
-
-                                    // See whether this patch is a ticket booth or its transaction area
-                                    // Resolve for the transaction area
-                                    if (Main.simulator.getCurrentAmenity()
-                                            instanceof OldTicketBooth) {
-                                        ticketBoothTransactionAreaToEdit
-                                                = ((OldTicketBooth) Main.simulator.getCurrentAmenity())
-                                                .getTicketBoothTransactionArea();
-
-                                        Main.simulator.setCurrentAmenity(ticketBoothTransactionAreaToEdit);
-                                    } else {
-                                        ticketBoothTransactionAreaToEdit
-                                                = (TicketBooth)
-                                                Main.simulator.getCurrentAmenity();
-                                    }
+                                    TicketBooth ticketBoothToEdit
+                                            = (TicketBooth) Main.simulator.getCurrentAmenity();
 
                                     // Take note of this amenity as the one that will own the floor fields once
                                     // drawn
-                                    Main.simulator.setCurrentFloorFieldTarget(ticketBoothTransactionAreaToEdit);
+                                    Main.simulator.setCurrentFloorFieldTarget(ticketBoothToEdit);
 
                                     // Update the direction choice box
                                     MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
@@ -3618,15 +3569,15 @@ public class MainScreenController extends ScreenController {
                                     Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
                                     ticketBoothEnableCheckBox.setSelected(
-                                            ticketBoothTransactionAreaToEdit.isEnabled()
+                                            ticketBoothToEdit.isEnabled()
                                     );
 
                                     ticketBoothModeChoiceBox.setValue(
-                                            ticketBoothTransactionAreaToEdit.getTicketBoothType()
+                                            ticketBoothToEdit.getTicketBoothType()
                                     );
 
                                     ticketBoothIntervalSpinner.getValueFactory().setValue(
-                                            ticketBoothTransactionAreaToEdit.getWaitingTime()
+                                            ticketBoothToEdit.getWaitingTime()
                                     );
                                 } else {
                                     // If there is no amenity there, just do nothing
@@ -3713,24 +3664,13 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(Turnstile.class);
 
-                                // Only add amenities on patches which do not have floor fields
-                                // Otherwise, do nothing
-                                if (currentPatch.getFloorFieldValues().isEmpty()) {
-                                    // Prepare the amenity that will be placed on the station
-                                    Turnstile turnstileToAdd = Turnstile.turnstileFactory.create(
-                                            currentPatch,
-                                            turnstileEnableCheckBox.isSelected(),
-                                            turnstileIntervalSpinner.getValue(),
-                                            turnstileBlockPassengerCheckBox.isSelected(),
-                                            turnstileDirectionChoiceBox.getValue()
-                                    );
-
-                                    // Set the amenity on that patch
-                                    currentPatch.setAmenityBlock(turnstileToAdd);
-
-                                    // Add this station gate to the list of all turnstiles on this floor
-                                    Main.simulator.getCurrentFloor().getTurnstiles().add(turnstileToAdd);
-                                }
+                                Turnstile.turnstileEditor.draw(
+                                        currentPatch,
+                                        turnstileEnableCheckBox.isSelected(),
+                                        turnstileIntervalSpinner.getValue(),
+                                        turnstileBlockPassengerCheckBox.isSelected(),
+                                        turnstileDirectionChoiceBox.getValue()
+                                );
                             } else {
                                 // If clicked on an existing amenity, switch to editing mode, then open that
                                 // amenity's controls
@@ -3854,7 +3794,7 @@ public class MainScreenController extends ScreenController {
                             break;
                     }
 
-                    break;
+                    break;/*
                 case TRAIN_BOARDING_AREA:
                     switch (buildState) {
                         case DRAWING:
@@ -3903,7 +3843,7 @@ public class MainScreenController extends ScreenController {
                                 if (Main.simulator.getCurrentAmenity() instanceof TrainDoor) {
                                     Main.simulator.setCurrentClass(TrainDoor.class);
 
-                                    // Only add amenities on patches which do not have floor fields
+                                    // Only add amenities on patches which are empty and do not have floor field values on them
                                     // Otherwise, do nothing
                                     if (Main.simulator.getCurrentAmenity().getPatch().getFloorFieldValues()
                                             .isEmpty()) {
@@ -4020,7 +3960,7 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(Wall.class);
 
-                                // Only add amenities on patches which do not have floor fields
+                                // Only add amenities on patches which are empty and do not have floor field values on them
                                 // Otherwise, do nothing
                                 if (currentPatch.getFloorFieldValues().isEmpty()) {
                                     // Prepare the amenity that will be placed on the station
@@ -4135,18 +4075,17 @@ public class MainScreenController extends ScreenController {
             } else {
                 buildSubcategory = Simulator.BuildSubcategory.ELEVATOR;
             }
-        /*} else if (
-                amenity instanceof OldTicketBooth
-                        || amenity instanceof TicketBooth
+        } else if (
+                amenity instanceof TicketBooth
                         || amenity instanceof Turnstile
         ) {
             buildCategory = Simulator.BuildCategory.CONCOURSE_AMENITIES;
 
-            if (amenity instanceof OldTicketBooth || amenity instanceof TicketBooth) {
+            if (amenity instanceof TicketBooth) {
                 buildSubcategory = Simulator.BuildSubcategory.TICKET_BOOTH;
             } else {
                 buildSubcategory = Simulator.BuildSubcategory.TURNSTILE;
-            }*/
+            }
         } else if (
                 amenity instanceof TrainDoor
         ) {

@@ -2,15 +2,13 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.SingularGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GenericGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
-import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +27,7 @@ public class TrainDoor extends Gate implements Queueable {
     public static final TrainDoorFactory trainDoorFactory;
 
     // Handles how the train door is displayed
-    private final SingularGraphic trainDoorGraphic;
+    private final GenericGraphic trainDoorGraphic;
 
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint trainDoorFootprint;
@@ -50,6 +48,7 @@ public class TrainDoor extends Gate implements Queueable {
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
         upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 0,
                 TrainDoor.class,
@@ -58,6 +57,7 @@ public class TrainDoor extends Gate implements Queueable {
         );
 
         upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 1,
                 TrainDoor.class,
@@ -66,6 +66,7 @@ public class TrainDoor extends Gate implements Queueable {
         );
 
         upBlock02 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 2,
                 TrainDoor.class,
@@ -74,6 +75,7 @@ public class TrainDoor extends Gate implements Queueable {
         );
 
         upBlock03 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
                 0,
                 3,
                 TrainDoor.class,
@@ -118,7 +120,7 @@ public class TrainDoor extends Gate implements Queueable {
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.trainDoorFloorFieldState, queueingFloorField);
 
-        this.trainDoorGraphic = new SingularGraphic(this);
+        this.trainDoorGraphic = new GenericGraphic(this);
     }
 
     public TrainDoorPlatform getPlatform() {
@@ -203,8 +205,8 @@ public class TrainDoor extends Gate implements Queueable {
     }
 
     @Override
-    public Image getGraphic() {
-        return this.trainDoorGraphic.getGraphic();
+    public String getGraphicURL() {
+        return this.trainDoorGraphic.getGraphicURL();
     }
 
     // Train door block
@@ -225,7 +227,8 @@ public class TrainDoor extends Gate implements Queueable {
             public TrainDoor.TrainDoorBlock create(
                     Patch patch,
                     boolean attractor,
-                    boolean hasGraphic
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
             ) {
                 return new TrainDoor.TrainDoorBlock(
                         patch,

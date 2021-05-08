@@ -154,6 +154,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
             Button deleteStationGateButton,
+            Button flipStationGateButton,
             // Security
             CheckBox securityEnableCheckBox,
             CheckBox securityBlockPassengerCheckBox,
@@ -162,6 +163,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button saveSecurityButton,
             Button deleteSecurityButton,
             Button addFloorFieldsSecurityButton,
+            Button flipSecurityButton,
             // Stairs and elevators
             // Stairs
             Button addStairButton,
@@ -230,13 +232,15 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 stationGateSpinner,
                 saveStationGateButton,
                 deleteStationGateButton,
+                flipStationGateButton,
                 securityEnableCheckBox,
                 securityBlockPassengerCheckBox,
                 securityIntervalLabel,
                 securityIntervalSpinner,
                 saveSecurityButton,
                 deleteSecurityButton,
-                addFloorFieldsSecurityButton
+                addFloorFieldsSecurityButton,
+                flipSecurityButton
         );
 
         initializeStairsElevators(
@@ -354,13 +358,15 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
             Button deleteStationGateButton,
+            Button flipStationGateButton,
             CheckBox securityEnableCheckBox,
             CheckBox securityBlockPassengerCheckBox,
             Label securityIntervalLabel,
             Spinner<Integer> securityIntervalSpinner,
             Button saveSecurityButton,
             Button deleteSecurityButton,
-            Button addFloorFieldsSecurityButton
+            Button addFloorFieldsSecurityButton,
+            Button flipSecurityButton
     ) {
         initializeStationEntranceExit(
                 stationGateEnableCheckBox,
@@ -369,7 +375,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 stationGateSpawnLabel,
                 stationGateSpinner,
                 saveStationGateButton,
-                deleteStationGateButton
+                deleteStationGateButton,
+                flipStationGateButton
         );
 
         initializeSecurity(
@@ -379,7 +386,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 securityIntervalSpinner,
                 saveSecurityButton,
                 deleteSecurityButton,
-                addFloorFieldsSecurityButton
+                addFloorFieldsSecurityButton,
+                flipSecurityButton
         );
     }
 
@@ -391,7 +399,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
-            Button deleteStationGateButton
+            Button deleteStationGateButton,
+            Button flipStationGateButton
     ) {
         stationGateModeLabel.setLabelFor(stationGateModeChoiceBox);
 
@@ -417,6 +426,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         saveStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        flipStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the security UI controls
@@ -427,7 +438,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> securityIntervalSpinner,
             Button saveSecurityButton,
             Button deleteSecurityButton,
-            Button addFloorFieldsSecurityButton
+            Button addFloorFieldsSecurityButton,
+            Button flipSecurityButton
     ) {
         securityIntervalLabel.setLabelFor(securityIntervalSpinner);
 
@@ -448,6 +460,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
         addFloorFieldsSecurityButton.disableProperty().bind(
                 InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING
         );
+
+        flipSecurityButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the stairs and elevators build category UI controls

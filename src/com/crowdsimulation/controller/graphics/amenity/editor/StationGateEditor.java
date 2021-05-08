@@ -13,24 +13,43 @@ public class StationGateEditor extends AmenityEditor {
             Patch currentPatch,
             boolean enabled,
             double chancePerSecond,
-            StationGate.StationGateMode mode
+            StationGate.StationGateMode stationGateMode
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
-                = StationGate.StationGateBlock.convertToAmenityBlocks(
+                = Amenity.AmenityBlock.convertToAmenityBlocks(
                 currentPatch,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation()
                         .getAmenityBlockTemplates()
         );
 
-        // Only add amenities on patches which do not have floor fields
+        // If there are no amenity blocks to be formed from the footprint at all, do nothing
+        if (amenityBlocks == null) {
+            return;
+        }
+
+        // Only add amenities on patches which are empty and do not have floor field values on them
+        // Check if, in each amenity block, there are no floor field values
+        boolean patchesClear = true;
+
+        for (Amenity.AmenityBlock amenityBlock : amenityBlocks) {
+            if (
+                    amenityBlock.getPatch().getAmenityBlock() != null
+                            || !amenityBlock.getPatch().getFloorFieldValues().isEmpty()
+            ) {
+                patchesClear = false;
+
+                break;
+            }
+        }
+
         // Otherwise, do nothing
-        if (currentPatch.getFloorFieldValues().isEmpty()) {
+        if (patchesClear) {
             // Prepare the amenity that will be placed on the station
             StationGate stationGateToAdd = StationGate.stationGateFactory.create(
                     amenityBlocks,
                     enabled,
                     chancePerSecond,
-                    mode
+                    stationGateMode
             );
 
             // Add this station gate to the list of all station gates on this floor
@@ -58,10 +77,10 @@ public class StationGateEditor extends AmenityEditor {
     }
 
     public void delete(
-            StationGate stationGate
+            StationGate stationGateToDelete
     ) {
         Main.simulator.getCurrentFloor().getStationGates().remove(
-                stationGate
+                stationGateToDelete
         );
     }
 }

@@ -4,17 +4,18 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
 import java.util.List;
 
-public class SecurityEditor extends AmenityEditor {
+public class TurnstileEditor extends AmenityEditor {
     public void draw(
             Patch currentPatch,
             boolean enabled,
-            int waitingTime,
-            boolean blockPassenger
+            int waitingTIme,
+            boolean blockEntry,
+            Turnstile.TurnstileMode turnstileMode
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
@@ -46,42 +47,45 @@ public class SecurityEditor extends AmenityEditor {
         // Otherwise, do nothing
         if (patchesClear) {
             // Prepare the amenity that will be placed on the station
-            Security securityToAdd = Security.securityFactory.create(
+            Turnstile turnstileToAdd = Turnstile.turnstileFactory.create(
                     amenityBlocks,
                     enabled,
-                    waitingTime,
-                    blockPassenger
+                    waitingTIme,
+                    blockEntry,
+                    turnstileMode
             );
 
             // Add this station gate to the list of all station gates on this floor
-            Main.simulator.getCurrentFloor().getSecurities().add(securityToAdd);
+            Main.simulator.getCurrentFloor().getTurnstiles().add(turnstileToAdd);
         }
     }
 
     public void edit(
-            Security securityToEdit,
+            Turnstile turnstileToEdit,
             boolean enabled,
             int waitingTime,
-            boolean blockPassenger
+            boolean blockEntry,
+            Turnstile.TurnstileMode turnstileMode
     ) {
-        securityToEdit.setEnabled(
+        turnstileToEdit.setEnabled(
                 enabled
         );
 
-        securityToEdit.setBlockEntry(
-                blockPassenger
+        turnstileToEdit.setWaitingTime(
+                waitingTime
         );
 
-        securityToEdit.setWaitingTime(
-                waitingTime
+        turnstileToEdit.setBlockEntry(
+                blockEntry
+        );
+
+        turnstileToEdit.setTurnstileMode(
+                turnstileMode
         );
     }
 
     public void delete(
-            Security securityToDelete
+            Turnstile turnstileToEdit
     ) {
-        Main.simulator.getCurrentFloor().getSecurities().remove(
-                securityToDelete
-        );
     }
 }
