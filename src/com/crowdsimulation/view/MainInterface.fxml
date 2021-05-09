@@ -399,17 +399,29 @@
                                     </Accordion>
                                  </content>
                               </Tab>
-                              <Tab text="Walls">
+                              <Tab text="Obstacles">
                                  <content>
                                     <Accordion>
                                        <panes>
-                                          <TitledPane animated="false" text="Wall">
+                                          <TitledPane animated="false" text="Obstacle">
                                              <content>
                                                 <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
                                                    <children>
                                                       <VBox alignment="CENTER" prefHeight="20.0" prefWidth="200.0" spacing="10.0">
                                                          <children>
-                                                            <Button fx:id="deleteWallButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
+                                                            <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                                               <children>
+                                                                  <Label fx:id="wallTypeLabel" prefHeight="17.0" prefWidth="42.0" text="Type:" />
+                                                                  <ChoiceBox fx:id="wallTypeChoiceBox" prefHeight="25.0" prefWidth="174.0" />
+                                                               </children>
+                                                            </HBox>
+                                                            <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
+                                                               <children>
+                                                                  <Button fx:id="saveWallButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Save" />
+                                                                  <Button fx:id="deleteWallButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
+                                                               </children>
+                                                            </HBox>
+                                                            <Button fx:id="flipWallButton" cancelButton="true" layoutX="10.0" layoutY="45.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Rotate obstacle" />
                                                          </children>
                                                       </VBox>
                                                    </children>

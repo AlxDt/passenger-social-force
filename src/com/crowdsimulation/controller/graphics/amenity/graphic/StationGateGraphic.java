@@ -1,6 +1,7 @@
 package com.crowdsimulation.controller.graphics.amenity.graphic;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 
 public class StationGateGraphic extends AmenityGraphic implements Cyclable, Changeable {
@@ -19,11 +20,9 @@ public class StationGateGraphic extends AmenityGraphic implements Cyclable, Chan
                         ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
         );
 
-        if (stationGate.isEnabled()) {
-            this.graphicIndex = 0;
-        } else {
-            this.graphicIndex = 2;
-        }
+        this.graphicIndex = 0;
+
+        change(stationGate);
     }
 
     @Override
@@ -46,8 +45,29 @@ public class StationGateGraphic extends AmenityGraphic implements Cyclable, Chan
     }
 
     @Override
-    public void change() {
-        // Cycle through the graphics list in steps of two
-        this.graphicIndex = (this.graphicIndex + 2) % this.graphics.size();
+    public void change(Drawable drawable) {
+        StationGate stationGate = (StationGate) drawable;
+
+        if (stationGate.isEnabled()) {
+            if (this.graphicIndex == 2 || this.graphicIndex == 3) {
+                if (this.graphicIndex == 2) {
+                    this.graphicIndex = 0;
+                } else {
+                    this.graphicIndex = 1;
+                }
+            } else {
+                this.graphicIndex = 0;
+            }
+        } else {
+            if (this.graphicIndex == 0 || this.graphicIndex == 1) {
+                if (this.graphicIndex == 0) {
+                    this.graphicIndex = 2;
+                } else {
+                    this.graphicIndex = 3;
+                }
+            } else {
+                this.graphicIndex = 2;
+            }
+        }
     }
 }

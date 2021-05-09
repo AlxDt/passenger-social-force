@@ -1,8 +1,10 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
+import com.crowdsimulation.controller.graphics.amenity.editor.TrainDoorEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.GenericGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.TrainDoorGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
@@ -27,10 +29,13 @@ public class TrainDoor extends Gate implements Queueable {
     public static final TrainDoorFactory trainDoorFactory;
 
     // Handles how the train door is displayed
-    private final GenericGraphic trainDoorGraphic;
+    private final TrainDoorGraphic trainDoorGraphic;
 
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint trainDoorFootprint;
+
+    // Denotes the editor of this amenity
+    public static final TrainDoorEditor trainDoorEditor;
 
     static {
         trainDoorFactory = new TrainDoorFactory();
@@ -89,6 +94,9 @@ public class TrainDoor extends Gate implements Queueable {
         upView.getAmenityBlockTemplates().add(upBlock03);
 
         trainDoorFootprint.addRotation(upView);
+
+        // Initialize the editor
+        trainDoorEditor = new TrainDoorEditor();
     }
 
     protected TrainDoor(
@@ -120,7 +128,7 @@ public class TrainDoor extends Gate implements Queueable {
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.trainDoorFloorFieldState, queueingFloorField);
 
-        this.trainDoorGraphic = new GenericGraphic(this);
+        this.trainDoorGraphic = new TrainDoorGraphic(this);
     }
 
     public TrainDoorPlatform getPlatform() {

@@ -4,6 +4,7 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.controller.screen.service.InitializeScreenService;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
@@ -14,16 +15,12 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 
-import java.awt.*;
 import java.util.List;
 
 public class InitializeMainScreenService extends InitializeScreenService {
@@ -212,7 +209,11 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button addFloorFieldsTrainDoorButton,
             // Walls
             // Wall
+            Label wallTypeLabel,
+            ChoiceBox<Wall.WallType> wallTypeChoiceBox,
+            Button saveWallButton,
             Button deleteWallButton,
+            Button flipWallButton,
             // Tab pane
             TabPane buildTabPane
     ) {
@@ -291,7 +292,11 @@ public class InitializeMainScreenService extends InitializeScreenService {
         );
 
         initializeWalls(
-                deleteWallButton
+                wallTypeLabel,
+                wallTypeChoiceBox,
+                saveWallButton,
+                deleteWallButton,
+                flipWallButton
         );
 
         // Initialize listeners
@@ -745,18 +750,43 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
     // Initialize the wall UI controls
     private static void initializeWalls(
-            Button deleteWallButton
+            Label wallTypeLabel,
+            ChoiceBox<Wall.WallType> wallTypeChoiceBox,
+            Button saveWallButton,
+            Button deleteWallButton,
+            Button flipWallButton
     ) {
         initializeWall(
-                deleteWallButton
+                wallTypeLabel,
+                wallTypeChoiceBox,
+                saveWallButton,
+                deleteWallButton,
+                flipWallButton
         );
     }
 
     // Initialize the wall controls
     private static void initializeWall(
-            Button deleteWallButton
+            Label wallTypeLabel,
+            ChoiceBox<Wall.WallType> wallTypeChoiceBox,
+            Button saveWallButton,
+            Button deleteWallButton,
+            Button flipWallButton
     ) {
+        wallTypeLabel.setLabelFor(wallTypeChoiceBox);
+
+        wallTypeChoiceBox.setItems(FXCollections.observableArrayList(
+                Wall.WallType.WALL,
+                Wall.WallType.BUILDING_COLUMN,
+                Wall.WallType.BELT_BARRIER,
+                Wall.WallType.METAL_BARRIER
+        ));
+        wallTypeChoiceBox.getSelectionModel().select(0);
+
+        saveWallButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteWallButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+
+        flipWallButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Iterate through each build subtab to set the listeners for the changing of build categories and subcategories

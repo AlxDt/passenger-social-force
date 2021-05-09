@@ -4,17 +4,14 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 
 import java.util.List;
 
-public class SecurityEditor extends AmenityEditor {
+public class WallEditor extends AmenityEditor {
     public void draw(
             Patch currentPatch,
-            boolean enabled,
-            int waitingTime,
-            boolean blockPassenger
+            Wall.WallType wallType
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
@@ -46,42 +43,30 @@ public class SecurityEditor extends AmenityEditor {
         // Otherwise, do nothing
         if (patchesClear) {
             // Prepare the amenity that will be placed on the station
-            Security securityToAdd = Security.securityFactory.create(
+            Wall wallToAdd = Wall.wallFactory.create(
                     amenityBlocks,
-                    enabled,
-                    waitingTime,
-                    blockPassenger
+                    wallType
             );
 
-            // Add this station gate to the list of all securities on this floor
-            Main.simulator.getCurrentFloor().getSecurities().add(securityToAdd);
+            // Add this station gate to the list of all walls on this floor
+            Main.simulator.getCurrentFloor().getWalls().add(wallToAdd);
         }
     }
 
     public void edit(
-            Security securityToEdit,
-            boolean enabled,
-            int waitingTime,
-            boolean blockPassenger
+            Wall wallToEdit,
+            Wall.WallType wallType
     ) {
-        securityToEdit.setEnabled(
-                enabled
-        );
-
-        securityToEdit.setBlockEntry(
-                blockPassenger
-        );
-
-        securityToEdit.setWaitingTime(
-                waitingTime
+        wallToEdit.setWallType(
+                wallType
         );
     }
 
     public void delete(
-            Security securityToDelete
+            Wall wallToEdit
     ) {
-        Main.simulator.getCurrentFloor().getSecurities().remove(
-                securityToDelete
+        Main.simulator.getCurrentFloor().getWalls().remove(
+                wallToEdit
         );
     }
 }

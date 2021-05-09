@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics.amenity.graphic;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
 
@@ -30,8 +31,15 @@ public class EscalatorGraphic extends AmenityGraphic implements Cyclable, Change
         }
     }
 
+
     @Override
-    public void change() {
+    public void cycle() {
+        // Cycle through the graphics list in steps of two
+        this.graphicIndex = (this.graphicIndex + 2) % this.graphics.size();
+    }
+
+    @Override
+    public void change(Drawable drawable) {
         // Indices 0 - 1: left-facing escalator
         if (this.graphicIndex == 0 || this.graphicIndex == 1) {
             if (this.graphicIndex == 0) {
@@ -47,11 +55,5 @@ public class EscalatorGraphic extends AmenityGraphic implements Cyclable, Change
                 this.graphicIndex--;
             }
         }
-    }
-
-    @Override
-    public void cycle() {
-        // Cycle through the graphics list in steps of two
-        this.graphicIndex = (this.graphicIndex + 2) % this.graphics.size();
     }
 }

@@ -1,6 +1,7 @@
 package com.crowdsimulation.controller.graphics.amenity.graphic;
 
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class AmenityGraphic {
+public abstract class AmenityGraphic implements Environment {
     public static final HashMap<Class<?>, List<String>> AMENITY_GRAPHICS = new HashMap<>();
 
     static {
@@ -76,14 +77,15 @@ public abstract class AmenityGraphic {
         AMENITY_GRAPHICS.put(Turnstile.class, turnstileGraphic);
 
         final List<String> trainDoorGraphic = new ArrayList<>();
-        trainDoorGraphic.add("com/crowdsimulation/view/image/amenity/traindoor/traindoor.png");
+        trainDoorGraphic.add("com/crowdsimulation/view/image/amenity/traindoor/nw/traindoor_nw.png");
+        trainDoorGraphic.add("com/crowdsimulation/view/image/amenity/traindoor/se/traindoor_se.png");
         AMENITY_GRAPHICS.put(TrainDoor.class, trainDoorGraphic);
 
         final List<String> wallGraphic = new ArrayList<>();
         wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/wall/wall.png");
         wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/post/post.png");
         wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/beltbarrier/front/beltbarrier_front.png");
-        wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/beltbarrier/side/belt_barrier_side.png");
+        wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/beltbarrier/side/beltbarrier_side.png");
         wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/metalbarrier/front/metalbarrier_front.png");
         wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/metalbarrier/side/metalbarrier_side.png");
         AMENITY_GRAPHICS.put(Wall.class, wallGraphic);
@@ -125,7 +127,7 @@ public abstract class AmenityGraphic {
         this.graphicURL = graphicURL;
     }
 
-    public static class AmenityGraphicScale {
+    public static class AmenityGraphicScale implements Environment {
         private int rowSpan;
         private int columnSpan;
 

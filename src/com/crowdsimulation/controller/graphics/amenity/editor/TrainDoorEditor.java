@@ -4,17 +4,17 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
 import java.util.List;
 
-public class SecurityEditor extends AmenityEditor {
+public class TrainDoorEditor {
     public void draw(
             Patch currentPatch,
             boolean enabled,
-            int waitingTime,
-            boolean blockPassenger
+            TrainDoor.TrainDoorPlatform trainDoorPlatform,
+            List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
@@ -46,42 +46,42 @@ public class SecurityEditor extends AmenityEditor {
         // Otherwise, do nothing
         if (patchesClear) {
             // Prepare the amenity that will be placed on the station
-            Security securityToAdd = Security.securityFactory.create(
+            TrainDoor trainDoorToAdd = TrainDoor.trainDoorFactory.create(
                     amenityBlocks,
                     enabled,
-                    waitingTime,
-                    blockPassenger
+                    trainDoorPlatform,
+                    trainDoorCarriages
             );
 
-            // Add this station gate to the list of all securities on this floor
-            Main.simulator.getCurrentFloor().getSecurities().add(securityToAdd);
+            // Add this station gate to the list of all train doors on this floor
+            Main.simulator.getCurrentFloor().getTrainDoors().add(trainDoorToAdd);
         }
     }
 
     public void edit(
-            Security securityToEdit,
+            TrainDoor trainDoorToEdit,
             boolean enabled,
-            int waitingTime,
-            boolean blockPassenger
+            TrainDoor.TrainDoorPlatform trainDoorPlatform,
+            List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
-        securityToEdit.setEnabled(
+        trainDoorToEdit.setEnabled(
                 enabled
         );
 
-        securityToEdit.setBlockEntry(
-                blockPassenger
+        trainDoorToEdit.setPlatform(
+                trainDoorPlatform
         );
 
-        securityToEdit.setWaitingTime(
-                waitingTime
+        trainDoorToEdit.setTrainDoorCarriagesSupported(
+                trainDoorCarriages
         );
     }
 
     public void delete(
-            Security securityToDelete
+            TrainDoor trainDoorToDelete
     ) {
-        Main.simulator.getCurrentFloor().getSecurities().remove(
-                securityToDelete
+        Main.simulator.getCurrentFloor().getTrainDoors().remove(
+                trainDoorToDelete
         );
     }
 }

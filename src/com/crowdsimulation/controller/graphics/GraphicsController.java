@@ -140,8 +140,8 @@ public class GraphicsController extends Controller {
             backgroundGraphicsContext.fillRect(
                     0,
                     0,
-                    backgroundCanvas.getWidth(),
-                    backgroundCanvas.getHeight()
+                    canvasWidth,
+                    canvasHeight
             );
         }
 
@@ -298,6 +298,11 @@ public class GraphicsController extends Controller {
                             if (drawGraphicTransparently) {
                                 backgroundGraphicsContext.setGlobalAlpha(1.0);
                             }
+                        }
+                    } else {
+                        if (patchColor != null) {
+                            backgroundGraphicsContext.setFill(patchColor);
+                            backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
                         }
                     }
                 } else {
@@ -564,14 +569,12 @@ public class GraphicsController extends Controller {
                         if (Main.simulator.getCurrentAmenity() == null) {
                             // Actions for left click
                             if (event.getButton() == MouseButton.PRIMARY) {
-/*
                                 // Commence building or editing on that patch
                                 try {
                                     Main.mainScreenController.buildOrEdit(currentPatch);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
-*/
 
                                 // Redraw the station view
                                 drawStationView(canvases, Main.simulator.getCurrentFloor(), true);

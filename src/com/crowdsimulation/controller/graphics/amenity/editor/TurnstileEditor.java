@@ -4,7 +4,6 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
 import java.util.List;
@@ -55,7 +54,7 @@ public class TurnstileEditor extends AmenityEditor {
                     turnstileMode
             );
 
-            // Add this station gate to the list of all station gates on this floor
+            // Add this station gate to the list of all turnstiles on this floor
             Main.simulator.getCurrentFloor().getTurnstiles().add(turnstileToAdd);
         }
     }
@@ -87,5 +86,8 @@ public class TurnstileEditor extends AmenityEditor {
     public void delete(
             Turnstile turnstileToEdit
     ) {
+        Main.simulator.getCurrentFloor().getTurnstiles().remove(
+                turnstileToEdit
+        );
     }
 }

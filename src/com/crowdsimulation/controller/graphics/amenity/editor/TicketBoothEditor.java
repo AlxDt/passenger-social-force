@@ -53,7 +53,7 @@ public class TicketBoothEditor extends AmenityEditor {
                     ticketBoothType
             );
 
-            // Add this station gate to the list of all station gates on this floor
+            // Add this station gate to the list of all ticket booths on this floor
             Main.simulator.getCurrentFloor().getTicketBooths().add(ticketBoothToAdd);
         }
     }

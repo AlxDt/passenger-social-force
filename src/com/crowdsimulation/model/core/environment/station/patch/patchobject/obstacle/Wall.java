@@ -1,18 +1,27 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle;
 
+import com.crowdsimulation.controller.graphics.amenity.editor.WallEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.WallGraphic;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 
 import java.util.List;
 
-public class Wall extends Obstacle {
+public class Wall extends Obstacle implements Drawable {
+    // Denotes the type of this wall
+    private WallType wallType;
+
     // Factory for wall creation
     public static final WallFactory wallFactory;
 
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint wallFootprint;
+
+    // Denotes the editor of this amenity
+    public static final WallEditor wallEditor;
 
     static {
         wallFactory = new WallFactory();
@@ -29,7 +38,7 @@ public class Wall extends Obstacle {
                 upView.getOrientation(),
                 0,
                 0,
-                Security.class,
+                Wall.class,
                 true,
                 true
         );
@@ -37,15 +46,62 @@ public class Wall extends Obstacle {
         upView.getAmenityBlockTemplates().add(block00);
 
         wallFootprint.addRotation(upView);
+
+        // Initialize the editor
+        wallEditor = new WallEditor();
     }
 
-    protected Wall(List<AmenityBlock> amenityBlocks) {
+    // Handles how the train door is displayed
+    private final WallGraphic wallGraphic;
+
+    protected Wall(List<AmenityBlock> amenityBlocks, WallType wallType) {
         super(amenityBlocks);
+
+        this.wallType = wallType;
+
+        this.wallGraphic = new WallGraphic(this);
+    }
+
+    public WallType getWallType() {
+        return wallType;
+    }
+
+    public void setWallType(WallType wallType) {
+        this.wallType = wallType;
     }
 
     @Override
     public String toString() {
         return "Wall";
+    }
+
+    @Override
+    public AmenityGraphic getGraphicObject() {
+        return this.wallGraphic;
+    }
+
+    @Override
+    public String getGraphicURL() {
+        return this.wallGraphic.getGraphicURL();
+    }
+
+    // The different types this wall has
+    public enum WallType {
+        WALL("Wall"),
+        BUILDING_COLUMN("Building column"),
+        BELT_BARRIER("Belt barrier"),
+        METAL_BARRIER("Metal barrier");
+
+        private final String name;
+
+        WallType(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
     }
 
     // Wall block
@@ -80,9 +136,10 @@ public class Wall extends Obstacle {
 
     // Wall factory
     public static class WallFactory extends ObstacleFactory {
-        public Wall create(List<AmenityBlock> amenityBlocks) {
+        public Wall create(List<AmenityBlock> amenityBlocks, WallType wallType) {
             return new Wall(
-                    amenityBlocks
+                    amenityBlocks,
+                    wallType
             );
         }
     }

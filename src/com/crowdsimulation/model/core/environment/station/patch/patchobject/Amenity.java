@@ -53,7 +53,7 @@ public abstract class Amenity extends PatchObject implements Environment {
     }
 
     // Denotes a single component of an amenity that occupies one patch
-    public abstract static class AmenityBlock {
+    public abstract static class AmenityBlock implements Environment {
         private Amenity parent;
         private final Patch patch;
         private final boolean attractor;
