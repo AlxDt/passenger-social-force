@@ -35,6 +35,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class GraphicsController extends Controller {
@@ -42,7 +43,7 @@ public class GraphicsController extends Controller {
 
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
     public static Floor floorNextPortal;
-    public static MatrixPosition firstPortalDrawnPosition;
+    public static List<Amenity.AmenityBlock> firstPortalAmenityBlocks;
     public static AmenityFootprint currentAmenityFootprint;
     public static double tileSize;
     private static Patch markedPatch;
@@ -58,7 +59,7 @@ public class GraphicsController extends Controller {
         GraphicsController.currentAmenityFootprint = null;
 
         GraphicsController.floorNextPortal = null;
-        GraphicsController.firstPortalDrawnPosition = null;
+        GraphicsController.firstPortalAmenityBlocks = null;
     }
 
     // Send a request to draw the station view on the canvas
@@ -164,9 +165,24 @@ public class GraphicsController extends Controller {
                     Color patchColor = null;
                     Image firstPortalImage = null;
 
+                    boolean currentPatchInFirstPortalBlock = false;
+                    Amenity.AmenityBlock firstPortalAmenityBlock = null;
+
                     if (patchAmenityBlock == null) {
+                        // Check if the current patch is in the first portal position, if it exists
+                        if (GraphicsController.firstPortalAmenityBlocks != null) {
+                            for (Amenity.AmenityBlock amenityBlock : GraphicsController.firstPortalAmenityBlocks) {
+                                if (amenityBlock.getPatch().getMatrixPosition().equals(currentPatch.getMatrixPosition())) {
+                                    currentPatchInFirstPortalBlock = true;
+                                    firstPortalAmenityBlock = amenityBlock;
+
+                                    break;
+                                }
+                            }
+                        }
+
                         // Draw the marker for first portal reference, if any has been drawn
-                        if (!currentPatch.getMatrixPosition().equals(GraphicsController.firstPortalDrawnPosition)) {
+                        if (!currentPatchInFirstPortalBlock) {
                             // There isn't an amenity on this patch, so just use the color corresponding to a blank
                             // patch
                             patchColor = Color.WHITE;
@@ -254,8 +270,6 @@ public class GraphicsController extends Controller {
                     if (patchAmenityBlock != null) {
                         Amenity patchAmenity = currentPatch.getAmenityBlock().getParent();
 
-                        Image graphic;
-
                         if (patchAmenityBlock.hasGraphic()) {
                             Drawable drawablePatchAmenity = (Drawable) patchAmenity;
 
@@ -264,11 +278,7 @@ public class GraphicsController extends Controller {
                                 backgroundGraphicsContext.setGlobalAlpha(0.2);
                             }
 
-                            if (patchAmenity == null) {
-                                graphic = firstPortalImage;
-                            } else {
-                                graphic = new Image(drawablePatchAmenity.getGraphicURL());
-                            }
+                            Image graphic = new Image(drawablePatchAmenity.getGraphicURL());
 
                             if (drawablePatchAmenity instanceof Turnstile) {
                                 Turnstile.TurnstileBlock turnstileBlock = (Turnstile.TurnstileBlock) patchAmenityBlock;
@@ -299,11 +309,27 @@ public class GraphicsController extends Controller {
                                 backgroundGraphicsContext.setGlobalAlpha(1.0);
                             }
                         }
-                    } else {
-                        if (patchColor != null) {
-                            backgroundGraphicsContext.setFill(patchColor);
-                            backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
+                    } else if (currentPatchInFirstPortalBlock) {
+                        if (firstPortalAmenityBlock.hasGraphic()) {
+                            Drawable drawablePatchAmenity = (Drawable) firstPortalAmenityBlock.getParent();
+
+                            backgroundGraphicsContext.setGlobalAlpha(0.2);
+
+                            backgroundGraphicsContext.drawImage(
+                                    firstPortalImage,
+                                    column * tileSize,
+                                    row * tileSize,
+                                    tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                            .getColumnSpan(),
+                                    tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                            .getRowSpan()
+                            );
+
+                            backgroundGraphicsContext.setGlobalAlpha(1.0);
                         }
+                    } else {
+                        backgroundGraphicsContext.setFill(patchColor);
+                        backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
                     }
                 } else {
                     // Draw passengers, if any

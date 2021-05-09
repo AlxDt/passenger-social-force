@@ -55,7 +55,9 @@ public abstract class AmenityGraphic implements Environment {
 
         final List<String> elevatorGraphic = new ArrayList<>();
         elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/front/elevator_front.png");
-        elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/side/elevator_side.png");
+        elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/right/elevator_right.png");
+        elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/rear/elevator_rear.png");
+        elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/left/elevator_left.png");
         AMENITY_GRAPHICS.put(ElevatorPortal.class, elevatorGraphic);
 
         final List<String> ticketBoothGraphic = new ArrayList<>();

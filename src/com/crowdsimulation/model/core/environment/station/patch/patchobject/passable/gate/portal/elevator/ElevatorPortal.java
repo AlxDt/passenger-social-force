@@ -1,7 +1,10 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator;
 
+import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.graphics.amenity.editor.ElevatorEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.ElevatorGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.GenericGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -29,7 +32,7 @@ public class ElevatorPortal extends Portal implements Queueable {
     public static final ElevatorPortalFactory elevatorPortalFactory;
 
     // Handles how this elevator portal is displayed
-    private final GenericGraphic elevatorPortalGraphic;
+    private final ElevatorGraphic elevatorPortalGraphic;
 
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint elevatorPortalFootprint;
@@ -275,7 +278,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.elevatorPortalFloorFieldState, queueingFloorField);
 
-        this.elevatorPortalGraphic = new GenericGraphic(this);
+        this.elevatorPortalGraphic = new ElevatorGraphic(this);
     }
 
     public ElevatorShaft getElevatorShaft() {

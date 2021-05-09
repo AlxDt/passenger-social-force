@@ -60,11 +60,14 @@ public class ElevatorEditController extends PortalEditController {
         ElevatorShaft.ElevatorDirection elevatorDirection = elevatorDirectionChoiceBox.getValue();
 
         // Modify its values
-        elevatorShaft.setEnabled(enabled);
-        elevatorShaft.setOpenDelayTime(delayTime);
-        elevatorShaft.setDoorOpenTime(openTime);
-        elevatorShaft.setMoveTime(moveTime);
-        elevatorShaft.setElevatorDirection(elevatorDirection);
+        ElevatorShaft.elevatorEditor.edit(
+                elevatorShaft,
+                enabled,
+                delayTime,
+                openTime,
+                moveTime,
+                elevatorDirection
+        );
 
         this.getWindowOutput().put(OUTPUT_KEY, elevatorShaft);
 

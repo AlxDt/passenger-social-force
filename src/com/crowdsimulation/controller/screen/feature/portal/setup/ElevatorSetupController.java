@@ -50,17 +50,11 @@ public class ElevatorSetupController extends PortalSetupController {
         int moveTime = elevatorMoveSpinner.getValue();
         ElevatorShaft.ElevatorDirection elevatorDirection = elevatorDirectionChoiceBox.getValue();
 
-        // Prepare the provisional elevator shaft
-        // If the user chooses not to go through with the elevator, this shaft will
-        // simply be discarded
-        ElevatorShaft.ElevatorShaftFactory elevatorShaftFactory =
-                new ElevatorShaft.ElevatorShaftFactory();
-
-        ElevatorShaft elevatorShaft = elevatorShaftFactory.create(
+        ElevatorShaft elevatorShaft = ElevatorShaft.elevatorEditor.createShaft(
                 enabled,
-                moveTime,
                 delayTime,
                 openTime,
+                moveTime,
                 elevatorDirection
         );
 

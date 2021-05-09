@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator;
 
+import com.crowdsimulation.controller.graphics.amenity.editor.ElevatorEditor;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
@@ -24,8 +25,14 @@ public class ElevatorShaft extends PortalShaft {
     // Factory for elevator shaft creation
     public static final ElevatorShaftFactory elevatorShaftFactory;
 
+    // Denotes the editor of this amenity
+    public static final ElevatorEditor elevatorEditor;
+
     static {
         elevatorShaftFactory = new ElevatorShaftFactory();
+
+        // Initialize the editor
+        elevatorEditor = new ElevatorEditor();
     }
 
     protected ElevatorShaft(

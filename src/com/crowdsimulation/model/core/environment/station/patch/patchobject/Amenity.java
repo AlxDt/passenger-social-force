@@ -29,18 +29,23 @@ public abstract class Amenity extends PatchObject implements Environment {
     protected Amenity(List<AmenityBlock> amenityBlocks) {
         this.amenityBlocks = amenityBlocks;
 
-        // Set the parent of each amenity block to this amenity
-        // In turn, set the contents of the patch in each amenity block to the amenity block
-        // Also, all this amenity's attractors to the pertinent list
-        this.attractors = new ArrayList<>();
+        // Only proceed when this amenity has blocks
+        if (this.amenityBlocks != null) {
+            // Set the parent of each amenity block to this amenity
+            // In turn, set the contents of the patch in each amenity block to the amenity block
+            // Also, all this amenity's attractors to the pertinent list
+            this.attractors = new ArrayList<>();
 
-        for (AmenityBlock amenityBlock : this.amenityBlocks) {
-            amenityBlock.setParent(this);
-            amenityBlock.getPatch().setAmenityBlock(amenityBlock);
+            for (AmenityBlock amenityBlock : this.amenityBlocks) {
+                amenityBlock.setParent(this);
+                amenityBlock.getPatch().setAmenityBlock(amenityBlock);
 
-            if (amenityBlock.isAttractor()) {
-                this.attractors.add(amenityBlock);
+                if (amenityBlock.isAttractor()) {
+                    this.attractors.add(amenityBlock);
+                }
             }
+        } else {
+            this.attractors = null;
         }
     }
 
