@@ -235,22 +235,98 @@ public class GraphicsController extends Controller {
                             drawGraphicTransparently = true;
 
                             if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ESCALATOR) {
-                                firstPortalImage
-                                        = new Image(
-                                        "com/crowdsimulation/view/image/amenity/escalator/single/blank/" +
-                                                "escalator_front.png"
-                                );
+                                switch (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()) {
+                                    case UP:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_front.png"
+                                        );
+
+                                        break;
+                                    case RIGHT:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_right.png"
+                                        );
+
+                                        break;
+                                    case DOWN:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_rear.png"
+                                        );
+
+                                        break;
+                                    case LEFT:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_left.png"
+                                        );
+
+                                        break;
+                                }
                             } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.STAIRS) {
-                                firstPortalImage
-                                        = new Image(
-                                        "com/crowdsimulation/view/image/amenity/stair/single/front/" +
-                                                "stair_single_front.png"
-                                );
+                                switch (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()) {
+                                    case UP:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/stair/single/front/stair_single_front.png"
+                                        );
+
+                                        break;
+                                    case RIGHT:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/stair/single/right/stair_single_right.png"
+                                        );
+
+                                        break;
+                                    case DOWN:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/stair/single/rear/stair_single_rear.png"
+                                        );
+
+                                        break;
+                                    case LEFT:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/stair/single/left/stair_single_left.png"
+                                        );
+
+                                        break;
+                                }
                             } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ELEVATOR) {
-                                firstPortalImage
-                                        = new Image(
-                                        "com/crowdsimulation/view/image/amenity/elevator/front/elevator_front.png"
-                                );
+                                switch (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()) {
+                                    case UP:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/elevator/front/elevator_front.png"
+                                        );
+
+                                        break;
+                                    case RIGHT:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/elevator/right/elevator_right.png"
+                                        );
+
+                                        break;
+                                    case DOWN:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/elevator/rear/elevator_rear.png"
+                                        );
+
+                                        break;
+                                    case LEFT:
+                                        firstPortalImage
+                                                = new Image(
+                                                "com/crowdsimulation/view/image/amenity/elevator/left/elevator_left.png"
+                                        );
+
+                                        break;
+                                }
                             }
                         }
                     } else {

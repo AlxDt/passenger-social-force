@@ -3,7 +3,6 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.controller.graphics.amenity.editor.TurnstileEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.GenericGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.TurnstileGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;

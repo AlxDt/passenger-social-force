@@ -1,11 +1,8 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator;
 
-import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.graphics.amenity.editor.ElevatorEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.ElevatorGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.GenericGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;

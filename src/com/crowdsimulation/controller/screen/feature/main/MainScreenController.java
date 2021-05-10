@@ -1837,7 +1837,7 @@ public class MainScreenController extends ScreenController {
                 }
 
                 break;
-            /*case STAIRS:
+            case STAIRS:
                 // Edit all stairs
                 StairShaft stairShaftReference = (StairShaft) portalShaft;
 
@@ -1852,17 +1852,19 @@ public class MainScreenController extends ScreenController {
                                     || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
                     ) {
                         // Mirror each stair shaft to the reference shaft
-                        stairShaftToEdit.setEnabled(stairShaftReference.isEnabled());
-                        stairShaftToEdit.setMoveTime(stairShaftReference.getMoveTime());
+                        StairShaft.stairEditor.edit(
+                                stairShaftToEdit,
+                                stairShaftReference.isEnabled(),
+                                stairShaftReference.getMoveTime()
+                        );
 
                         // Apply the changes from the stair shaft to these portals
-                        lowerPortal.setEnabled(stairShaftReference.isEnabled());
-                        upperPortal.setEnabled(stairShaftReference.isEnabled());
+                        saveSingleAmenityInFloor(stairShaftToEdit);
                     }
                 }
 
                 break;
-            case ESCALATOR:
+            /*case ESCALATOR:
                 // Edit all escalators
                 EscalatorShaft escalatorShaftReference = (EscalatorShaft) portalShaft;
 
@@ -1918,15 +1920,17 @@ public class MainScreenController extends ScreenController {
                                     || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
                     ) {
                         // Mirror each elevator shaft to the reference shaft
-                        elevatorShaftToEdit.setEnabled(elevatorShaftReference.isEnabled());
-                        elevatorShaftToEdit.setOpenDelayTime(elevatorShaftReference.getOpenDelayTime());
-                        elevatorShaftToEdit.setDoorOpenTime(elevatorShaftReference.getDoorOpenTime());
-                        elevatorShaftToEdit.setMoveTime(elevatorShaftReference.getMoveTime());
-                        elevatorShaftToEdit.setElevatorDirection(elevatorShaftReference.getElevatorDirection());
+                        ElevatorShaft.elevatorEditor.edit(
+                                elevatorShaftToEdit,
+                                elevatorShaftReference.isEnabled(),
+                                elevatorShaftReference.getOpenDelayTime(),
+                                elevatorShaftReference.getDoorOpenTime(),
+                                elevatorShaftReference.getMoveTime(),
+                                elevatorShaftReference.getElevatorDirection()
+                        );
 
                         // Apply the changes from the elevator shaft to these portals
-                        lowerPortal.setEnabled(elevatorShaftReference.isEnabled());
-                        upperPortal.setEnabled(elevatorShaftReference.isEnabled());
+                        saveSingleAmenityInFloor(elevatorShaftToEdit);
                     }
                 }
 
@@ -2023,36 +2027,15 @@ public class MainScreenController extends ScreenController {
                         (Security) amenityToDelete
                 );
 
-                break;/*
+                break;
             case STAIRS:
                 StairShaft stairShaftToDelete = (StairShaft) amenityToDelete;
 
-                // Retrieve portal components
-                StairPortal upperStairPortal = (StairPortal) stairShaftToDelete.getUpperPortal();
-                StairPortal lowerStairPortal = (StairPortal) stairShaftToDelete.getLowerPortal();
+                StairShaft.stairEditor.delete(
+                        stairShaftToDelete
+                );
 
-                // Remove the portals from their patches in their respective floors
-                if (Main.simulator.getFirstPortal() == null) {
-                    // Portal drawing completed, deleting portal from portal shaft
-                    if (upperStairPortal != null) {
-                        upperStairPortal.getPatch().setAmenity(null);
-                    }
-
-                    if (lowerStairPortal != null) {
-                        lowerStairPortal.getPatch().setAmenity(null);
-                    }
-
-                    // Remove stair shaft
-                    Main.simulator.getStation().getStairShafts().remove(
-                            (StairShaft) stairShaftToDelete
-                    );
-                } else {
-                    // Portal drawing uncompleted, deleting portal from simulator
-                    StairPortal portal = (StairPortal) Main.simulator.getFirstPortal();
-                    portal.getPatch().setAmenity(null);
-                }
-
-                break;
+                break;/*
             case ESCALATOR:
                 EscalatorShaft escalatorShaftToDelete = (EscalatorShaft) amenityToDelete;
 
@@ -2616,7 +2599,7 @@ public class MainScreenController extends ScreenController {
                     }
 
                     break;
-                /*case STAIRS:
+                case STAIRS:
                     switch (buildState) {
                         case DRAWING:
                             // Only add if the current patch doesn't already have an amenity
@@ -2667,84 +2650,88 @@ public class MainScreenController extends ScreenController {
                                                 // peace
                                                 // Prepare the first portal that will be placed on this floor
                                                 StairPortal stairPortalToAdd
-                                                        = StairPortal.stairPortalFactory.create(
+                                                        = StairShaft.stairEditor.draw(
                                                         currentPatch,
                                                         Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                         Main.simulator.getCurrentFloor(),
                                                         (StairShaft) Main.simulator.getProvisionalPortalShaft()
                                                 );
 
-                                                // Set the amenity on that patch
-                                                currentPatch.setAmenityBlock(stairPortalToAdd);
+                                                // Only add the first portal when there is a valid place to put it in
+                                                if (stairPortalToAdd != null) {
+                                                    // The first portal has now been drawn
+                                                    Main.simulator.setFirstPortalDrawn(true);
+                                                    Main.simulator.setFirstPortal(stairPortalToAdd);
 
-                                                // The first portal has now been drawn
-                                                Main.simulator.setFirstPortalDrawn(true);
-                                                Main.simulator.setFirstPortal(stairPortalToAdd);
+                                                    // Redraw the interface to briefly show the newly added elevator
+                                                    drawInterface(false);
 
-                                                // Redraw the interface to briefly show the newly added elevator
-                                                drawInterface(false);
+                                                    // Show the window for choosing the floor where the next portal will be
+                                                    FXMLLoader loader = ScreenController.getLoader(
+                                                            getClass(),
+                                                            "/com/crowdsimulation/view" +
+                                                                    "/PortalFloorSelectorInterface.fxml");
+                                                    Parent root = loader.load();
 
-                                                // Show the window for choosing the floor where the next portal will be
-                                                FXMLLoader loader = ScreenController.getLoader(
-                                                        getClass(),
-                                                        "/com/crowdsimulation/view" +
-                                                                "/PortalFloorSelectorInterface.fxml");
-                                                Parent root = loader.load();
+                                                    PortalFloorSelectorController portalFloorSelectorController
+                                                            = loader.getController();
+                                                    portalFloorSelectorController.setElements();
 
-                                                PortalFloorSelectorController portalFloorSelectorController
-                                                        = loader.getController();
-                                                portalFloorSelectorController.setElements();
+                                                    portalFloorSelectorController.showWindow(
+                                                            root,
+                                                            "Choose the floor of the second stair landing",
+                                                            true,
+                                                            true
+                                                    );
 
-                                                portalFloorSelectorController.showWindow(
-                                                        root,
-                                                        "Choose the floor of the second stair landing",
-                                                        true,
-                                                        true
-                                                );
+                                                    // Only continue when the floor selection has been completed
+                                                    if (portalFloorSelectorController.isClosedWithAction()) {
+                                                        // A floor has already been chosen, now retrieve that floor and go there
+                                                        Floor chosenFloor = (Floor) portalFloorSelectorController
+                                                                .getWindowOutput()
+                                                                .get(PortalFloorSelectorController.OUTPUT_KEY);
 
-                                                // Only continue when the floor selection has been completed
-                                                if (portalFloorSelectorController.isClosedWithAction()) {
-                                                    // A floor has already been chosen, now retrieve that floor and go there
-                                                    Floor chosenFloor = (Floor) portalFloorSelectorController
-                                                            .getWindowOutput()
-                                                            .get(PortalFloorSelectorController.OUTPUT_KEY);
+                                                        // After the chosen floor was selected, we may now set the
+                                                        // provisional portal shaft with one of the portals, now that we
+                                                        // know which one is the portal located in the upper or lower
+                                                        // floor
+                                                        List<Floor> floors = Main.simulator.getStation().getFloors();
 
-                                                    // After the chosen floor was selected, we may now set the
-                                                    // provisional portal shaft with one of the portals, now that we
-                                                    // know which one is the portal located in the upper or lower
-                                                    // floor
-                                                    List<Floor> floors = Main.simulator.getStation().getFloors();
+                                                        // If the current floor is lower than the chosen floor, this
+                                                        // current floor will be the lower portal
+                                                        if (floors.indexOf(Main.simulator.getCurrentFloor())
+                                                                < floors.indexOf(chosenFloor)) {
+                                                            Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                                    stairPortalToAdd
+                                                            );
+                                                        } else {
+                                                            Main.simulator.getProvisionalPortalShaft().setUpperPortal(
+                                                                    stairPortalToAdd
+                                                            );
+                                                        }
 
-                                                    // If the current floor is lower than the chosen floor, this
-                                                    // current floor will be the lower portal
-                                                    if (floors.indexOf(Main.simulator.getCurrentFloor())
-                                                            < floors.indexOf(chosenFloor)) {
-                                                        Main.simulator.getProvisionalPortalShaft().setLowerPortal(
-                                                                stairPortalToAdd
+                                                        // On the added floor, mark the position of the added portal
+                                                        GraphicsController.floorNextPortal = chosenFloor;
+                                                        GraphicsController.firstPortalAmenityBlocks
+                                                                = stairPortalToAdd.getAmenityBlocks();
+
+                                                        // Switch to that floor
+                                                        switchFloor(chosenFloor);
+
+                                                        // Prompt the user that it is now time to draw the second portal
+                                                        AlertController.showSimpleAlert(
+                                                                "Add second stair landing",
+                                                                "Draw the second stair landing",
+                                                                "After closing this window, please draw the" +
+                                                                        " second stair landing on this floor. Click X to" +
+                                                                        " cancel this operation.",
+                                                                Alert.AlertType.INFORMATION
                                                         );
                                                     } else {
-                                                        Main.simulator.getProvisionalPortalShaft().setUpperPortal(
-                                                                stairPortalToAdd
-                                                        );
+                                                        // Cancel portal adding
+                                                        // Also delete the earlier added portal shafts and portals
+                                                        endPortalDrawing(false);
                                                     }
-
-                                                    // On the added floor, mark the position of the added portal
-                                                    GraphicsController.floorNextPortal = chosenFloor;
-                                                    GraphicsController.firstPortalDrawnPosition
-                                                            = stairPortalToAdd.getPatch().getMatrixPosition();
-
-                                                    // Switch to that floor
-                                                    switchFloor(chosenFloor);
-
-                                                    // Prompt the user that it is now time to draw the second portal
-                                                    AlertController.showSimpleAlert(
-                                                            "Add second stair landing",
-                                                            "Draw the second stair landing",
-                                                            "After closing this window, please draw the" +
-                                                                    " second stair landing on this floor. Click X to" +
-                                                                    " cancel this operation.",
-                                                            Alert.AlertType.INFORMATION
-                                                    );
                                                 } else {
                                                     // Cancel portal adding
                                                     // Also delete the earlier added portal shafts and portals
@@ -2761,63 +2748,68 @@ public class MainScreenController extends ScreenController {
                                         }
                                     } else {
                                         // Prepare the second portal that will be placed on this floor
-                                        StairPortal stairPortalToAdd = StairPortal.stairPortalFactory.create(
+                                        StairPortal stairPortalToAdd = StairShaft.stairEditor.draw(
                                                 currentPatch,
                                                 Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                 Main.simulator.getCurrentFloor(),
                                                 (StairShaft) Main.simulator.getProvisionalPortalShaft()
                                         );
 
-                                        // Set the amenity on that patch
-                                        currentPatch.setAmenityBlock(stairPortalToAdd);
 
-                                        // If the upper portal has already been set, then this portal will be the
-                                        // lower one (and vice versa)
-                                        if (Main.simulator.getProvisionalPortalShaft().getUpperPortal() == null) {
-                                            Main.simulator.getProvisionalPortalShaft().setUpperPortal(
-                                                    stairPortalToAdd
+                                        // Only add the first portal when there is a valid place to put it in
+                                        if (stairPortalToAdd != null) {
+                                            // If the upper portal has already been set, then this portal will be the
+                                            // lower one (and vice versa)
+                                            if (Main.simulator.getProvisionalPortalShaft().getUpperPortal() == null) {
+                                                Main.simulator.getProvisionalPortalShaft().setUpperPortal(
+                                                        stairPortalToAdd
+                                                );
+
+                                                stairPortalToAdd.setPair(
+                                                        Main.simulator.getProvisionalPortalShaft().getLowerPortal()
+                                                );
+
+                                                Main.simulator.getProvisionalPortalShaft().getLowerPortal().setPair(
+                                                        stairPortalToAdd
+                                                );
+                                            } else {
+                                                Main.simulator.getProvisionalPortalShaft().setLowerPortal(
+                                                        stairPortalToAdd
+                                                );
+
+                                                stairPortalToAdd.setPair(
+                                                        Main.simulator.getProvisionalPortalShaft().getUpperPortal()
+                                                );
+
+                                                Main.simulator.getProvisionalPortalShaft().getUpperPortal().setPair(
+                                                        stairPortalToAdd
+                                                );
+                                            }
+
+                                            // Register the provisional shaft to the station
+                                            Main.simulator.getStation().getStairShafts().add(
+                                                    (StairShaft) Main.simulator.getProvisionalPortalShaft()
                                             );
 
-                                            stairPortalToAdd.setPair(
-                                                    Main.simulator.getProvisionalPortalShaft().getLowerPortal()
-                                            );
+                                            // Finish adding the portal
+                                            endPortalDrawing(true);
 
-                                            Main.simulator.getProvisionalPortalShaft().getLowerPortal().setPair(
-                                                    stairPortalToAdd
+                                            // Again, briefly redraw the interface to let the user have a glimpse at
+                                            // the newly added elevator
+                                            drawInterface(false);
+
+                                            // Let the user know that portal addition has been successful
+                                            AlertController.showSimpleAlert(
+                                                    "Staircase addition successful",
+                                                    "Staircase successfully added",
+                                                    "The staircase has been successfully added.",
+                                                    Alert.AlertType.INFORMATION
                                             );
                                         } else {
-                                            Main.simulator.getProvisionalPortalShaft().setLowerPortal(
-                                                    stairPortalToAdd
-                                            );
-
-                                            stairPortalToAdd.setPair(
-                                                    Main.simulator.getProvisionalPortalShaft().getUpperPortal()
-                                            );
-
-                                            Main.simulator.getProvisionalPortalShaft().getUpperPortal().setPair(
-                                                    stairPortalToAdd
-                                            );
+                                            // Cancel portal adding
+                                            // Also delete the earlier added portal shafts and portals
+                                            endPortalDrawing(false);
                                         }
-
-                                        // Register the provisional shaft to the station
-                                        Main.simulator.getStation().getStairShafts().add(
-                                                (StairShaft) Main.simulator.getProvisionalPortalShaft()
-                                        );
-
-                                        // Finish adding the portal
-                                        endPortalDrawing(true);
-
-                                        // Again, briefly redraw the interface to let the user have a glimpse at
-                                        // the newly added elevator
-                                        drawInterface(false);
-
-                                        // Let the user know that portal addition has been successful
-                                        AlertController.showSimpleAlert(
-                                                "Staircase addition successful",
-                                                "Staircase successfully added",
-                                                "The staircase has been successfully added.",
-                                                Alert.AlertType.INFORMATION
-                                        );
                                     }
                                 } else {
                                     // We will end up here if a first portal has been added on an empty patch,
@@ -2882,7 +2874,7 @@ public class MainScreenController extends ScreenController {
                             break;
                     }
 
-                    break;
+                    break;/*
                 case ESCALATOR:
                     switch (buildState) {
                         case DRAWING:

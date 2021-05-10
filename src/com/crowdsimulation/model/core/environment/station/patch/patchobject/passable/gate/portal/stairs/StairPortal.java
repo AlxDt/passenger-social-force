@@ -133,7 +133,7 @@ public class StairPortal extends Portal {
                 0,
                 StairPortal.class,
                 false,
-                true
+                false
         );
 
         leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
@@ -142,7 +142,7 @@ public class StairPortal extends Portal {
                 -1,
                 StairPortal.class,
                 true,
-                false
+                true
         );
 
         leftView.getAmenityBlockTemplates().add(leftBlock00);

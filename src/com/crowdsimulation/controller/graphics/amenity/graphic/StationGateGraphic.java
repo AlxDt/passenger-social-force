@@ -27,7 +27,6 @@ public class StationGateGraphic extends AmenityGraphic implements Cyclable, Chan
 
     @Override
     public void cycle() {
-        // Indices 0 - 1: Open station gate
         if (this.graphicIndex == 0 || this.graphicIndex == 1) {
             if (this.graphicIndex == 0) {
                 this.graphicIndex++;
@@ -35,7 +34,6 @@ public class StationGateGraphic extends AmenityGraphic implements Cyclable, Chan
                 this.graphicIndex--;
             }
         } else {
-            // Indices 2 - 3: Closed station gate
             if (this.graphicIndex == 2) {
                 this.graphicIndex++;
             } else {

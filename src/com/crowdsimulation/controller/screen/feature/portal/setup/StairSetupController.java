@@ -36,13 +36,7 @@ public class StairSetupController extends PortalSetupController {
         boolean enabled = stairEnableCheckBox.isSelected();
         int moveTime = stairMoveSpinner.getValue();
 
-        // Prepare the provisional stair shaft
-        // If the user chooses not to go through with the stair, this shaft will
-        // simply be discarded
-        StairShaft.StairShaftFactory stairShaftFactory =
-                new StairShaft.StairShaftFactory();
-
-        StairShaft stairShaft = stairShaftFactory.create(
+        StairShaft stairShaft = StairShaft.stairEditor.createShaft(
                 enabled,
                 moveTime
         );

@@ -7,37 +7,33 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 
 import java.util.List;
 
-public class ElevatorEditor extends AmenityEditor {
-    public ElevatorShaft createShaft(
+public class StairEditor extends AmenityEditor {
+    public StairShaft createShaft(
             boolean enabled,
-            int delayTime,
-            int openTime,
-            int moveTime,
-            ElevatorShaft.ElevatorDirection elevatorDirection
+            int moveTime
     ) {
-        // Prepare the provisional elevator shaft
-        // If the user chooses not to go through with the elevator, this shaft will
+        // Prepare the provisional stair shaft
+        // If the user chooses not to go through with the stair, this shaft will
         // simply be discarded
-        ElevatorShaft.ElevatorShaftFactory elevatorShaftFactory =
-                new ElevatorShaft.ElevatorShaftFactory();
+        StairShaft.StairShaftFactory stairShaftFactory =
+                new StairShaft.StairShaftFactory();
 
-        return elevatorShaftFactory.create(
+        return stairShaftFactory.create(
                 enabled,
-                moveTime,
-                delayTime,
-                openTime,
-                elevatorDirection
+                moveTime
         );
     }
 
-    public ElevatorPortal draw(
+    public StairPortal draw(
             Patch currentPatch,
             boolean enabled,
             Floor currentFloor,
-            ElevatorShaft elevatorShaft
+            StairShaft stairShaft
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
@@ -68,11 +64,11 @@ public class ElevatorEditor extends AmenityEditor {
 
         // Otherwise, do nothing
         if (patchesClear) {
-            return ElevatorPortal.elevatorPortalFactory.create(
+            return StairPortal.stairPortalFactory.create(
                     amenityBlocks,
                     enabled,
                     currentFloor,
-                    elevatorShaft
+                    stairShaft
             );
         } else {
             return null;
@@ -80,49 +76,43 @@ public class ElevatorEditor extends AmenityEditor {
     }
 
     public void edit(
-            ElevatorShaft elevatorShaftToEdit,
+            StairShaft stairShaftToEdit,
             boolean enabled,
-            int delayTime,
-            int openTime,
-            int moveTime,
-            ElevatorShaft.ElevatorDirection elevatorDirection
+            int moveTime
     ) {
-        elevatorShaftToEdit.setEnabled(enabled);
-        elevatorShaftToEdit.setOpenDelayTime(delayTime);
-        elevatorShaftToEdit.setDoorOpenTime(openTime);
-        elevatorShaftToEdit.setMoveTime(moveTime);
-        elevatorShaftToEdit.setElevatorDirection(elevatorDirection);
+        stairShaftToEdit.setEnabled(enabled);
+        stairShaftToEdit.setMoveTime(moveTime);
     }
 
     public void delete(
-            ElevatorShaft elevatorShaftToDelete
+            StairShaft stairShaftToDelete
     ) {
         // Retrieve portal components
-        ElevatorPortal upperElevatorPortal = (ElevatorPortal) elevatorShaftToDelete.getUpperPortal();
-        ElevatorPortal lowerElevatorPortal = (ElevatorPortal) elevatorShaftToDelete.getLowerPortal();
+        StairPortal upperStairPortal = (StairPortal) stairShaftToDelete.getUpperPortal();
+        StairPortal lowerStairPortal = (StairPortal) stairShaftToDelete.getLowerPortal();
 
         // Remove the portals from their patches in their respective floors
         if (Main.simulator.getFirstPortal() == null) {
             // Portal drawing completed, deleting portal from portal shaft
-            if (upperElevatorPortal != null) {
-                for (Amenity.AmenityBlock amenityBlock : upperElevatorPortal.getAmenityBlocks()) {
+            if (upperStairPortal != null) {
+                for (Amenity.AmenityBlock amenityBlock : upperStairPortal.getAmenityBlocks()) {
                     amenityBlock.getPatch().setAmenityBlock(null);
                 }
             }
 
-            if (lowerElevatorPortal != null) {
-                for (Amenity.AmenityBlock amenityBlock : lowerElevatorPortal.getAmenityBlocks()) {
+            if (lowerStairPortal != null) {
+                for (Amenity.AmenityBlock amenityBlock : lowerStairPortal.getAmenityBlocks()) {
                     amenityBlock.getPatch().setAmenityBlock(null);
                 }
             }
 
-            // Remove elevator shaft
-            Main.simulator.getStation().getElevatorShafts().remove(
-                    elevatorShaftToDelete
+            // Remove stair shaft
+            Main.simulator.getStation().getStairShafts().remove(
+                    stairShaftToDelete
             );
         } else {
             // Portal drawing uncompleted, deleting portal from simulator
-            ElevatorPortal portal = (ElevatorPortal) Main.simulator.getFirstPortal();
+            StairPortal portal = (StairPortal) Main.simulator.getFirstPortal();
 
             for (Amenity.AmenityBlock amenityBlock : portal.getAmenityBlocks()) {
                 amenityBlock.getPatch().setAmenityBlock(null);
