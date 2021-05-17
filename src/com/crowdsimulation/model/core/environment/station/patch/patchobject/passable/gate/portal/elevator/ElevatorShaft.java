@@ -22,15 +22,10 @@ public class ElevatorShaft extends PortalShaft {
     // Denotes the direction the elevator is going
     private ElevatorDirection elevatorDirection;
 
-    // Factory for elevator shaft creation
-    public static final ElevatorShaftFactory elevatorShaftFactory;
-
     // Denotes the editor of this amenity
     public static final ElevatorEditor elevatorEditor;
 
     static {
-        elevatorShaftFactory = new ElevatorShaftFactory();
-
         // Initialize the editor
         elevatorEditor = new ElevatorEditor();
     }

@@ -387,9 +387,6 @@ public class Turnstile extends BlockableAmenity {
     public static class TurnstileBlock extends Amenity.AmenityBlock {
         public static Turnstile.TurnstileBlock.TurnstileBlockFactory turnstileBlockFactory;
 
-        private final int graphicXOffset;
-        private final int graphicYOffset;
-
         static {
             turnstileBlockFactory = new Turnstile.TurnstileBlock.TurnstileBlockFactory();
         }
@@ -397,22 +394,9 @@ public class Turnstile extends BlockableAmenity {
         private TurnstileBlock(
                 Patch patch,
                 boolean attractor,
-                boolean hasGraphic,
-                int graphicXOffset,
-                int graphicYOffset
+                boolean hasGraphic
         ) {
             super(patch, attractor, hasGraphic);
-
-            this.graphicXOffset = graphicXOffset;
-            this.graphicYOffset = graphicYOffset;
-        }
-
-        public int getGraphicXOffset() {
-            return graphicXOffset;
-        }
-
-        public int getGraphicYOffset() {
-            return graphicYOffset;
         }
 
         // Turnstile block factory
@@ -424,24 +408,11 @@ public class Turnstile extends BlockableAmenity {
                     boolean hasGraphic,
                     AmenityFootprint.Rotation.Orientation... orientation
             ) {
-                int graphicXOffset = 0;
-                int graphicYOffset = 0;
-
-                AmenityFootprint.Rotation.Orientation turnstileOrientation = orientation[0];
-
                 // Make the necessary adjustments
-                if (turnstileOrientation == AmenityFootprint.Rotation.Orientation.DOWN) {
-                    graphicYOffset = -1;
-                } else if (turnstileOrientation == AmenityFootprint.Rotation.Orientation.RIGHT) {
-                    graphicXOffset = -1;
-                }
-
                 return new Turnstile.TurnstileBlock(
                         patch,
                         attractor,
-                        hasGraphic,
-                        graphicXOffset,
-                        graphicYOffset
+                        hasGraphic
                 );
             }
         }

@@ -1,17 +1,23 @@
 package com.crowdsimulation.controller.graphics.amenity.graphic;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 
-public class EscalatorGraphic extends AmenityGraphic implements Cyclable, Changeable {
+public class EscalatorGraphic extends AmenityGraphic implements Changeable {
     private static final int ROW_SPAN_VERTICAL = 2;
-    private static final int COLUMN_SPAN_VERTICAL = 1;
+    private static final int COLUMN_SPAN_VERTICAL = 2;
 
-    private static final int ROW_SPAN_HORIZONTAL = 1;
+    private static final int ROW_SPAN_HORIZONTAL = 2;
     private static final int COLUMN_SPAN_HORIZONTAL = 2;
+
+    private static final int ROW_OFFSET = 0;
+    private static final int COLUMN_OFFSET = 0;
 
     public EscalatorGraphic(EscalatorPortal escalatorPortal) {
         super(
@@ -19,40 +25,75 @@ public class EscalatorGraphic extends AmenityGraphic implements Cyclable, Change
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
-                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
+                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL,
+                ROW_OFFSET,
+                COLUMN_OFFSET
         );
-    }
 
-    public void setGraphicToDirection(EscalatorShaft.EscalatorDirection escalatorDirection) {
-        if (escalatorDirection == EscalatorShaft.EscalatorDirection.DOWN) {
-            this.graphicIndex = 0;
-        } else {
-            this.graphicIndex = 1;
+        AmenityFootprint.Rotation.Orientation orientation
+                = GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation();
+
+        switch (orientation) {
+            case UP:
+                if (escalatorPortal.getEscalatorShaft().getEscalatorDirection()
+                        == EscalatorShaft.EscalatorDirection.UP) {
+                    this.graphicIndex = 0;
+                } else {
+                    this.graphicIndex = 1;
+                }
+
+                break;
+            case RIGHT:
+                if (escalatorPortal.getEscalatorShaft().getEscalatorDirection()
+                        == EscalatorShaft.EscalatorDirection.UP) {
+                    this.graphicIndex = 2;
+                } else {
+                    this.graphicIndex = 3;
+                }
+
+                break;
+            case DOWN:
+                if (escalatorPortal.getEscalatorShaft().getEscalatorDirection()
+                        == EscalatorShaft.EscalatorDirection.UP) {
+                    this.graphicIndex = 4;
+                } else {
+                    this.graphicIndex = 5;
+                }
+                break;
+            case LEFT:
+                if (escalatorPortal.getEscalatorShaft().getEscalatorDirection()
+                        == EscalatorShaft.EscalatorDirection.UP) {
+                    this.graphicIndex = 6;
+                } else {
+                    this.graphicIndex = 7;
+                }
+
+                break;
         }
-    }
-
-
-    @Override
-    public void cycle() {
-        // Cycle through the graphics list in steps of two
-        this.graphicIndex = (this.graphicIndex + 2) % this.graphics.size();
     }
 
     @Override
     public void change(Drawable drawable) {
-        // Indices 0 - 1: left-facing escalator
-        if (this.graphicIndex == 0 || this.graphicIndex == 1) {
-            if (this.graphicIndex == 0) {
-                this.graphicIndex++;
-            } else {
-                this.graphicIndex--;
+        EscalatorPortal escalatorPortal = (EscalatorPortal) drawable;
+
+        if (escalatorPortal.getEscalatorShaft().getEscalatorDirection() ==  EscalatorShaft.EscalatorDirection.DOWN) {
+            this.graphicIndex++;
+        } else {
+            this.graphicIndex--;
+        }
+    }
+
+    public void decideLowerOrUpper() {
+        EscalatorPortal escalatorPortal = (EscalatorPortal) this.getAmenity();
+        EscalatorShaft escalatorShaft = escalatorPortal.getEscalatorShaft();
+
+        if (escalatorShaft.getLowerPortal() == escalatorPortal) {
+            if (this.graphicIndex >= 8 && this.graphicIndex <= 15) {
+                this.graphicIndex -= 8;
             }
         } else {
-            // Indices 2 - 3: right-facing escalator
-            if (this.graphicIndex == 2) {
-                this.graphicIndex++;
-            } else {
-                this.graphicIndex--;
+            if (this.graphicIndex >= 0 && this.graphicIndex <= 7) {
+                this.graphicIndex += 8;
             }
         }
     }

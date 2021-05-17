@@ -8,8 +8,14 @@ public class TicketBoothGraphic extends AmenityGraphic implements Cyclable {
     private static final int ROW_SPAN_VERTICAL = 2;
     private static final int COLUMN_SPAN_VERTICAL = 1;
 
-    private static final int ROW_SPAN_HORIZONTAL = 1;
-    private static final int COLUMN_SPAN_HORIZONTAL = 2;
+    private static final int ROW_SPAN_HORIZONTAL = 2;
+    private static final int COLUMN_SPAN_HORIZONTAL = 1;
+
+    private static final int NORMAL_ROW_OFFSET = 0;
+    private static final int NORMAL_COLUMN_OFFSET = 0;
+
+    private static final int SIDEWAYS_ROW_OFFSET = -1;
+    private static final int SIDEWAYS_COLUMN_OFFSET = 0;
 
     public TicketBoothGraphic(TicketBooth ticketBooth) {
         super(
@@ -17,7 +23,11 @@ public class TicketBoothGraphic extends AmenityGraphic implements Cyclable {
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
-                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
+                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL,
+                GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
+                        ? NORMAL_ROW_OFFSET : SIDEWAYS_ROW_OFFSET,
+                GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
+                        ? NORMAL_COLUMN_OFFSET : SIDEWAYS_COLUMN_OFFSET
         );
 
         AmenityFootprint.Rotation.Orientation orientation

@@ -46,9 +46,12 @@ public class EscalatorEditController extends PortalEditController {
         EscalatorShaft.EscalatorDirection escalatorDirection = escalatorDirectionChoiceBox.getValue();
 
         // Modify its values
-        escalatorShaft.setEnabled(enabled);
-        escalatorShaft.setMoveTime(moveTime);
-        escalatorShaft.setEscalatorDirection(escalatorDirection);
+        EscalatorShaft.escalatorEditor.edit(
+                escalatorShaft,
+                enabled,
+                moveTime,
+                escalatorDirection
+        );
 
         this.getWindowOutput().put(OUTPUT_KEY, escalatorShaft);
 

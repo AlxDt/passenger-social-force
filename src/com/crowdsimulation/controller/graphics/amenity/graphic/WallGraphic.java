@@ -11,13 +11,24 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
     private static final int ROW_SPAN_HORIZONTAL = 1;
     private static final int COLUMN_SPAN_HORIZONTAL = 1;
 
+    private static final int ROW_SPAN_BUILDING_COLUMN = 2;
+    private static final int COLUMN_SPAN_BUILDING_COLUMN = 1;
+
+    private static final int NORMAL_ROW_OFFSET = 0;
+    private static final int NORMAL_COLUMN_OFFSET = 0;
+
+    private static final int BUILDING_COLUMN_ROW_OFFSET = -1;
+    private static final int BUILDING_COLUMN_COLUMN_OFFSET = 0;
+
     public WallGraphic(Wall wall) {
         super(
                 wall,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
-                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
+                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL,
+                NORMAL_ROW_OFFSET,
+                NORMAL_COLUMN_OFFSET
         );
 
         this.graphicIndex = 0;
@@ -49,9 +60,28 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
             case WALL:
                 this.graphicIndex = 0;
 
+                this.getAmenityGraphicScale().setRowSpan(
+                        GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
+                                ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL
+                );
+
+                this.getAmenityGraphicScale().setColumnSpan(
+                        GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
+                                ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
+                );
+
+                this.getAmenityGraphicOffset().setRowOffset(NORMAL_ROW_OFFSET);
+                this.getAmenityGraphicOffset().setColumnOffset(NORMAL_COLUMN_OFFSET);
+
                 break;
             case BUILDING_COLUMN:
                 this.graphicIndex = 1;
+
+                this.getAmenityGraphicScale().setRowSpan(ROW_SPAN_BUILDING_COLUMN);
+                this.getAmenityGraphicScale().setColumnSpan(COLUMN_SPAN_BUILDING_COLUMN);
+
+                this.getAmenityGraphicOffset().setRowOffset(BUILDING_COLUMN_ROW_OFFSET);
+                this.getAmenityGraphicOffset().setColumnOffset(BUILDING_COLUMN_COLUMN_OFFSET);
 
                 break;
             case BELT_BARRIER:
@@ -65,6 +95,19 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
                     this.graphicIndex = 2;
                 }
 
+                this.getAmenityGraphicScale().setRowSpan(
+                        GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
+                                ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL
+                );
+
+                this.getAmenityGraphicScale().setColumnSpan(
+                        GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
+                                ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
+                );
+
+                this.getAmenityGraphicOffset().setRowOffset(NORMAL_ROW_OFFSET);
+                this.getAmenityGraphicOffset().setColumnOffset(NORMAL_COLUMN_OFFSET);
+
                 break;
             case METAL_BARRIER:
                 if (this.graphicIndex == 3 || this.graphicIndex == 4) {
@@ -76,6 +119,19 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
                 } else {
                     this.graphicIndex = 4;
                 }
+
+                this.getAmenityGraphicScale().setRowSpan(
+                        GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
+                                ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL
+                );
+
+                this.getAmenityGraphicScale().setColumnSpan(
+                        GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
+                                ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
+                );
+
+                this.getAmenityGraphicOffset().setRowOffset(NORMAL_ROW_OFFSET);
+                this.getAmenityGraphicOffset().setColumnOffset(NORMAL_COLUMN_OFFSET);
 
                 break;
         }

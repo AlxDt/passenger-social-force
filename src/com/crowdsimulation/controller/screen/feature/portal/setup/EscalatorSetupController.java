@@ -39,10 +39,8 @@ public class EscalatorSetupController extends PortalSetupController {
         // Prepare the provisional escalator shaft
         // If the user chooses not to go through with the elevator, this shaft will
         // simply be discarded
-        EscalatorShaft.EscalatorShaftFactory escalatorShaftFactory
-                = new EscalatorShaft.EscalatorShaftFactory();
 
-        EscalatorShaft escalatorShaft = escalatorShaftFactory.create(
+        EscalatorShaft escalatorShaft = EscalatorShaft.escalatorEditor.createShaft(
                 enabled,
                 moveTime,
                 escalatorDirection

@@ -7,11 +7,16 @@ public class TrainDoorGraphic extends AmenityGraphic implements Changeable {
     private static final int ROW_SPAN_VERTICAL = 1;
     private static final int COLUMN_SPAN_VERTICAL = 4;
 
+    private static final int NORMAL_ROW_OFFSET = 0;
+    private static final int NORMAL_COLUMN_OFFSET = 0;
+
     public TrainDoorGraphic(TrainDoor trainDoor) {
         super(
                 trainDoor,
                 ROW_SPAN_VERTICAL,
-                COLUMN_SPAN_VERTICAL
+                COLUMN_SPAN_VERTICAL,
+                NORMAL_ROW_OFFSET,
+                NORMAL_COLUMN_OFFSET
         );
 
         this.graphicIndex = 0;

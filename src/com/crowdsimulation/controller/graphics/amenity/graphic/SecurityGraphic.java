@@ -10,13 +10,18 @@ public class SecurityGraphic extends AmenityGraphic implements Cyclable {
     private static final int ROW_SPAN_HORIZONTAL = 1;
     private static final int COLUMN_SPAN_HORIZONTAL = 1;
 
+    private static final int ROW_OFFSET = 0;
+    private static final int COLUMN_OFFSET = 0;
+
     public SecurityGraphic(Security security) {
         super(
                 security,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
-                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
+                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL,
+                ROW_OFFSET,
+                COLUMN_OFFSET
         );
     }
 

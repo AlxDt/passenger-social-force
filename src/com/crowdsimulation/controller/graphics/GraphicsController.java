@@ -356,29 +356,17 @@ public class GraphicsController extends Controller {
 
                             Image graphic = new Image(drawablePatchAmenity.getGraphicURL());
 
-                            if (drawablePatchAmenity instanceof Turnstile) {
-                                Turnstile.TurnstileBlock turnstileBlock = (Turnstile.TurnstileBlock) patchAmenityBlock;
-
-                                backgroundGraphicsContext.drawImage(
-                                        graphic,
-                                        column * tileSize + turnstileBlock.getGraphicXOffset() * tileSize,
-                                        row * tileSize + turnstileBlock.getGraphicYOffset() * tileSize,
-                                        tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
-                                                .getColumnSpan(),
-                                        tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
-                                                .getRowSpan()
-                                );
-                            } else {
-                                backgroundGraphicsContext.drawImage(
-                                        graphic,
-                                        column * tileSize,
-                                        row * tileSize,
-                                        tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
-                                                .getColumnSpan(),
-                                        tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
-                                                .getRowSpan()
-                                );
-                            }
+                            backgroundGraphicsContext.drawImage(
+                                    graphic,
+                                    column * tileSize + drawablePatchAmenity.getGraphicObject()
+                                            .getAmenityGraphicOffset().getColumnOffset() * tileSize,
+                                    row * tileSize + drawablePatchAmenity.getGraphicObject()
+                                            .getAmenityGraphicOffset().getRowOffset() * tileSize,
+                                    tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                            .getColumnSpan(),
+                                    tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                            .getRowSpan()
+                            );
 
                             // Reset transparency if previously added
                             if (drawGraphicTransparently) {

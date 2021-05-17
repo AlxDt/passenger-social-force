@@ -216,11 +216,6 @@
                                                             <Button fx:id="deleteStairButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="100.0" text="Delete" />
                                                          </children>
                                                       </HBox>
-                                                      <VBox alignment="CENTER" prefHeight="38.0" prefWidth="199.0" spacing="10.0">
-                                                         <children>
-                                                            <Button fx:id="flipStairButton" cancelButton="true" layoutX="10.0" layoutY="80.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Flip stairs" />
-                                                         </children>
-                                                      </VBox>
                                                    </children>
                                                 </VBox>
                                              </content>
@@ -236,11 +231,6 @@
                                                             <Button fx:id="deleteEscalatorButton" cancelButton="true" mnemonicParsing="false" onAction="#deletePortalAction" prefHeight="25.0" prefWidth="199.0" text="Delete" />
                                                          </children>
                                                       </HBox>
-                                                      <VBox alignment="CENTER" prefHeight="39.0" prefWidth="199.0" spacing="10.0">
-                                                         <children>
-                                                            <Button fx:id="flipEscalatorButton" cancelButton="true" layoutX="10.0" layoutY="80.0" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Flip escalator" />
-                                                         </children>
-                                                      </VBox>
                                                    </children>
                                                 </VBox>
                                              </content>

@@ -11,13 +11,18 @@ public class ElevatorGraphic extends AmenityGraphic {
     private static final int ROW_SPAN_VERTICAL = 2;
     private static final int COLUMN_SPAN_VERTICAL = 2;
 
+    private static final int ROW_OFFSET = 0;
+    private static final int COLUMN_OFFSET = 0;
+
     public ElevatorGraphic(ElevatorPortal elevatorPortal) {
         super(
                 elevatorPortal,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? ROW_SPAN_VERTICAL : ROW_SPAN_HORIZONTAL,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
-                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL
+                        ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL,
+                ROW_OFFSET,
+                COLUMN_OFFSET
         );
 
         AmenityFootprint.Rotation.Orientation orientation

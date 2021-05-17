@@ -166,12 +166,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button addStairButton,
             Button editStairButton,
             Button deleteStairButton,
-            Button flipStairButton,
             // Escalator
             Button addEscalatorButton,
             Button editEscalatorButton,
             Button deleteEscalatorButton,
-            Button flipEscalatorButton,
             // Elevator
             Button addElevatorButton,
             Button editElevatorButton,
@@ -248,11 +246,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 addStairButton,
                 editStairButton,
                 deleteStairButton,
-                flipStairButton,
                 addEscalatorButton,
                 editEscalatorButton,
                 deleteEscalatorButton,
-                flipEscalatorButton,
                 addElevatorButton,
                 editElevatorButton,
                 deleteElevatorButton,
@@ -474,11 +470,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button addStairButton,
             Button editStairButton,
             Button deleteStairButton,
-            Button flipStairButton,
             Button addEscalatorButton,
             Button editEscalatorButton,
             Button deleteEscalatorButton,
-            Button flipEscalatorButton,
             Button addElevatorButton,
             Button editElevatorButton,
             Button deleteElevatorButton,
@@ -487,15 +481,13 @@ public class InitializeMainScreenService extends InitializeScreenService {
         initializeStairs(
                 addStairButton,
                 editStairButton,
-                deleteStairButton,
-                flipStairButton
+                deleteStairButton
         );
 
         initializeEscalators(
                 addEscalatorButton,
                 editEscalatorButton,
-                deleteEscalatorButton,
-                flipEscalatorButton
+                deleteEscalatorButton
         );
 
         initializeElevators(
@@ -510,30 +502,24 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeStairs(
             Button addStairButton,
             Button editStairButton,
-            Button deleteStairButton,
-            Button flipStairButton
+            Button deleteStairButton
     ) {
         addStairButton.disableProperty().bind(InitializeMainScreenService.DRAW_ONLY_BINDING);
 
         editStairButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteStairButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
-
-        flipStairButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the escalators controls
     private static void initializeEscalators(
             Button addEscalatorButton,
             Button editEscalatorButton,
-            Button deleteEscalatorButton,
-            Button flipEscalatorButton
+            Button deleteEscalatorButton
     ) {
         addEscalatorButton.disableProperty().bind(InitializeMainScreenService.DRAW_ONLY_BINDING);
 
         editEscalatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteEscalatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
-
-        flipEscalatorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the elevators controls

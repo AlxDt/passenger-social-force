@@ -7,7 +7,6 @@ import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
-import javafx.scene.image.Image;
 
 import java.util.List;
 
@@ -33,6 +32,8 @@ public class EscalatorPortal extends Portal {
         // Up view
         AmenityFootprint.Rotation.AmenityBlockTemplate upBlock00;
         AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN10;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN11;
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock01;
 
         AmenityFootprint.Rotation upView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
@@ -55,14 +56,36 @@ public class EscalatorPortal extends Portal {
                 true
         );
 
+        upBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
+                -1,
+                1,
+                EscalatorPortal.class,
+                false,
+                false
+        );
+
+        upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                upView.getOrientation(),
+                0,
+                1,
+                EscalatorPortal.class,
+                true,
+                false
+        );
+
         upView.getAmenityBlockTemplates().add(upBlock00);
         upView.getAmenityBlockTemplates().add(upBlockN10);
+        upView.getAmenityBlockTemplates().add(upBlockN11);
+        upView.getAmenityBlockTemplates().add(upBlock01);
 
         escalatorPortalFootprint.addRotation(upView);
 
         // Right view
         AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock00;
         AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock01;
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock10;
+        AmenityFootprint.Rotation.AmenityBlockTemplate rightBlock11;
 
         AmenityFootprint.Rotation rightView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
@@ -85,13 +108,35 @@ public class EscalatorPortal extends Portal {
                 false
         );
 
+        rightBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
+                1,
+                0,
+                EscalatorPortal.class,
+                true,
+                false
+        );
+
+        rightBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                rightView.getOrientation(),
+                1,
+                1,
+                EscalatorPortal.class,
+                false,
+                false
+        );
+
         rightView.getAmenityBlockTemplates().add(rightBlock00);
         rightView.getAmenityBlockTemplates().add(rightBlock01);
+        rightView.getAmenityBlockTemplates().add(rightBlock10);
+        rightView.getAmenityBlockTemplates().add(rightBlock11);
 
         escalatorPortalFootprint.addRotation(rightView);
 
         // Down view
         AmenityFootprint.Rotation.AmenityBlockTemplate downBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock0N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate downBlock1N1;
         AmenityFootprint.Rotation.AmenityBlockTemplate downBlock10;
 
         AmenityFootprint.Rotation downView
@@ -103,7 +148,25 @@ public class EscalatorPortal extends Portal {
                 0,
                 EscalatorPortal.class,
                 true,
+                false
+        );
+
+        downBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
+                0,
+                -1,
+                EscalatorPortal.class,
+                true,
                 true
+        );
+
+        downBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                downView.getOrientation(),
+                1,
+                -1,
+                EscalatorPortal.class,
+                false,
+                false
         );
 
         downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
@@ -116,12 +179,16 @@ public class EscalatorPortal extends Portal {
         );
 
         downView.getAmenityBlockTemplates().add(downBlock00);
+        downView.getAmenityBlockTemplates().add(downBlock0N1);
+        downView.getAmenityBlockTemplates().add(downBlock1N1);
         downView.getAmenityBlockTemplates().add(downBlock10);
 
         escalatorPortalFootprint.addRotation(downView);
 
         // Left view
         AmenityFootprint.Rotation.AmenityBlockTemplate leftBlock00;
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlockN1N1;
+        AmenityFootprint.Rotation.AmenityBlockTemplate leftBlockN10;
         AmenityFootprint.Rotation.AmenityBlockTemplate leftBlock0N1;
 
         AmenityFootprint.Rotation leftView
@@ -132,8 +199,26 @@ public class EscalatorPortal extends Portal {
                 0,
                 0,
                 EscalatorPortal.class,
+                true,
+                false
+        );
+
+        leftBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
+                -1,
+                -1,
+                EscalatorPortal.class,
                 false,
                 true
+        );
+
+        leftBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+                leftView.getOrientation(),
+                -1,
+                0,
+                EscalatorPortal.class,
+                true,
+                false
         );
 
         leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
@@ -141,11 +226,13 @@ public class EscalatorPortal extends Portal {
                 0,
                 -1,
                 EscalatorPortal.class,
-                true,
+                false,
                 false
         );
 
         leftView.getAmenityBlockTemplates().add(leftBlock00);
+        leftView.getAmenityBlockTemplates().add(leftBlockN1N1);
+        leftView.getAmenityBlockTemplates().add(leftBlockN10);
         leftView.getAmenityBlockTemplates().add(leftBlock0N1);
 
         escalatorPortalFootprint.addRotation(leftView);

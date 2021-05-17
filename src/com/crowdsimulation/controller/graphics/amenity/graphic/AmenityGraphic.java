@@ -36,21 +36,33 @@ public abstract class AmenityGraphic implements Environment {
         AMENITY_GRAPHICS.put(Security.class, securityGraphic);
 
         final List<String> stairsGraphic = new ArrayList<>();
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/single/front/stair_single_front.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/single/right/stair_single_right.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/single/rear/stair_single_rear.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/single/left/stair_single_left.png");
+        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/lower/front/stair_lower_front.png");
+        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/lower/right/stair_lower_right.png");
+        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/lower/rear/stair_lower_rear.png");
+        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/lower/left/stair_lower_left.png");
+        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/upper/front/stair_upper_front.png");
+        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/upper/right/stair_upper_right.png");
+        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/upper/rear/stair_upper_rear.png");
+        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/upper/left/stair_upper_left.png");
         AMENITY_GRAPHICS.put(StairPortal.class, stairsGraphic);
 
         final List<String> escalatorGraphic = new ArrayList<>();
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/single/up/front/escalator_up_front.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/single/up/right/escalator_up_right.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/single/up/rear/escalator_up_rear.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/single/up/left/escalator_up_left.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/single/down/front/escalator_down_front.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/single/down/right/escalator_down_right.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/single/down/rear/escalator_down_rear.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/single/down/left/escalator_down_left.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/front/up/escalator_lower_front_up.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/front/down/escalator_lower_front_down.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/right/up/escalator_lower_right_up.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/right/down/escalator_lower_right_down.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/rear/up/escalator_lower_rear_up.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/rear/down/escalator_lower_rear_down.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/left/up/escalator_lower_left_up.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/left/down/escalator_lower_left_down.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/front/up/escalator_upper_front_up.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/front/down/escalator_upper_front_down.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/right/up/escalator_upper_right_up.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/right/down/escalator_upper_right_down.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/rear/up/escalator_upper_rear_up.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/rear/down/escalator_upper_rear_down.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/left/up/escalator_upper_left_up.png");
+        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/left/down/escalator_upper_left_down.png");
         AMENITY_GRAPHICS.put(EscalatorPortal.class, escalatorGraphic);
 
         final List<String> elevatorGraphic = new ArrayList<>();
@@ -98,23 +110,28 @@ public abstract class AmenityGraphic implements Environment {
     protected final List<String> graphics;
     protected int graphicIndex;
 
-    // Only take note of the URL of the image, as it is expensive to store the image itself
-    private String graphicURL;
-
+    // Denotes the rows and columns spanned by this graphic
     private final AmenityGraphicScale amenityGraphicScale;
 
-    public AmenityGraphic(Amenity amenity, int rowSpan, int columnSpan) {
+    // Denotes the offset of this graphic
+    private final AmenityGraphicOffset amenityGraphicOffset;
+
+    public AmenityGraphic(Amenity amenity, int rowSpan, int columnSpan, int rowOffset, int columnOffset) {
         this.amenity = amenity;
 
         this.amenityGraphicScale = new AmenityGraphicScale(rowSpan, columnSpan);
+        this.amenityGraphicOffset = new AmenityGraphicOffset(rowOffset, columnOffset);
 
         this.graphics = AMENITY_GRAPHICS.get(amenity.getClass());
         this.graphicIndex = 0;
-        this.graphicURL = this.graphics.get(this.graphicIndex);
     }
 
     public AmenityGraphicScale getAmenityGraphicScale() {
         return amenityGraphicScale;
+    }
+
+    public AmenityGraphicOffset getAmenityGraphicOffset() {
+        return amenityGraphicOffset;
     }
 
     public Amenity getAmenity() {
@@ -123,10 +140,6 @@ public abstract class AmenityGraphic implements Environment {
 
     public String getGraphicURL() {
         return this.graphics.get(this.graphicIndex);
-    }
-
-    public void setGraphicURL(String graphicURL) {
-        this.graphicURL = graphicURL;
     }
 
     public static class AmenityGraphicScale implements Environment {
@@ -152,6 +165,32 @@ public abstract class AmenityGraphic implements Environment {
 
         public void setColumnSpan(int columnSpan) {
             this.columnSpan = columnSpan;
+        }
+    }
+
+    public static class AmenityGraphicOffset {
+        private int rowOffset;
+        private int columnOffset;
+
+        public AmenityGraphicOffset(int rowOffset, int columnOffset) {
+            this.rowOffset = rowOffset;
+            this.columnOffset = columnOffset;
+        }
+
+        public int getRowOffset() {
+            return rowOffset;
+        }
+
+        public void setRowOffset(int rowOffset) {
+            this.rowOffset = rowOffset;
+        }
+
+        public int getColumnOffset() {
+            return columnOffset;
+        }
+
+        public void setColumnOffset(int columnOffset) {
+            this.columnOffset = columnOffset;
         }
     }
 }

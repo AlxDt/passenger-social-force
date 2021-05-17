@@ -13,8 +13,10 @@ import java.util.List;
 public class StationGate extends Gate {
     // Factory for station gate creation
     public static final StationGateFactory stationGateFactory;
+
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint stationGateFootprint;
+
     // Denotes the editor of this amenity
     public static final StationGateEditor stationGateEditor;
 
@@ -48,8 +50,10 @@ public class StationGate extends Gate {
 
     // Handles how the station gate is displayed
     private final StationGateGraphic stationGateGraphic;
+
     // Denotes the chance of generating a passenger per second
     private double chancePerSecond;
+
     // Denotes the mode of this station gate (whether it's entry/exit only, or both)
     private StationGateMode stationGateMode;
 
