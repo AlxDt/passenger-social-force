@@ -1,9 +1,9 @@
 package com.crowdsimulation.controller.graphics.amenity.graphic;
 
-import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
@@ -94,6 +94,10 @@ public abstract class AmenityGraphic implements Environment {
         trainDoorGraphic.add("com/crowdsimulation/view/image/amenity/traindoor/nw/traindoor_nw.png");
         trainDoorGraphic.add("com/crowdsimulation/view/image/amenity/traindoor/se/traindoor_se.png");
         AMENITY_GRAPHICS.put(TrainDoor.class, trainDoorGraphic);
+
+        final List<String> trackGraphic = new ArrayList<>();
+        trackGraphic.add("com/crowdsimulation/view/image/amenity/track/track.png");
+        AMENITY_GRAPHICS.put(Track.class, trackGraphic);
 
         final List<String> wallGraphic = new ArrayList<>();
         wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/wall/wall.png");

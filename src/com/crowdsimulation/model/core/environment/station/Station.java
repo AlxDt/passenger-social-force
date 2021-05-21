@@ -19,6 +19,9 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import java.util.*;
 
 public class Station extends BaseStationObject implements Environment {
+    // Default station name
+    private static final String DEFAULT_STATION_NAME = "New station";
+
     // Contains binding values for the number of floors this station has
     // The name of the station
     private String name;
@@ -40,7 +43,7 @@ public class Station extends BaseStationObject implements Environment {
     private final List<Passenger> passengersInStation;
 
     public Station(int rows, int columns) {
-        this.name = "New station";
+        this.name = DEFAULT_STATION_NAME;
         this.floors = new ArrayList<>();
 
         this.rows = rows;

@@ -6,7 +6,8 @@ import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
@@ -148,6 +149,8 @@ public abstract class Amenity extends PatchObject implements Environment {
                 return Turnstile.TurnstileBlock.turnstileBlockFactory;
             } else if (amenityClass == TrainDoor.class) {
                 return TrainDoor.TrainDoorBlock.trainDoorBlockFactory;
+            } else if (amenityClass == Track.class) {
+                return Track.TrackBlock.trackBlockFactory;
             } else if (amenityClass == TicketBooth.class) {
                 return TicketBooth.TicketBoothBlock.ticketBoothBlockFactory;
             } else if (amenityClass == StairPortal.class) {

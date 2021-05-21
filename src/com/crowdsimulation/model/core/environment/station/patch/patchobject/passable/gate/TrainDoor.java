@@ -15,17 +15,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TrainDoor extends Gate implements Queueable {
-    private TrainDoorPlatform platform;
+    // Denotes the platform side served by this train door
+    private TrainDoorDirection platform;
+
+    // Denotes the types of carriages supported by this train door
     private final List<TrainDoorCarriage> trainDoorCarriagesSupported;
+
+    // Factory for train door creation
+    public static final TrainDoorFactory trainDoorFactory;
 
     // Denotes the queueing object associated with all goals like this
     private final QueueObject queueObject;
 
     // Denotes the floor field state needed to access the floor fields of this train door
     private final QueueingFloorField.FloorFieldState trainDoorFloorFieldState;
-
-    // Factory for train door creation
-    public static final TrainDoorFactory trainDoorFactory;
 
     // Handles how the train door is displayed
     private final TrainDoorGraphic trainDoorGraphic;
@@ -101,7 +104,7 @@ public class TrainDoor extends Gate implements Queueable {
     protected TrainDoor(
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
-            TrainDoorPlatform platform,
+            TrainDoorDirection platform,
             List<TrainDoorCarriage> trainDoorCarriagesSupported
     ) {
         super(amenityBlocks, enabled);
@@ -130,11 +133,11 @@ public class TrainDoor extends Gate implements Queueable {
         this.trainDoorGraphic = new TrainDoorGraphic(this);
     }
 
-    public TrainDoorPlatform getPlatform() {
+    public TrainDoorDirection getPlatform() {
         return platform;
     }
 
-    public void setPlatform(TrainDoorPlatform platform) {
+    public void setPlatform(TrainDoorDirection platform) {
         this.platform = platform;
     }
 
@@ -203,7 +206,7 @@ public class TrainDoor extends Gate implements Queueable {
 
     @Override
     public String toString() {
-        return "Train boarding area";
+        return "Train boarding area" + ((this.enabled) ? "" : " (disabled)");
     }
 
     @Override
@@ -251,20 +254,20 @@ public class TrainDoor extends Gate implements Queueable {
         public TrainDoor create(
                 List<AmenityBlock> amenityBlocks,
                 boolean enabled,
-                TrainDoorPlatform platform,
+                TrainDoorDirection trainDoorDirection,
                 List<TrainDoorCarriage> trainDoorCarriagesSupported
         ) {
             return new TrainDoor(
                     amenityBlocks,
                     enabled,
-                    platform,
+                    trainDoorDirection,
                     trainDoorCarriagesSupported
             );
         }
     }
 
     // The platform direction this train door waiting area is at
-    public enum TrainDoorPlatform {
+    public enum TrainDoorDirection {
         NORTHBOUND("Northbound"),
         SOUTHBOUND("Southbound"),
         EASTBOUND("Eastbound"),
@@ -272,7 +275,7 @@ public class TrainDoor extends Gate implements Queueable {
 
         private final String name;
 
-        private TrainDoorPlatform(String name) {
+        private TrainDoorDirection(String name) {
             this.name = name;
         }
 

@@ -6,7 +6,8 @@ import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
@@ -37,6 +38,7 @@ public class Floor extends BaseStationObject implements Environment {
     private final List<Turnstile> turnstiles;
 
     private final List<TrainDoor> trainDoors;
+    private final List<List<Track>> trackLines;
 
     private final List<Wall> walls;
 
@@ -69,6 +71,7 @@ public class Floor extends BaseStationObject implements Environment {
         this.turnstiles = new ArrayList<>();
 
         this.trainDoors = new ArrayList<>();
+        this.trackLines = new ArrayList<>();
 
         this.walls = new ArrayList<>();
 
@@ -118,6 +121,10 @@ public class Floor extends BaseStationObject implements Environment {
 
     public List<TrainDoor> getTrainDoors() {
         return trainDoors;
+    }
+
+    public List<List<Track>> getTrackLines() {
+        return trackLines;
     }
 
     public List<Wall> getWalls() {

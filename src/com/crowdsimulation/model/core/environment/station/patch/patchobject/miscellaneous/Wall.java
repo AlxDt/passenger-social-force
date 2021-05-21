@@ -1,4 +1,4 @@
-package com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle;
+package com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous;
 
 import com.crowdsimulation.controller.graphics.amenity.editor.WallEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
@@ -10,12 +10,15 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Draw
 
 import java.util.List;
 
-public class Wall extends Obstacle implements Drawable {
+public class Wall extends Obstacle {
     // Denotes the type of this wall
     private WallType wallType;
 
     // Factory for wall creation
     public static final WallFactory wallFactory;
+
+    // Handles how the wall is displayed
+    private final WallGraphic wallGraphic;
 
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint wallFootprint;
@@ -39,7 +42,7 @@ public class Wall extends Obstacle implements Drawable {
                 0,
                 0,
                 Wall.class,
-                true,
+                false,
                 true
         );
 
@@ -50,9 +53,6 @@ public class Wall extends Obstacle implements Drawable {
         // Initialize the editor
         wallEditor = new WallEditor();
     }
-
-    // Handles how the train door is displayed
-    private final WallGraphic wallGraphic;
 
     protected Wall(List<AmenityBlock> amenityBlocks, WallType wallType) {
         super(amenityBlocks);
@@ -72,7 +72,7 @@ public class Wall extends Obstacle implements Drawable {
 
     @Override
     public String toString() {
-        return "Wall";
+        return this.wallType.toString();
     }
 
     @Override

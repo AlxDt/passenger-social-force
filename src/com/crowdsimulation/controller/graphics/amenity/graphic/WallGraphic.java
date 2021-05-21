@@ -2,7 +2,7 @@ package com.crowdsimulation.controller.graphics.amenity.graphic;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 
 public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable {
     private static final int ROW_SPAN_VERTICAL = 1;

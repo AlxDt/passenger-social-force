@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator;
 
+import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.EscalatorGraphic;
@@ -267,7 +268,15 @@ public class EscalatorPortal extends Portal {
 
     @Override
     public String toString() {
-        return "Escalator";
+        String string = "Escalator" + ((this.enabled) ? "" : " (disabled)");
+
+        Floor floorServed = this.getPair().getFloorServed();
+        int numberFloorServed = Main.simulator.getStation().getFloors().indexOf(floorServed) + 1;
+
+        string += "\n" + "Connects to floor #" + numberFloorServed;
+        string += "\n" + this.escalatorShaft.getEscalatorDirection();
+
+        return string;
     }
 
     // Escalator portal block

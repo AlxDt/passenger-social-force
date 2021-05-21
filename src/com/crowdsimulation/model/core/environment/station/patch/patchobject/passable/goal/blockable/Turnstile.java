@@ -17,12 +17,12 @@ public class Turnstile extends BlockableAmenity {
     // Denotes the current mode of this turnstile
     private TurnstileMode turnstileMode;
 
+    // Factory for turnstile creation
+    public static final TurnstileFactory turnstileFactory;
+
     // Denotes the floor field states needed to access the floor fields of this turnstile
     private final QueueingFloorField.FloorFieldState turnstileFloorFieldStateBoarding;
     private final QueueingFloorField.FloorFieldState turnstileFloorFieldStateAlighting;
-
-    // Factory for turnstile creation
-    public static final TurnstileFactory turnstileFactory;
 
     // Handles how this turnstile is displayed
     private final TurnstileGraphic turnstileGraphic;
@@ -310,7 +310,7 @@ public class Turnstile extends BlockableAmenity {
 
     @Override
     public String toString() {
-        return "Turnstile";
+        return "Turnstile" + ((this.enabled) ? "" : " (disabled)");
     }
 
     @Override

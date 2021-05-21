@@ -14,10 +14,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Security extends BlockableAmenity {
+    // Denotes whether to block passengers from passing through
+    private boolean blockEntry;
+
     // Factory for security gate creation
     public static final SecurityFactory securityFactory;
+
+    // Denotes the floor field state needed to access the floor fields of this security gate
+    private final QueueingFloorField.FloorFieldState securityFloorFieldState;
+
+    // Handles how this security is displayed
+    private final SecurityGraphic securityGraphic;
+
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint securityFootprint;
+
     // Denotes the editor of this amenity
     public static final SecurityEditor securityEditor;
 
@@ -48,13 +59,6 @@ public class Security extends BlockableAmenity {
         // Initialize the editor
         securityEditor = new SecurityEditor();
     }
-
-    // Denotes the floor field state needed to access the floor fields of this security gate
-    private final QueueingFloorField.FloorFieldState securityFloorFieldState;
-    // Handles how this security is displayed
-    private final SecurityGraphic securityGraphic;
-    // Denotes whether to block passengers from passing through
-    private boolean blockEntry;
 
     protected Security(
             List<AmenityBlock> amenityBlocks,
@@ -100,7 +104,7 @@ public class Security extends BlockableAmenity {
 
     @Override
     public String toString() {
-        return "Security";
+        return "Security" + ((this.enabled) ? "" : " (disabled)");
     }
 
     @Override

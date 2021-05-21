@@ -8,7 +8,8 @@ import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
@@ -351,7 +352,9 @@ public class Simulator {
                 return Turnstile.class;
             case TRAIN_BOARDING_AREA:
                 return TrainDoor.class;
-            case WALL:
+            case TRAIN_TRACK:
+                return Track.class;
+            case OBSTACLE:
                 return Wall.class;
         }
 
@@ -453,7 +456,7 @@ public class Simulator {
         STAIRS_AND_ELEVATORS,
         CONCOURSE_AMENITIES,
         PLATFORM_AMENITIES,
-        WALLS
+        MISCELLANEOUS
     }
 
     // Describes the subcategories within the current build category
@@ -475,9 +478,10 @@ public class Simulator {
 
         // Platform amenities
         TRAIN_BOARDING_AREA,
+        TRAIN_TRACK,
 
-        // Walls
-        WALL
+        // Miscellaneous
+        OBSTACLE
     }
 
     // Describes the states within the build mode in the program

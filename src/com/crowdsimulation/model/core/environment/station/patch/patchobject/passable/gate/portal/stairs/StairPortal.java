@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs;
 
+import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.StairGraphic;
@@ -267,7 +268,14 @@ public class StairPortal extends Portal {
 
     @Override
     public String toString() {
-        return "Stair";
+        String string = "Stair" + ((this.enabled) ? "" : " (disabled)");
+
+        Floor floorServed = this.getPair().getFloorServed();
+        int numberFloorServed = Main.simulator.getStation().getFloors().indexOf(floorServed) + 1;
+
+        string += "\n" + "Connects to floor #" + numberFloorServed;
+
+        return string;
     }
 
     // Stair portal block

@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.screen.feature.main;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.controller.graphics.amenity.editor.TrackEditor;
 import com.crowdsimulation.controller.graphics.amenity.graphic.*;
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.alert.AlertController;
@@ -21,7 +22,8 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
@@ -56,12 +58,9 @@ import java.util.List;
 
 public class MainScreenController extends ScreenController {
     public static final String[] INPUT_KEYS = {"blank_station", "rows", "columns"};
+
     // The controller for floor field adding
     public static NormalFloorFieldController normalFloorFieldController;
-
-    // Denotes whether the listeners for the drawing interface has already been drawn, in order to prevent its
-    // double-drawing
-    public static boolean listenersDrawn;
 
     // Operational variables
     @FXML
@@ -253,7 +252,7 @@ public class MainScreenController extends ScreenController {
     private Label trainDoorDirectionLabel;
 
     @FXML
-    private ChoiceBox<TrainDoor.TrainDoorPlatform> trainDoorDirectionChoiceBox;
+    private ChoiceBox<TrainDoor.TrainDoorDirection> trainDoorDirectionChoiceBox;
 
     @FXML
     private Label trainDoorCarriageLabel;
@@ -270,6 +269,19 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private Button addFloorFieldsTrainDoorButton;
+
+    // Train tracks
+    @FXML
+    private Label trackDirectionLabel;
+
+    @FXML
+    private ChoiceBox<Track.TrackDirection> trackDirectionChoiceBox;
+
+    @FXML
+    private Button saveTrackButton;
+
+    @FXML
+    private Button deleteTrackButton;
 
     // Walls
     // Wall
@@ -392,7 +404,7 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case 4:
-                buildCategory = Simulator.BuildCategory.WALLS;
+                buildCategory = Simulator.BuildCategory.MISCELLANEOUS;
 
                 break;
         }
@@ -447,8 +459,12 @@ public class MainScreenController extends ScreenController {
                     buildSubcategory = Simulator.BuildSubcategory.TRAIN_BOARDING_AREA;
 
                     break;
+                case "Train track":
+                    buildSubcategory = Simulator.BuildSubcategory.TRAIN_TRACK;
+
+                    break;
                 case "Obstacle":
-                    buildSubcategory = Simulator.BuildSubcategory.WALL;
+                    buildSubcategory = Simulator.BuildSubcategory.OBSTACLE;
 
                     break;
             }
@@ -545,8 +561,13 @@ public class MainScreenController extends ScreenController {
                 saveTrainDoorButton,
                 deleteTrainDoorButton,
                 addFloorFieldsTrainDoorButton,
-                // Walls
-                // Wall
+                // Train tracks
+                trackDirectionLabel,
+                trackDirectionChoiceBox,
+                saveTrackButton,
+                deleteTrackButton,
+                // Miscellaneous
+                // Obstacle
                 wallTypeLabel,
                 wallTypeChoiceBox,
                 saveWallButton,
@@ -579,11 +600,11 @@ public class MainScreenController extends ScreenController {
 
             // Initialize the blank station
             Station blankStation = new Station(rows, columns);
-            initializeStation(blankStation, !listenersDrawn);
+            initializeStation(blankStation, !GraphicsController.listenersDrawn);
 
             // Listeners have already been drawn
-            if (!listenersDrawn) {
-                MainScreenController.listenersDrawn = true;
+            if (!GraphicsController.listenersDrawn) {
+                GraphicsController.listenersDrawn = true;
             }
         } else {
             loadStationAction();
@@ -624,14 +645,14 @@ public class MainScreenController extends ScreenController {
                 Station station = loadStation(stationFile);
 
                 // Load the station to the simulator
-                initializeStation(station, !MainScreenController.listenersDrawn);
+                initializeStation(station, !GraphicsController.listenersDrawn);
 
                 // Regardless, the first choice has already been made
                 Main.hasMadeChoice = true;
 
                 // Listeners have already been drawn
-                if (!listenersDrawn) {
-                    MainScreenController.listenersDrawn = true;
+                if (!GraphicsController.listenersDrawn) {
+                    GraphicsController.listenersDrawn = true;
                 }
             } catch (IOException | ClassNotFoundException e) {
                 AlertController.showSimpleAlert(
@@ -1591,10 +1612,6 @@ public class MainScreenController extends ScreenController {
         }
 
         switch (Main.simulator.getBuildSubcategory()) {
-            case NONE:
-                amenityText = "none";
-
-                break;
             case STATION_ENTRANCE_EXIT:
                 amenityText = "station entrance/exit" + ((editingAll) ? "s" : "");
 
@@ -1627,8 +1644,12 @@ public class MainScreenController extends ScreenController {
                 amenityText = "train boarding area" + ((editingAll) ? "s" : "");
 
                 break;
-            case WALL:
-                amenityText = "wall" + ((editingAll) ? "s" : "");
+            case TRAIN_TRACK:
+                amenityText = "train track" + ((editingAll) ? "s" : "");
+
+                break;
+            case OBSTACLE:
+                amenityText = "obstacle" + ((editingAll) ? "s" : "");
 
                 break;
         }
@@ -1771,7 +1792,7 @@ public class MainScreenController extends ScreenController {
                 if (!trainDoorCarriageListView.getSelectionModel().isEmpty()) {
                     TrainDoor trainDoorToEdit = (TrainDoor) amenityToSave;
 
-                    TrainDoor.TrainDoorPlatform priorPlatform = trainDoorToEdit.getPlatform();
+                    TrainDoor.TrainDoorDirection priorPlatform = trainDoorToEdit.getPlatform();
 
                     TrainDoor.trainDoorEditor.edit(
                             trainDoorToEdit,
@@ -1794,7 +1815,16 @@ public class MainScreenController extends ScreenController {
                 }
 
                 break;
-            case WALL:
+            case TRAIN_TRACK:
+                Track trackToEdit = (Track) amenityToSave;
+
+                Track.trackEditor.editTrackLine(
+                        trackToEdit,
+                        trackDirectionChoiceBox.getValue()
+                );
+
+                break;
+            case OBSTACLE:
                 Wall wallToEdit = (Wall) amenityToSave;
 
                 Wall.WallType priorWallType = wallToEdit.getWallType();
@@ -1945,7 +1975,14 @@ public class MainScreenController extends ScreenController {
                 }
 
                 break;
-            case WALL:
+            case TRAIN_TRACK:
+                // Edit all tracks
+                for (List<Track> trackToEdit : Main.simulator.getCurrentFloor().getTrackLines()) {
+                    saveSingleAmenityInFloor(trackToEdit.get(0));
+                }
+
+                break;
+            case OBSTACLE:
                 // Edit all walls
                 for (Wall wallToEdit : Main.simulator.getCurrentFloor().getWalls()) {
                     saveSingleAmenityInFloor(wallToEdit);
@@ -1966,12 +2003,24 @@ public class MainScreenController extends ScreenController {
     }
 
     // Delete the current amenity in a floor
-    private void deleteSingleAmenityInFloor(Amenity amenityToDelete, Simulator.BuildSubcategory buildSubcategory) {
+    public void deleteSingleAmenityInFloor(Amenity amenityToDelete, Simulator.BuildSubcategory buildSubcategory) {
         // Delete this amenity from the patch that contains it
         // Portal shafts do not have a patch, so ignore if it is
         if (!(amenityToDelete instanceof PortalShaft)) {
-            for (Amenity.AmenityBlock amenityBlock : amenityToDelete.getAmenityBlocks()) {
-                amenityBlock.getPatch().setAmenityBlock(null);
+            // Tracks have a special way of being deleted
+            if (amenityToDelete instanceof Track) {
+                // Get track line containing this track
+                List<Track> trackLine = TrackEditor.getTrackLine((Track) amenityToDelete);
+
+                for (Track track : trackLine) {
+                    for (Amenity.AmenityBlock amenityBlock : track.getAmenityBlocks()) {
+                        amenityBlock.getPatch().setAmenityBlock(null);
+                    }
+                }
+            } else {
+                for (Amenity.AmenityBlock amenityBlock : amenityToDelete.getAmenityBlocks()) {
+                    amenityBlock.getPatch().setAmenityBlock(null);
+                }
             }
         }
 
@@ -2050,7 +2099,13 @@ public class MainScreenController extends ScreenController {
                 );
 
                 break;
-            case WALL:
+            case TRAIN_TRACK:
+                Track.trackEditor.deleteTrackLine(
+                        (Track) amenityToDelete
+                );
+
+                break;
+            case OBSTACLE:
                 Wall.wallEditor.delete(
                         (Wall) amenityToDelete
                 );
@@ -2126,15 +2181,24 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case TRAIN_BOARDING_AREA:
-                List<TrainDoor> trainDoorCopy
+                List<TrainDoor> trainDoorsCopy
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getTrainDoors());
 
-                for (TrainDoor trainDoor : trainDoorCopy) {
+                for (TrainDoor trainDoor : trainDoorsCopy) {
                     deleteSingleAmenityInFloor(trainDoor, buildSubcategory);
                 }
 
                 break;
-            case WALL:
+            case TRAIN_TRACK:
+                List<List<Track>> trackLinesCopy
+                        = new ArrayList<>(Main.simulator.getCurrentFloor().getTrackLines());
+
+                for (List<Track> track : trackLinesCopy) {
+                    deleteSingleAmenityInFloor(track.get(0), buildSubcategory);
+                }
+
+                break;
+            case OBSTACLE:
                 List<Wall> wallsCopy
                         = new ArrayList<>(Main.simulator.getCurrentFloor().getWalls());
 
@@ -2224,7 +2288,7 @@ public class MainScreenController extends ScreenController {
 
         Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TRAIN_BOARDING_AREA);
 
-        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.WALL);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.OBSTACLE);
 
         // Then reset simulator variables
         Main.simulator.setCurrentAmenity(null);
@@ -2276,7 +2340,7 @@ public class MainScreenController extends ScreenController {
                 }
 
                 break;
-            case WALL:
+            case OBSTACLE:
                 for (Wall wall : Main.simulator.getCurrentFloor().getWalls()) {
                     flipSingleAmenityInFloor(wall);
                 }
@@ -3831,7 +3895,57 @@ public class MainScreenController extends ScreenController {
                     }
 
                     break;
-                case WALL:
+                case TRAIN_TRACK:
+                    switch (buildState) {
+                        case DRAWING:
+                            // Only add if the current patch doesn't already have an amenity
+                            if (Main.simulator.currentAmenityProperty().isNull().get()) {
+                                Main.simulator.setCurrentClass(Track.class);
+
+                                Track.trackEditor.drawTrackLine(
+                                        currentPatch,
+                                        trackDirectionChoiceBox.getValue()
+                                );
+                            } else {
+                                // If clicked on an existing amenity, switch to editing mode, then open that
+                                // amenity's controls
+                                goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                // Then revisit this method as if that amenity was clicked
+                                buildOrEdit(currentPatch);
+                            }
+
+                            break;
+                        case EDITING_ONE:
+                            // Only edit if there is already a track on that patch
+                            Main.simulator.setCurrentClass(Track.class);
+
+                            Track trackToEdit
+                                    = (Track) Main.simulator.getCurrentAmenity();
+
+                            trackDirectionChoiceBox.setValue(
+                                    trackToEdit.getTrackDirection()
+                            );
+
+                            break;
+                        case EDITING_ALL:
+                            // No specific values need to be set here because all amenities will be edited
+                            // once save is clicked
+                            // If there is no amenity there, just do nothing
+                            if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
+                                // If clicked on an existing amenity, switch to editing mode, then open that
+                                // amenity's controls
+                                goToAmenityControls(Main.simulator.getCurrentAmenity());
+
+                                // Then revisit this method as if that amenity was clicked
+                                buildOrEdit(currentPatch);
+                            }
+
+                            break;
+                    }
+
+                    break;
+                case OBSTACLE:
                     switch (buildState) {
                         case DRAWING:
                             // Only add if the current patch doesn't already have an amenity
@@ -3962,13 +4076,17 @@ public class MainScreenController extends ScreenController {
             buildCategory = Simulator.BuildCategory.PLATFORM_AMENITIES;
             buildSubcategory = Simulator.BuildSubcategory.TRAIN_BOARDING_AREA;
         } else if (
+                amenity instanceof Track
+        ) {
+            buildCategory = Simulator.BuildCategory.PLATFORM_AMENITIES;
+            buildSubcategory = Simulator.BuildSubcategory.TRAIN_TRACK;
+        } else if (
                 amenity instanceof Wall
         ) {
-            buildCategory = Simulator.BuildCategory.WALLS;
-            buildSubcategory = Simulator.BuildSubcategory.WALL;
+            buildCategory = Simulator.BuildCategory.MISCELLANEOUS;
+            buildSubcategory = Simulator.BuildSubcategory.OBSTACLE;
         }
 
-        // TODO: Deal with floor fields result
         if (buildCategory == null) {
             return;
         }
@@ -4042,10 +4160,19 @@ public class MainScreenController extends ScreenController {
                 accordion = (Accordion) buildTabPane.getTabs().get(3).getContent();
                 titledPanes = accordion.getPanes();
 
-                titledPanes.get(0).setExpanded(true);
+                switch (buildSubcategory) {
+                    case TRAIN_BOARDING_AREA:
+                        titledPanes.get(0).setExpanded(true);
+
+                        break;
+                    case TRAIN_TRACK:
+                        titledPanes.get(1).setExpanded(true);
+
+                        break;
+                }
 
                 break;
-            case WALLS:
+            case MISCELLANEOUS:
                 buildTabPane.getSelectionModel().select(4);
 
                 accordion = (Accordion) buildTabPane.getTabs().get(4).getContent();

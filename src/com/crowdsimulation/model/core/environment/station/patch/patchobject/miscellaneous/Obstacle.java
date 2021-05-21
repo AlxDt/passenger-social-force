@@ -1,11 +1,11 @@
-package com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle;
+package com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous;
 
-import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 
 import java.util.List;
 
-public abstract class Obstacle extends Amenity {
+public abstract class Obstacle extends Amenity implements Drawable {
     protected Obstacle(List<AmenityBlock> amenityBlocks) {
         super(amenityBlocks);
     }

@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator;
 
+import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.ElevatorGraphic;
@@ -19,14 +20,14 @@ public class ElevatorPortal extends Portal implements Queueable {
     // Denotes the elevator shaft which contains this elevator portal
     private final ElevatorShaft elevatorShaft;
 
+    // Factory for elevator portal creation
+    public static final ElevatorPortalFactory elevatorPortalFactory;
+
     // Denotes the queueing object associated with all goals like this
     private final QueueObject queueObject;
 
     // Denotes the floor field state needed to access the floor fields of this security gate
     private final QueueingFloorField.FloorFieldState elevatorPortalFloorFieldState;
-
-    // Factory for elevator portal creation
-    public static final ElevatorPortalFactory elevatorPortalFactory;
 
     // Handles how this elevator portal is displayed
     private final ElevatorGraphic elevatorPortalGraphic;
@@ -368,7 +369,14 @@ public class ElevatorPortal extends Portal implements Queueable {
 
     @Override
     public String toString() {
-        return "Elevator";
+        String string = "Elevator" + ((this.enabled) ? "" : " (disabled)");
+
+        Floor floorServed = this.getPair().getFloorServed();
+        int numberFloorServed = Main.simulator.getStation().getFloors().indexOf(floorServed) + 1;
+
+        string += "\n" + "Connects to floor #" + numberFloorServed;
+
+        return string;
     }
 
     // Elevator portal block

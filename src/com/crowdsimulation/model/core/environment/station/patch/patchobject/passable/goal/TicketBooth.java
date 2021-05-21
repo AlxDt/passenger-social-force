@@ -22,11 +22,11 @@ public class TicketBooth extends Goal {
     // Takes note of the passenger currently transacting in the ticket booth
     private Passenger passengerTransacting;
 
-    // Denotes the floor field state needed to access the floor fields of this ticket booth
-    private final QueueingFloorField.FloorFieldState ticketBoothFloorFieldState;
-
     // Factory for ticket booth
     public static final TicketBoothFactory ticketBoothFactory;
+
+    // Denotes the floor field state needed to access the floor fields of this ticket booth
+    private final QueueingFloorField.FloorFieldState ticketBoothFloorFieldState;
 
     // Handles how this ticket booth is displayed
     private final TicketBoothGraphic ticketBoothGraphic;
@@ -154,7 +154,7 @@ public class TicketBooth extends Goal {
                 0,
                 -1,
                 TicketBooth.class,
-                true,
+                false,
                 true
         );
 
@@ -221,7 +221,7 @@ public class TicketBooth extends Goal {
 
     @Override
     public String toString() {
-        return "Ticket booth";
+        return "Ticket booth" + ((this.enabled) ? "" : " (disabled)");
     }
 
     @Override

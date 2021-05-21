@@ -12,9 +12,9 @@ import com.crowdsimulation.model.core.environment.station.patch.location.Locatio
 import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
@@ -40,15 +40,22 @@ import java.util.Map;
 
 public class GraphicsController extends Controller {
     private static final int FLOOR_FIELD_COLOR_HUE = 115;
-
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
+
     public static Floor floorNextPortal;
     public static List<Amenity.AmenityBlock> firstPortalAmenityBlocks;
+
     public static AmenityFootprint currentAmenityFootprint;
+
     public static double tileSize;
+
     private static Patch markedPatch;
     private static boolean showTooltip;
     private static Tooltip tooltip;
+
+    // Denotes whether the listeners for the drawing interface has already been drawn, in order to prevent its
+    // double-drawing
+    public static boolean listenersDrawn;
 
     static {
         GraphicsController.markedPatch = null;
@@ -533,7 +540,7 @@ public class GraphicsController extends Controller {
                     if (Main.simulator.getBuildState() != Simulator.BuildState.DRAWING
                             && !Main.simulator.isPortalDrawing()
                             && !Main.simulator.isFloorFieldDrawing()
-                            && Main.simulator.getBuildCategory() != Simulator.BuildCategory.WALLS) {
+                            && Main.simulator.getBuildCategory() != Simulator.BuildCategory.MISCELLANEOUS) {
                         if (Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE
                                 && Main.simulator.getCurrentAmenity() != null
                                 || Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ALL) {
@@ -581,7 +588,10 @@ public class GraphicsController extends Controller {
                                     && (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.SECURITY
                                     || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                                     || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TURNSTILE
-                                    || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ELEVATOR)
+                                    || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ELEVATOR
+                                    || Main.simulator.getBuildSubcategory()
+                                    == Simulator.BuildSubcategory.TRAIN_BOARDING_AREA
+                            )
                     ) {
                         Main.mainScreenController.addFloorFieldsAction();
                     }
@@ -636,8 +646,11 @@ public class GraphicsController extends Controller {
         backgroundCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
             // If there are no subcategories, erase all markings
             if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
-                // Only allow dragging when drawing walls
-                if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.WALL) {
+                // Only allow dragging when drawing obstacles or tracks
+                if (
+                        Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.OBSTACLE
+                                || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TRAIN_TRACK
+                ) {
                     // Get the patch coordinates from the mouse click coordinates
                     Patch currentPatch = retrievePatchFromMouseClick(event);
 
@@ -774,15 +787,6 @@ public class GraphicsController extends Controller {
             Amenity amenity = amenityBlock.getParent();
 
             newText = newText.replace("%p", amenity.toString());
-
-            // If the amenity is a portal, show what floor it connects to
-            if (amenity instanceof Portal) {
-                Floor floorServed = ((Portal) amenity).getPair().getFloorServed();
-                int numberFloorServed = Main.simulator.getStation().getFloors().indexOf(floorServed) + 1;
-
-                newText = newText + "\n"
-                        + "Connects to floor #" + numberFloorServed;
-            }
         }
 
         GraphicsController.tooltip.setText(newText);
@@ -812,7 +816,7 @@ public class GraphicsController extends Controller {
         GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
 
         Color markingColor = Color.hsb(0, 0, 0.25, 0.5);
-        Color extraMarkingColor = Color.hsb(0, 0, 0.5, 0.5);
+        Color extraMarkingColor = Color.hsb(80, 1.0, 0.5, 0.5);
         Color strokeColor = Color.hsb(0, 0, 0.25, 0.1);
 
         // Draw the markings at that patch location
@@ -820,45 +824,64 @@ public class GraphicsController extends Controller {
         int cursorColumn = patch.getMatrixPosition().getColumn();
 
         if (Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
-            // Draw the rectangles
-            // Get the footprint corresponding to the current class and the current rotation
-            if (GraphicsController.currentAmenityFootprint != null) {
-                // Draw rectangles in each offset in the footprint
-                for (AmenityFootprint.Rotation.AmenityBlockTemplate amenityBlockTemplate :
-                        GraphicsController.currentAmenityFootprint.getCurrentRotation().getAmenityBlockTemplates()) {
-                    // Compute for the position of the patch using the offset data
-                    int patchRow = cursorRow + amenityBlockTemplate.getOffset().getRowOffset();
-                    int patchColumn = cursorColumn + amenityBlockTemplate.getOffset().getColumnOffset();
+            boolean isDrawingTrainTrack
+                    = Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TRAIN_TRACK;
 
-                    // If there is an attractor on this patch, draw a lighter color - the darker colors are for
-                    // non-attractor components
-                    if (!amenityBlockTemplate.isAttractor()) {
-                        graphicsContext.setFill(markingColor);
-                    } else {
-                        graphicsContext.setFill(extraMarkingColor);
+            // Only draw rectangles when not drawing train tracks
+            if (!isDrawingTrainTrack) {
+                // Draw the rectangles
+                // Get the footprint corresponding to the current class and the current rotation
+                if (GraphicsController.currentAmenityFootprint != null) {
+                    // Draw rectangles in each offset in the footprint
+                    for (AmenityFootprint.Rotation.AmenityBlockTemplate amenityBlockTemplate :
+                            GraphicsController.currentAmenityFootprint.getCurrentRotation().getAmenityBlockTemplates()) {
+                        // Compute for the position of the patch using the offset data
+                        int patchRow = cursorRow + amenityBlockTemplate.getOffset().getRowOffset();
+                        int patchColumn = cursorColumn + amenityBlockTemplate.getOffset().getColumnOffset();
+
+                        // If there is an attractor on this patch, draw a different color
+                        if (!amenityBlockTemplate.isAttractor()) {
+                            graphicsContext.setFill(markingColor);
+                        } else {
+                            graphicsContext.setFill(extraMarkingColor);
+                        }
+
+                        // Draw the rectangle there
+                        graphicsContext.fillRect(patchColumn * tileSize, patchRow * tileSize, tileSize, tileSize);
                     }
-
-                    // Draw the rectangle there
-                    graphicsContext.fillRect(patchColumn * tileSize, patchRow * tileSize, tileSize, tileSize);
                 }
             }
 
             // Draw the crosshairs
             graphicsContext.setStroke(strokeColor);
-            graphicsContext.setLineWidth(tileSize);
 
-            graphicsContext.strokeLine(
-                    0,
-                    cursorRow * tileSize + tileSize * 0.5,
-                    markingsCanvas.getWidth(),
-                    cursorRow * tileSize + tileSize * 0.5
-            );
-            graphicsContext.strokeLine(
-                    cursorColumn * tileSize + tileSize * 0.5,
-                    0,
-                    cursorColumn * tileSize + tileSize * 0.5,
-                    markingsCanvas.getHeight()
-            );
+            // If there are train tracks being drawn, double the width of the strokes, and don't draw the vertical line
+            // anymore
+            if (!isDrawingTrainTrack) {
+                graphicsContext.setLineWidth(tileSize);
+
+                graphicsContext.strokeLine(
+                        0,
+                        cursorRow * tileSize + tileSize * 0.5,
+                        markingsCanvas.getWidth(),
+                        cursorRow * tileSize + tileSize * 0.5
+                );
+                graphicsContext.strokeLine(
+                        cursorColumn * tileSize + tileSize * 0.5,
+                        0,
+                        cursorColumn * tileSize + tileSize * 0.5,
+                        markingsCanvas.getHeight()
+                );
+            } else {
+                graphicsContext.setLineWidth(tileSize * 2);
+
+                graphicsContext.strokeLine(
+                        0,
+                        cursorRow * tileSize,
+                        markingsCanvas.getWidth(),
+                        cursorRow * tileSize
+                );
+            }
         } else {
             graphicsContext.fillRect(cursorColumn * tileSize, cursorRow * tileSize, tileSize, tileSize);
         }
@@ -878,6 +901,8 @@ public class GraphicsController extends Controller {
             GraphicsController.currentAmenityFootprint = Turnstile.turnstileFootprint;
         } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TRAIN_BOARDING_AREA) {
             GraphicsController.currentAmenityFootprint = TrainDoor.trainDoorFootprint;
+        } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TRAIN_TRACK) {
+            GraphicsController.currentAmenityFootprint = Track.trackFootprint;
         } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH) {
             GraphicsController.currentAmenityFootprint = TicketBooth.ticketBoothFootprint;
         } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.STAIRS) {
@@ -886,7 +911,7 @@ public class GraphicsController extends Controller {
             GraphicsController.currentAmenityFootprint = EscalatorPortal.escalatorPortalFootprint;
         } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ELEVATOR) {
             GraphicsController.currentAmenityFootprint = ElevatorPortal.elevatorPortalFootprint;
-        } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.WALL) {
+        } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.OBSTACLE) {
             GraphicsController.currentAmenityFootprint = Wall.wallFootprint;
         }
     }

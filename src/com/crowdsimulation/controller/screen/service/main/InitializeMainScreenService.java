@@ -4,7 +4,8 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.controller.screen.service.InitializeScreenService;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
@@ -197,16 +198,22 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button deleteTurnstileButton,
             Button addFloorFieldsTurnstileButton,
             // Platform amenities
+            // Train boarding area
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TrainDoorPlatform> trainDoorDirectionChoiceBox,
+            ChoiceBox<TrainDoor.TrainDoorDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
             Button saveTrainDoorButton,
             Button deleteTrainDoorButton,
             Button addFloorFieldsTrainDoorButton,
-            // Walls
-            // Wall
+            // Train tracks
+            Label trackDirectionLabel,
+            ChoiceBox<Track.TrackDirection> trackDirectionChoiceBox,
+            Button saveTrackButton,
+            Button deleteTrackButton,
+            // Miscellaneous
+            // Obstacle
             Label wallTypeLabel,
             ChoiceBox<Wall.WallType> wallTypeChoiceBox,
             Button saveWallButton,
@@ -284,7 +291,11 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 trainDoorCarriageListView,
                 saveTrainDoorButton,
                 deleteTrainDoorButton,
-                addFloorFieldsTrainDoorButton
+                addFloorFieldsTrainDoorButton,
+                trackDirectionLabel,
+                trackDirectionChoiceBox,
+                saveTrackButton,
+                deleteTrackButton
         );
 
         initializeWalls(
@@ -672,12 +683,16 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializePlatformAmenities(
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TrainDoorPlatform> trainDoorDirectionChoiceBox,
+            ChoiceBox<TrainDoor.TrainDoorDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
             Button saveTrainDoorButton,
             Button deleteTrainDoorButton,
-            Button addFloorFieldsTrainDoorButton
+            Button addFloorFieldsTrainDoorButton,
+            Label trackDirectionLabel,
+            ChoiceBox<Track.TrackDirection> trackDirectionChoiceBox,
+            Button saveTrackButton,
+            Button deleteTrackButton
     ) {
         initializeTrainBoardingArea(
                 trainDoorEnableCheckBox,
@@ -689,13 +704,20 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 deleteTrainDoorButton,
                 addFloorFieldsTrainDoorButton
         );
+
+        initializeTrack(
+                trackDirectionLabel,
+                trackDirectionChoiceBox,
+                saveTrackButton,
+                deleteTrackButton
+        );
     }
 
     // Initialize the train boarding area controls
     private static void initializeTrainBoardingArea(
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TrainDoorPlatform> trainDoorDirectionChoiceBox,
+            ChoiceBox<TrainDoor.TrainDoorDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriagesListView,
             Button saveTrainDoorButton,
@@ -705,10 +727,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
         trainDoorDirectionLabel.setLabelFor(trainDoorDirectionChoiceBox);
 
         trainDoorDirectionChoiceBox.setItems(FXCollections.observableArrayList(
-                TrainDoor.TrainDoorPlatform.NORTHBOUND,
-                TrainDoor.TrainDoorPlatform.SOUTHBOUND,
-                TrainDoor.TrainDoorPlatform.WESTBOUND,
-                TrainDoor.TrainDoorPlatform.EASTBOUND
+                TrainDoor.TrainDoorDirection.NORTHBOUND,
+                TrainDoor.TrainDoorDirection.SOUTHBOUND,
+                TrainDoor.TrainDoorDirection.WESTBOUND,
+                TrainDoor.TrainDoorDirection.EASTBOUND
         ));
         trainDoorDirectionChoiceBox.getSelectionModel().select(0);
 
@@ -732,6 +754,27 @@ public class InitializeMainScreenService extends InitializeScreenService {
         deleteTrainDoorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
 
         addFloorFieldsTrainDoorButton.disableProperty().bind(InitializeMainScreenService.ADD_FLOOR_FIELD_BINDING);
+    }
+
+    // Initialize the train track controls
+    private static void initializeTrack(
+            Label trackDirectionLabel,
+            ChoiceBox<Track.TrackDirection> trackDirectionChoiceBox,
+            Button saveTrackButton,
+            Button deleteTrackButton
+    ) {
+        trackDirectionLabel.setLabelFor(trackDirectionChoiceBox);
+
+        trackDirectionChoiceBox.setItems(FXCollections.observableArrayList(
+                Track.TrackDirection.NORTHBOUND,
+                Track.TrackDirection.SOUTHBOUND,
+                Track.TrackDirection.WESTBOUND,
+                Track.TrackDirection.EASTBOUND
+        ));
+        trackDirectionChoiceBox.getSelectionModel().select(0);
+
+        saveTrackButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
+        deleteTrackButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the wall UI controls

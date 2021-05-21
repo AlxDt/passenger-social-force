@@ -5,7 +5,6 @@ import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
 import java.util.List;
 
@@ -13,7 +12,7 @@ public class TrainDoorEditor {
     public void draw(
             Patch currentPatch,
             boolean enabled,
-            TrainDoor.TrainDoorPlatform trainDoorPlatform,
+            TrainDoor.TrainDoorDirection trainDoorDirection,
             List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
@@ -49,7 +48,7 @@ public class TrainDoorEditor {
             TrainDoor trainDoorToAdd = TrainDoor.trainDoorFactory.create(
                     amenityBlocks,
                     enabled,
-                    trainDoorPlatform,
+                    trainDoorDirection,
                     trainDoorCarriages
             );
 
@@ -61,7 +60,7 @@ public class TrainDoorEditor {
     public void edit(
             TrainDoor trainDoorToEdit,
             boolean enabled,
-            TrainDoor.TrainDoorPlatform trainDoorPlatform,
+            TrainDoor.TrainDoorDirection trainDoorDirection,
             List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
         trainDoorToEdit.setEnabled(
@@ -69,7 +68,7 @@ public class TrainDoorEditor {
         );
 
         trainDoorToEdit.setPlatform(
-                trainDoorPlatform
+                trainDoorDirection
         );
 
         trainDoorToEdit.setTrainDoorCarriagesSupported(

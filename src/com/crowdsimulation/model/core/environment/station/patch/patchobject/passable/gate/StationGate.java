@@ -11,8 +11,17 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amen
 import java.util.List;
 
 public class StationGate extends Gate {
+    // Denotes the chance of generating a passenger per second
+    private double chancePerSecond;
+
+    // Denotes the mode of this station gate (whether it's entry/exit only, or both)
+    private StationGateMode stationGateMode;
+
     // Factory for station gate creation
     public static final StationGateFactory stationGateFactory;
+
+    // Handles how the station gate is displayed
+    private final StationGateGraphic stationGateGraphic;
 
     // Denotes the footprint of this amenity when being drawn
     public static final AmenityFootprint stationGateFootprint;
@@ -48,15 +57,6 @@ public class StationGate extends Gate {
         stationGateEditor = new StationGateEditor();
     }
 
-    // Handles how the station gate is displayed
-    private final StationGateGraphic stationGateGraphic;
-
-    // Denotes the chance of generating a passenger per second
-    private double chancePerSecond;
-
-    // Denotes the mode of this station gate (whether it's entry/exit only, or both)
-    private StationGateMode stationGateMode;
-
     protected StationGate(
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
@@ -89,7 +89,7 @@ public class StationGate extends Gate {
 
     @Override
     public String toString() {
-        return "Station entrance/exit";
+        return "Station entrance/exit" + ((this.enabled) ? "" : " (disabled)");
     }
 
     @Override

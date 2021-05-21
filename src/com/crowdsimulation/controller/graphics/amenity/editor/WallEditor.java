@@ -4,7 +4,7 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.obstacle.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 
 import java.util.List;
 
@@ -13,6 +13,8 @@ public class WallEditor extends AmenityEditor {
             Patch currentPatch,
             Wall.WallType wallType
     ) {
+        // Check if all the
+
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
                 currentPatch,
@@ -48,7 +50,7 @@ public class WallEditor extends AmenityEditor {
                     wallType
             );
 
-            // Add this station gate to the list of all walls on this floor
+            // Add this wall to the list of all walls on this floor
             Main.simulator.getCurrentFloor().getWalls().add(wallToAdd);
         }
     }
@@ -63,10 +65,10 @@ public class WallEditor extends AmenityEditor {
     }
 
     public void delete(
-            Wall wallToEdit
+            Wall wallToDelete
     ) {
         Main.simulator.getCurrentFloor().getWalls().remove(
-                wallToEdit
+                wallToDelete
         );
     }
 }
