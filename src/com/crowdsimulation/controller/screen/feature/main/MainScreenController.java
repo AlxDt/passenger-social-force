@@ -2,7 +2,6 @@ package com.crowdsimulation.controller.screen.feature.main;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
-import com.crowdsimulation.controller.graphics.amenity.editor.TrackEditor;
 import com.crowdsimulation.controller.graphics.amenity.graphic.*;
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.alert.AlertController;
@@ -39,6 +38,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -372,6 +372,10 @@ public class MainScreenController extends ScreenController {
 
             ex.printStackTrace();
         }
+    }
+
+    public StackPane getInterfaceStackPane() {
+        return interfaceStackPane;
     }
 
     // Switch the build mode
@@ -1416,10 +1420,6 @@ public class MainScreenController extends ScreenController {
         drawInterface(false);
     }
 
-    public StackPane getInterfaceStackPane() {
-        return interfaceStackPane;
-    }
-
     public void initializeStation(Station station, boolean drawListeners) {
         // Reset the simulator to its initial settings
         Main.simulator.resetToDefaultConfiguration(station);
@@ -1540,18 +1540,20 @@ public class MainScreenController extends ScreenController {
 
     // Reset the switch floor buttons
     private void resetSwitchFloorButtons() {
-        // Check if the above and below switch floor buttons may be enabled
-        floorBelowButton.setDisable(
-                Main.simulator.isPortalDrawing()
-                        || Main.simulator.isFloorFieldDrawing()
-                        || Main.simulator.getCurrentFloorIndex() == 0
-        );
+        Platform.runLater(() -> {
+            // Check if the above and below switch floor buttons may be enabled
+            floorBelowButton.setDisable(
+                    Main.simulator.isPortalDrawing()
+                            || Main.simulator.isFloorFieldDrawing()
+                            || Main.simulator.getCurrentFloorIndex() == 0
+            );
 
-        floorAboveButton.setDisable(
-                Main.simulator.isPortalDrawing()
-                        || Main.simulator.isFloorFieldDrawing()
-                        || Main.simulator.getCurrentFloorIndex() == Main.simulator.getStation().getFloors().size() - 1
-        );
+            floorAboveButton.setDisable(
+                    Main.simulator.isPortalDrawing()
+                            || Main.simulator.isFloorFieldDrawing()
+                            || Main.simulator.getCurrentFloorIndex() == Main.simulator.getStation().getFloors().size() - 1
+            );
+        });
     }
 
     // Update the top bar as a while
@@ -1563,16 +1565,20 @@ public class MainScreenController extends ScreenController {
 
     // Set the station name text
     private void updateStationNameText() {
-        stationNameText.setText(
-                Main.simulator.getStation().getName()
-        );
+        Platform.runLater(() -> {
+            stationNameText.setText(
+                    Main.simulator.getStation().getName()
+            );
+        });
     }
 
     // Set the floor number text
     public void updateFloorNumberText() {
-        floorNumberText.setText(
-                "Floor #" + (Main.simulator.getCurrentFloorIndex() + 1)
-        );
+        Platform.runLater(() -> {
+            floorNumberText.setText(
+                    "Floor #" + (Main.simulator.getCurrentFloorIndex() + 1)
+            );
+        });
     }
 
     // Set the prompt text
@@ -1654,18 +1660,24 @@ public class MainScreenController extends ScreenController {
                 break;
         }
 
-        promptText.setText(
-                operationModeText + ((testing) ?
-                        ""
-                        :
-                        ": "
-                                + ((!noAmenity) ?
-                                buildStateText + " " + amenityText
-                                :
-                                "Ready to " + buildStateText
-                        )
-                )
-        );
+        String finalOperationModeText = operationModeText;
+        String finalBuildStateText = buildStateText;
+        String finalAmenityText = amenityText;
+
+        Platform.runLater(() -> {
+            promptText.setText(
+                    finalOperationModeText + ((testing) ?
+                            ""
+                            :
+                            ": "
+                                    + ((!noAmenity) ?
+                                    finalBuildStateText + " " + finalAmenityText
+                                    :
+                                    "Ready to " + finalBuildStateText
+                            )
+                    )
+            );
+        });
     }
 
     // Save a single amenity or all instances of an amenity in a floor
@@ -1818,7 +1830,7 @@ public class MainScreenController extends ScreenController {
             case TRAIN_TRACK:
                 Track trackToEdit = (Track) amenityToSave;
 
-                Track.trackEditor.editTrackLine(
+                Track.trackEditor.edit(
                         trackToEdit,
                         trackDirectionChoiceBox.getValue()
                 );
@@ -1977,8 +1989,8 @@ public class MainScreenController extends ScreenController {
                 break;
             case TRAIN_TRACK:
                 // Edit all tracks
-                for (List<Track> trackToEdit : Main.simulator.getCurrentFloor().getTrackLines()) {
-                    saveSingleAmenityInFloor(trackToEdit.get(0));
+                for (Track trackToEdit : Main.simulator.getCurrentFloor().getTracks()) {
+                    saveSingleAmenityInFloor(trackToEdit);
                 }
 
                 break;
@@ -2007,20 +2019,8 @@ public class MainScreenController extends ScreenController {
         // Delete this amenity from the patch that contains it
         // Portal shafts do not have a patch, so ignore if it is
         if (!(amenityToDelete instanceof PortalShaft)) {
-            // Tracks have a special way of being deleted
-            if (amenityToDelete instanceof Track) {
-                // Get track line containing this track
-                List<Track> trackLine = TrackEditor.getTrackLine((Track) amenityToDelete);
-
-                for (Track track : trackLine) {
-                    for (Amenity.AmenityBlock amenityBlock : track.getAmenityBlocks()) {
-                        amenityBlock.getPatch().setAmenityBlock(null);
-                    }
-                }
-            } else {
-                for (Amenity.AmenityBlock amenityBlock : amenityToDelete.getAmenityBlocks()) {
-                    amenityBlock.getPatch().setAmenityBlock(null);
-                }
+            for (Amenity.AmenityBlock amenityBlock : amenityToDelete.getAmenityBlocks()) {
+                amenityBlock.getPatch().setAmenityBlock(null);
             }
         }
 
@@ -2100,7 +2100,7 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case TRAIN_TRACK:
-                Track.trackEditor.deleteTrackLine(
+                Track.trackEditor.delete(
                         (Track) amenityToDelete
                 );
 
@@ -2190,11 +2190,11 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case TRAIN_TRACK:
-                List<List<Track>> trackLinesCopy
-                        = new ArrayList<>(Main.simulator.getCurrentFloor().getTrackLines());
+                List<Track> tracksCopy
+                        = new ArrayList<>(Main.simulator.getCurrentFloor().getTracks());
 
-                for (List<Track> track : trackLinesCopy) {
-                    deleteSingleAmenityInFloor(track.get(0), buildSubcategory);
+                for (Track track : tracksCopy) {
+                    deleteSingleAmenityInFloor(track, buildSubcategory);
                 }
 
                 break;
@@ -2287,6 +2287,7 @@ public class MainScreenController extends ScreenController {
         Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TURNSTILE);
 
         Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TRAIN_BOARDING_AREA);
+        Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.TRAIN_TRACK);
 
         Main.mainScreenController.deleteAllAmenitiesInFloor(Simulator.BuildSubcategory.OBSTACLE);
 
@@ -2391,17 +2392,19 @@ public class MainScreenController extends ScreenController {
                                 StationGate stationGateToEdit
                                         = (StationGate) Main.simulator.getCurrentAmenity();
 
-                                stationGateEnableCheckBox.setSelected(
-                                        stationGateToEdit.isEnabled()
-                                );
+                                Platform.runLater(() -> {
+                                    stationGateEnableCheckBox.setSelected(
+                                            stationGateToEdit.isEnabled()
+                                    );
 
-                                stationGateSpawnSpinner.getValueFactory().setValue(
-                                        (int) (stationGateToEdit.getChancePerSecond() * 100)
-                                );
+                                    stationGateSpawnSpinner.getValueFactory().setValue(
+                                            (int) (stationGateToEdit.getChancePerSecond() * 100)
+                                    );
 
-                                stationGateModeChoiceBox.setValue(
-                                        stationGateToEdit.getStationGateMode()
-                                );
+                                    stationGateModeChoiceBox.setValue(
+                                            stationGateToEdit.getStationGateMode()
+                                    );
+                                });
                             } else {
                                 // If there is no amenity there, just do nothing
                                 if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
@@ -2479,18 +2482,20 @@ public class MainScreenController extends ScreenController {
 
                                     Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
-                                    // Set the forms to the proper position
-                                    securityEnableCheckBox.setSelected(
-                                            securityToEdit.isEnabled()
-                                    );
+                                    Platform.runLater(() -> {
+                                        // Set the forms to the proper position
+                                        securityEnableCheckBox.setSelected(
+                                                securityToEdit.isEnabled()
+                                        );
 
-                                    securityBlockPassengerCheckBox.setSelected(
-                                            securityToEdit.isBlockEntry()
-                                    );
+                                        securityBlockPassengerCheckBox.setSelected(
+                                                securityToEdit.isBlockEntry()
+                                        );
 
-                                    securityIntervalSpinner.getValueFactory().setValue(
-                                            securityToEdit.getWaitingTime()
-                                    );
+                                        securityIntervalSpinner.getValueFactory().setValue(
+                                                securityToEdit.getWaitingTime()
+                                        );
+                                    });
                                 } else {
                                     // If there is no amenity there, just do nothing
                                     if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
@@ -3522,17 +3527,19 @@ public class MainScreenController extends ScreenController {
 
                                     Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
-                                    ticketBoothEnableCheckBox.setSelected(
-                                            ticketBoothToEdit.isEnabled()
-                                    );
+                                    Platform.runLater(() -> {
+                                        ticketBoothEnableCheckBox.setSelected(
+                                                ticketBoothToEdit.isEnabled()
+                                        );
 
-                                    ticketBoothModeChoiceBox.setValue(
-                                            ticketBoothToEdit.getTicketBoothType()
-                                    );
+                                        ticketBoothModeChoiceBox.setValue(
+                                                ticketBoothToEdit.getTicketBoothType()
+                                        );
 
-                                    ticketBoothIntervalSpinner.getValueFactory().setValue(
-                                            ticketBoothToEdit.getWaitingTime()
-                                    );
+                                        ticketBoothIntervalSpinner.getValueFactory().setValue(
+                                                ticketBoothToEdit.getWaitingTime()
+                                        );
+                                    });
                                 } else {
                                     // If there is no amenity there, just do nothing
                                     if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
@@ -3659,21 +3666,23 @@ public class MainScreenController extends ScreenController {
 
                                     Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
-                                    turnstileEnableCheckBox.setSelected(
-                                            turnstileToEdit.isEnabled()
-                                    );
+                                    Platform.runLater(() -> {
+                                        turnstileEnableCheckBox.setSelected(
+                                                turnstileToEdit.isEnabled()
+                                        );
 
-                                    turnstileBlockPassengerCheckBox.setSelected(
-                                            turnstileToEdit.isBlockEntry()
-                                    );
+                                        turnstileBlockPassengerCheckBox.setSelected(
+                                                turnstileToEdit.isBlockEntry()
+                                        );
 
-                                    turnstileDirectionChoiceBox.setValue(
-                                            turnstileToEdit.getTurnstileMode()
-                                    );
+                                        turnstileDirectionChoiceBox.setValue(
+                                                turnstileToEdit.getTurnstileMode()
+                                        );
 
-                                    turnstileIntervalSpinner.getValueFactory().setValue(
-                                            turnstileToEdit.getWaitingTime()
-                                    );
+                                        turnstileIntervalSpinner.getValueFactory().setValue(
+                                                turnstileToEdit.getWaitingTime()
+                                        );
+                                    });
                                 } else {
                                     // If there is no amenity there, just do nothing
                                     if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
@@ -3806,20 +3815,22 @@ public class MainScreenController extends ScreenController {
 
                                     Main.simulator.setCurrentFloorFieldState(floorFieldState);
 
-                                    trainDoorEnableCheckBox.setSelected(
-                                            trainDoorToEdit.isEnabled()
-                                    );
+                                    Platform.runLater(() -> {
+                                        trainDoorEnableCheckBox.setSelected(
+                                                trainDoorToEdit.isEnabled()
+                                        );
 
-                                    trainDoorDirectionChoiceBox.setValue(
-                                            trainDoorToEdit.getPlatform()
-                                    );
+                                        trainDoorDirectionChoiceBox.setValue(
+                                                trainDoorToEdit.getPlatform()
+                                        );
 
-                                    trainDoorCarriageListView.getSelectionModel().clearSelection();
+                                        trainDoorCarriageListView.getSelectionModel().clearSelection();
 
-                                    for (TrainDoor.TrainDoorCarriage trainDoorCarriage
-                                            : trainDoorToEdit.getTrainDoorCarriagesSupported()) {
-                                        trainDoorCarriageListView.getSelectionModel().select(trainDoorCarriage);
-                                    }
+                                        for (TrainDoor.TrainDoorCarriage trainDoorCarriage
+                                                : trainDoorToEdit.getTrainDoorCarriagesSupported()) {
+                                            trainDoorCarriageListView.getSelectionModel().select(trainDoorCarriage);
+                                        }
+                                    });
                                 } else {
                                     // If there is no amenity there, just do nothing
                                     if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
@@ -3902,7 +3913,7 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(Track.class);
 
-                                Track.trackEditor.drawTrackLine(
+                                Track.trackEditor.draw(
                                         currentPatch,
                                         trackDirectionChoiceBox.getValue()
                                 );
@@ -3923,9 +3934,11 @@ public class MainScreenController extends ScreenController {
                             Track trackToEdit
                                     = (Track) Main.simulator.getCurrentAmenity();
 
-                            trackDirectionChoiceBox.setValue(
-                                    trackToEdit.getTrackDirection()
-                            );
+                            Platform.runLater(() -> {
+                                trackDirectionChoiceBox.setValue(
+                                        trackToEdit.getTrackDirection()
+                                );
+                            });
 
                             break;
                         case EDITING_ALL:
@@ -3974,9 +3987,11 @@ public class MainScreenController extends ScreenController {
                                 Wall wallToEdit
                                         = (Wall) Main.simulator.getCurrentAmenity();
 
-                                wallTypeChoiceBox.setValue(
-                                        wallToEdit.getWallType()
-                                );
+                                Platform.runLater(() -> {
+                                    wallTypeChoiceBox.setValue(
+                                            wallToEdit.getWallType()
+                                    );
+                                });
                             } else {
                                 // If there is no amenity there, just do nothing
                                 if (Main.simulator.currentAmenityProperty().isNotNull().get()) {
@@ -4032,7 +4047,9 @@ public class MainScreenController extends ScreenController {
         Simulator.BuildSubcategory buildSubcategory = null;
 
         // Set the choice box to the editing modes
-        buildModeChoiceBox.getSelectionModel().select(Simulator.BuildState.EDITING_ONE);
+        Platform.runLater(() -> {
+            buildModeChoiceBox.getSelectionModel().select(Simulator.BuildState.EDITING_ONE);
+        });
 
         // Get category and subcategory
         if (
@@ -4091,97 +4108,102 @@ public class MainScreenController extends ScreenController {
             return;
         }
 
-        Accordion accordion;
-        ObservableList<TitledPane> titledPanes;
+        Simulator.BuildCategory finalBuildCategory = buildCategory;
+        Simulator.BuildSubcategory finalBuildSubcategory = buildSubcategory;
 
-        // Then open the respective tab and titled pane
-        switch (buildCategory) {
-            case ENTRANCES_AND_EXITS:
-                buildTabPane.getSelectionModel().select(0);
+        Platform.runLater(() -> {
+            Accordion accordion;
+            ObservableList<TitledPane> titledPanes;
 
-                accordion = (Accordion) buildTabPane.getTabs().get(0).getContent();
-                titledPanes = accordion.getPanes();
+            // Then open the respective tab and titled pane
+            switch (finalBuildCategory) {
+                case ENTRANCES_AND_EXITS:
+                    buildTabPane.getSelectionModel().select(0);
 
-                switch (buildSubcategory) {
-                    case STATION_ENTRANCE_EXIT:
-                        titledPanes.get(0).setExpanded(true);
+                    accordion = (Accordion) buildTabPane.getTabs().get(0).getContent();
+                    titledPanes = accordion.getPanes();
 
-                        break;
-                    case SECURITY:
-                        titledPanes.get(1).setExpanded(true);
+                    switch (finalBuildSubcategory) {
+                        case STATION_ENTRANCE_EXIT:
+                            titledPanes.get(0).setExpanded(true);
 
-                        break;
-                }
+                            break;
+                        case SECURITY:
+                            titledPanes.get(1).setExpanded(true);
 
-                break;
-            case STAIRS_AND_ELEVATORS:
-                buildTabPane.getSelectionModel().select(1);
+                            break;
+                    }
 
-                accordion = (Accordion) buildTabPane.getTabs().get(1).getContent();
-                titledPanes = accordion.getPanes();
+                    break;
+                case STAIRS_AND_ELEVATORS:
+                    buildTabPane.getSelectionModel().select(1);
 
-                switch (buildSubcategory) {
-                    case STAIRS:
-                        titledPanes.get(0).setExpanded(true);
+                    accordion = (Accordion) buildTabPane.getTabs().get(1).getContent();
+                    titledPanes = accordion.getPanes();
 
-                        break;
-                    case ESCALATOR:
-                        titledPanes.get(1).setExpanded(true);
+                    switch (finalBuildSubcategory) {
+                        case STAIRS:
+                            titledPanes.get(0).setExpanded(true);
 
-                        break;
-                    case ELEVATOR:
-                        titledPanes.get(2).setExpanded(true);
+                            break;
+                        case ESCALATOR:
+                            titledPanes.get(1).setExpanded(true);
 
-                        break;
-                }
+                            break;
+                        case ELEVATOR:
+                            titledPanes.get(2).setExpanded(true);
 
-                break;
-            case CONCOURSE_AMENITIES:
-                buildTabPane.getSelectionModel().select(2);
+                            break;
+                    }
 
-                accordion = (Accordion) buildTabPane.getTabs().get(2).getContent();
-                titledPanes = accordion.getPanes();
+                    break;
+                case CONCOURSE_AMENITIES:
+                    buildTabPane.getSelectionModel().select(2);
 
-                switch (buildSubcategory) {
-                    case TICKET_BOOTH:
-                        titledPanes.get(0).setExpanded(true);
+                    accordion = (Accordion) buildTabPane.getTabs().get(2).getContent();
+                    titledPanes = accordion.getPanes();
 
-                        break;
-                    case TURNSTILE:
-                        titledPanes.get(1).setExpanded(true);
+                    switch (finalBuildSubcategory) {
+                        case TICKET_BOOTH:
+                            titledPanes.get(0).setExpanded(true);
 
-                        break;
-                }
+                            break;
+                        case TURNSTILE:
+                            titledPanes.get(1).setExpanded(true);
 
-                break;
-            case PLATFORM_AMENITIES:
-                buildTabPane.getSelectionModel().select(3);
+                            break;
+                    }
 
-                accordion = (Accordion) buildTabPane.getTabs().get(3).getContent();
-                titledPanes = accordion.getPanes();
+                    break;
+                case PLATFORM_AMENITIES:
+                    buildTabPane.getSelectionModel().select(3);
 
-                switch (buildSubcategory) {
-                    case TRAIN_BOARDING_AREA:
-                        titledPanes.get(0).setExpanded(true);
+                    accordion = (Accordion) buildTabPane.getTabs().get(3).getContent();
+                    titledPanes = accordion.getPanes();
 
-                        break;
-                    case TRAIN_TRACK:
-                        titledPanes.get(1).setExpanded(true);
+                    switch (finalBuildSubcategory) {
+                        case TRAIN_BOARDING_AREA:
+                            titledPanes.get(0).setExpanded(true);
 
-                        break;
-                }
+                            break;
+                        case TRAIN_TRACK:
+                            titledPanes.get(1).setExpanded(true);
 
-                break;
-            case MISCELLANEOUS:
-                buildTabPane.getSelectionModel().select(4);
+                            break;
+                    }
 
-                accordion = (Accordion) buildTabPane.getTabs().get(4).getContent();
-                titledPanes = accordion.getPanes();
+                    break;
+                case MISCELLANEOUS:
+                    buildTabPane.getSelectionModel().select(4);
 
-                titledPanes.get(0).setExpanded(true);
+                    accordion = (Accordion) buildTabPane.getTabs().get(4).getContent();
+                    titledPanes = accordion.getPanes();
 
-                break;
-        }
+                    titledPanes.get(0).setExpanded(true);
+
+                    break;
+            }
+        });
 
         // Switch the class to the class of the current amenity
         Main.simulator.setCurrentClass(amenity.getClass());

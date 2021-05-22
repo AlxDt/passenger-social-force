@@ -38,7 +38,7 @@ public class Floor extends BaseStationObject implements Environment {
     private final List<Turnstile> turnstiles;
 
     private final List<TrainDoor> trainDoors;
-    private final List<List<Track>> trackLines;
+    private final List<Track> tracks;
 
     private final List<Wall> walls;
 
@@ -71,7 +71,7 @@ public class Floor extends BaseStationObject implements Environment {
         this.turnstiles = new ArrayList<>();
 
         this.trainDoors = new ArrayList<>();
-        this.trackLines = new ArrayList<>();
+        this.tracks = new ArrayList<>();
 
         this.walls = new ArrayList<>();
 
@@ -123,8 +123,8 @@ public class Floor extends BaseStationObject implements Environment {
         return trainDoors;
     }
 
-    public List<List<Track>> getTrackLines() {
-        return trackLines;
+    public List<Track> getTracks() {
+        return tracks;
     }
 
     public List<Wall> getWalls() {

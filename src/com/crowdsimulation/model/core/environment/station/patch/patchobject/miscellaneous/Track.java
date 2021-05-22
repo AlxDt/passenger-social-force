@@ -1,12 +1,15 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous;
 
+import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.editor.TrackEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.TrackGraphic;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Track extends Obstacle {
@@ -33,9 +36,7 @@ public class Track extends Obstacle {
 
         // Up view
         AmenityFootprint.Rotation.AmenityBlockTemplate upBlock00;
-        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN10;/*
-        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN11;
-        AmenityFootprint.Rotation.AmenityBlockTemplate upBlock01;*/
+        AmenityFootprint.Rotation.AmenityBlockTemplate upBlockN10;
 
         AmenityFootprint.Rotation upView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
@@ -58,28 +59,8 @@ public class Track extends Obstacle {
                 true
         );
 
-/*        upBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
-                upView.getOrientation(),
-                -1,
-                1,
-                Track.class,
-                false,
-                false
-        );
-
-        upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
-                upView.getOrientation(),
-                0,
-                1,
-                Track.class,
-                false,
-                false
-        );*/
-
         upView.getAmenityBlockTemplates().add(upBlock00);
-        upView.getAmenityBlockTemplates().add(upBlockN10);/*
-        upView.getAmenityBlockTemplates().add(upBlockN11);
-        upView.getAmenityBlockTemplates().add(upBlock01);*/
+        upView.getAmenityBlockTemplates().add(upBlockN10);
 
         trackFootprint.addRotation(upView);
 
@@ -147,6 +128,62 @@ public class Track extends Obstacle {
 
         private TrackBlock(Patch patch, boolean attractor, boolean hasGraphic) {
             super(patch, attractor, hasGraphic);
+        }
+
+        public static List<AmenityBlock> convertToAmenityBlocks(
+                int currentRow,
+                int columnsSpanned,
+                AmenityFootprint.Rotation.AmenityBlockTemplate templateAbove,
+                AmenityFootprint.Rotation.AmenityBlockTemplate templateBelow
+        ) {
+            List<AmenityBlock> trackBlocks = new ArrayList<>();
+
+            // Create a track block for all of the specified columns
+            for (int currentColumn = 0; currentColumn < columnsSpanned; currentColumn++) {
+                MatrixPosition patchPositionAbove = new MatrixPosition(
+                        currentRow - 1,
+                        currentColumn
+                );
+
+                MatrixPosition patchPositionBelow = new MatrixPosition(
+                        currentRow,
+                        currentColumn
+                );
+
+                // If either of the positions are out of bounds, return null
+                if (!MatrixPosition.inBounds(
+                        patchPositionAbove,
+                        Main.simulator.getStation())
+                        || !MatrixPosition.inBounds(
+                        patchPositionBelow,
+                        Main.simulator.getStation()
+                )) {
+                    return null;
+                }
+
+                // Create the amenity block, then add it to the list
+                Patch patchAbove = Main.simulator.getCurrentFloor().getPatch(currentRow - 1, currentColumn);
+                Patch patchBelow = Main.simulator.getCurrentFloor().getPatch(currentRow, currentColumn);
+
+                TrackBlock trackBlockAbove = TrackBlock.trackBlockFactory.create(
+                        patchAbove,
+                        templateAbove.isAttractor(),
+                        templateAbove.hasGraphic(),
+                        templateAbove.getOrientation()
+                );
+
+                TrackBlock trackBlockBelow = TrackBlock.trackBlockFactory.create(
+                        patchBelow,
+                        templateBelow.isAttractor(),
+                        templateBelow.hasGraphic(),
+                        templateBelow.getOrientation()
+                );
+
+                trackBlocks.add(trackBlockAbove);
+                trackBlocks.add(trackBlockBelow);
+            }
+
+            return trackBlocks;
         }
 
         // Track block factory

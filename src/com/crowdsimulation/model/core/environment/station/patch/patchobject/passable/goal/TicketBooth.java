@@ -86,7 +86,7 @@ public class TicketBooth extends Goal {
                 0,
                 TicketBooth.class,
                 true,
-                true
+                false
         );
 
         rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
@@ -95,7 +95,7 @@ public class TicketBooth extends Goal {
                 1,
                 TicketBooth.class,
                 false,
-                false
+                true
         );
 
         rightView.getAmenityBlockTemplates().add(rightBlock00);
