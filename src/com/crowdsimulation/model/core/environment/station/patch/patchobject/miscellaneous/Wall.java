@@ -3,10 +3,10 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.mis
 import com.crowdsimulation.controller.graphics.amenity.editor.WallEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.WallGraphic;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 
 import java.util.List;
 
@@ -81,8 +81,8 @@ public class Wall extends Obstacle {
     }
 
     @Override
-    public String getGraphicURL() {
-        return this.wallGraphic.getGraphicURL();
+    public GraphicLocation getGraphicLocation() {
+        return this.wallGraphic.getGraphicLocation();
     }
 
     // The different types this wall has

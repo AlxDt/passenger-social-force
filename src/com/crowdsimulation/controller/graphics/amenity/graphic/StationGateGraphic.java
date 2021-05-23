@@ -5,11 +5,11 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Draw
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 
 public class StationGateGraphic extends AmenityGraphic implements Cyclable, Changeable {
-    private static final int ROW_SPAN_VERTICAL = 1;
-    private static final int COLUMN_SPAN_VERTICAL = 1;
+    public static final int ROW_SPAN_VERTICAL = 1;
+    public static final int COLUMN_SPAN_VERTICAL = 1;
 
-    private static final int ROW_SPAN_HORIZONTAL = 1;
-    private static final int COLUMN_SPAN_HORIZONTAL = 1;
+    public static final int ROW_SPAN_HORIZONTAL = 1;
+    public static final int COLUMN_SPAN_HORIZONTAL = 1;
 
     private static final int ROW_OFFSET = 0;
     private static final int COLUMN_OFFSET = 0;
@@ -24,8 +24,6 @@ public class StationGateGraphic extends AmenityGraphic implements Cyclable, Chan
                 ROW_OFFSET,
                 COLUMN_OFFSET
         );
-
-        this.graphicIndex = 0;
 
         change(stationGate);
     }

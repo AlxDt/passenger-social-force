@@ -4,6 +4,7 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.ElevatorGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -19,6 +20,9 @@ import java.util.List;
 public class ElevatorPortal extends Portal implements Queueable {
     // Denotes the elevator shaft which contains this elevator portal
     private final ElevatorShaft elevatorShaft;
+
+    // Denotes whether the door of this elevator portal is open
+    private boolean isOpen;
 
     // Factory for elevator portal creation
     public static final ElevatorPortalFactory elevatorPortalFactory;
@@ -260,6 +264,8 @@ public class ElevatorPortal extends Portal implements Queueable {
 
         this.elevatorShaft = elevatorShaft;
 
+        this.isOpen = false;
+
         this.queueObject = new QueueObject();
 
         // Initialize this elevator portal's floor field state
@@ -281,6 +287,14 @@ public class ElevatorPortal extends Portal implements Queueable {
 
     public ElevatorShaft getElevatorShaft() {
         return elevatorShaft;
+    }
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+
+    public void setOpen(boolean open) {
+        isOpen = open;
     }
 
     public QueueObject getQueueObject() {
@@ -363,8 +377,8 @@ public class ElevatorPortal extends Portal implements Queueable {
     }
 
     @Override
-    public String getGraphicURL() {
-        return this.elevatorPortalGraphic.getGraphicURL();
+    public GraphicLocation getGraphicLocation() {
+        return this.elevatorPortalGraphic.getGraphicLocation();
     }
 
     @Override

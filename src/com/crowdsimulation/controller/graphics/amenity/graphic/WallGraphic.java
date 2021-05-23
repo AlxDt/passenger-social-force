@@ -73,6 +73,9 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
                 this.getAmenityGraphicOffset().setRowOffset(NORMAL_ROW_OFFSET);
                 this.getAmenityGraphicOffset().setColumnOffset(NORMAL_COLUMN_OFFSET);
 
+                this.getGraphicLocation().setGraphicWidth(COLUMN_SPAN_VERTICAL);
+                this.getGraphicLocation().setGraphicHeight(ROW_SPAN_VERTICAL);
+
                 break;
             case BUILDING_COLUMN:
                 this.graphicIndex = 1;
@@ -82,6 +85,9 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
 
                 this.getAmenityGraphicOffset().setRowOffset(BUILDING_COLUMN_ROW_OFFSET);
                 this.getAmenityGraphicOffset().setColumnOffset(BUILDING_COLUMN_COLUMN_OFFSET);
+
+                this.getGraphicLocation().setGraphicWidth(COLUMN_SPAN_BUILDING_COLUMN);
+                this.getGraphicLocation().setGraphicHeight(ROW_SPAN_BUILDING_COLUMN);
 
                 break;
             case BELT_BARRIER:
@@ -108,6 +114,9 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
                 this.getAmenityGraphicOffset().setRowOffset(NORMAL_ROW_OFFSET);
                 this.getAmenityGraphicOffset().setColumnOffset(NORMAL_COLUMN_OFFSET);
 
+                this.getGraphicLocation().setGraphicWidth(COLUMN_SPAN_VERTICAL);
+                this.getGraphicLocation().setGraphicHeight(ROW_SPAN_VERTICAL);
+
                 break;
             case METAL_BARRIER:
                 if (this.graphicIndex == 3 || this.graphicIndex == 4) {
@@ -132,6 +141,9 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
 
                 this.getAmenityGraphicOffset().setRowOffset(NORMAL_ROW_OFFSET);
                 this.getAmenityGraphicOffset().setColumnOffset(NORMAL_COLUMN_OFFSET);
+
+                this.getGraphicLocation().setGraphicWidth(COLUMN_SPAN_VERTICAL);
+                this.getGraphicLocation().setGraphicHeight(ROW_SPAN_VERTICAL);
 
                 break;
         }

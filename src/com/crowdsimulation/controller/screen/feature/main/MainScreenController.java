@@ -59,7 +59,7 @@ import java.util.List;
 public class MainScreenController extends ScreenController {
     public static final String[] INPUT_KEYS = {"blank_station", "rows", "columns"};
 
-    // The controller for floor field adding
+    // Controller for functions related to adding and editing
     public static NormalFloorFieldController normalFloorFieldController;
 
     // Operational variables
@@ -344,15 +344,16 @@ public class MainScreenController extends ScreenController {
 
     public MainScreenController() {
         try {
-            // Display the elevator setup prompt
-            FXMLLoader loader = ScreenController.getLoader(
+            FXMLLoader loader;
+
+            loader = ScreenController.getLoader(
                     getClass(),
                     "/com/crowdsimulation/view/NormalFloorFieldInterface.fxml");
-            Parent root = loader.load();
+            Parent normalFloorFieldControllerRoot = loader.load();
 
             MainScreenController.normalFloorFieldController = loader.getController();
             MainScreenController.normalFloorFieldController.setElements();
-            MainScreenController.normalFloorFieldController.setRoot(root);
+            MainScreenController.normalFloorFieldController.setRoot(normalFloorFieldControllerRoot);
 
             // Set the position where the floor field would appear
             MainScreenController.normalFloorFieldController.setX(Screen.getPrimary().getBounds().getWidth() * 0.75);
@@ -2351,7 +2352,7 @@ public class MainScreenController extends ScreenController {
     }
 
     // Contains actions for building or editing
-    public void buildOrEdit(Patch currentPatch) throws IOException {
+    public void buildOrEdit(Patch currentPatch) throws IOException, InterruptedException {
         // Get the current operation mode, category, and subcategory
         Simulator.OperationMode operationMode = Main.simulator.getOperationMode();
         Simulator.BuildSubcategory buildSubcategory = Main.simulator.getBuildSubcategory();
@@ -2597,9 +2598,7 @@ public class MainScreenController extends ScreenController {
                                                                 "/StairSetupInterface.fxml");
                                                 Parent root = loader.load();
 
-                                                StairSetupController stairSetupController;
-
-                                                stairSetupController = loader.getController();
+                                                StairSetupController stairSetupController = loader.getController();
                                                 stairSetupController.setElements();
 
                                                 // Show the window

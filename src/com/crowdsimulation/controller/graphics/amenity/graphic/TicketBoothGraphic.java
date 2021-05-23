@@ -14,6 +14,9 @@ public class TicketBoothGraphic extends AmenityGraphic implements Cyclable {
     private static final int NORMAL_ROW_OFFSET = 0;
     private static final int NORMAL_COLUMN_OFFSET = 0;
 
+    private static final int FRONT_ROW_OFFSET = -1;
+    private static final int FRONT_COLUMN_OFFSET = 0;
+
     private static final int SIDEWAYS_ROW_OFFSET = -1;
     private static final int SIDEWAYS_COLUMN_OFFSET = 0;
 
@@ -25,7 +28,11 @@ public class TicketBoothGraphic extends AmenityGraphic implements Cyclable {
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? COLUMN_SPAN_VERTICAL : COLUMN_SPAN_HORIZONTAL,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
-                        ? NORMAL_ROW_OFFSET : SIDEWAYS_ROW_OFFSET,
+                        ? (
+                        (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()
+                                == AmenityFootprint.Rotation.Orientation.UP)
+                                ? FRONT_ROW_OFFSET : NORMAL_ROW_OFFSET
+                ) : SIDEWAYS_ROW_OFFSET,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation().isVertical()
                         ? NORMAL_COLUMN_OFFSET : SIDEWAYS_COLUMN_OFFSET
         );

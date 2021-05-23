@@ -3,6 +3,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.controller.graphics.amenity.editor.TicketBoothEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.TicketBoothGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
@@ -10,7 +11,6 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import javafx.scene.image.Image;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -276,8 +276,8 @@ public class TicketBooth extends Goal {
     }
 
     @Override
-    public String getGraphicURL() {
-        return this.ticketBoothGraphic.getGraphicURL();
+    public GraphicLocation getGraphicLocation() {
+        return this.ticketBoothGraphic.getGraphicLocation();
     }
 
     // Ticket booth block

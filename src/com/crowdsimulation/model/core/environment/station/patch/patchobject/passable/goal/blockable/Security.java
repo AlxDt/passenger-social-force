@@ -3,6 +3,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.controller.graphics.amenity.editor.SecurityEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.SecurityGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -159,8 +160,8 @@ public class Security extends BlockableAmenity {
     }
 
     @Override
-    public String getGraphicURL() {
-        return this.securityGraphic.getGraphicURL();
+    public GraphicLocation getGraphicLocation() {
+        return this.securityGraphic.getGraphicLocation();
     }
 
     // Security block

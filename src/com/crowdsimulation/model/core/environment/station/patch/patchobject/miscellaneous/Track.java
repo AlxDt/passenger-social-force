@@ -4,6 +4,7 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.editor.TrackEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.TrackGraphic;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
@@ -95,8 +96,8 @@ public class Track extends Obstacle {
     }
 
     @Override
-    public String getGraphicURL() {
-        return this.trackGraphic.getGraphicURL();
+    public GraphicLocation getGraphicLocation() {
+        return this.trackGraphic.getGraphicLocation();
     }
 
     // Thr direction of this track

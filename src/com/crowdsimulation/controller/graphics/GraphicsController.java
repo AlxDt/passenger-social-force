@@ -3,6 +3,8 @@ package com.crowdsimulation.controller.graphics;
 import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -25,8 +27,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.application.Platform;
-import javafx.concurrent.Task;
-import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 
 public class GraphicsController extends Controller {
+    private static final Image AMENITY_SPRITE_SHEET = new Image(AmenityGraphic.AMENITY_SPRITE_SHEET_URL);
+
     private static final int FLOOR_FIELD_COLOR_HUE = 115;
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
 
@@ -311,28 +313,28 @@ public class GraphicsController extends Controller {
                                     case UP:
                                         firstPortalImage
                                                 = new Image(
-                                                "com/crowdsimulation/view/image/amenity/elevator/front/elevator_front.png"
+                                                "com/crowdsimulation/view/image/amenity/elevator/closed/front/elevator_closed_front.png"
                                         );
 
                                         break;
                                     case RIGHT:
                                         firstPortalImage
                                                 = new Image(
-                                                "com/crowdsimulation/view/image/amenity/elevator/right/elevator_right.png"
+                                                "com/crowdsimulation/view/image/amenity/elevator/closed/right/elevator_closed_right.png"
                                         );
 
                                         break;
                                     case DOWN:
                                         firstPortalImage
                                                 = new Image(
-                                                "com/crowdsimulation/view/image/amenity/elevator/rear/elevator_rear.png"
+                                                "com/crowdsimulation/view/image/amenity/elevator/closed/rear/elevator_closed_rear.png"
                                         );
 
                                         break;
                                     case LEFT:
                                         firstPortalImage
                                                 = new Image(
-                                                "com/crowdsimulation/view/image/amenity/elevator/left/elevator_left.png"
+                                                "com/crowdsimulation/view/image/amenity/elevator/closed/left/elevator_closed_left.png"
                                         );
 
                                         break;
@@ -364,10 +366,14 @@ public class GraphicsController extends Controller {
                                 backgroundGraphicsContext.setGlobalAlpha(0.2);
                             }
 
-                            Image graphic = new Image(drawablePatchAmenity.getGraphicURL());
+                            GraphicLocation graphicLocation = drawablePatchAmenity.getGraphicLocation();
 
                             backgroundGraphicsContext.drawImage(
-                                    graphic,
+                                    AMENITY_SPRITE_SHEET,
+                                    graphicLocation.getSourceX(),
+                                    graphicLocation.getSourceY(),
+                                    graphicLocation.getSourceWidth(),
+                                    graphicLocation.getSourceHeight(),
                                     column * tileSize + drawablePatchAmenity.getGraphicObject()
                                             .getAmenityGraphicOffset().getColumnOffset() * tileSize,
                                     row * tileSize + drawablePatchAmenity.getGraphicObject()
@@ -633,26 +639,14 @@ public class GraphicsController extends Controller {
                     // Actions for left click
                     if (event.getButton() == MouseButton.PRIMARY) {
                         // Commence building or editing on that patch
-                        canvases.getScene().setCursor(Cursor.WAIT);
-
-                        // Create a task so that
-                        Task<Void> buildOrEditTask = new Task<Void>() {
-                            @Override
-                            protected Void call() throws Exception {
-                                Main.mainScreenController.buildOrEdit(currentPatch);
-
-                                return null;
-                            }
-                        };
-
-                        buildOrEditTask.setOnSucceeded(taskEvent -> {
-                            canvases.getScene().setCursor(Cursor.DEFAULT);
+                        try {
+                            Main.mainScreenController.buildOrEdit(currentPatch);
 
                             // Redraw the station view
                             drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
-                        });
-
-                        new Thread(buildOrEditTask).start();
+                        } catch (IOException | InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -692,7 +686,7 @@ public class GraphicsController extends Controller {
                                     Main.mainScreenController.buildOrEdit(currentPatch);
 
                                     drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
-                                } catch (IOException e) {
+                                } catch (IOException | InterruptedException e) {
                                     e.printStackTrace();
                                 }
                             }

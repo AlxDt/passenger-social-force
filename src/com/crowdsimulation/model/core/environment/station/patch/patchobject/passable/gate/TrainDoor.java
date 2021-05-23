@@ -3,6 +3,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.controller.graphics.amenity.editor.TrainDoorEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.TrainDoorGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -215,8 +216,8 @@ public class TrainDoor extends Gate implements Queueable {
     }
 
     @Override
-    public String getGraphicURL() {
-        return this.trainDoorGraphic.getGraphicURL();
+    public GraphicLocation getGraphicLocation() {
+        return this.trainDoorGraphic.getGraphicLocation();
     }
 
     // Train door block

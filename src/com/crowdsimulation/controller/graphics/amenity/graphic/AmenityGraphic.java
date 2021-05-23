@@ -18,100 +18,110 @@ import java.util.HashMap;
 import java.util.List;
 
 public abstract class AmenityGraphic implements Environment {
-    public static final HashMap<Class<?>, List<String>> AMENITY_GRAPHICS = new HashMap<>();
+    // The amenity sprite sheet
+    public static final String AMENITY_SPRITE_SHEET_URL
+            = "com/crowdsimulation/view/image/amenity/amenity_spritesheet.png";
+
+    //    public static final HashMap<Class<?>, List<String>> AMENITY_GRAPHICS = new HashMap<>();
+    public static final HashMap<Class<?>, List<GraphicLocation>> AMENITY_GRAPHICS = new HashMap<>();
 
     static {
-        // TODO: Modify graphics to fit new dimensions
         // The designated graphic of the amenities
-        final List<String> stationGateGraphic = new ArrayList<>();
-        stationGateGraphic.add("com/crowdsimulation/view/image/amenity/stationgate/open/front/stationgate_open_front.png");
-        stationGateGraphic.add("com/crowdsimulation/view/image/amenity/stationgate/open/side/stationgate_open_side.png");
-        stationGateGraphic.add("com/crowdsimulation/view/image/amenity/stationgate/closed/front/stationgate_closed_front.png");
-        stationGateGraphic.add("com/crowdsimulation/view/image/amenity/stationgate/closed/side/stationgate_closed_side.png");
+        final List<GraphicLocation> stationGateGraphic = new ArrayList<>();
+        stationGateGraphic.add(new GraphicLocation(0, 0));
+        stationGateGraphic.add(new GraphicLocation(0, 1));
+        stationGateGraphic.add(new GraphicLocation(0, 2));
+        stationGateGraphic.add(new GraphicLocation(0, 3));
         AMENITY_GRAPHICS.put(StationGate.class, stationGateGraphic);
 
-        final List<String> securityGraphic = new ArrayList<>();
-        securityGraphic.add("com/crowdsimulation/view/image/amenity/security/front/security_front.png");
-        securityGraphic.add("com/crowdsimulation/view/image/amenity/security/side/security_side.png");
+        final List<GraphicLocation> securityGraphic = new ArrayList<>();
+        securityGraphic.add(new GraphicLocation(0, 4));
+        securityGraphic.add(new GraphicLocation(0, 5));
         AMENITY_GRAPHICS.put(Security.class, securityGraphic);
 
-        final List<String> stairsGraphic = new ArrayList<>();
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/lower/front/stair_lower_front.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/lower/right/stair_lower_right.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/lower/rear/stair_lower_rear.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/lower/left/stair_lower_left.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/upper/front/stair_upper_front.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/upper/right/stair_upper_right.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/upper/rear/stair_upper_rear.png");
-        stairsGraphic.add("com/crowdsimulation/view/image/amenity/stair/upper/left/stair_upper_left.png");
+        final List<GraphicLocation> stairsGraphic = new ArrayList<>();
+        stairsGraphic.add(new GraphicLocation(1, 0));
+        stairsGraphic.add(new GraphicLocation(1, 2));
+        stairsGraphic.add(new GraphicLocation(1, 4));
+        stairsGraphic.add(new GraphicLocation(1, 6));
+        stairsGraphic.add(new GraphicLocation(3, 0));
+        stairsGraphic.add(new GraphicLocation(3, 2));
+        stairsGraphic.add(new GraphicLocation(3, 4));
+        stairsGraphic.add(new GraphicLocation(3, 6));
         AMENITY_GRAPHICS.put(StairPortal.class, stairsGraphic);
 
-        final List<String> escalatorGraphic = new ArrayList<>();
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/front/up/escalator_lower_front_up.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/front/down/escalator_lower_front_down.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/right/up/escalator_lower_right_up.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/right/down/escalator_lower_right_down.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/rear/up/escalator_lower_rear_up.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/rear/down/escalator_lower_rear_down.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/left/up/escalator_lower_left_up.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/lower/left/down/escalator_lower_left_down.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/front/up/escalator_upper_front_up.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/front/down/escalator_upper_front_down.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/right/up/escalator_upper_right_up.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/right/down/escalator_upper_right_down.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/rear/up/escalator_upper_rear_up.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/rear/down/escalator_upper_rear_down.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/left/up/escalator_upper_left_up.png");
-        escalatorGraphic.add("com/crowdsimulation/view/image/amenity/escalator/upper/left/down/escalator_upper_left_down.png");
+        final List<GraphicLocation> escalatorGraphic = new ArrayList<>();
+        escalatorGraphic.add(new GraphicLocation(5, 0));
+        escalatorGraphic.add(new GraphicLocation(5, 2));
+        escalatorGraphic.add(new GraphicLocation(5, 4));
+        escalatorGraphic.add(new GraphicLocation(5, 6));
+        escalatorGraphic.add(new GraphicLocation(5, 8));
+        escalatorGraphic.add(new GraphicLocation(5, 10));
+        escalatorGraphic.add(new GraphicLocation(5, 12));
+        escalatorGraphic.add(new GraphicLocation(5, 14));
+        escalatorGraphic.add(new GraphicLocation(7, 0));
+        escalatorGraphic.add(new GraphicLocation(7, 2));
+        escalatorGraphic.add(new GraphicLocation(7, 4));
+        escalatorGraphic.add(new GraphicLocation(7, 6));
+        escalatorGraphic.add(new GraphicLocation(7, 8));
+        escalatorGraphic.add(new GraphicLocation(7, 10));
+        escalatorGraphic.add(new GraphicLocation(7, 12));
+        escalatorGraphic.add(new GraphicLocation(7, 14));
         AMENITY_GRAPHICS.put(EscalatorPortal.class, escalatorGraphic);
 
-        final List<String> elevatorGraphic = new ArrayList<>();
-        elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/front/elevator_front.png");
-        elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/right/elevator_right.png");
-        elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/rear/elevator_rear.png");
-        elevatorGraphic.add("com/crowdsimulation/view/image/amenity/elevator/left/elevator_left.png");
+        final List<GraphicLocation> elevatorGraphic = new ArrayList<>();
+        elevatorGraphic.add(new GraphicLocation(1, 8));
+        elevatorGraphic.add(new GraphicLocation(1, 10));
+        elevatorGraphic.add(new GraphicLocation(1, 12));
+        elevatorGraphic.add(new GraphicLocation(1, 14));
+        elevatorGraphic.add(new GraphicLocation(3, 8));
+        elevatorGraphic.add(new GraphicLocation(3, 10));
+        elevatorGraphic.add(new GraphicLocation(3, 12));
+        elevatorGraphic.add(new GraphicLocation(3, 14));
         AMENITY_GRAPHICS.put(ElevatorPortal.class, elevatorGraphic);
 
-        final List<String> ticketBoothGraphic = new ArrayList<>();
-        ticketBoothGraphic.add("com/crowdsimulation/view/image/amenity/ticketbooth/automatic/front/ticketbooth_automatic_front.png");
-        ticketBoothGraphic.add("com/crowdsimulation/view/image/amenity/ticketbooth/automatic/right/ticketbooth_automatic_right.png");
-        ticketBoothGraphic.add("com/crowdsimulation/view/image/amenity/ticketbooth/automatic/rear/ticketbooth_automatic_rear.png");
-        ticketBoothGraphic.add("com/crowdsimulation/view/image/amenity/ticketbooth/automatic/left/ticketbooth_automatic_left.png");
-        ticketBoothGraphic.add("com/crowdsimulation/view/image/amenity/ticketbooth/manual/front/ticketbooth_manual_front.png");
-        ticketBoothGraphic.add("com/crowdsimulation/view/image/amenity/ticketbooth/manual/right/ticketbooth_manual_right.png");
-        ticketBoothGraphic.add("com/crowdsimulation/view/image/amenity/ticketbooth/manual/rear/ticketbooth_manual_rear.png");
-        ticketBoothGraphic.add("com/crowdsimulation/view/image/amenity/ticketbooth/manual/left/ticketbooth_manual_left.png");
+        final List<GraphicLocation> ticketBoothGraphic = new ArrayList<>();
+        ticketBoothGraphic.add(new GraphicLocation(9, 0));
+        ticketBoothGraphic.add(new GraphicLocation(9, 1));
+        ticketBoothGraphic.add(new GraphicLocation(9, 2));
+        ticketBoothGraphic.add(new GraphicLocation(9, 3));
+        ticketBoothGraphic.add(new GraphicLocation(9, 4));
+        ticketBoothGraphic.add(new GraphicLocation(9, 5));
+        ticketBoothGraphic.add(new GraphicLocation(9, 6));
+        ticketBoothGraphic.add(new GraphicLocation(9, 7));
         AMENITY_GRAPHICS.put(TicketBooth.class, ticketBoothGraphic);
 
-        final List<String> turnstileGraphic = new ArrayList<>();
-        turnstileGraphic.add("com/crowdsimulation/view/image/amenity/turnstile/front/turnstile_front.png");
-        turnstileGraphic.add("com/crowdsimulation/view/image/amenity/turnstile/right/turnstile_right.png");
-        turnstileGraphic.add("com/crowdsimulation/view/image/amenity/turnstile/rear/turnstile_rear.png");
-        turnstileGraphic.add("com/crowdsimulation/view/image/amenity/turnstile/left/turnstile_left.png");
+        final List<GraphicLocation> turnstileGraphic = new ArrayList<>();
+        turnstileGraphic.add(new GraphicLocation(11, 3));
+        turnstileGraphic.add(new GraphicLocation(12, 0));
+        turnstileGraphic.add(new GraphicLocation(11, 0));
+        turnstileGraphic.add(new GraphicLocation(12, 1));
         AMENITY_GRAPHICS.put(Turnstile.class, turnstileGraphic);
 
-        final List<String> trainDoorGraphic = new ArrayList<>();
-        trainDoorGraphic.add("com/crowdsimulation/view/image/amenity/traindoor/nw/traindoor_nw.png");
-        trainDoorGraphic.add("com/crowdsimulation/view/image/amenity/traindoor/se/traindoor_se.png");
+        final List<GraphicLocation> trainDoorGraphic = new ArrayList<>();
+        trainDoorGraphic.add(new GraphicLocation(12, 2));
+        trainDoorGraphic.add(new GraphicLocation(12, 6));
+        trainDoorGraphic.add(new GraphicLocation(13, 2));
+        trainDoorGraphic.add(new GraphicLocation(13, 6));
         AMENITY_GRAPHICS.put(TrainDoor.class, trainDoorGraphic);
 
-        final List<String> trackGraphic = new ArrayList<>();
-        trackGraphic.add("com/crowdsimulation/view/image/amenity/track/track.png");
+        final List<GraphicLocation> trackGraphic = new ArrayList<>();
+        trackGraphic.add(new GraphicLocation(12, 10));
         AMENITY_GRAPHICS.put(Track.class, trackGraphic);
 
-        final List<String> wallGraphic = new ArrayList<>();
-        wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/wall/wall.png");
-        wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/post/post.png");
-        wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/beltbarrier/front/beltbarrier_front.png");
-        wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/beltbarrier/side/beltbarrier_side.png");
-        wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/metalbarrier/front/metalbarrier_front.png");
-        wallGraphic.add("com/crowdsimulation/view/image/amenity/obstacle/metalbarrier/side/metalbarrier_side.png");
+        final List<GraphicLocation> wallGraphic = new ArrayList<>();
+        wallGraphic.add(new GraphicLocation(9, 8));
+        wallGraphic.add(new GraphicLocation(9, 9));
+        wallGraphic.add(new GraphicLocation(9, 10));
+        wallGraphic.add(new GraphicLocation(10, 10));
+        wallGraphic.add(new GraphicLocation(9, 11));
+        wallGraphic.add(new GraphicLocation(10, 11));
         AMENITY_GRAPHICS.put(Wall.class, wallGraphic);
     }
 
     private final Amenity amenity;
 
-    protected final List<String> graphics;
+    protected final List<GraphicLocation> graphics;
     protected int graphicIndex;
 
     // Denotes the rows and columns spanned by this graphic
@@ -126,7 +136,20 @@ public abstract class AmenityGraphic implements Environment {
         this.amenityGraphicScale = new AmenityGraphicScale(rowSpan, columnSpan);
         this.amenityGraphicOffset = new AmenityGraphicOffset(rowOffset, columnOffset);
 
-        this.graphics = AMENITY_GRAPHICS.get(amenity.getClass());
+        this.graphics = new ArrayList<>();
+
+        for (GraphicLocation graphicLocation : AMENITY_GRAPHICS.get(amenity.getClass())) {
+            GraphicLocation newGraphicLocation = new GraphicLocation(
+                    graphicLocation.getGraphicRow(),
+                    graphicLocation.getGraphicColumn()
+            );
+
+            newGraphicLocation.setGraphicWidth(columnSpan);
+            newGraphicLocation.setGraphicHeight(rowSpan);
+
+            this.graphics.add(newGraphicLocation);
+        }
+
         this.graphicIndex = 0;
     }
 
@@ -142,7 +165,7 @@ public abstract class AmenityGraphic implements Environment {
         return amenity;
     }
 
-    public String getGraphicURL() {
+    public GraphicLocation getGraphicLocation() {
         return this.graphics.get(this.graphicIndex);
     }
 

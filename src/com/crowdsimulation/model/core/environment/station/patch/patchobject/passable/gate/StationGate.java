@@ -3,6 +3,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.controller.graphics.amenity.editor.StationGateEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.StationGateGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -103,8 +104,8 @@ public class StationGate extends Gate {
     }
 
     @Override
-    public String getGraphicURL() {
-        return this.stationGateGraphic.getGraphicURL();
+    public GraphicLocation getGraphicLocation() {
+        return this.stationGateGraphic.getGraphicLocation();
     }
 
     // Lists the mode of this station gate (whether it's entry/exit only, or both)
