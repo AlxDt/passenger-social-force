@@ -3,6 +3,7 @@ package com.crowdsimulation.model.core.environment.station.patch.floorfield.head
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.AbstractFloorFieldObject;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
 import java.util.ArrayList;
@@ -63,36 +64,34 @@ public class QueueingFloorField extends HeadfulFloorField {
             double value) {
         final double EPSILON = 1E-6;
 
-        boolean apexNull = false;
-
         QueueingFloorField queueingFloorField = target.retrieveFloorField(floorFieldState);
         List<Patch> associatedPatches = queueingFloorField.getAssociatedPatches();
 
-        // If the floor field value is one, check if this floor field already has a value of one
+        Amenity amenity = ((Amenity) target);
+
+        // If the floor field value is one, check if the number of apices in this floor field is already equal to the
+        // number of attractors in the amenity
         // This is to make sure that there is only one apex in the floor field
         if (Math.abs(value - 1.0) < EPSILON) {
-            // If it does, refuse to register the patch
-            if (queueingFloorField.getApex() != null) {
+            // If it is, refuse to register the patch
+            if (queueingFloorField.getApices().size() == amenity.getAttractors().size()) {
                 return false;
             } else {
-                // If it hasn't yet, set the patch as the apex
-                queueingFloorField.setApex(patch);
+                // If it hasn't yet, add the patch to the list of apices
+                queueingFloorField.getApices().add(patch);
             }
         }
 
         // Check if the floor field already contains the patch
         if (associatedPatches.contains(patch)) {
             // If it already does, just modify the value that's already there
-            // Take note of the patch that's already in there
-            Patch patchPresent = associatedPatches.get(associatedPatches.indexOf(patch));
-
             // Get the value in the patch present
-            double valuePresent = patchPresent.getFloorFieldValues().get(target).get(floorFieldState);
+            double valuePresent = patch.getFloorFieldValues().get(target).get(floorFieldState);
 
             // If the present value is 1.0, and the value to replace it isn't 1.0, indicate that this patch doesn't have
             // an apex anymore as it was replaced with another value
             if (Math.abs(valuePresent - 1.0) < EPSILON && value < 1.0 - EPSILON) {
-                queueingFloorField.setApex(null);
+                queueingFloorField.getApices().remove(patch);
             }
         } else {
             // If it doesn't contain the patch yet, add it
@@ -118,7 +117,7 @@ public class QueueingFloorField extends HeadfulFloorField {
 
         // If the value being removed is 1.0, this means this floor field won't have an apex anymore
         if (Math.abs(value - 1.0) < EPSILON) {
-            queueingFloorField.setApex(null);
+            queueingFloorField.getApices().remove(patch);
         }
     }
 

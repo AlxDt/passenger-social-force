@@ -825,7 +825,7 @@ public class GraphicsController extends Controller {
         GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
 
         Color markingColor = Color.hsb(0, 0, 0.25, 0.5);
-        Color extraMarkingColor = Color.hsb(80, 1.0, 0.5, 0.5);
+        Color extraMarkingColor = Color.hsb(30, 1.0, 0.5, 0.5);
         Color strokeColor = Color.hsb(0, 0, 0.25, 0.1);
 
         // Draw the markings at that patch location
@@ -892,6 +892,7 @@ public class GraphicsController extends Controller {
                 );
             }
         } else {
+            graphicsContext.setFill(markingColor);
             graphicsContext.fillRect(cursorColumn * tileSize, cursorRow * tileSize, tileSize, tileSize);
         }
     }

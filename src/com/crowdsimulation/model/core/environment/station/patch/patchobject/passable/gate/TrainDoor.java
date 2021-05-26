@@ -180,8 +180,10 @@ public class TrainDoor extends Gate implements Queueable {
     public boolean isFloorFieldsComplete() {
         QueueingFloorField queueingFloorField = retrieveFloorField(this.trainDoorFloorFieldState);
 
-        // The floor field of this queueable is complete when there are floor fields present and it has an apex patch
-        return queueingFloorField.getApex() != null && !queueingFloorField.getAssociatedPatches().isEmpty();
+        // The floor field of this queueable is complete when there are floor field values present with an apex patch
+        // that is equal to the number of attractors in this queueable target
+        return queueingFloorField.getApices().size() == this.getAttractors().size()
+                && !queueingFloorField.getAssociatedPatches().isEmpty();
     }
 
     @Override

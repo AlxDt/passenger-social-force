@@ -345,8 +345,15 @@ public class Turnstile extends BlockableAmenity {
 
         // Despite the actual mode of the turnstile, always require that the user fill all (boarding and alighting)
         // floor fields
-        boardingCheck = boardingFloorField.getApex() != null && !boardingFloorField.getAssociatedPatches().isEmpty();
-        alightingCheck = alightingFloorField.getApex() != null && !alightingFloorField.getAssociatedPatches().isEmpty();
+        // The floor field of this queueable is complete when there are floor field values present with an apex patch
+        // that is equal to the number of attractors in this queueable target
+        boardingCheck
+                = boardingFloorField.getApices().size() == this.getAttractors().size()
+                && !boardingFloorField.getAssociatedPatches().isEmpty();
+
+        alightingCheck
+                = alightingFloorField.getApices().size() == this.getAttractors().size()
+                && !alightingFloorField.getAssociatedPatches().isEmpty();
 
         // The floor field of this queueable is complete when, for both floor fields, there are floor fields present and
         // apex patches are present

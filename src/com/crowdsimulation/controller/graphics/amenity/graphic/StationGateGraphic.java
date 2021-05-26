@@ -24,51 +24,23 @@ public class StationGateGraphic extends AmenityGraphic implements Cyclable, Chan
                 ROW_OFFSET,
                 COLUMN_OFFSET
         );
-
-        change(stationGate);
     }
 
     @Override
     public void cycle() {
-        if (this.graphicIndex == 0 || this.graphicIndex == 1) {
-            if (this.graphicIndex == 0) {
-                this.graphicIndex++;
-            } else {
-                this.graphicIndex--;
-            }
+        if (this.graphicIndex >= 0 && this.graphicIndex <= 2) {
+            this.graphicIndex = (this.graphicIndex + 1) % 3;
         } else {
-            if (this.graphicIndex == 2) {
-                this.graphicIndex++;
-            } else {
-                this.graphicIndex--;
-            }
+            this.graphicIndex = (this.graphicIndex + 1) % 3 + 3;
         }
     }
 
     @Override
     public void change(Drawable drawable) {
-        StationGate stationGate = (StationGate) drawable;
-
-        if (stationGate.isEnabled()) {
-            if (this.graphicIndex == 2 || this.graphicIndex == 3) {
-                if (this.graphicIndex == 2) {
-                    this.graphicIndex = 0;
-                } else {
-                    this.graphicIndex = 1;
-                }
-            } else {
-                this.graphicIndex = 0;
-            }
+        if (this.graphicIndex >= 0 && this.graphicIndex <= 2) {
+            this.graphicIndex += 3;
         } else {
-            if (this.graphicIndex == 0 || this.graphicIndex == 1) {
-                if (this.graphicIndex == 0) {
-                    this.graphicIndex = 2;
-                } else {
-                    this.graphicIndex = 3;
-                }
-            } else {
-                this.graphicIndex = 2;
-            }
+            this.graphicIndex -= 3;
         }
     }
 }

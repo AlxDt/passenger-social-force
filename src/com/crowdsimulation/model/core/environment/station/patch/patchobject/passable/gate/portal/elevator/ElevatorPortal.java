@@ -338,11 +338,11 @@ public class ElevatorPortal extends Portal implements Queueable {
         boolean otherFloorFieldCheck;
 
         thisFloorFieldCheck
-                = queueingFloorField.getApex() != null
+                = queueingFloorField.getApices() != null
                 && !queueingFloorField.getAssociatedPatches().isEmpty();
 
         otherFloorFieldCheck
-                = queueingFloorFieldOther.getApex() != null
+                = queueingFloorFieldOther.getApices() != null
                 && !queueingFloorFieldOther.getAssociatedPatches().isEmpty();
 
         // The floor field of this queueable is complete when, for both portals in this elevator shaft, there are floor\

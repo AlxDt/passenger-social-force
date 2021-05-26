@@ -32,11 +32,13 @@ public abstract class AmenityGraphic implements Environment {
         stationGateGraphic.add(new GraphicLocation(0, 1));
         stationGateGraphic.add(new GraphicLocation(0, 2));
         stationGateGraphic.add(new GraphicLocation(0, 3));
+        stationGateGraphic.add(new GraphicLocation(0, 4));
+        stationGateGraphic.add(new GraphicLocation(0, 5));
         AMENITY_GRAPHICS.put(StationGate.class, stationGateGraphic);
 
         final List<GraphicLocation> securityGraphic = new ArrayList<>();
-        securityGraphic.add(new GraphicLocation(0, 4));
-        securityGraphic.add(new GraphicLocation(0, 5));
+        securityGraphic.add(new GraphicLocation(0, 6));
+        securityGraphic.add(new GraphicLocation(0, 7));
         AMENITY_GRAPHICS.put(Security.class, securityGraphic);
 
         final List<GraphicLocation> stairsGraphic = new ArrayList<>();
@@ -195,7 +197,7 @@ public abstract class AmenityGraphic implements Environment {
         }
     }
 
-    public static class AmenityGraphicOffset {
+    public static class AmenityGraphicOffset implements Environment {
         private int rowOffset;
         private int columnOffset;
 

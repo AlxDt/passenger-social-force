@@ -63,6 +63,9 @@ public class MainScreenController extends ScreenController {
 
     // Operational variables
     @FXML
+    private MenuBar menuBar;
+
+    @FXML
     private TabPane sidebar;
 
     @FXML
@@ -1427,8 +1430,8 @@ public class MainScreenController extends ScreenController {
         // Update the top bar, reflecting the name and other details of the current station
         updateTopBar();
 
-        // Reset switch floors buttons
-        resetSwitchFloorButtons();
+        // Reset the top bar
+        resetTopBar();
 
         // Draw the interface
         GraphicsController.tileSize = backgroundCanvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
@@ -1487,8 +1490,8 @@ public class MainScreenController extends ScreenController {
     private void beginFloorFieldDrawing() {
         Main.simulator.setFloorFieldDrawing(true);
 
-        // Reset switch floors buttons
-        resetSwitchFloorButtons();
+        // Reset the top bar
+        resetTopBar();
 
         // Redraw interface
         drawInterface(false);
@@ -1507,12 +1510,10 @@ public class MainScreenController extends ScreenController {
         }
 
         // If the window is to be closed automatically, do so
-        if (windowClosedAutomatically) {
-            MainScreenController.normalFloorFieldController.closeWindow();
-        }
+        MainScreenController.normalFloorFieldController.closeWindow();
 
-        // Reset switch floors buttons
-        resetSwitchFloorButtons();
+        // Reset the top bar
+        resetTopBar();
 
         // Redraw interface
         drawInterface(false);
@@ -1534,12 +1535,18 @@ public class MainScreenController extends ScreenController {
         // Update the top bar
         updateTopBar();
 
-        // Reset switch floor buttons
-        resetSwitchFloorButtons();
+        // Reset the top bar
+        resetTopBar();
     }
 
-    // Reset the switch floor buttons
-    private void resetSwitchFloorButtons() {
+    // Reset the top bar
+    private void resetTopBar() {
+        // Check if the menu bar may be enabled
+        menuBar.setDisable(
+                Main.simulator.isPortalDrawing()
+                        || Main.simulator.isFloorFieldDrawing()
+        );
+
         // Check if the above and below switch floor buttons may be enabled
         floorBelowButton.setDisable(
                 Main.simulator.isPortalDrawing()
@@ -2131,8 +2138,19 @@ public class MainScreenController extends ScreenController {
                 List<StairShaft> stairsCopy
                         = new ArrayList<>(Main.simulator.getStation().getStairShafts());
 
-                for (StairShaft stairShafts : stairsCopy) {
-                    deleteSingleAmenityInFloor(stairShafts, buildSubcategory);
+                for (StairShaft stairShaft : stairsCopy) {
+                    // Retrieve portal components
+                    Portal lowerPortal = stairShaft.getLowerPortal();
+                    Portal upperPortal = stairShaft.getUpperPortal();
+
+                    // Only delete stairs that are in this floor
+                    if (
+                            lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                                    || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                    ) {
+                        // Mirror each stair shaft to the reference shaft
+                        deleteSingleAmenityInFloor(stairShaft, buildSubcategory);
+                    }
                 }
 
                 break;
@@ -2140,8 +2158,19 @@ public class MainScreenController extends ScreenController {
                 List<EscalatorShaft> escalatorsCopy
                         = new ArrayList<>(Main.simulator.getStation().getEscalatorShafts());
 
-                for (EscalatorShaft escalatorShaft : escalatorsCopy) {
-                    deleteSingleAmenityInFloor(escalatorShaft, buildSubcategory);
+                for (EscalatorShaft esclalatorShaft : escalatorsCopy) {
+                    // Retrieve portal components
+                    Portal lowerPortal = esclalatorShaft.getLowerPortal();
+                    Portal upperPortal = esclalatorShaft.getUpperPortal();
+
+                    // Only delete escalators that are in this floor
+                    if (
+                            lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                                    || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                    ) {
+                        // Mirror each stair shaft to the reference shaft
+                        deleteSingleAmenityInFloor(esclalatorShaft, buildSubcategory);
+                    }
                 }
 
                 break;
@@ -2149,8 +2178,19 @@ public class MainScreenController extends ScreenController {
                 List<ElevatorShaft> elevatorsCopy
                         = new ArrayList<>(Main.simulator.getStation().getElevatorShafts());
 
-                for (ElevatorShaft elevatorsShaft : elevatorsCopy) {
-                    deleteSingleAmenityInFloor(elevatorsShaft, buildSubcategory);
+                for (ElevatorShaft elevatorShaft : elevatorsCopy) {
+                    // Retrieve portal components
+                    Portal lowerPortal = elevatorShaft.getLowerPortal();
+                    Portal upperPortal = elevatorShaft.getUpperPortal();
+
+                    // Only delete elevators that are in this floor
+                    if (
+                            lowerPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                                    || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
+                    ) {
+                        // Mirror each stair shaft to the reference shaft
+                        deleteSingleAmenityInFloor(elevatorShaft, buildSubcategory);
+                    }
                 }
 
                 break;
@@ -2225,7 +2265,7 @@ public class MainScreenController extends ScreenController {
         Main.simulator.setPortalDrawing(true);
 
         // Finally, reset the switch floor buttons
-        resetSwitchFloorButtons();
+        resetTopBar();
     }
 
     // End adding a portal
@@ -2253,7 +2293,7 @@ public class MainScreenController extends ScreenController {
         GraphicsController.firstPortalAmenityBlocks = null;
 
         // Finally, reset the switch floor buttons
-        resetSwitchFloorButtons();
+        resetTopBar();
     }
 
     // Update the floor field state
@@ -2515,8 +2555,9 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "A floor field may only have a single patch with a"
-                                                            + " value of 1.0.",
+                                                    "The maximum number of 1.0 values for this floor field " +
+                                                            "(" + target.getAttractors().size() + ") has already been " +
+                                                            "reached.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }
@@ -3421,8 +3462,9 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "A floor field may only have a single patch with a"
-                                                            + " value of 1.0.",
+                                                    "The maximum number of 1.0 values for this floor field " +
+                                                            "(" + target.getAttractors().size() + ") has already been " +
+                                                            "reached.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }
@@ -3557,8 +3599,9 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "A floor field may only have a single patch with a"
-                                                            + " value of 1.0.",
+                                                    "The maximum number of 1.0 values for this floor field " +
+                                                            "(" + target.getAttractors().size() + ") has already been " +
+                                                            "reached.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }
@@ -3696,8 +3739,9 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "A floor field may only have a single patch with a"
-                                                            + " value of 1.0.",
+                                                    "The maximum number of 1.0 values for this floor field " +
+                                                            "(" + target.getAttractors().size() + ") has already been " +
+                                                            "reached.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }
@@ -3842,8 +3886,9 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "A floor field may only have a single patch with a"
-                                                            + " value of 1.0.",
+                                                    "The maximum number of 1.0 values for this floor field " +
+                                                            "(" + target.getAttractors().size() + ") has already been " +
+                                                            "reached.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }

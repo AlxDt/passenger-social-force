@@ -129,8 +129,10 @@ public class Security extends BlockableAmenity {
     public boolean isFloorFieldsComplete() {
         QueueingFloorField queueingFloorField = retrieveFloorField(this.securityFloorFieldState);
 
-        // The floor field of this queueable is complete when there are floor fields present and it has an apex patch
-        return queueingFloorField.getApex() != null && !queueingFloorField.getAssociatedPatches().isEmpty();
+        // The floor field of this queueable is complete when there are floor field values present with an apex patch
+        // that is equal to the number of attractors in this queueable target
+        return queueingFloorField.getApices().size() == this.getAttractors().size()
+                && !queueingFloorField.getAssociatedPatches().isEmpty();
     }
 
     // Clear all floor fields of the given floor field state in this security gate

@@ -4,6 +4,8 @@ import com.crowdsimulation.controller.Controller;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -24,7 +26,7 @@ public abstract class ScreenController extends Controller {
     private boolean closedWithAction;
 
     // Take note of the stage
-    private Stage stage;
+    protected Stage stage;
 
     public ScreenController() {
         this.closedWithAction = false;
@@ -75,6 +77,12 @@ public abstract class ScreenController extends Controller {
         if (this.y != null) {
             stage.setY(this.y);
         }
+
+        this.stage.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent event) -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                closeAction();
+            }
+        });
 
         if (showAndWait) {
             stage.initModality(Modality.APPLICATION_MODAL);
