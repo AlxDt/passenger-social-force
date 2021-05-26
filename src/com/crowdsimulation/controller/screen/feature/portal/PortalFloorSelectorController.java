@@ -5,7 +5,8 @@ import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.service.portal.InitializePortalFloorSelectorService;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Spinner;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 

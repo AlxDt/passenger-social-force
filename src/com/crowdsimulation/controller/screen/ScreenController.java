@@ -1,7 +1,6 @@
 package com.crowdsimulation.controller.screen;
 
 import com.crowdsimulation.controller.Controller;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -87,9 +86,7 @@ public abstract class ScreenController extends Controller {
     }
 
     public void closeWindow() {
-        Platform.runLater(() -> {
-            this.stage.close();
-        });
+        this.stage.close();
     }
 
     public boolean isClosedWithAction() {

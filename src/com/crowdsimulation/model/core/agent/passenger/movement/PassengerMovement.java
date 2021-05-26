@@ -4,9 +4,9 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
-import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
 
 import java.util.*;
 
@@ -784,7 +784,7 @@ F
 
         private final String name;
 
-        private Direction(String name) {
+        Direction(String name) {
             this.name = name;
         }
 

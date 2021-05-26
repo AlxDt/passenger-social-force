@@ -2,12 +2,9 @@ package com.crowdsimulation.controller.graphics.amenity.graphic;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 
 public class EscalatorGraphic extends AmenityGraphic implements Changeable {
     private static final int ROW_SPAN_VERTICAL = 2;
@@ -76,7 +73,7 @@ public class EscalatorGraphic extends AmenityGraphic implements Changeable {
     public void change(Drawable drawable) {
         EscalatorPortal escalatorPortal = (EscalatorPortal) drawable;
 
-        if (escalatorPortal.getEscalatorShaft().getEscalatorDirection() ==  EscalatorShaft.EscalatorDirection.DOWN) {
+        if (escalatorPortal.getEscalatorShaft().getEscalatorDirection() == EscalatorShaft.EscalatorDirection.DOWN) {
             this.graphicIndex++;
         } else {
             this.graphicIndex--;

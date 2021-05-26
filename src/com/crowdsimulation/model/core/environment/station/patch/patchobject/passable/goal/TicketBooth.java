@@ -329,9 +329,9 @@ public class TicketBooth extends Goal {
 
     // Lists the types of tickets this ticket booth dispenses
     public enum TicketBoothType {
-        SINGLE_JOURNEY ("Single journey"),
-        STORED_VALUE ("Stored value"),
-        ALL_TICKET_TYPES ("All ticket types");
+        SINGLE_JOURNEY("Single journey"),
+        STORED_VALUE("Stored value"),
+        ALL_TICKET_TYPES("All ticket types");
 
         private final String name;
 

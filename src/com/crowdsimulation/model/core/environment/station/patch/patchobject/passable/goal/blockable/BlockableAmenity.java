@@ -1,6 +1,5 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable;
 
-import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Goal;
 

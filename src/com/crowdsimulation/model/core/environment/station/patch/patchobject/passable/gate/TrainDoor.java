@@ -276,7 +276,7 @@ public class TrainDoor extends Gate implements Queueable {
 
         private final String name;
 
-        private TrainDoorDirection(String name) {
+        TrainDoorDirection(String name) {
             this.name = name;
         }
 
@@ -297,7 +297,7 @@ public class TrainDoor extends Gate implements Queueable {
 
         private final String name;
 
-        private TrainDoorCarriage(String name) {
+        TrainDoorCarriage(String name) {
             this.name = name;
         }
 

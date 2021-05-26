@@ -446,7 +446,7 @@ public class Turnstile extends BlockableAmenity {
 
         private final String name;
 
-        private TurnstileMode(String name) {
+        TurnstileMode(String name) {
             this.name = name;
         }
 

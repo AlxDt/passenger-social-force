@@ -26,7 +26,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
-import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
@@ -799,11 +798,9 @@ public class GraphicsController extends Controller {
 
         String finalNewText = newText;
 
-        Platform.runLater(() -> {
-            GraphicsController.tooltip.setText(finalNewText);
-            GraphicsController.tooltip.setX(currentPatch.getPatchCenterCoordinates().getX() * tileSize);
-            GraphicsController.tooltip.setY(currentPatch.getPatchCenterCoordinates().getY() * tileSize);
-        });
+        GraphicsController.tooltip.setText(finalNewText);
+        GraphicsController.tooltip.setX(currentPatch.getPatchCenterCoordinates().getX() * tileSize);
+        GraphicsController.tooltip.setY(currentPatch.getPatchCenterCoordinates().getY() * tileSize);
     }
 
     private static Patch retrievePatchFromMouseClick(MouseEvent event) {
@@ -825,87 +822,83 @@ public class GraphicsController extends Controller {
     }
 
     private static void markPatch(Canvas markingsCanvas, Patch patch) {
-        Platform.runLater(() -> {
-            GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
+        GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
 
-            Color markingColor = Color.hsb(0, 0, 0.25, 0.5);
-            Color extraMarkingColor = Color.hsb(80, 1.0, 0.5, 0.5);
-            Color strokeColor = Color.hsb(0, 0, 0.25, 0.1);
+        Color markingColor = Color.hsb(0, 0, 0.25, 0.5);
+        Color extraMarkingColor = Color.hsb(80, 1.0, 0.5, 0.5);
+        Color strokeColor = Color.hsb(0, 0, 0.25, 0.1);
 
-            // Draw the markings at that patch location
-            int cursorRow = patch.getMatrixPosition().getRow();
-            int cursorColumn = patch.getMatrixPosition().getColumn();
+        // Draw the markings at that patch location
+        int cursorRow = patch.getMatrixPosition().getRow();
+        int cursorColumn = patch.getMatrixPosition().getColumn();
 
-            if (Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
-                boolean isDrawingTrainTrack
-                        = Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TRAIN_TRACK;
+        if (Main.simulator.getBuildState() == Simulator.BuildState.DRAWING) {
+            boolean isDrawingTrainTrack
+                    = Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TRAIN_TRACK;
 
-                // Only draw rectangles when not drawing train tracks
-                if (!isDrawingTrainTrack) {
-                    // Draw the rectangles
-                    // Get the footprint corresponding to the current class and the current rotation
-                    if (GraphicsController.currentAmenityFootprint != null) {
-                        // Draw rectangles in each offset in the footprint
-                        for (AmenityFootprint.Rotation.AmenityBlockTemplate amenityBlockTemplate :
-                                GraphicsController.currentAmenityFootprint.getCurrentRotation().getAmenityBlockTemplates()) {
-                            // Compute for the position of the patch using the offset data
-                            int patchRow = cursorRow + amenityBlockTemplate.getOffset().getRowOffset();
-                            int patchColumn = cursorColumn + amenityBlockTemplate.getOffset().getColumnOffset();
+            // Only draw rectangles when not drawing train tracks
+            if (!isDrawingTrainTrack) {
+                // Draw the rectangles
+                // Get the footprint corresponding to the current class and the current rotation
+                if (GraphicsController.currentAmenityFootprint != null) {
+                    // Draw rectangles in each offset in the footprint
+                    for (AmenityFootprint.Rotation.AmenityBlockTemplate amenityBlockTemplate :
+                            GraphicsController.currentAmenityFootprint.getCurrentRotation().getAmenityBlockTemplates()) {
+                        // Compute for the position of the patch using the offset data
+                        int patchRow = cursorRow + amenityBlockTemplate.getOffset().getRowOffset();
+                        int patchColumn = cursorColumn + amenityBlockTemplate.getOffset().getColumnOffset();
 
-                            // If there is an attractor on this patch, draw a different color
-                            if (!amenityBlockTemplate.isAttractor()) {
-                                graphicsContext.setFill(markingColor);
-                            } else {
-                                graphicsContext.setFill(extraMarkingColor);
-                            }
-
-                            // Draw the rectangle there
-                            graphicsContext.fillRect(patchColumn * tileSize, patchRow * tileSize, tileSize, tileSize);
+                        // If there is an attractor on this patch, draw a different color
+                        if (!amenityBlockTemplate.isAttractor()) {
+                            graphicsContext.setFill(markingColor);
+                        } else {
+                            graphicsContext.setFill(extraMarkingColor);
                         }
+
+                        // Draw the rectangle there
+                        graphicsContext.fillRect(patchColumn * tileSize, patchRow * tileSize, tileSize, tileSize);
                     }
                 }
-
-                // Draw the crosshairs
-                graphicsContext.setStroke(strokeColor);
-
-                // If there are train tracks being drawn, double the width of the strokes, and don't draw the vertical line
-                // anymore
-                if (!isDrawingTrainTrack) {
-                    graphicsContext.setLineWidth(tileSize);
-
-                    graphicsContext.strokeLine(
-                            0,
-                            cursorRow * tileSize + tileSize * 0.5,
-                            markingsCanvas.getWidth(),
-                            cursorRow * tileSize + tileSize * 0.5
-                    );
-                    graphicsContext.strokeLine(
-                            cursorColumn * tileSize + tileSize * 0.5,
-                            0,
-                            cursorColumn * tileSize + tileSize * 0.5,
-                            markingsCanvas.getHeight()
-                    );
-                } else {
-                    graphicsContext.setLineWidth(tileSize * 2);
-
-                    graphicsContext.strokeLine(
-                            0,
-                            cursorRow * tileSize,
-                            markingsCanvas.getWidth(),
-                            cursorRow * tileSize
-                    );
-                }
-            } else {
-                graphicsContext.fillRect(cursorColumn * tileSize, cursorRow * tileSize, tileSize, tileSize);
             }
-        });
+
+            // Draw the crosshairs
+            graphicsContext.setStroke(strokeColor);
+
+            // If there are train tracks being drawn, double the width of the strokes, and don't draw the vertical line
+            // anymore
+            if (!isDrawingTrainTrack) {
+                graphicsContext.setLineWidth(tileSize);
+
+                graphicsContext.strokeLine(
+                        0,
+                        cursorRow * tileSize + tileSize * 0.5,
+                        markingsCanvas.getWidth(),
+                        cursorRow * tileSize + tileSize * 0.5
+                );
+                graphicsContext.strokeLine(
+                        cursorColumn * tileSize + tileSize * 0.5,
+                        0,
+                        cursorColumn * tileSize + tileSize * 0.5,
+                        markingsCanvas.getHeight()
+                );
+            } else {
+                graphicsContext.setLineWidth(tileSize * 2);
+
+                graphicsContext.strokeLine(
+                        0,
+                        cursorRow * tileSize,
+                        markingsCanvas.getWidth(),
+                        cursorRow * tileSize
+                );
+            }
+        } else {
+            graphicsContext.fillRect(cursorColumn * tileSize, cursorRow * tileSize, tileSize, tileSize);
+        }
     }
 
     private static void unmarkPatch(Canvas markingsCanvas) {
-        Platform.runLater(() -> {
-            GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
-            graphicsContext.clearRect(0, 0, markingsCanvas.getWidth(), markingsCanvas.getHeight());
-        });
+        GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
+        graphicsContext.clearRect(0, 0, markingsCanvas.getWidth(), markingsCanvas.getHeight());
     }
 
     public static void updateCurrentAmenityFootprint() {

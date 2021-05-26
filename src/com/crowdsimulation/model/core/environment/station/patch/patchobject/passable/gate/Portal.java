@@ -1,7 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
 import com.crowdsimulation.model.core.environment.station.Floor;
-import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 import java.util.List;
 

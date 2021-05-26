@@ -38,7 +38,7 @@ public class MainScreenControllerOld {
     private int modeIndex;
 
     private Orientation orientation;
-    private Rectangle currentExtraRectangle;
+    private final Rectangle currentExtraRectangle;
     private Rectangle previousExtraRectangle;
     private boolean isValidDraw;
 
@@ -991,7 +991,7 @@ public class MainScreenControllerOld {
         UP,
         RIGHT,
         DOWN,
-        LEFT;
+        LEFT
     }
 
     public enum DrawState {
@@ -999,6 +999,6 @@ public class MainScreenControllerOld {
         CHECKPOINT,
         DESPAWN,
         OBSTACLE,
-        FLOOR_FIELDS;
+        FLOOR_FIELDS
     }
 }

@@ -1,7 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator;
 
 import com.crowdsimulation.controller.graphics.amenity.editor.EscalatorEditor;
-import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
 
 public class EscalatorShaft extends PortalShaft {
@@ -68,7 +67,7 @@ public class EscalatorShaft extends PortalShaft {
 
         private final String name;
 
-        private EscalatorDirection(String name) {
+        EscalatorDirection(String name) {
             this.name = name;
         }
 

@@ -492,7 +492,7 @@ public class Simulator {
 
         private final String name;
 
-        private BuildState(String name) {
+        BuildState(String name) {
             this.name = name;
         }
 

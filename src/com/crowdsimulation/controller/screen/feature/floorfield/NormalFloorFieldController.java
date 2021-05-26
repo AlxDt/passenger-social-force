@@ -6,7 +6,6 @@ import com.crowdsimulation.controller.screen.alert.AlertController;
 import com.crowdsimulation.controller.screen.service.floorfield.InitializeNormalFloorFieldService;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -192,9 +191,7 @@ public class NormalFloorFieldController extends ScreenController {
 
         String finalPromptString = promptString;
 
-        Platform.runLater(() -> {
-            promptText.setText(finalPromptString);
-        });
+        promptText.setText(finalPromptString);
     }
 
     // For what stages need to do when the window is closed
@@ -208,13 +205,11 @@ public class NormalFloorFieldController extends ScreenController {
         List<QueueingFloorField.FloorFieldState> floorFieldStates
                 = Main.simulator.getCurrentFloorFieldTarget().retrieveFloorFieldStates();
 
-        Platform.runLater(() -> {
-            floorFieldStateChoiceBox.setItems(FXCollections.observableArrayList(
-                    floorFieldStates
-            ));
+        floorFieldStateChoiceBox.setItems(FXCollections.observableArrayList(
+                floorFieldStates
+        ));
 
-            floorFieldStateChoiceBox.getSelectionModel().select(0);
-        });
+        floorFieldStateChoiceBox.getSelectionModel().select(0);
     }
 
     public enum FloorFieldMode {

@@ -116,7 +116,7 @@ public class StationGate extends Gate {
 
         private final String name;
 
-        private StationGateMode(String name) {
+        StationGateMode(String name) {
             this.name = name;
         }
 
