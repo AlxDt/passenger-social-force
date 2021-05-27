@@ -7,6 +7,7 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
@@ -16,6 +17,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amen
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
@@ -37,13 +39,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class GraphicsController extends Controller {
     private static final Image AMENITY_SPRITE_SHEET = new Image(AmenityGraphic.AMENITY_SPRITE_SHEET_URL);
 
-    private static final int FLOOR_FIELD_COLOR_HUE = 115;
+    private static final Map<PassengerMovement.Direction, Integer> FLOOR_FIELD_COLORS;
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
 
     public static Floor floorNextPortal;
@@ -62,6 +65,10 @@ public class GraphicsController extends Controller {
     public static boolean listenersDrawn;
 
     static {
+        FLOOR_FIELD_COLORS = new HashMap<>();
+        FLOOR_FIELD_COLORS.put(PassengerMovement.Direction.BOARDING, 125);
+        FLOOR_FIELD_COLORS.put(PassengerMovement.Direction.ALIGHTING, 225);
+
         GraphicsController.markedPatch = null;
 
         GraphicsController.showTooltip = false;
@@ -211,24 +218,24 @@ public class GraphicsController extends Controller {
                             // Draw something if there is a target associated with this patch
                             if (floorFieldStateDoubleMap != null) {
                                 // If the current patch's floor field state matches the current floor field state, draw
-                                // a green patch
+                                // a green or blue patch (depending on direction)
                                 if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
                                     double value = floorFieldStateDoubleMap.get(floorFieldState);
 
                                     // Map the colors of this patch to the its field value's intensity
                                     patchColor = Color.hsb(
-                                            FLOOR_FIELD_COLOR_HUE,
-                                            Main.simulator.isFloorFieldDrawing() ? value : 0.1,
-                                            1.0
+                                            FLOOR_FIELD_COLORS.get(floorFieldState.getDirection()),
+                                            Main.simulator.isFloorFieldDrawing() ? value : 0.0,
+                                            Main.simulator.isFloorFieldDrawing() ? 1.0 : 0.97
                                     );
                                 } else {
                                     // There is a floor field value here with the same target, but it is not of the
                                     // current floor field state
                                     // Hence, just draw an unsaturated patch
                                     patchColor = Color.hsb(
-                                            FLOOR_FIELD_COLOR_HUE,
-                                            0.1,
-                                            1.0
+                                            0,
+                                            0,
+                                            0.97
                                     );
                                 }
                             } else if (!floorFieldValues.isEmpty()) {
@@ -236,9 +243,9 @@ public class GraphicsController extends Controller {
                                 // values isn't empty, there are still other floor field values on this patch
                                 // Hence, just draw an unsaturated patch
                                 patchColor = Color.hsb(
-                                        FLOOR_FIELD_COLOR_HUE,
-                                        0.1,
-                                        1.0
+                                        0,
+                                        0,
+                                        0.97
                                 );
                             }
                         } else {
@@ -359,6 +366,13 @@ public class GraphicsController extends Controller {
 
                         if (patchAmenityBlock.hasGraphic()) {
                             Drawable drawablePatchAmenity = (Drawable) patchAmenity;
+
+                            // If the amenity is disabled, draw transparently as well
+                            if (patchAmenity instanceof NonObstacle) {
+                                if (!((NonObstacle) patchAmenity).isEnabled()) {
+                                    drawGraphicTransparently = true;
+                                }
+                            }
 
                             // Add transparency if needed
                             if (drawGraphicTransparently) {
