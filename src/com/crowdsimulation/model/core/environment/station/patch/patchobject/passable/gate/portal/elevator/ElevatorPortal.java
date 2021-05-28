@@ -297,6 +297,7 @@ public class ElevatorPortal extends Portal implements Queueable {
         isOpen = open;
     }
 
+    @Override
     public QueueObject getQueueObject() {
         return queueObject;
     }

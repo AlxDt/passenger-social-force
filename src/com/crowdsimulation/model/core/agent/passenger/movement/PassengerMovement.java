@@ -6,9 +6,14 @@ import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
+import com.crowdsimulation.model.simulator.Simulator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class PassengerMovement {
     // Denotes the owner of this passenger movement object
@@ -40,14 +45,24 @@ public class PassengerMovement {
     // Denotes the amenity the passenger is aiming for
     private Amenity goalAmenity;
 
+    // Denotes the attractor the passenger is aiming for
+    private Amenity.AmenityBlock goalAttractor;
+
+    // Denotes the route plan of this passenger
+    private RoutePlan routePlan;
+
+    // Get the floor where this passenger currently is
+    private Floor floor;
+
     // Denotes the direction of the passenger - whether the passenger is about to ride a train, or the passenger is
     // about to depart the station (macroscopic state)
     private Direction direction;
 
-    // Denotes the state of the passenger - the current disposition of the passenger (microscopic state)
+    // Denotes the state of the passenger - the current disposition of the passenger (macroscopic state)
     private State state;
 
-    // Denotes the action of the passenger - the low-level description of what the passenger is doing
+    // Denotes the action of the passenger - the low-level description of what the passenger is doing (microscopic
+    // state)
     private Action action;
 
     // Denotes whether the passenger is temporarily waiting in an amenity
@@ -61,7 +76,10 @@ public class PassengerMovement {
     public PassengerMovement(Gate gate, Passenger parent, Coordinates coordinates) {
         this.parent = parent;
 
-        this.position = coordinates;
+        this.position = new Coordinates(
+                coordinates.getX(),
+                coordinates.getY()
+        );
 
         // TODO: Walking speed should depend on the passenger's age
         // TODO: Adjust to actual, realistic values
@@ -83,12 +101,18 @@ public class PassengerMovement {
         // Take note of the amenity where this passenger was spawned
         this.currentAmenity = gate;
 
-        // Take note of the passenger's goal patch and amenity (on that goal patch)
-        // TODO: Not null!
+        // Take note of the passenger's goal patch, amenity (on that goal patch), and that amenity's attractor
         this.goalPatch = null;
         this.goalAmenity = null;
+        this.goalAttractor = null;
 
-        // Assign the initial direction, state,  action of this passenger
+        // Assign the route plan of this passenger
+        this.routePlan = new RoutePlan();
+
+        // Assign the floor of this passenger
+        this.floor = gate.getAmenityBlocks().get(0).getPatch().getFloor();
+
+        // Assign the initial direction, state, action of this passenger
         this.direction = Direction.BOARDING;
         this.state = State.WALKING;
         this.action = Action.WILL_QUEUE;
@@ -138,6 +162,14 @@ public class PassengerMovement {
         this.currentAmenity = currentAmenity;
     }
 
+    public Amenity.AmenityBlock getGoalAttractor() {
+        return goalAttractor;
+    }
+
+    public void setGoalAttractor(Amenity.AmenityBlock goalAttractor) {
+        this.goalAttractor = goalAttractor;
+    }
+
     public Patch getGoalPatch() {
         return goalPatch;
     }
@@ -152,6 +184,22 @@ public class PassengerMovement {
 
     public void setGoalAmenity(Amenity goalAmenity) {
         this.goalAmenity = goalAmenity;
+    }
+
+    public RoutePlan getRoutePlan() {
+        return routePlan;
+    }
+
+    public void setRoutePlan(RoutePlan routePlan) {
+        this.routePlan = routePlan;
+    }
+
+    public Floor getFloor() {
+        return floor;
+    }
+
+    public void setFloor(Floor floor) {
+        this.floor = floor;
     }
 
     public Direction getDirection() {
@@ -194,33 +242,64 @@ public class PassengerMovement {
         this.stateChanged = stateChanged;
     }
 
-// Set the nearest goal to this passenger
+    // Set the nearest goal to this passenger
     // That goal should also have the fewer passengers queueing for it
-    // To determine this, for each two passengers in the queue (or fraction thereof), a penalty of one meter is added to
+    // To determine this, for each two passengers in the queue (or fraction thereof), a penalty of one tile is added to
     // the distance to this goal
-    /*public void setChosenGoal() {
-        double minScore = Double.MAX_VALUE;
-        Patch chosenGoal = null;
+    public void chooseGoal() {
+        // TODO: consider amenities in next floor
+        // Based on the passenger's current direction and route plan, get the next amenity class to be sought
+        Class<? extends Amenity> nextAmenityClass = this.routePlan.getCurrentAmenityClass();
+        List<? extends Amenity> amenityListInFloor = this.floor.getAmenityList(nextAmenityClass);
 
-        double distance;
+        double minimumScore = Double.MAX_VALUE;
+        Amenity chosenAmenity = null;
+        Amenity.AmenityBlock chosenAmenityBlock = null;
+
         int passengersQueueing;
         double score;
 
-        for (Patch goal : Main.simulator.getCurrentFloor().getGoalsAtSequence(goalsReached)) {
-            distance = Coordinates.distance(this.position, goal.getPatchCenterCoordinates());
-            passengersQueueing = goal.getPassengersQueueing().size();
+        // From the amenity list, look for the nearest one to this passenger
+        for (Amenity amenity : amenityListInFloor) {
+            // Within the amenity itself, see which attractor is closer to this passenger
+            double minimumAttractorDistance = Double.MAX_VALUE;
+            Amenity.AmenityBlock nearestAttractor = null;
 
-            score = distance + passengersQueueing * 1.5;
+            double attractorDistance;
 
-            if (score < minScore) {
-                minScore = score;
-                chosenGoal = goal;
+            for (Amenity.AmenityBlock attractor : amenity.getAttractors()) {
+                attractorDistance = Coordinates.distance(
+                        this.position,
+                        attractor.getPatch().getPatchCenterCoordinates()
+                );
+
+                if (attractorDistance < minimumAttractorDistance) {
+                    minimumAttractorDistance = attractorDistance;
+                    nearestAttractor = attractor;
+                }
+            }
+
+            // Then measure the distance from the nearest attractor to this passenger
+            if (amenity instanceof Queueable) {
+                passengersQueueing = ((Queueable) amenity).getQueueObject().getPassengersQueueing().size();
+
+                score = minimumAttractorDistance + passengersQueueing * 1.5;
+            } else {
+                score = minimumAttractorDistance;
+            }
+
+            if (score < minimumScore) {
+                minimumScore = score;
+
+                chosenAmenity = amenity;
+                chosenAmenityBlock = nearestAttractor;
             }
         }
 
         // Set the goal nearest to this passenger
-        this.goal = chosenGoal;
-    }*/
+        this.goalAmenity = chosenAmenity;
+        this.goalAttractor = chosenAmenityBlock;
+    }
 
     // Get the future position of this passenger given the current goal, current heading, and the current walking
     // distance
@@ -235,15 +314,33 @@ public class PassengerMovement {
 
     // Get the future position of this passenger given a goal and a heading
     public Coordinates getFuturePosition(Amenity goal, double heading, double walkingDistance) {
-/*        // Check if the distance between this passenger and its goal
-        double distanceToGoal = Coordinates.distance(this.position, goal.getPatch().getPatchCenterCoordinates());
+        // Get the nearest attractor to this passenger
+        double minimumDistance = Double.MAX_VALUE;
+        double distance;
+
+        Amenity.AmenityBlock nearestAttractor = null;
+
+        for (Amenity.AmenityBlock attractor : goal.getAttractors()) {
+            distance = Coordinates.distance(this.position, attractor.getPatch().getPatchCenterCoordinates());
+
+            if (distance < minimumDistance) {
+                minimumDistance = distance;
+                nearestAttractor = attractor;
+            }
+        }
+
+        // Check if the distance between this passenger and its goal
+        assert nearestAttractor != null;
 
         // If the distance between this passenger and the goal is less than the distance this passenger covers every
         // time it walks, "snap" the position of the passenger to the center of the goal immediately, to avoid
         // overshooting its target
         // If not, compute the next coordinates normally
-        if (distanceToGoal < walkingDistance) {
-            return new Coordinates(goal.getPatch().getPatchCenterCoordinates().getX(), goal.getPatch().getPatchCenterCoordinates().getY());
+        if (minimumDistance < walkingDistance) {
+            return new Coordinates(
+                    nearestAttractor.getPatch().getPatchCenterCoordinates().getX(),
+                    nearestAttractor.getPatch().getPatchCenterCoordinates().getY()
+            );
         } else {
             // Given the current position, the current heading, and the walking speed, the coordinates for the new
             // position of the passenger are
@@ -267,9 +364,7 @@ public class PassengerMovement {
 
             // Then set the position of this passenger to the new coordinates
             return new Coordinates(newX, newY);
-        }*/
-        // TODO: remove return null
-        return null;
+        }
     }
 
     // Make the passenger move given the currently set heading and walking distance
@@ -280,6 +375,26 @@ public class PassengerMovement {
     // Make the passenger move given the currently set heading and the modified walking distance
     public void move(double walkingDistance) {
         this.setPosition(this.getFuturePosition(walkingDistance));
+    }
+
+    // Check whether this passenger has reached its goal
+    public boolean hasReachedGoal() {
+        return (int) this.position.getX() == this.goalAttractor.getPatch().getMatrixPosition().getColumn()
+                && (int) this.position.getY() == this.goalAttractor.getPatch().getMatrixPosition().getRow();
+    }
+
+    // Check whether this passenger has reached its final goal
+    public boolean hasReachedFinalGoal() {
+        return !this.routePlan.getCurrentRoutePlan().hasNext();
+    }
+
+    // Despawn this passenger
+    public void despawnPassenger() {
+        // Remove this passenger from this floor
+        this.floor.getPassengersInFloor().remove(this.parent);
+
+        // Remove this passenger from this station
+        this.floor.getStation().getPassengersInStation().remove(this.parent);
     }
 
     // See if this passenger should move
@@ -408,7 +523,7 @@ public class PassengerMovement {
 
         // If there are no passengers within the field of view, good - move normally
         if (nearestPassengerEntry == null) {
-            PassengerMovement.face(this.parent, null, heading);
+//            PassengerMovement.face(this.parent, null, heading);
 
             this.move();
 
@@ -428,7 +543,7 @@ public class PassengerMovement {
             if (headingDifference < Math.toRadians(90.0)) {
                 // If the two passengers are more or less going at the same direction, take the heading to that
                 // passenger into account in the final heading
-                PassengerMovement.face(this.parent, nearestPassenger, heading);
+//                PassengerMovement.face(this.parent, nearestPassenger, heading);
 
                 // Check the distance of that nearest passenger to this passenger
                 double distanceToNearestPassenger = nearestPassengerEntry.getKey();
@@ -635,7 +750,7 @@ public class PassengerMovement {
                 }
 
                 // Finally, move towards that modified heading at a modified speed
-                face(this.parent, null, meanHeading);
+//                face(this.parent, null, meanHeading);
 
                 // The slowdown factor linearly depends on the distance between this passenger and the closest passenger
                 final double distanceToNearestPassenger = nearestPassengerEntry.getKey();
@@ -654,7 +769,22 @@ public class PassengerMovement {
         }
     }
 
-    public static void face(Passenger currentPassenger, Passenger leader, double headingGoal) {
+    // Have the passenger face its current goal
+    public void faceGoal() {
+        // Compute for the heading towards the goal
+        double headingToGoal = Coordinates.headingTowards(
+                this.position,
+                this.goalAttractor.getPatch().getPatchCenterCoordinates()
+        );
+
+        // Add some stochasticity, so the passenger's heading will not always be in just a straight line
+        headingToGoal += Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * Math.toRadians(10);
+
+        // Then set the passenger's heading to it
+        this.heading = headingToGoal;
+    }
+
+/*    private void face(Passenger currentPassenger, Passenger leader, double headingGoal) {
 //        Passenger currentPassenger = this.parent;
 
         // If a leader was chosen, face towards the angular mean of the headings toward the leader and the goal
@@ -681,7 +811,7 @@ public class PassengerMovement {
             // If a leader has not been chosen, continue moving solo
             currentPassenger.getPassengerMovement().setHeading(headingGoal);
         }
-    }
+    }*/
 
 /*
     // From a set of patches associated with a goal, get the nearest patch with a floor field value greater than a

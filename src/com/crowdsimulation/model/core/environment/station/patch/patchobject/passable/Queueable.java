@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable;
 
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 
 import java.util.List;
@@ -19,4 +20,7 @@ public interface Queueable {
 
     // Delete all floor fields in this queueable
     void deleteAllFloorFields();
+
+    // Retrieve the queue object
+    QueueObject getQueueObject();
 }

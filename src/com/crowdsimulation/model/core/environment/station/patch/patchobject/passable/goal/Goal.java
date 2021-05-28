@@ -31,8 +31,9 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
         this.waitingTime = waitingTime;
     }
 
+    @Override
     public QueueObject getQueueObject() {
-        return queueObject;
+        return this.queueObject;
     }
 
     // Goal factory

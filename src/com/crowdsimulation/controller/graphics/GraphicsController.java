@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 public class GraphicsController extends Controller {
     private static final Image AMENITY_SPRITE_SHEET = new Image(AmenityGraphic.AMENITY_SPRITE_SHEET_URL);
@@ -64,6 +65,8 @@ public class GraphicsController extends Controller {
     // double-drawing
     public static boolean listenersDrawn;
 
+    public static final Semaphore DRAW_SEMAPHORE;
+
     static {
         FLOOR_FIELD_COLORS = new HashMap<>();
         FLOOR_FIELD_COLORS.put(PassengerMovement.Direction.BOARDING, 125);
@@ -78,6 +81,8 @@ public class GraphicsController extends Controller {
 
         GraphicsController.floorNextPortal = null;
         GraphicsController.firstPortalAmenityBlocks = null;
+
+        DRAW_SEMAPHORE = new Semaphore(1);
     }
 
     // Send a request to draw the station view on the canvas
@@ -87,7 +92,6 @@ public class GraphicsController extends Controller {
             boolean background
     ) {
         javafx.application.Platform.runLater(() -> {
-            // Tell the JavaFX thread that we'd like to draw on the canvas
             drawStationView(canvases, floor, background);
         });
     }
@@ -429,6 +433,8 @@ public class GraphicsController extends Controller {
                     final double passengerDiameter = tileSize * 0.5;
 
                     for (Passenger passenger : floor.getPassengersInFloor()) {
+                        foregroundGraphicsContext.setFill(passenger.getColor());
+
                         // TODO: Draw passengers
                         foregroundGraphicsContext.fillOval(
                                 passenger.getPassengerMovement().getPosition().getX()
@@ -464,6 +470,10 @@ public class GraphicsController extends Controller {
                     CIRCLE_DIAMETER,
                     CIRCLE_DIAMETER
             );
+        }
+
+        if (!background) {
+            GraphicsController.DRAW_SEMAPHORE.release();
         }
     }
 

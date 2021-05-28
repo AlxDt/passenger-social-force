@@ -4301,16 +4301,6 @@ public class MainScreenController extends ScreenController {
         );
     }
 
-    // Draw the station view foreground given a current floor
-    private void drawStationViewFloorForeground(Floor currentFloor) {
-        // Draw each station in the train system onto its respective tab
-        GraphicsController.requestDrawStationView(
-                interfaceStackPane,
-                currentFloor,
-                false
-        );
-    }
-
     // Draw the mouse listeners
     private void drawListeners() {
         // Draw each mouse listener along with their corresponding actions

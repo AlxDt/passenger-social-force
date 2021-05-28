@@ -26,6 +26,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -72,13 +75,21 @@ public class Simulator {
     private Queueable currentFloorFieldTarget;
     private QueueingFloorField.FloorFieldState currentFloorFieldState;
 
-    // Simulation variables
+    // Simulator variables
     private final AtomicBoolean running;
     // TODO: Replace with SimulationTime object
     private int timeElapsed;
     private final Semaphore playSemaphore;
 
-    private final Random randomNumberGenerator;
+    // Random number generator for all purposes in the simulation
+    public static final Random RANDOM_NUMBER_GENERATOR;
+
+    // Simulation variables
+    private final List<Passenger> passengersToDespawn;
+
+    static {
+        RANDOM_NUMBER_GENERATOR = new Random();
+    }
 
     public Simulator() {
         // The program is initially in the building mode
@@ -114,7 +125,7 @@ public class Simulator {
         this.timeElapsed = 0;
         this.playSemaphore = new Semaphore(0);
 
-        this.randomNumberGenerator = new Random();
+        this.passengersToDespawn = Collections.synchronizedList(new ArrayList<>());
 
         // Start the simulation thread, but in reality it would be activated much later
         this.start();
@@ -331,6 +342,13 @@ public class Simulator {
 
         this.running.set(false);
         this.timeElapsed = 0;
+
+        // Clear all previously saved passengers in this station
+        this.station.getPassengersInStation().clear();
+
+        for (Floor floor : this.getStation().getFloors()) {
+            floor.getPassengersInFloor().clear();
+        }
     }
 
     // Convert a build subcategory to its corresponding class
@@ -384,9 +402,15 @@ public class Simulator {
 
                     // Keep looping until paused
                     while (this.running.get()) {
+                        try {
+                            GraphicsController.DRAW_SEMAPHORE.acquire();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
                         // Update the pertinent variables when ticking
 
-                        // Update all agents in each floor
+                        // Draw all agents in each floor
                         for (Floor floor : Main.simulator.station.getFloors()) {
                             updateFloor(floor);
                         }
@@ -396,6 +420,8 @@ public class Simulator {
                                 Main.simulator.getCurrentFloor(),
                                 false
                         );
+
+                        // TODO: Rest for an amount of time depending on the interface slider
                         Thread.sleep(100);
                     }
                 } catch (InterruptedException ex) {
@@ -409,9 +435,11 @@ public class Simulator {
     private void updateFloor(Floor floor) {
         // Make all station gates in this floor spawn passengers depending on their spawn frequency
         // Generate a number from 0.0 to 1.0
-        double randomNumber = randomNumberGenerator.nextDouble();
+        double randomNumber;
 
         for (StationGate stationGate : floor.getStationGates()) {
+            randomNumber = RANDOM_NUMBER_GENERATOR.nextDouble();
+
             // Only deal with station gates which have entrances
             if (stationGate.getStationGateMode() != StationGate.StationGateMode.EXIT) {
                 // Spawn passengers depending on the spawn frequency of the station gate
@@ -422,15 +450,41 @@ public class Simulator {
         }
 
         // Make each passenger move
-        for (Passenger passenger : Main.simulator.getStation().getPassengersInStation()) {
-            PassengerMovement passengerMovement = passenger.getPassengerMovement();
+        for (Passenger passenger : floor.getPassengersInFloor()) {
+            movePassenger(floor, passenger);
+        }
 
-            // Look for train doors in this floor
-            // TODO: change
-            TrainDoor trainDoor = floor.getTrainDoors().get(0);
+        // Remove all passengers that are marked for removal
+        for (Passenger passengerToDespawn : this.passengersToDespawn) {
+            passengerToDespawn.getPassengerMovement().despawnPassenger();
+        }
 
-            passengerMovement.setGoalAmenity(trainDoor);
-            passengerMovement.move();
+        passengersToDespawn.clear();
+    }
+
+    private void movePassenger(Floor floor, Passenger passenger) {
+        PassengerMovement passengerMovement = passenger.getPassengerMovement();
+
+        // Look for the goal nearest to this passenger
+        passengerMovement.chooseGoal();
+
+        // Make this passenger face the set goal
+        passengerMovement.faceGoal();
+
+        // Then make the passenger move towards that goal
+        passengerMovement.move();
+
+        // If the passenger has reached its goal after moving, see if there are more goals available
+        if (passengerMovement.hasReachedGoal()) {
+            // Check if there is no next goal
+            // If there isn't any, despawn the passenger
+            if (passengerMovement.hasReachedFinalGoal()) {
+                // TODO: Transition to other plans
+                this.passengersToDespawn.add(passenger);
+            } else {
+                // If there are still more goals, just move forward to looking for the next one
+                passengerMovement.getRoutePlan().setNextAmenityClass();
+            }
         }
     }
 

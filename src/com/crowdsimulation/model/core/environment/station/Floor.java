@@ -6,16 +6,23 @@ import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Floor extends BaseStationObject implements Environment {
     // Denotes the station which contains this floor
@@ -64,16 +71,16 @@ public class Floor extends BaseStationObject implements Environment {
         this.initializePatches();
 
         // Initialize the amenity lists
-        this.stationGates = new ArrayList<>();
-        this.securities = new ArrayList<>();
+        this.stationGates = Collections.synchronizedList(new ArrayList<>());
+        this.securities = Collections.synchronizedList(new ArrayList<>());
 
-        this.ticketBooths = new ArrayList<>();
-        this.turnstiles = new ArrayList<>();
+        this.ticketBooths = Collections.synchronizedList(new ArrayList<>());
+        this.turnstiles = Collections.synchronizedList(new ArrayList<>());
 
-        this.trainDoors = new ArrayList<>();
-        this.tracks = new ArrayList<>();
+        this.trainDoors = Collections.synchronizedList(new ArrayList<>());
+        this.tracks = Collections.synchronizedList(new ArrayList<>());
 
-        this.walls = new ArrayList<>();
+        this.walls = Collections.synchronizedList(new ArrayList<>());
 
         // Initialize the passenger list
         this.passengersInFloor = new ArrayList<>();
@@ -441,6 +448,69 @@ public class Floor extends BaseStationObject implements Environment {
 
         // Remove the floor specified
         floors.remove(floorToBeRemoved);
+    }
+
+    // Depending on the given amenity class, grab the appropriate amenity list
+    public List<? extends Amenity> getAmenityList(Class<? extends Amenity> amenityClass) {
+        if (amenityClass == StationGate.class) {
+            return this.getStationGates();
+        } else if (amenityClass == Security.class) {
+            return this.getSecurities();
+        } else if (amenityClass == StairShaft.class) {
+            List<StairShaft> stairShaftsInFloor = new ArrayList<>();
+
+            for (StairShaft stairShaft : this.getStation().getStairShafts()) {
+                Portal lowerPortal = stairShaft.getLowerPortal();
+                Portal upperPortal = stairShaft.getUpperPortal();
+
+                // Only add stairs that are in this floor
+                if (lowerPortal.getFloorServed() == this || upperPortal.getFloorServed() == this) {
+                    stairShaftsInFloor.add(stairShaft);
+                }
+            }
+
+            return stairShaftsInFloor;
+        } else if (amenityClass == EscalatorShaft.class) {
+            List<EscalatorShaft> escalatorShaftsInFloor = new ArrayList<>();
+
+            for (EscalatorShaft escalatorShaft : this.getStation().getEscalatorShafts()) {
+                Portal lowerPortal = escalatorShaft.getLowerPortal();
+                Portal upperPortal = escalatorShaft.getUpperPortal();
+
+                // Only add escalators that are in this floor
+                if (lowerPortal.getFloorServed() == this || upperPortal.getFloorServed() == this) {
+                    escalatorShaftsInFloor.add(escalatorShaft);
+                }
+            }
+
+            return escalatorShaftsInFloor;
+        } else if (amenityClass == ElevatorShaft.class) {
+            List<ElevatorShaft> elevatorShaftsInFloor = new ArrayList<>();
+
+            for (ElevatorShaft elevatorShaft : this.getStation().getElevatorShafts()) {
+                Portal lowerPortal = elevatorShaft.getLowerPortal();
+                Portal upperPortal = elevatorShaft.getUpperPortal();
+
+                // Only add escalators that are in this floor
+                if (lowerPortal.getFloorServed() == this || upperPortal.getFloorServed() == this) {
+                    elevatorShaftsInFloor.add(elevatorShaft);
+                }
+            }
+
+            return elevatorShaftsInFloor;
+        } else if (amenityClass == TicketBooth.class) {
+            return this.getTicketBooths();
+        } else if (amenityClass == Turnstile.class) {
+            return this.getTurnstiles();
+        } else if (amenityClass == TrainDoor.class) {
+            return this.getTrainDoors();
+        } else if (amenityClass == Track.class) {
+            return this.getTracks();
+        } else if (amenityClass == Wall.class) {
+            return this.getWalls();
+        } else {
+            return null;
+        }
     }
 
     // Create a floor

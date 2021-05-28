@@ -257,7 +257,7 @@ public class MainScreenControllerOld {
                         }
 
                         if (chooseQueue) {
-                            passengerMovement.setChosenGoal();
+                            passengerMovement.chooseGoal();
                         }
 
                         passengerMovement.setStateChanged(false);
