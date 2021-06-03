@@ -6,10 +6,8 @@ import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.simulator.Simulator;
-import javafx.scene.paint.Color;
 
 import java.util.Objects;
-import java.util.Random;
 
 public class Passenger extends PatchObject implements Agent {
     // Keep track of the number of passengers generated
@@ -47,11 +45,17 @@ public class Passenger extends PatchObject implements Agent {
         // Increment the number of passengers made by one
         Passenger.passengerCount++;
 
+        // Get the number of attractors in the gate
+        int numAttractors = gate.getAttractors().size();
+
+        // Randomly choose between the attractors to determine where the agent will spawn from
+        int randomAttractor = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(numAttractors);
+
         // Instantiate all movement-related fields
         this.passengerMovement = new PassengerMovement(
                 gate,
                 this,
-                gate.getAttractors().get(0).getPatch().getPatchCenterCoordinates()
+                gate.getAttractors().get(randomAttractor).getPatch().getPatchCenterCoordinates()
         );
     }
 

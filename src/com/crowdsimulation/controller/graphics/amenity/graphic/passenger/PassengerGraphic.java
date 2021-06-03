@@ -59,41 +59,111 @@ public class PassengerGraphic extends Graphic implements Changeable {
         female5Graphic.add(new PassengerGraphicLocation(4, 3));
         femaleGraphics.add(female5Graphic);
 
+        final List<PassengerGraphicLocation> female6Graphic = new ArrayList<>();
+        female6Graphic.add(new PassengerGraphicLocation(5, 0));
+        female6Graphic.add(new PassengerGraphicLocation(5, 1));
+        female6Graphic.add(new PassengerGraphicLocation(5, 2));
+        female6Graphic.add(new PassengerGraphicLocation(5, 3));
+        femaleGraphics.add(female6Graphic);
+
+        final List<PassengerGraphicLocation> female7Graphic = new ArrayList<>();
+        female7Graphic.add(new PassengerGraphicLocation(6, 0));
+        female7Graphic.add(new PassengerGraphicLocation(6, 1));
+        female7Graphic.add(new PassengerGraphicLocation(6, 2));
+        female7Graphic.add(new PassengerGraphicLocation(6, 3));
+        femaleGraphics.add(female7Graphic);
+
+        final List<PassengerGraphicLocation> female8Graphic = new ArrayList<>();
+        female8Graphic.add(new PassengerGraphicLocation(7, 0));
+        female8Graphic.add(new PassengerGraphicLocation(7, 1));
+        female8Graphic.add(new PassengerGraphicLocation(7, 2));
+        female8Graphic.add(new PassengerGraphicLocation(7, 3));
+        femaleGraphics.add(female8Graphic);
+
+        final List<PassengerGraphicLocation> female9Graphic = new ArrayList<>();
+        female9Graphic.add(new PassengerGraphicLocation(8, 0));
+        female9Graphic.add(new PassengerGraphicLocation(8, 1));
+        female9Graphic.add(new PassengerGraphicLocation(8, 2));
+        female9Graphic.add(new PassengerGraphicLocation(8, 3));
+        femaleGraphics.add(female9Graphic);
+
+        final List<PassengerGraphicLocation> female10Graphic = new ArrayList<>();
+        female10Graphic.add(new PassengerGraphicLocation(9, 0));
+        female10Graphic.add(new PassengerGraphicLocation(9, 1));
+        female10Graphic.add(new PassengerGraphicLocation(9, 2));
+        female10Graphic.add(new PassengerGraphicLocation(9, 3));
+        femaleGraphics.add(female10Graphic);
+
         // Male graphics
         final List<PassengerGraphicLocation> male1Graphic = new ArrayList<>();
-        male1Graphic.add(new PassengerGraphicLocation(5, 0));
-        male1Graphic.add(new PassengerGraphicLocation(5, 1));
-        male1Graphic.add(new PassengerGraphicLocation(5, 2));
-        male1Graphic.add(new PassengerGraphicLocation(5, 3));
+        male1Graphic.add(new PassengerGraphicLocation(10, 0));
+        male1Graphic.add(new PassengerGraphicLocation(10, 1));
+        male1Graphic.add(new PassengerGraphicLocation(10, 2));
+        male1Graphic.add(new PassengerGraphicLocation(10, 3));
         maleGraphics.add(male1Graphic);
 
         final List<PassengerGraphicLocation> male2Graphic = new ArrayList<>();
-        male2Graphic.add(new PassengerGraphicLocation(6, 0));
-        male2Graphic.add(new PassengerGraphicLocation(6, 1));
-        male2Graphic.add(new PassengerGraphicLocation(6, 2));
-        male2Graphic.add(new PassengerGraphicLocation(6, 3));
+        male2Graphic.add(new PassengerGraphicLocation(11, 0));
+        male2Graphic.add(new PassengerGraphicLocation(11, 1));
+        male2Graphic.add(new PassengerGraphicLocation(11, 2));
+        male2Graphic.add(new PassengerGraphicLocation(11, 3));
         maleGraphics.add(male2Graphic);
 
         final List<PassengerGraphicLocation> male3Graphic = new ArrayList<>();
-        male3Graphic.add(new PassengerGraphicLocation(7, 0));
-        male3Graphic.add(new PassengerGraphicLocation(7, 1));
-        male3Graphic.add(new PassengerGraphicLocation(7, 2));
-        male3Graphic.add(new PassengerGraphicLocation(7, 3));
+        male3Graphic.add(new PassengerGraphicLocation(12, 0));
+        male3Graphic.add(new PassengerGraphicLocation(12, 1));
+        male3Graphic.add(new PassengerGraphicLocation(12, 2));
+        male3Graphic.add(new PassengerGraphicLocation(12, 3));
         maleGraphics.add(male3Graphic);
 
         final List<PassengerGraphicLocation> male4Graphic = new ArrayList<>();
-        male4Graphic.add(new PassengerGraphicLocation(8, 0));
-        male4Graphic.add(new PassengerGraphicLocation(8, 1));
-        male4Graphic.add(new PassengerGraphicLocation(8, 2));
-        male4Graphic.add(new PassengerGraphicLocation(8, 3));
+        male4Graphic.add(new PassengerGraphicLocation(13, 0));
+        male4Graphic.add(new PassengerGraphicLocation(13, 1));
+        male4Graphic.add(new PassengerGraphicLocation(13, 2));
+        male4Graphic.add(new PassengerGraphicLocation(13, 3));
         maleGraphics.add(male4Graphic);
 
         final List<PassengerGraphicLocation> male5Graphic = new ArrayList<>();
-        male5Graphic.add(new PassengerGraphicLocation(9, 0));
-        male5Graphic.add(new PassengerGraphicLocation(9, 1));
-        male5Graphic.add(new PassengerGraphicLocation(9, 2));
-        male5Graphic.add(new PassengerGraphicLocation(9, 3));
+        male5Graphic.add(new PassengerGraphicLocation(14, 0));
+        male5Graphic.add(new PassengerGraphicLocation(14, 1));
+        male5Graphic.add(new PassengerGraphicLocation(14, 2));
+        male5Graphic.add(new PassengerGraphicLocation(14, 3));
         maleGraphics.add(male5Graphic);
+
+        final List<PassengerGraphicLocation> male6Graphic = new ArrayList<>();
+        male6Graphic.add(new PassengerGraphicLocation(15, 0));
+        male6Graphic.add(new PassengerGraphicLocation(15, 1));
+        male6Graphic.add(new PassengerGraphicLocation(15, 2));
+        male6Graphic.add(new PassengerGraphicLocation(15, 3));
+        maleGraphics.add(male6Graphic);
+
+        final List<PassengerGraphicLocation> male7Graphic = new ArrayList<>();
+        male7Graphic.add(new PassengerGraphicLocation(16, 0));
+        male7Graphic.add(new PassengerGraphicLocation(16, 1));
+        male7Graphic.add(new PassengerGraphicLocation(16, 2));
+        male7Graphic.add(new PassengerGraphicLocation(16, 3));
+        maleGraphics.add(male7Graphic);
+
+        final List<PassengerGraphicLocation> male8Graphic = new ArrayList<>();
+        male8Graphic.add(new PassengerGraphicLocation(17, 0));
+        male8Graphic.add(new PassengerGraphicLocation(17, 1));
+        male8Graphic.add(new PassengerGraphicLocation(17, 2));
+        male8Graphic.add(new PassengerGraphicLocation(17, 3));
+        maleGraphics.add(male8Graphic);
+
+        final List<PassengerGraphicLocation> male9Graphic = new ArrayList<>();
+        male9Graphic.add(new PassengerGraphicLocation(18, 0));
+        male9Graphic.add(new PassengerGraphicLocation(18, 1));
+        male9Graphic.add(new PassengerGraphicLocation(18, 2));
+        male9Graphic.add(new PassengerGraphicLocation(18, 3));
+        maleGraphics.add(male9Graphic);
+
+        final List<PassengerGraphicLocation> male10Graphic = new ArrayList<>();
+        male10Graphic.add(new PassengerGraphicLocation(19, 0));
+        male10Graphic.add(new PassengerGraphicLocation(19, 1));
+        male10Graphic.add(new PassengerGraphicLocation(19, 2));
+        male10Graphic.add(new PassengerGraphicLocation(19, 3));
+        maleGraphics.add(male10Graphic);
 
         PASSENGER_GRAPHICS.put(Passenger.Gender.FEMALE, femaleGraphics);
         PASSENGER_GRAPHICS.put(Passenger.Gender.MALE, maleGraphics);
@@ -105,12 +175,14 @@ public class PassengerGraphic extends Graphic implements Changeable {
     protected int graphicIndex;
 
     public PassengerGraphic(Passenger passenger) {
+        final int typesPerGender = 10;
+
         this.passenger = passenger;
 
         this.graphics = new ArrayList<>();
 
         // Get a random number from 0 to 4 - this will be the random color of the passenger
-        int graphicType = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(5);
+        int graphicType = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(typesPerGender);
 
         List<PassengerGraphicLocation> passengerGraphics
                 = PASSENGER_GRAPHICS.get(passenger.getGender()).get(graphicType);

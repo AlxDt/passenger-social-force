@@ -1453,6 +1453,9 @@ public class MainScreenController extends ScreenController {
     public void resetAction() {
         // Clear all passengers
         clearPassengersInStation(Main.simulator.getStation());
+
+        // Redraw the canvas
+        drawStationViewFloorForeground(Main.simulator.getCurrentFloor());
     }
 
     @FXML
