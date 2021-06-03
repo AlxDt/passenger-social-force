@@ -3,8 +3,10 @@ package com.crowdsimulation.controller.graphics;
 import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
+import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphicLocation;
 import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
@@ -46,6 +48,7 @@ import java.util.concurrent.Semaphore;
 
 public class GraphicsController extends Controller {
     private static final Image AMENITY_SPRITE_SHEET = new Image(AmenityGraphic.AMENITY_SPRITE_SHEET_URL);
+    private static final Image PASSENGER_SPRITE_SHEET = new Image(PassengerGraphic.PASSENGER_SPRITE_SHEET_URL);
 
     private static final Map<PassengerMovement.Direction, Integer> FLOOR_FIELD_COLORS;
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
@@ -170,17 +173,17 @@ public class GraphicsController extends Controller {
 
         boolean drawGraphicTransparently;
 
-        // Draw all the patches of this floor
-        for (int row = rowStart; row < rowEnd; row++) {
-            for (int column = columnStart; column < columnEnd; column++) {
-                drawGraphicTransparently = false;
+        // Draw only the background (the environment) if requested
+        // Draw only the foreground (the passengers) if otherwise
+        if (background) {
+            // Draw all the patches of this floor
+            for (int row = rowStart; row < rowEnd; row++) {
+                for (int column = columnStart; column < columnEnd; column++) {
+                    drawGraphicTransparently = false;
 
-                // Get the current patch
-                Patch currentPatch = floor.getPatch(row, column);
+                    // Get the current patch
+                    Patch currentPatch = floor.getPatch(row, column);
 
-                // Draw only the background (the environment) if requested
-                // Draw only the foreground (the passengers) if otherwise
-                if (background) {
                     // Draw graphics corresponding to whatever is in the content of the patch
                     // If the patch has no amenity on it, just draw a blank patch
                     Amenity.AmenityBlock patchAmenityBlock = currentPatch.getAmenityBlock();
@@ -383,14 +386,14 @@ public class GraphicsController extends Controller {
                                 backgroundGraphicsContext.setGlobalAlpha(0.2);
                             }
 
-                            GraphicLocation graphicLocation = drawablePatchAmenity.getGraphicLocation();
+                            AmenityGraphicLocation amenityGraphicLocation = drawablePatchAmenity.getGraphicLocation();
 
                             backgroundGraphicsContext.drawImage(
                                     AMENITY_SPRITE_SHEET,
-                                    graphicLocation.getSourceX(),
-                                    graphicLocation.getSourceY(),
-                                    graphicLocation.getSourceWidth(),
-                                    graphicLocation.getSourceHeight(),
+                                    amenityGraphicLocation.getSourceX(),
+                                    amenityGraphicLocation.getSourceY(),
+                                    amenityGraphicLocation.getSourceWidth(),
+                                    amenityGraphicLocation.getSourceHeight(),
                                     column * tileSize + drawablePatchAmenity.getGraphicObject()
                                             .getAmenityGraphicOffset().getColumnOffset() * tileSize,
                                     row * tileSize + drawablePatchAmenity.getGraphicObject()
@@ -428,24 +431,29 @@ public class GraphicsController extends Controller {
                         backgroundGraphicsContext.setFill(patchColor);
                         backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
                     }
-                } else {
-                    // Draw passengers, if any
-                    final double passengerDiameter = tileSize * 0.5;
-
-                    for (Passenger passenger : floor.getPassengersInFloor()) {
-                        foregroundGraphicsContext.setFill(passenger.getColor());
-
-                        // TODO: Draw passengers
-                        foregroundGraphicsContext.fillOval(
-                                passenger.getPassengerMovement().getPosition().getX()
-                                        * tileSize - passengerDiameter * 0.5,
-                                passenger.getPassengerMovement().getPosition().getY()
-                                        * tileSize - passengerDiameter * 0.5,
-                                passengerDiameter,
-                                passengerDiameter
-                        );
-                    }
                 }
+            }
+        } else {
+            // Draw each passenger
+            final double passengerDiameter = tileSize * 0.5;
+
+            for (Passenger passenger : floor.getPassengersInFloor()) {
+                PassengerGraphicLocation passengerGraphicLocation
+                        = passenger.getPassengerGraphic().getGraphicLocation();
+
+                foregroundGraphicsContext.drawImage(
+                        PASSENGER_SPRITE_SHEET,
+                        passengerGraphicLocation.getSourceX(),
+                        passengerGraphicLocation.getSourceY(),
+                        passengerGraphicLocation.getSourceWidth(),
+                        passengerGraphicLocation.getSourceHeight(),
+                        passenger.getPassengerMovement().getPosition().getX()
+                                * tileSize - tileSize,
+                        passenger.getPassengerMovement().getPosition().getY()
+                                * tileSize - tileSize * 2,
+                        tileSize * 2,
+                        tileSize * 2 + tileSize * 0.25
+                );
             }
         }
 
@@ -473,7 +481,7 @@ public class GraphicsController extends Controller {
         }
 
         if (!background) {
-            GraphicsController.DRAW_SEMAPHORE.release();
+//            GraphicsController.DRAW_SEMAPHORE.release();
         }
     }
 

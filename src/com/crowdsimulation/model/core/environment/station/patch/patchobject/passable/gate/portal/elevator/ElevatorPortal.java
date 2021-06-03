@@ -2,9 +2,9 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.ElevatorGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.ElevatorGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -378,7 +378,7 @@ public class ElevatorPortal extends Portal implements Queueable {
     }
 
     @Override
-    public GraphicLocation getGraphicLocation() {
+    public AmenityGraphicLocation getGraphicLocation() {
         return this.elevatorPortalGraphic.getGraphicLocation();
     }
 

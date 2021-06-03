@@ -1,9 +1,11 @@
 package com.crowdsimulation.model.core.agent.passenger;
 
+import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphic;
 import com.crowdsimulation.model.core.agent.Agent;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
+import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.paint.Color;
 
 import java.util.Objects;
@@ -16,9 +18,12 @@ public class Passenger extends PatchObject implements Agent {
     // Denotes the serial number of this passenger
     private final int identifier;
 
-    // TODO: Maybe move somewhere?
-    // Denotes the color of this passenger (as displayed on the interface)
-    private final Color color;
+    // Denotes the gender of this passenger
+    // TODO: Move to passenger information object?
+    private final Gender gender;
+
+    // Handles how this passenger is displayed
+    private final PassengerGraphic passengerGraphic;
 
     // Contains the mechanisms for this passenger's movement
     private final PassengerMovement passengerMovement;
@@ -31,10 +36,10 @@ public class Passenger extends PatchObject implements Agent {
     }
 
     private Passenger(Gate gate) {
-        // TODO: Set color options from interface
-        Random randomColor = new Random();
+        this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
 
-        this.color = Color.color(randomColor.nextDouble(), randomColor.nextDouble(), randomColor.nextDouble());
+        // Set the graphic object of this passenger
+        this.passengerGraphic = new PassengerGraphic(this);
 
         // The identifier of this passenger is its serial number (based on the number of passengers generated)
         this.identifier = passengerCount;
@@ -50,8 +55,12 @@ public class Passenger extends PatchObject implements Agent {
         );
     }
 
-    public Color getColor() {
-        return color;
+    public Gender getGender() {
+        return gender;
+    }
+
+    public PassengerGraphic getPassengerGraphic() {
+        return passengerGraphic;
     }
 
     public PassengerMovement getPassengerMovement() {
@@ -79,5 +88,11 @@ public class Passenger extends PatchObject implements Agent {
     @Override
     public int hashCode() {
         return Objects.hash(identifier);
+    }
+
+    // Denotes the gender of this passenger
+    public enum Gender {
+        FEMALE,
+        MALE
     }
 }

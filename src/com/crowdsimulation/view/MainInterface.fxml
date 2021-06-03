@@ -459,24 +459,24 @@
                     <content>
                         <Accordion>
                             <panes>
-                                <TitledPane animated="false" text="Simulation controls">
+                                <TitledPane animated="false" prefWidth="253.0" text="Simulation controls">
                                     <content>
-                                        <VBox prefHeight="80.0" prefWidth="230.0">
+                                        <VBox prefHeight="80.0" prefWidth="251.0">
                                             <children>
                                                 <VBox alignment="CENTER" prefHeight="70.0" prefWidth="100.0" spacing="10.0">
                                                     <children>
                                                         <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                             <children>
                                                                 <ToggleButton fx:id="playButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="230.0" text="Play" />
-                                                                <Button fx:id="resetButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="117.0" text="Reset" />
+                                                                <Button fx:id="resetButton" mnemonicParsing="false" onAction="#resetAction" prefHeight="25.0" prefWidth="117.0" text="Reset" />
                                                             </children>
                                                         </HBox>
-                                                        <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="5.0">
-                                                            <children>
-                                                                <Label text="Simulation speed" />
-                                                                <Slider fx:id="speedSlider" max="300.0" min="1.0" prefWidth="273.0" snapToTicks="true" value="1.0" />
-                                                            </children>
-                                                        </VBox>
+                                          <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+                                             <children>
+                                                                <Label fx:id="simulationSpeedLabel" prefHeight="17.0" prefWidth="248.0" text="Simulation speed:" />
+                                                                <Slider fx:id="simulationSpeedSlider" max="300.0" min="1.0" prefWidth="273.0" snapToTicks="true" value="1.0" />
+                                             </children>
+                                          </HBox>
                                                     </children>
                                                 </VBox>
                                             </children>
@@ -489,14 +489,27 @@
                                             <children>
                                                 <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
                                                     <children>
-                                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="n passengers in the simulation" textAlignment="CENTER" wrappingWidth="230.421875" />
-                                                        <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers" />
-                                                        <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="5.0">
-                                                            <children>
-                                                                <Label text="Passenger walking speed (m/s)" />
-                                                                <Slider blockIncrement="0.1" majorTickUnit="0.5" max="2.0" min="0.5" minorTickCount="1" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
-                                                            </children>
-                                                        </VBox>
+                                          <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+                                             <children>
+                                                <Text fx:id="passengerCountStationText" strokeType="OUTSIDE" strokeWidth="0.0" text="n" textAlignment="CENTER" wrappingWidth="25.421875" />
+                                                <Text layoutX="10.0" layoutY="23.0" strokeType="OUTSIDE" strokeWidth="0.0" text="passengers in this station" textAlignment="CENTER" wrappingWidth="156.421875" />
+                                             </children>
+                                          </HBox>
+                                                        <Button fx:id="clearPassengersStationButton" mnemonicParsing="false" onAction="#clearPassengersStationAction" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers in this station" />
+                                          <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+                                             <children>
+                                                <Text fx:id="passengerCountFloorText" strokeType="OUTSIDE" strokeWidth="0.0" text="n" textAlignment="CENTER" wrappingWidth="25.421875" />
+                                                <Text layoutX="10.0" layoutY="23.0" strokeType="OUTSIDE" strokeWidth="0.0" text="passengers in this floor" textAlignment="CENTER" wrappingWidth="156.421875" />
+                                             </children>
+                                          </HBox>
+                                          <Button fx:id="clearPassengersFloorButton" layoutX="11.0" layoutY="63.0" mnemonicParsing="false" onAction="#clearPassengersFloorAction" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers in this floor" />
+                                          <HBox alignment="CENTER" layoutX="10.0" layoutY="37.0" prefHeight="100.0" prefWidth="200.0" />
+                                          <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+                                             <children>
+                                                                <Label fx:id="walkingSpeedLabel" prefHeight="17.0" prefWidth="133.0" text="Walking speed (m/s):" />
+                                                                <Slider fx:id="walkingSpeedSlider" blockIncrement="0.1" majorTickUnit="0.5" max="2.0" min="0.5" minorTickCount="1" prefHeight="38.0" prefWidth="126.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
+                                             </children>
+                                          </HBox>
                                                     </children>
                                                 </VBox>
                                             </children>

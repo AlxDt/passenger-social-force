@@ -2,7 +2,7 @@ package com.crowdsimulation.controller.screen.feature.main;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
-import com.crowdsimulation.controller.graphics.amenity.graphic.*;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.*;
 import com.crowdsimulation.controller.screen.ScreenController;
 import com.crowdsimulation.controller.screen.alert.AlertController;
 import com.crowdsimulation.controller.screen.feature.floorfield.NormalFloorFieldController;
@@ -307,13 +307,34 @@ public class MainScreenController extends ScreenController {
     @FXML
     private ToggleButton playButton;
 
-    // Passenger controls
-    // Platform controls
     @FXML
     private Button resetButton;
 
     @FXML
-    private Slider speedSlider;
+    private Label simulationSpeedLabel;
+
+    @FXML
+    private Slider simulationSpeedSlider;
+
+    // Passenger controls
+    // Platform controls
+    @FXML
+    private Text passengerCountStationText;
+
+    @FXML
+    private Button clearPassengersStationButton;
+
+    @FXML
+    private Text passengerCountFloorText;
+
+    @FXML
+    private Button clearPassengersFloorButton;
+
+    @FXML
+    private Label walkingSpeedLabel;
+
+    @FXML
+    private Slider walkingSpeedSlider;
 
     // Top bar
     // Top bar text prompt
@@ -482,7 +503,6 @@ public class MainScreenController extends ScreenController {
 
     @Override
     protected void closeAction() {
-
     }
 
     @FXML
@@ -585,9 +605,18 @@ public class MainScreenController extends ScreenController {
         );
 
         InitializeMainScreenService.initializeTestTab(
+                // Simulation controls
                 playButton,
                 resetButton,
-                speedSlider
+                simulationSpeedLabel,
+                simulationSpeedSlider,
+                // Passenger controls
+                passengerCountStationText,
+                clearPassengersStationButton,
+                passengerCountFloorText,
+                clearPassengersFloorButton,
+                walkingSpeedLabel,
+                walkingSpeedSlider
         );
 
         InitializeMainScreenService.initializeScrollPane(
@@ -1423,6 +1452,66 @@ public class MainScreenController extends ScreenController {
         drawInterface(false);
     }
 
+    @FXML
+    // Reset the simulation
+    public void resetAction() {
+        // Clear all passengers
+        clearPassengersInStation(Main.simulator.getStation());
+    }
+
+    @FXML
+    // Clear all passengers
+    public void clearPassengersStationAction() {
+        Station station = Main.simulator.getStation();
+
+        // Clear the passengers
+        clearPassengersInStation(station);
+
+        // Redraw the canvas
+        drawStationViewFloorForeground(Main.simulator.getCurrentFloor());
+    }
+
+    @FXML
+    // Clear passengers in this floor
+    public void clearPassengersFloorAction() {
+        Floor currentFloor = Main.simulator.getCurrentFloor();
+
+        // Clear the passengers
+        clearPassengersInFloor(currentFloor);
+
+        // Redraw the canvas
+        drawStationViewFloorForeground(currentFloor);
+    }
+
+    // Clear all passengers in the station
+    public void clearPassengersInStation(Station station) {
+        // TODO: Clear passengers from each queuable's passenger list
+
+        // Clear passengers from each floor
+        for (Floor floor : station.getFloors()) {
+            clearPassengersInFloor(floor);
+        }
+
+    }
+
+    // Clear passengers in a single floor
+    public void clearPassengersInFloor(Floor floor) {
+        // Clear passengers from each patch
+        for (Patch[] patchRow : floor.getPatches()) {
+            for (Patch patch : patchRow) {
+                patch.getPassengers().clear();
+            }
+        }
+
+        // Remove all the passengers found in this floor from the station's master list of passengers
+        floor.getStation().getPassengersInStation().removeAll(
+                floor.getPassengersInFloor()
+        );
+
+        // Clear all passengers from this floor's passenger list
+        floor.getPassengersInFloor().clear();
+    }
+
     public void initializeStation(Station station, boolean drawListeners) {
         // Reset the simulator to its initial settings
         Main.simulator.resetToDefaultConfiguration(station);
@@ -1455,6 +1544,9 @@ public class MainScreenController extends ScreenController {
     private void saveStation(Station station, File stationFile) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(stationFile.getAbsolutePath());
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+
+        // Clear the passengers in the station first
+        clearPassengersInStation(station);
 
         objectOutputStream.writeObject(station);
         objectOutputStream.close();
@@ -1537,6 +1629,8 @@ public class MainScreenController extends ScreenController {
 
         // Reset the top bar
         resetTopBar();
+
+        // Update the passenger counts
     }
 
     // Reset the top bar
@@ -1679,6 +1773,17 @@ public class MainScreenController extends ScreenController {
         );
     }
 
+    // Set the passenger counts
+    public void updatePassengerCounts() {
+        passengerCountStationText.setText(
+                Integer.toString(Main.simulator.getStation().getPassengersInStation().size())
+        );
+
+        passengerCountFloorText.setText(
+                Integer.toString(Main.simulator.getCurrentFloor().getPassengersInFloor().size())
+        );
+    }
+
     // Save a single amenity or all instances of an amenity in a floor
     private void saveAmenityInFloor(boolean singleAmenity) {
         // Distinguish whether only a single amenity will be saved or not
@@ -1706,7 +1811,7 @@ public class MainScreenController extends ScreenController {
 
                 // Update the graphic if needed
                 if (wasEnabledPrior != stationGateEnableCheckBox.isSelected()) {
-                    ((StationGateGraphic) stationGateToEdit.getGraphicObject()).change(stationGateToEdit);
+                    ((StationGateGraphic) stationGateToEdit.getGraphicObject()).change();
                 }
 
                 break;
@@ -1752,12 +1857,12 @@ public class MainScreenController extends ScreenController {
                     EscalatorGraphic lowerEscalatorGraphic
                             = (EscalatorGraphic) lowerPortalEscalator.getGraphicObject();
 
-                    lowerEscalatorGraphic.change(lowerPortalEscalator);
+                    lowerEscalatorGraphic.change();
 
                     EscalatorGraphic upperEscalatorGraphic
                             = (EscalatorGraphic) upperPortalEscalator.getGraphicObject();
 
-                    upperEscalatorGraphic.change(upperPortalEscalator);
+                    upperEscalatorGraphic.change();
 
                     escalatorShaftToEdit.setChangedDirection(false);
                 }
@@ -1814,7 +1919,7 @@ public class MainScreenController extends ScreenController {
 
                     // Update the graphic if needed
                     if (priorPlatform != trainDoorDirectionChoiceBox.getValue()) {
-                        ((TrainDoorGraphic) trainDoorToEdit.getGraphicObject()).change(trainDoorToEdit);
+                        ((TrainDoorGraphic) trainDoorToEdit.getGraphicObject()).change();
                     }
                 } else {
                     AlertController.showSimpleAlert(
@@ -1847,7 +1952,7 @@ public class MainScreenController extends ScreenController {
 
                 // Update the graphic if needed
                 if (priorWallType != wallTypeChoiceBox.getValue()) {
-                    ((WallGraphic) wallToEdit.getGraphicObject()).change(wallToEdit);
+                    ((WallGraphic) wallToEdit.getGraphicObject()).change();
                 }
 
                 break;
@@ -4272,13 +4377,24 @@ public class MainScreenController extends ScreenController {
     }
 
     // Draw the station view background given a current floor
-    private void drawStationViewFloorBackground(Floor currentFloor) {
-        // Draw each station in the train system onto its respective tab
+    public void drawStationViewFloorBackground(Floor currentFloor) {
         GraphicsController.requestDrawStationView(
                 interfaceStackPane,
                 currentFloor,
                 true
         );
+    }
+
+    // Draw the station view foreground given a current floor
+    public void drawStationViewFloorForeground(Floor currentFloor) {
+        GraphicsController.requestDrawStationView(
+                interfaceStackPane,
+                currentFloor,
+                false
+        );
+
+        // Update the passenger counts
+        updatePassengerCounts();
     }
 
     // Draw the station view background given a current floor

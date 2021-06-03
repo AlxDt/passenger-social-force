@@ -154,6 +154,10 @@ public class Floor extends BaseStationObject implements Environment {
         return patches[row][column];
     }
 
+    public Patch[][] getPatches() {
+        return this.patches;
+    }
+
     public static List<Patch> get5x5Field(Patch centerPatch, double heading, boolean includeCenterPatch) {
         final double fieldOfViewAngleDegrees = 135.0;
 

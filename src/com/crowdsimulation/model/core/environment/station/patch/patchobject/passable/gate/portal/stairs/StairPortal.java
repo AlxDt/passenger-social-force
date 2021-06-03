@@ -2,9 +2,9 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
-import com.crowdsimulation.controller.graphics.amenity.graphic.StairGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.StairGraphic;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -263,7 +263,7 @@ public class StairPortal extends Portal {
     }
 
     @Override
-    public GraphicLocation getGraphicLocation() {
+    public AmenityGraphicLocation getGraphicLocation() {
         return this.stairGraphic.getGraphicLocation();
     }
 

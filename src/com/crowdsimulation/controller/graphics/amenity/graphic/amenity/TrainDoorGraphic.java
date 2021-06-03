@@ -1,4 +1,4 @@
-package com.crowdsimulation.controller.graphics.amenity.graphic;
+package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
@@ -21,12 +21,12 @@ public class TrainDoorGraphic extends AmenityGraphic implements Changeable {
 
         this.graphicIndex = 0;
 
-        change(trainDoor);
+        change();
     }
 
     @Override
-    public void change(Drawable amenity) {
-        TrainDoor trainDoor = (TrainDoor) amenity;
+    public void change() {
+        TrainDoor trainDoor = (TrainDoor) this.amenity;
 
         switch (trainDoor.getPlatform()) {
             case NORTHBOUND:

@@ -2,9 +2,9 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.graphics.amenity.editor.SecurityEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
-import com.crowdsimulation.controller.graphics.amenity.graphic.SecurityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.SecurityGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
@@ -162,7 +162,7 @@ public class Security extends BlockableAmenity {
     }
 
     @Override
-    public GraphicLocation getGraphicLocation() {
+    public AmenityGraphicLocation getGraphicLocation() {
         return this.securityGraphic.getGraphicLocation();
     }
 

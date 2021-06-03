@@ -2,9 +2,9 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.graphics.amenity.editor.StationGateEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
-import com.crowdsimulation.controller.graphics.amenity.graphic.StationGateGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.StationGateGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -104,7 +104,7 @@ public class StationGate extends Gate {
     }
 
     @Override
-    public GraphicLocation getGraphicLocation() {
+    public AmenityGraphicLocation getGraphicLocation() {
         return this.stationGateGraphic.getGraphicLocation();
     }
 

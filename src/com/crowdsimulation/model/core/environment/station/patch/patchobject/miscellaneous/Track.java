@@ -3,9 +3,9 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.mis
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.editor.TrackEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
-import com.crowdsimulation.controller.graphics.amenity.graphic.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.GraphicLocation;
-import com.crowdsimulation.controller.graphics.amenity.graphic.TrackGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.TrackGraphic;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -96,7 +96,7 @@ public class Track extends Obstacle {
     }
 
     @Override
-    public GraphicLocation getGraphicLocation() {
+    public AmenityGraphicLocation getGraphicLocation() {
         return this.trackGraphic.getGraphicLocation();
     }
 

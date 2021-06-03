@@ -1,4 +1,4 @@
-package com.crowdsimulation.controller.graphics.amenity.graphic;
+package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 
@@ -6,5 +6,5 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Draw
 // (i.e., a visual change brought about by a change in the object's state, such as how a station entrance may be open
 // or closed)
 public interface Changeable {
-    void change(Drawable amenity);
+    void change();
 }

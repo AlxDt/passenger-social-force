@@ -1,4 +1,4 @@
-package com.crowdsimulation.controller.graphics.amenity.graphic;
+package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
@@ -33,7 +33,7 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
 
         this.graphicIndex = 0;
 
-        change(wall);
+        change();
     }
 
     @Override
@@ -53,8 +53,8 @@ public class WallGraphic extends AmenityGraphic implements Cyclable, Changeable 
     }
 
     @Override
-    public void change(Drawable drawable) {
-        Wall wall = (Wall) drawable;
+    public void change() {
+        Wall wall = (Wall) this.amenity;
 
         switch (wall.getWallType()) {
             case WALL:

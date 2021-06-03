@@ -21,6 +21,9 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
+import javafx.util.StringConverter;
+import javafx.util.converter.NumberStringConverter;
 
 import java.util.List;
 
@@ -350,14 +353,30 @@ public class InitializeMainScreenService extends InitializeScreenService {
             // Simulation controls
             ToggleButton playButton,
             Button resetButton,
-            Slider speedSlider
+            Label simulationSpeedLabel,
+            Slider simulationSpeedSlider,
             // Passenger controls
-            // Platform controls
+            Text passengerCountStationText,
+            Button clearPassengersStationButton,
+            Text passengerCountFloorText,
+            Button clearPassengersFloorButton,
+            Label walkingSpeedLabel,
+            Slider walkingSpeedSlider
     ) {
         initializeSimulationControls(
                 playButton,
                 resetButton,
-                speedSlider
+                simulationSpeedLabel,
+                simulationSpeedSlider
+        );
+
+        initializePassengerControls(
+                passengerCountStationText,
+                clearPassengersStationButton,
+                passengerCountFloorText,
+                clearPassengersFloorButton,
+                walkingSpeedLabel,
+                walkingSpeedSlider
         );
     }
 
@@ -876,7 +895,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeSimulationControls(
             ToggleButton playButton,
             Button resetButton,
-            Slider speedSlider
+            Label simulationSpeedLabel,
+            Slider simulationSpeedSlider
     ) {
         playButton.setOnAction(event -> {
             // Not yet running to running (play simulation)
@@ -898,6 +918,17 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 Main.simulator.getRunning().set(false);
             }
         });
+    }
+
+    private static void initializePassengerControls(
+            Text passengerCountStationText,
+            Button clearPassengersStationButton,
+            Text passengerCountFloorText,
+            Button clearPassengersFloorButton,
+            Label walkingSpeedLabel,
+            Slider walkingSpeedSlider
+    ) {
+
     }
 
     public static void initializeScrollPane(

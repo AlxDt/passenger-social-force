@@ -1,4 +1,4 @@
-package com.crowdsimulation.controller.graphics.amenity.graphic;
+package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
@@ -70,8 +70,8 @@ public class EscalatorGraphic extends AmenityGraphic implements Changeable {
     }
 
     @Override
-    public void change(Drawable drawable) {
-        EscalatorPortal escalatorPortal = (EscalatorPortal) drawable;
+    public void change() {
+        EscalatorPortal escalatorPortal = (EscalatorPortal) this.amenity;
 
         if (escalatorPortal.getEscalatorShaft().getEscalatorDirection() == EscalatorShaft.EscalatorDirection.DOWN) {
             this.graphicIndex++;

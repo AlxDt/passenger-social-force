@@ -1,7 +1,6 @@
 package com.crowdsimulation.model.simulator;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -342,13 +341,6 @@ public class Simulator {
 
         this.running.set(false);
         this.timeElapsed = 0;
-
-        // Clear all previously saved passengers in this station
-        this.station.getPassengersInStation().clear();
-
-        for (Floor floor : this.getStation().getFloors()) {
-            floor.getPassengersInFloor().clear();
-        }
     }
 
     // Convert a build subcategory to its corresponding class
@@ -402,11 +394,11 @@ public class Simulator {
 
                     // Keep looping until paused
                     while (this.running.get()) {
-                        try {
+/*                        try {
                             GraphicsController.DRAW_SEMAPHORE.acquire();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
-                        }
+                        }*/
 
                         // Update the pertinent variables when ticking
 
@@ -415,10 +407,9 @@ public class Simulator {
                             updateFloor(floor);
                         }
 
-                        GraphicsController.requestDrawStationView(
-                                Main.mainScreenController.getInterfaceStackPane(),
-                                Main.simulator.getCurrentFloor(),
-                                false
+                        // Update the interface
+                        Main.mainScreenController.drawStationViewFloorForeground(
+                                Main.simulator.getCurrentFloor()
                         );
 
                         // TODO: Rest for an amount of time depending on the interface slider
@@ -451,7 +442,10 @@ public class Simulator {
 
         // Make each passenger move
         for (Passenger passenger : floor.getPassengersInFloor()) {
-            movePassenger(floor, passenger);
+            movePassenger(passenger);
+
+            // Also update the graphic of the passenger
+            passenger.getPassengerGraphic().change();
         }
 
         // Remove all passengers that are marked for removal
@@ -462,7 +456,7 @@ public class Simulator {
         passengersToDespawn.clear();
     }
 
-    private void movePassenger(Floor floor, Passenger passenger) {
+    private void movePassenger(Passenger passenger) {
         PassengerMovement passengerMovement = passenger.getPassengerMovement();
 
         // Look for the goal nearest to this passenger

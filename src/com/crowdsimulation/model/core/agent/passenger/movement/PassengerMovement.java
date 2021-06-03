@@ -778,7 +778,7 @@ public class PassengerMovement {
         );
 
         // Add some stochasticity, so the passenger's heading will not always be in just a straight line
-        headingToGoal += Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * Math.toRadians(10);
+        headingToGoal += Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * Math.toRadians(5);
 
         // Then set the passenger's heading to it
         this.heading = headingToGoal;

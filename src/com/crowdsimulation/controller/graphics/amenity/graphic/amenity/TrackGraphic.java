@@ -1,4 +1,4 @@
-package com.crowdsimulation.controller.graphics.amenity.graphic;
+package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
 

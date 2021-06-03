@@ -1,4 +1,4 @@
-package com.crowdsimulation.controller.graphics.amenity.graphic;
+package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
@@ -36,7 +36,7 @@ public class StationGateGraphic extends AmenityGraphic implements Cyclable, Chan
     }
 
     @Override
-    public void change(Drawable drawable) {
+    public void change() {
         if (this.graphicIndex >= 0 && this.graphicIndex <= 2) {
             this.graphicIndex += 3;
         } else {

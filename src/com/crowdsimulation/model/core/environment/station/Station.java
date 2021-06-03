@@ -17,7 +17,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Station extends BaseStationObject implements Environment {
     // Default station name
