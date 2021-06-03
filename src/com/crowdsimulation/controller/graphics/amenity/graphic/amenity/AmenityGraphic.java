@@ -111,6 +111,7 @@ public abstract class AmenityGraphic extends Graphic {
 
         final List<AmenityGraphicLocation> trackGraphic = new ArrayList<>();
         trackGraphic.add(new AmenityGraphicLocation(12, 10));
+        trackGraphic.add(new AmenityGraphicLocation(12, 11));
         AMENITY_GRAPHICS.put(Track.class, trackGraphic);
 
         final List<AmenityGraphicLocation> wallGraphic = new ArrayList<>();

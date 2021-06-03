@@ -1929,11 +1929,17 @@ public class MainScreenController extends ScreenController {
                 break;
             case TRAIN_TRACK:
                 Track trackToEdit = (Track) amenityToSave;
+                Track.TrackDirection priorTrackDirection = trackToEdit.getTrackDirection();
 
                 Track.trackEditor.edit(
                         trackToEdit,
                         trackDirectionChoiceBox.getValue()
                 );
+
+                // Update the graphic if needed
+                if (priorTrackDirection != trackToEdit.getTrackDirection()) {
+                    ((TrackGraphic) trackToEdit.getGraphicObject()).change();
+                }
 
                 break;
             case OBSTACLE:
