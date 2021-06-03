@@ -28,17 +28,19 @@ public abstract class AmenityGraphic extends Graphic {
     static {
         // The designated graphic of the amenities
         final List<AmenityGraphicLocation> stationGateGraphic = new ArrayList<>();
-        stationGateGraphic.add(new AmenityGraphicLocation(0, 0));
-        stationGateGraphic.add(new AmenityGraphicLocation(0, 1));
-        stationGateGraphic.add(new AmenityGraphicLocation(0, 2));
-        stationGateGraphic.add(new AmenityGraphicLocation(0, 3));
-        stationGateGraphic.add(new AmenityGraphicLocation(0, 4));
-        stationGateGraphic.add(new AmenityGraphicLocation(0, 5));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 0));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 2));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 4));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 6));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 8));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 10));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 12));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 14));
         AMENITY_GRAPHICS.put(StationGate.class, stationGateGraphic);
 
         final List<AmenityGraphicLocation> securityGraphic = new ArrayList<>();
-        securityGraphic.add(new AmenityGraphicLocation(0, 6));
-        securityGraphic.add(new AmenityGraphicLocation(0, 7));
+        securityGraphic.add(new AmenityGraphicLocation(9, 12));
+        securityGraphic.add(new AmenityGraphicLocation(9, 13));
         AMENITY_GRAPHICS.put(Security.class, securityGraphic);
 
         final List<AmenityGraphicLocation> stairsGraphic = new ArrayList<>();

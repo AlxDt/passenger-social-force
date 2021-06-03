@@ -126,9 +126,6 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Button deleteStationGateButton;
 
-    @FXML
-    private Button flipStationGateButton;
-
     // Security
     @FXML
     private CheckBox securityEnableCheckBox;
@@ -533,7 +530,6 @@ public class MainScreenController extends ScreenController {
                 stationGateSpawnSpinner,
                 saveStationGateButton,
                 deleteStationGateButton,
-                flipStationGateButton,
                 // Security
                 securityEnableCheckBox,
                 securityBlockPassengerCheckBox,
@@ -2446,9 +2442,7 @@ public class MainScreenController extends ScreenController {
     private void flipSingleAmenityInFloor(Amenity amenity) {
         Drawable drawable = (Drawable) amenity;
 
-        if (drawable instanceof StationGate) {
-            ((StationGateGraphic) drawable.getGraphicObject()).cycle();
-        } else if (drawable instanceof Security) {
+        if (drawable instanceof Security) {
             ((SecurityGraphic) drawable.getGraphicObject()).cycle();
         } else if (drawable instanceof TicketBooth) {
             ((TicketBoothGraphic) drawable.getGraphicObject()).cycle();
@@ -2460,12 +2454,6 @@ public class MainScreenController extends ScreenController {
     // Flip all amenities
     private void flipAllAmenitiesInFloor() {
         switch (Main.simulator.getBuildSubcategory()) {
-            case STATION_ENTRANCE_EXIT:
-                for (StationGate stationGate : Main.simulator.getCurrentFloor().getStationGates()) {
-                    flipSingleAmenityInFloor(stationGate);
-                }
-
-                break;
             case SECURITY:
                 for (Security security : Main.simulator.getCurrentFloor().getSecurities()) {
                     flipSingleAmenityInFloor(security);

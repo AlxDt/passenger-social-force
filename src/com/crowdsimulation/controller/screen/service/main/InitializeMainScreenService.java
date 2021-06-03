@@ -22,8 +22,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
-import javafx.util.StringConverter;
-import javafx.util.converter.NumberStringConverter;
 
 import java.util.List;
 
@@ -155,7 +153,6 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
             Button deleteStationGateButton,
-            Button flipStationGateButton,
             // Security
             CheckBox securityEnableCheckBox,
             CheckBox securityBlockPassengerCheckBox,
@@ -241,7 +238,6 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 stationGateSpinner,
                 saveStationGateButton,
                 deleteStationGateButton,
-                flipStationGateButton,
                 securityEnableCheckBox,
                 securityBlockPassengerCheckBox,
                 securityIntervalLabel,
@@ -389,7 +385,6 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
             Button deleteStationGateButton,
-            Button flipStationGateButton,
             CheckBox securityEnableCheckBox,
             CheckBox securityBlockPassengerCheckBox,
             Label securityIntervalLabel,
@@ -406,8 +401,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 stationGateSpawnLabel,
                 stationGateSpinner,
                 saveStationGateButton,
-                deleteStationGateButton,
-                flipStationGateButton
+                deleteStationGateButton
         );
 
         initializeSecurity(
@@ -430,8 +424,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
-            Button deleteStationGateButton,
-            Button flipStationGateButton
+            Button deleteStationGateButton
     ) {
         stationGateModeLabel.setLabelFor(stationGateModeChoiceBox);
 
@@ -457,8 +450,6 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         saveStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
-
-        flipStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
     }
 
     // Initialize the security UI controls

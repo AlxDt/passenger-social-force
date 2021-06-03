@@ -154,7 +154,6 @@
                                                                                         <Button fx:id="deleteStationGateButton" cancelButton="true" mnemonicParsing="false" onAction="#deleteAmenityAction" prefHeight="25.0" prefWidth="200.0" text="Delete" />
                                                                                     </children>
                                                                                 </HBox>
-                                                                                <Button fx:id="flipStationGateButton" cancelButton="true" mnemonicParsing="false" onAction="#flipAction" prefHeight="25.0" prefWidth="199.0" text="Rotate station entrance/exit" />
                                                                             </children>
                                                                         </VBox>
                                                                     </children>
