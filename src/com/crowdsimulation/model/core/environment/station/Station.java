@@ -17,6 +17,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Station extends BaseStationObject implements Environment {
     // Default station name
@@ -40,7 +41,7 @@ public class Station extends BaseStationObject implements Environment {
     private final List<ElevatorShaft> elevatorShafts;
 
     // The list of passengers in this station
-    private final List<Passenger> passengersInStation;
+    private final CopyOnWriteArrayList<Passenger> passengersInStation;
 
     public Station(int rows, int columns) {
         this.name = DEFAULT_STATION_NAME;
@@ -53,7 +54,7 @@ public class Station extends BaseStationObject implements Environment {
         this.escalatorShafts = Collections.synchronizedList(new ArrayList<>());
         this.elevatorShafts = Collections.synchronizedList(new ArrayList<>());
 
-        this.passengersInStation = new ArrayList<>();
+        this.passengersInStation = new CopyOnWriteArrayList<>();
 
         // Initially, the station has one floor
         Floor.addFloor(this, this.floors, 0, rows, columns);
@@ -91,7 +92,7 @@ public class Station extends BaseStationObject implements Environment {
         return elevatorShafts;
     }
 
-    public List<Passenger> getPassengersInStation() {
+    public CopyOnWriteArrayList<Passenger> getPassengersInStation() {
         return passengersInStation;
     }
 

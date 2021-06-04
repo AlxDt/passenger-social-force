@@ -10,6 +10,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
+import com.crowdsimulation.model.simulator.SimulationTime;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -347,6 +348,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
     public static void initializeTestTab(
             // Simulation controls
+            Text elapsedTimeText,
             ToggleButton playButton,
             Button resetButton,
             Label simulationSpeedLabel,
@@ -360,6 +362,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Slider walkingSpeedSlider
     ) {
         initializeSimulationControls(
+                elapsedTimeText,
                 playButton,
                 resetButton,
                 simulationSpeedLabel,
@@ -884,6 +887,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     }
 
     private static void initializeSimulationControls(
+            Text elapsedTimeText,
             ToggleButton playButton,
             Button resetButton,
             Label simulationSpeedLabel,
@@ -891,14 +895,16 @@ public class InitializeMainScreenService extends InitializeScreenService {
     ) {
         playButton.setOnAction(event -> {
             // Not yet running to running (play simulation)
-            if (!Main.simulator.getRunning().get()) {
+            if (!Main.simulator.isRunning()) {
                 // Update mode
                 Main.simulator.setOperationMode(Simulator.OperationMode.TESTING);
                 Main.mainScreenController.updatePromptText();
 
                 // The simulation will now be running
-                Main.simulator.getRunning().set(true);
+                Main.simulator.setRunning(true);
                 Main.simulator.getPlaySemaphore().release();
+
+                playButton.setText("Pause");
             } else {
                 // Update mode
                 Main.simulator.setOperationMode(Simulator.OperationMode.BUILDING);
@@ -906,9 +912,16 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
                 // Running to not running (pause simulation)
                 // The simulation will now be pausing
-                Main.simulator.getRunning().set(false);
+                Main.simulator.setRunning(false);
+
+                playButton.setText("Play");
             }
         });
+
+        simulationSpeedLabel.setLabelFor(simulationSpeedSlider);
+        simulationSpeedSlider.valueProperty().addListener(((observable, oldValue, newValue) -> {
+            SimulationTime.SLEEP_TIME_MILLISECONDS.set((int) (1.0 / newValue.intValue() * 1000));
+        }));
     }
 
     private static void initializePassengerControls(

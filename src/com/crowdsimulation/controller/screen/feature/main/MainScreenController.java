@@ -38,6 +38,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -52,6 +53,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 
 import java.io.*;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -301,6 +304,9 @@ public class MainScreenController extends ScreenController {
 
     // Test tab variables
     // Simulation controls
+    @FXML
+    private Text elapsedTimeText;
+
     @FXML
     private ToggleButton playButton;
 
@@ -602,6 +608,7 @@ public class MainScreenController extends ScreenController {
 
         InitializeMainScreenService.initializeTestTab(
                 // Simulation controls
+                elapsedTimeText,
                 playButton,
                 resetButton,
                 simulationSpeedLabel,
@@ -1451,6 +1458,8 @@ public class MainScreenController extends ScreenController {
     @FXML
     // Reset the simulation
     public void resetAction() {
+        Main.simulator.reset();
+
         // Clear all passengers
         clearPassengersInStation(Main.simulator.getStation());
 
@@ -1495,6 +1504,12 @@ public class MainScreenController extends ScreenController {
 
     // Clear passengers in a single floor
     public void clearPassengersInFloor(Floor floor) {
+/*        try {
+            GraphicsController.DRAW_SEMAPHORE.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }*/
+
         // Clear passengers from each patch
         for (Patch[] patchRow : floor.getPatches()) {
             for (Patch patch : patchRow) {
@@ -1772,14 +1787,22 @@ public class MainScreenController extends ScreenController {
         );
     }
 
+    // Update the simulation time on the screen
+    public void updateSimulationTime() {
+        LocalTime currentTime = Main.simulator.getSimulationTime().getTime();
+        long elapsedTime = Main.simulator.getSimulationTime().getStartTime().until(currentTime, ChronoUnit.SECONDS);
+
+        elapsedTimeText.setText("Elapsed time: " + elapsedTime + " s");
+    }
+
     // Set the passenger counts
     public void updatePassengerCounts() {
         passengerCountStationText.setText(
-                Integer.toString(Main.simulator.getStation().getPassengersInStation().size())
+                Main.simulator.getStation().getPassengersInStation().size() + " passengers in this station"
         );
 
         passengerCountFloorText.setText(
-                Integer.toString(Main.simulator.getCurrentFloor().getPassengersInFloor().size())
+                Main.simulator.getCurrentFloor().getPassengersInFloor().size() + " passengers in this floor"
         );
     }
 
@@ -4390,8 +4413,18 @@ public class MainScreenController extends ScreenController {
                 false
         );
 
-        // Update the passenger counts
-        updatePassengerCounts();
+        requestUpdateInterfaceSimulationElements();
+    }
+
+    // Update the interface elements pertinent to the simulation
+    private void requestUpdateInterfaceSimulationElements() {
+        Platform.runLater(() -> {
+            // Update the simulation time
+            updateSimulationTime();
+
+            // Update the passenger counts
+            updatePassengerCounts();
+        });
     }
 
     // Draw the station view background given a current floor

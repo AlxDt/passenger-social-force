@@ -50,7 +50,7 @@ public class Floor extends BaseStationObject implements Environment {
     private final List<Wall> walls;
 
     // Passengers in this floor
-    private final List<Passenger> passengersInFloor;
+    private final CopyOnWriteArrayList<Passenger> passengersInFloor;
 
     // Factory for floor creation
     private static final Floor.FloorFactory floorFactory;
@@ -83,7 +83,7 @@ public class Floor extends BaseStationObject implements Environment {
         this.walls = Collections.synchronizedList(new ArrayList<>());
 
         // Initialize the passenger list
-        this.passengersInFloor = new ArrayList<>();
+        this.passengersInFloor = new CopyOnWriteArrayList<>();
     }
 
     private void initializePatches() {
@@ -138,7 +138,7 @@ public class Floor extends BaseStationObject implements Environment {
         return walls;
     }
 
-    public List<Passenger> getPassengersInFloor() {
+    public CopyOnWriteArrayList<Passenger> getPassengersInFloor() {
         return passengersInFloor;
     }
 

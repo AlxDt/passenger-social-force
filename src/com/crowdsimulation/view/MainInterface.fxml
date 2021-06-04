@@ -29,7 +29,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1350.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.crowdsimulation.controller.screen.feature.main.MainScreenController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1500.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.crowdsimulation.controller.screen.feature.main.MainScreenController">
     <center>
         <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
             <children>
@@ -71,7 +71,7 @@
                         </HBox>
                     </children>
                 </HBox>
-                <ScrollPane fx:id="scrollPane" focusTraversable="false" prefHeight="620.0" prefWidth="1100.0">
+                <ScrollPane fx:id="scrollPane" focusTraversable="false" prefHeight="705.0" prefWidth="1230.0">
                     <VBox.margin>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                     </VBox.margin>
@@ -454,100 +454,102 @@
                         </VBox>
                     </content>
                 </Tab>
-                <Tab text="Run">
-                    <content>
-                        <Accordion>
-                            <panes>
-                                <TitledPane animated="false" prefWidth="253.0" text="Simulation controls">
-                                    <content>
-                                        <VBox prefHeight="80.0" prefWidth="251.0">
-                                            <children>
-                                                <VBox alignment="CENTER" prefHeight="70.0" prefWidth="100.0" spacing="10.0">
-                                                    <children>
-                                                        <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                            <children>
-                                                                <ToggleButton fx:id="playButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="230.0" text="Play" />
-                                                                <Button fx:id="resetButton" mnemonicParsing="false" onAction="#resetAction" prefHeight="25.0" prefWidth="117.0" text="Reset" />
-                                                            </children>
-                                                        </HBox>
+                <Tab text="Test">
+               <content>
+                  <VBox prefHeight="794.0" prefWidth="286.0">
+                     <children>
+                        <TitledPane animated="false" collapsible="false" prefHeight="110.0" prefWidth="286.0" text="Simulation">
+                           <content>
+                              <VBox prefHeight="194.0" prefWidth="120.0">
+                                 <children>
+                                    <VBox alignment="CENTER" prefHeight="70.0" prefWidth="100.0" spacing="10.0">
+                                       <children>
+                                          <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+                                             <children>
+                                                <Text fx:id="elapsedTimeText" strokeType="OUTSIDE" strokeWidth="0.0" text="Elapsed time: 0 s" textAlignment="CENTER" />
+                                             </children>
+                                          </HBox>
+                                          <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                             <children>
+                                                <ToggleButton fx:id="playButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="230.0" text="Play" />
+                                                <Button fx:id="resetButton" mnemonicParsing="false" onAction="#resetAction" prefHeight="25.0" prefWidth="117.0" text="Reset" />
+                                             </children>
+                                          </HBox>
                                           <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
                                              <children>
-                                                                <Label fx:id="simulationSpeedLabel" prefHeight="17.0" prefWidth="248.0" text="Simulation speed:" />
-                                                                <Slider fx:id="simulationSpeedSlider" max="300.0" min="1.0" prefWidth="273.0" snapToTicks="true" value="1.0" />
+                                                <Label fx:id="simulationSpeedLabel" prefHeight="17.0" prefWidth="248.0" text="Simulation speed:" />
+                                                <Slider fx:id="simulationSpeedSlider" max="300.0" min="1.0" prefWidth="273.0" snapToTicks="true" value="1.0" />
                                              </children>
                                           </HBox>
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </VBox>
-                                    </content>
-                                </TitledPane>
-                                <TitledPane animated="false" text="Passenger controls">
-                                    <content>
-                                        <VBox prefHeight="200.0" prefWidth="100.0">
-                                            <children>
-                                                <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
-                                                    <children>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </VBox>
+                           </content>
+                        </TitledPane>
+                        <TitledPane animated="false" collapsible="false" prefHeight="214.0" prefWidth="286.0" text="Passengers">
+                           <content>
+                              <VBox prefHeight="200.0" prefWidth="100.0">
+                                 <children>
+                                    <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
+                                       <children>
                                           <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                                              <children>
-                                                <Text fx:id="passengerCountStationText" strokeType="OUTSIDE" strokeWidth="0.0" text="n" textAlignment="CENTER" wrappingWidth="25.421875" />
-                                                <Text layoutX="10.0" layoutY="23.0" strokeType="OUTSIDE" strokeWidth="0.0" text="passengers in this station" textAlignment="CENTER" wrappingWidth="156.421875" />
+                                                <Text fx:id="passengerCountStationText" strokeType="OUTSIDE" strokeWidth="0.0" text="0 passengers in this station" textAlignment="CENTER" wrappingWidth="221.421875" />
                                              </children>
                                           </HBox>
-                                                        <Button fx:id="clearPassengersStationButton" mnemonicParsing="false" onAction="#clearPassengersStationAction" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers in this station" />
+                                          <Button fx:id="clearPassengersStationButton" mnemonicParsing="false" onAction="#clearPassengersStationAction" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers in this station" />
                                           <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                                              <children>
-                                                <Text fx:id="passengerCountFloorText" strokeType="OUTSIDE" strokeWidth="0.0" text="n" textAlignment="CENTER" wrappingWidth="25.421875" />
-                                                <Text layoutX="10.0" layoutY="23.0" strokeType="OUTSIDE" strokeWidth="0.0" text="passengers in this floor" textAlignment="CENTER" wrappingWidth="156.421875" />
+                                                <Text fx:id="passengerCountFloorText" strokeType="OUTSIDE" strokeWidth="0.0" text="0 passengers in this floor" textAlignment="CENTER" wrappingWidth="204.421875" />
                                              </children>
                                           </HBox>
                                           <Button fx:id="clearPassengersFloorButton" layoutX="11.0" layoutY="63.0" mnemonicParsing="false" onAction="#clearPassengersFloorAction" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers in this floor" />
                                           <HBox alignment="CENTER" layoutX="10.0" layoutY="37.0" prefHeight="100.0" prefWidth="200.0" />
                                           <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
                                              <children>
-                                                                <Label fx:id="walkingSpeedLabel" prefHeight="17.0" prefWidth="133.0" text="Walking speed (m/s):" />
-                                                                <Slider fx:id="walkingSpeedSlider" blockIncrement="0.1" majorTickUnit="0.5" max="2.0" min="0.5" minorTickCount="1" prefHeight="38.0" prefWidth="126.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
+                                                <Label fx:id="walkingSpeedLabel" prefHeight="17.0" prefWidth="133.0" text="Walking speed (m/s):" />
+                                                <Slider fx:id="walkingSpeedSlider" blockIncrement="0.1" majorTickUnit="0.5" max="2.0" min="0.5" minorTickCount="1" prefHeight="38.0" prefWidth="126.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
                                              </children>
                                           </HBox>
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </VBox>
-                                    </content>
-                                </TitledPane>
-                                <TitledPane animated="false" text="Platform controls">
-                                    <content>
-                                        <VBox prefHeight="200.0" prefWidth="230.0">
-                                            <children>
-                                                <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
-                                                    <children>
-                                                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Choose the direction of the platform where train doors will be opened, then choose the type of train carriages whose doors will be opened." wrappingWidth="230.421875" />
-                                                        <HBox alignment="CENTER" prefHeight="30.0" prefWidth="282.0" spacing="10.0">
-                                                            <children>
-                                                                <Label text="Direction:" />
-                                                                <ChoiceBox prefHeight="25.0" prefWidth="171.0" />
-                                                            </children>
-                                                        </HBox>
-                                                        <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                            <children>
-                                                                <Label text="Carriages:" />
-                                                                <ChoiceBox prefHeight="25.0" prefWidth="170.0" />
-                                                            </children>
-                                                        </HBox>
-                                                        <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                                            <children>
-                                                                <ToggleButton mnemonicParsing="false" prefHeight="25.0" prefWidth="231.0" text="Open train doors" />
-                                                            </children>
-                                                        </HBox>
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </VBox>
-                                    </content>
-                                </TitledPane>
-                            </panes>
-                        </Accordion>
-                    </content>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </VBox>
+                           </content>
+                        </TitledPane>
+                        <TitledPane animated="false" collapsible="false" prefHeight="455.0" prefWidth="286.0" text="Platform">
+                           <content>
+                              <VBox prefHeight="200.0" prefWidth="230.0">
+                                 <children>
+                                    <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
+                                       <children>
+                                          <HBox alignment="CENTER" prefHeight="30.0" prefWidth="282.0" spacing="10.0">
+                                             <children>
+                                                <Label text="Direction:" />
+                                                <ChoiceBox prefHeight="25.0" prefWidth="165.0" />
+                                             </children>
+                                          </HBox>
+                                          <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                             <children>
+                                                <Label text="Carriages:" />
+                                                <ChoiceBox prefHeight="25.0" prefWidth="164.0" />
+                                             </children>
+                                          </HBox>
+                                          <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                             <children>
+                                                <ToggleButton mnemonicParsing="false" prefHeight="25.0" prefWidth="231.0" text="Open train doors" />
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </VBox>
+                           </content>
+                        </TitledPane>
+                     </children>
+                  </VBox>
+               </content>
                 </Tab>
             </tabs>
         </TabPane>

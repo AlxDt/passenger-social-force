@@ -1,6 +1,7 @@
 package com.crowdsimulation.model.simulator;
 
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -76,8 +77,9 @@ public class Simulator {
 
     // Simulator variables
     private final AtomicBoolean running;
-    // TODO: Replace with SimulationTime object
-    private int timeElapsed;
+
+    // Denotes the current time in the simulation
+    private SimulationTime time;
     private final Semaphore playSemaphore;
 
     // Random number generator for all purposes in the simulation
@@ -121,7 +123,8 @@ public class Simulator {
         this.currentFloorFieldTarget = null;
 
         this.running = new AtomicBoolean(false);
-        this.timeElapsed = 0;
+
+        this.time = new SimulationTime(0, 0, 0);
         this.playSemaphore = new Semaphore(0);
 
         this.passengersToDespawn = Collections.synchronizedList(new ArrayList<>());
@@ -309,6 +312,26 @@ public class Simulator {
         this.currentFloorFieldState = currentFloorFieldState;
     }
 
+    public AtomicBoolean getRunning() {
+        return this.running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running.set(running);
+    }
+
+    public boolean isRunning() {
+        return running.get();
+    }
+
+    public SimulationTime getSimulationTime() {
+        return time;
+    }
+
+    public Semaphore getPlaySemaphore() {
+        return playSemaphore;
+    }
+
     public void resetToDefaultConfiguration(Station station) {
         // The program is initially in the building mode
         this.operationMode.set(OperationMode.BUILDING);
@@ -339,8 +362,8 @@ public class Simulator {
         this.floorFieldDrawing.set(false);
         this.currentFloorFieldTarget = null;
 
+        this.time.reset();
         this.running.set(false);
-        this.timeElapsed = 0;
     }
 
     // Convert a build subcategory to its corresponding class
@@ -371,18 +394,6 @@ public class Simulator {
         return null;
     }
 
-    public AtomicBoolean getRunning() {
-        return running;
-    }
-
-    public Semaphore getPlaySemaphore() {
-        return playSemaphore;
-    }
-
-    public int getTimeElapsed() {
-        return timeElapsed;
-    }
-
     // Start the simulation thread
     private void start() {
         // Run this on a thread so it won't choke the JavaFX UI thread
@@ -393,7 +404,7 @@ public class Simulator {
                     playSemaphore.acquire();
 
                     // Keep looping until paused
-                    while (this.running.get()) {
+                    while (this.isRunning()) {
 /*                        try {
                             GraphicsController.DRAW_SEMAPHORE.acquire();
                         } catch (InterruptedException e) {
@@ -412,14 +423,23 @@ public class Simulator {
                                 Main.simulator.getCurrentFloor()
                         );
 
+                        // Increment (tick) the clock
+                        this.time.tick();
+
                         // TODO: Rest for an amount of time depending on the interface slider
-                        Thread.sleep(100);
+                        Thread.sleep(SimulationTime.SLEEP_TIME_MILLISECONDS.get());
                     }
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
             }
         }).start();
+    }
+
+    // Reset the simulation
+    public void reset() {
+        // Reset the simulation time
+        this.time.reset();
     }
 
     // Make all agents tick (move once in a one-second time frame) in the given floor

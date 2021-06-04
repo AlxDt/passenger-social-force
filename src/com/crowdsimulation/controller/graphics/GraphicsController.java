@@ -41,6 +41,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -437,7 +438,7 @@ public class GraphicsController extends Controller {
             // Draw each passenger
             final double passengerDiameter = tileSize * 0.5;
 
-            for (Passenger passenger : floor.getPassengersInFloor()) {
+            for (Passenger passenger : floor.getPassengersInFloor()){
                 PassengerGraphicLocation passengerGraphicLocation
                         = passenger.getPassengerGraphic().getGraphicLocation();
 
@@ -479,10 +480,10 @@ public class GraphicsController extends Controller {
                     CIRCLE_DIAMETER
             );
         }
-
+/*
         if (!background) {
-//            GraphicsController.DRAW_SEMAPHORE.release();
-        }
+            GraphicsController.DRAW_SEMAPHORE.release();
+        }*/
     }
 
     // Draw all that is needed on the station view on the canvases
@@ -515,27 +516,27 @@ public class GraphicsController extends Controller {
                 case DIGIT1:
                 case DIGIT2:
                 case DIGIT3:
-                    if (!Main.simulator.getRunning().get()
+                    if (!Main.simulator.isRunning()
                             && !Main.simulator.isFloorFieldDrawing()
                             && !Main.simulator.isPortalDrawing()) {
 
                         if (e.getCode() == KeyCode.DIGIT1) {
                             // Draw mode
-                            if (!Main.simulator.getRunning().get()
+                            if (!Main.simulator.isRunning()
                                     && !Main.simulator.isFloorFieldDrawing()
                                     && !Main.simulator.isPortalDrawing()) {
                                 MainScreenController.switchBuildMode(Simulator.BuildState.DRAWING);
                             }
                         } else if (e.getCode() == KeyCode.DIGIT2) {
                             // Edit one mode
-                            if (!Main.simulator.getRunning().get()
+                            if (!Main.simulator.isRunning()
                                     && !Main.simulator.isFloorFieldDrawing()
                                     && !Main.simulator.isPortalDrawing()) {
                                 MainScreenController.switchBuildMode(Simulator.BuildState.EDITING_ONE);
                             }
                         } else if (e.getCode() == KeyCode.DIGIT3) {
                             // Edit all mode
-                            if (!Main.simulator.getRunning().get()
+                            if (!Main.simulator.isRunning()
                                     && !Main.simulator.isFloorFieldDrawing()
                                     && !Main.simulator.isPortalDrawing()) {
                                 MainScreenController.switchBuildMode(Simulator.BuildState.EDITING_ALL);
