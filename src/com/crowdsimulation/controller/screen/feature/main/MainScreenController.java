@@ -1464,7 +1464,7 @@ public class MainScreenController extends ScreenController {
         clearPassengersInStation(Main.simulator.getStation());
 
         // Redraw the canvas
-        drawStationViewFloorForeground(Main.simulator.getCurrentFloor());
+        drawStationViewFloorForeground(Main.simulator.getCurrentFloor(), false);
     }
 
     @FXML
@@ -1476,7 +1476,7 @@ public class MainScreenController extends ScreenController {
         clearPassengersInStation(station);
 
         // Redraw the canvas
-        drawStationViewFloorForeground(Main.simulator.getCurrentFloor());
+        drawStationViewFloorForeground(Main.simulator.getCurrentFloor(), false);
     }
 
     @FXML
@@ -1488,7 +1488,7 @@ public class MainScreenController extends ScreenController {
         clearPassengersInFloor(currentFloor);
 
         // Redraw the canvas
-        drawStationViewFloorForeground(currentFloor);
+        drawStationViewFloorForeground(currentFloor, false);
     }
 
     // Clear all passengers in the station
@@ -1504,12 +1504,6 @@ public class MainScreenController extends ScreenController {
 
     // Clear passengers in a single floor
     public void clearPassengersInFloor(Floor floor) {
-/*        try {
-            GraphicsController.DRAW_SEMAPHORE.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
-
         // Clear passengers from each patch
         for (Patch[] patchRow : floor.getPatches()) {
             for (Patch patch : patchRow) {
@@ -1792,7 +1786,13 @@ public class MainScreenController extends ScreenController {
         LocalTime currentTime = Main.simulator.getSimulationTime().getTime();
         long elapsedTime = Main.simulator.getSimulationTime().getStartTime().until(currentTime, ChronoUnit.SECONDS);
 
-        elapsedTimeText.setText("Elapsed time: " + elapsedTime + " s");
+        String timeString;
+
+        timeString = String.format("%02d", currentTime.getHour()) + ":"
+                + String.format("%02d", currentTime.getMinute()) + ":"
+                + String.format("%02d", currentTime.getSecond());
+
+        elapsedTimeText.setText("Elapsed time: " + timeString + " (" + elapsedTime + " s)");
     }
 
     // Set the passenger counts
@@ -4401,20 +4401,24 @@ public class MainScreenController extends ScreenController {
         GraphicsController.requestDrawStationView(
                 interfaceStackPane,
                 currentFloor,
-                true
+                true,
+                false
         );
     }
 
     // Draw the station view foreground given a current floor
-    public void drawStationViewFloorForeground(Floor currentFloor) {
+    public void drawStationViewFloorForeground(Floor currentFloor, boolean speedAware) {
         GraphicsController.requestDrawStationView(
                 interfaceStackPane,
                 currentFloor,
-                false
+                false,
+                speedAware
         );
 
         requestUpdateInterfaceSimulationElements();
     }
+
+    // Decide whether to
 
     // Update the interface elements pertinent to the simulation
     private void requestUpdateInterfaceSimulationElements() {

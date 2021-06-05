@@ -41,7 +41,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +64,8 @@ public class GraphicsController extends Controller {
     private static boolean showTooltip;
     private static Tooltip tooltip;
 
+    private static long millisecondsLastCanvasRefresh;
+
     // Denotes whether the listeners for the drawing interface has already been drawn, in order to prevent its
     // double-drawing
     public static boolean listenersDrawn;
@@ -86,6 +87,8 @@ public class GraphicsController extends Controller {
         GraphicsController.floorNextPortal = null;
         GraphicsController.firstPortalAmenityBlocks = null;
 
+        millisecondsLastCanvasRefresh = 0;
+
         DRAW_SEMAPHORE = new Semaphore(1);
     }
 
@@ -93,8 +96,28 @@ public class GraphicsController extends Controller {
     public static void requestDrawStationView(
             StackPane canvases,
             Floor floor,
-            boolean background
+            boolean background,
+            boolean speedAware
     ) {
+        // If the speed-aware option is true, only perform canvas refreshes after a set interval has elapsed
+        // This is done to avoid having too many refreshes within a short period of time
+        if (speedAware) {
+            final int millisecondsIntervalBetweenCalls = 500;
+
+            long currentTimeMilliseconds = System.currentTimeMillis();
+
+            // If enough time has passed between the current time and the time of last canvas refresh, do the
+            // canvas refresh
+            // Otherwise, don't do it
+            if (currentTimeMilliseconds - GraphicsController.millisecondsLastCanvasRefresh
+                    < millisecondsIntervalBetweenCalls) {
+                return;
+            } else {
+                // If a canvas refresh will be performed, reset the time of last canvas refresh
+                GraphicsController.millisecondsLastCanvasRefresh = System.currentTimeMillis();
+            }
+        }
+
         javafx.application.Platform.runLater(() -> {
             drawStationView(canvases, floor, background);
         });
@@ -436,9 +459,7 @@ public class GraphicsController extends Controller {
             }
         } else {
             // Draw each passenger
-            final double passengerDiameter = tileSize * 0.5;
-
-            for (Passenger passenger : floor.getPassengersInFloor()){
+            for (Passenger passenger : floor.getPassengersInFloor()) {
                 PassengerGraphicLocation passengerGraphicLocation
                         = passenger.getPassengerGraphic().getGraphicLocation();
 
@@ -480,10 +501,6 @@ public class GraphicsController extends Controller {
                     CIRCLE_DIAMETER
             );
         }
-/*
-        if (!background) {
-            GraphicsController.DRAW_SEMAPHORE.release();
-        }*/
     }
 
     // Draw all that is needed on the station view on the canvases

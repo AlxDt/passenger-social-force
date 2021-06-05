@@ -466,7 +466,7 @@
                                        <children>
                                           <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                                              <children>
-                                                <Text fx:id="elapsedTimeText" strokeType="OUTSIDE" strokeWidth="0.0" text="Elapsed time: 0 s" textAlignment="CENTER" />
+                                                <Text fx:id="elapsedTimeText" strokeType="OUTSIDE" strokeWidth="0.0" text="Elapsed time: 00:00:00 (0 s)" textAlignment="CENTER" />
                                              </children>
                                           </HBox>
                                           <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">

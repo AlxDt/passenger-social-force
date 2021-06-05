@@ -1,7 +1,6 @@
 package com.crowdsimulation.model.simulator;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -398,6 +397,9 @@ public class Simulator {
     private void start() {
         // Run this on a thread so it won't choke the JavaFX UI thread
         new Thread(() -> {
+            // For times shorter than this, speed awareness will be implemented
+            final int speedAwarenessLimitMilliseconds = 10;
+
             while (true) {
                 try {
                     // Wait until the play button has been pressed
@@ -405,12 +407,6 @@ public class Simulator {
 
                     // Keep looping until paused
                     while (this.isRunning()) {
-/*                        try {
-                            GraphicsController.DRAW_SEMAPHORE.acquire();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }*/
-
                         // Update the pertinent variables when ticking
 
                         // Draw all agents in each floor
@@ -418,9 +414,13 @@ public class Simulator {
                             updateFloor(floor);
                         }
 
-                        // Update the interface
+                        // Redraw the visualization
+                        // If the refreshes are frequent enough, update the visualization in a speed-aware manner
+                        // That is, avoid having too many refreshes within a short period of time
                         Main.mainScreenController.drawStationViewFloorForeground(
-                                Main.simulator.getCurrentFloor()
+                                Main.simulator.getCurrentFloor(),
+                                SimulationTime.SLEEP_TIME_MILLISECONDS.get()
+                                        < speedAwarenessLimitMilliseconds
                         );
 
                         // Increment (tick) the clock
