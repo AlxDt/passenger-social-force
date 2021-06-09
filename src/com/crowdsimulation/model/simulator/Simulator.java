@@ -472,7 +472,11 @@ public class Simulator {
 
         // Remove all passengers that are marked for removal
         for (Passenger passengerToDespawn : this.passengersToDespawn) {
-            passengerToDespawn.getPassengerMovement().despawnPassenger();
+            // Get the passenger's gate
+            Gate gate = (Gate) passengerToDespawn.getPassengerMovement().getCurrentAmenity();
+
+            // Have the gate despawn that passenger
+            gate.despawnPassenger(passengerToDespawn);
         }
 
         passengersToDespawn.clear();
@@ -598,10 +602,15 @@ public class Simulator {
                             }
                         }
                     case IN_QUEUEABLE:
-                        // If the passenger
+                        // Have the passenger set its current goal
+                        passengerMovement.reachGoal();
+
                         if (action == PassengerMovement.Action.BOARDING_TRAIN) {
                             this.passengersToDespawn.add(passenger);
-                        } else if (action == PassengerMovement.Action.ASCENDING || action == PassengerMovement.Action.DESCENDING) {
+                        } else if (
+                                action == PassengerMovement.Action.ASCENDING
+                                        || action == PassengerMovement.Action.DESCENDING
+                        ) {
                         } else if (
                                 action == PassengerMovement.Action.SECURITY_CHECKING
                                         || action == PassengerMovement.Action.TRANSACTING_TICKET

@@ -514,6 +514,11 @@ public class PassengerMovement {
         return isOnPatch(this.goalAttractor.getPatch());
     }
 
+    // Set the passenger's current amenity
+    public void reachGoal() {
+        this.currentAmenity = this.goalAmenity;
+    }
+
     // Check if this passenger has reached its final goal
     public boolean hasReachedFinalGoal() {
         return !this.routePlan.getCurrentRoutePlan().hasNext();

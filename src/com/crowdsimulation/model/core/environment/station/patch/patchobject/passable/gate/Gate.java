@@ -32,6 +32,11 @@ public abstract class Gate extends NonObstacle implements Drawable {
         }
     }
 
+    // Despawn a passenger in this position
+    public void despawnPassenger(Passenger passenger) {
+        passenger.getPassengerMovement().despawnPassenger();
+    }
+
     // Gate factory
     public static abstract class GateFactory extends NonObstacleFactory {
     }

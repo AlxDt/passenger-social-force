@@ -186,11 +186,6 @@ public class GraphicsController extends Controller {
             );
         }
 
-        boolean drawGraphicTransparently;
-
-/*        // Draw only the background (the environment) if requested
-        // Draw only the foreground (the passengers) if otherwise
-        if (background) {*/
         // Draw all the patches of this floor
         // If the background is supposed to be drawn, draw from all the patches
         // If not, draw only from the combined passenger and amenity set
@@ -213,6 +208,8 @@ public class GraphicsController extends Controller {
         for (Patch patch : patches) {
             int row = patch.getMatrixPosition().getRow();
             int column = patch.getMatrixPosition().getColumn();
+
+            boolean drawGraphicTransparently;
 
             drawGraphicTransparently = false;
 
@@ -392,7 +389,7 @@ public class GraphicsController extends Controller {
 
                     // Add transparency if needed
                     if (drawGraphicTransparently) {
-                        backgroundGraphicsContext.setGlobalAlpha(0.2);
+                        foregroundGraphicsContext.setGlobalAlpha(0.2);
                     }
 
                     AmenityGraphicLocation amenityGraphicLocation = drawablePatchAmenity.getGraphicLocation();
@@ -415,7 +412,7 @@ public class GraphicsController extends Controller {
 
                     // Reset transparency if previously added
                     if (drawGraphicTransparently) {
-                        backgroundGraphicsContext.setGlobalAlpha(1.0);
+                        foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }
                 }
             } else if (currentPatchInFirstPortalBlock) {
@@ -446,17 +443,19 @@ public class GraphicsController extends Controller {
                 for (Passenger passenger : patch.getPassengers()) {
                     PassengerGraphicLocation passengerGraphicLocation
                             = passenger.getPassengerGraphic().getGraphicLocation();
-/*                // Draw passengers, if any
-                final double passengerDiameter = tileSize;
 
-                foregroundGraphicsContext.fillOval(
-                        passenger.getPassengerMovement().getPosition().getX()
-                                * tileSize - passengerDiameter * 0.5,
-                        passenger.getPassengerMovement().getPosition().getY()
-                                * tileSize - passengerDiameter * 0.5,
-                        passengerDiameter,
-                        passengerDiameter
-                );*/
+                    /* // Draw passengers, if any
+                    final double passengerDiameter = tileSize;
+
+                    foregroundGraphicsContext.fillOval(
+                            passenger.getPassengerMovement().getPosition().getX()
+                                    * tileSize - passengerDiameter * 0.5,
+                            passenger.getPassengerMovement().getPosition().getY()
+                                    * tileSize - passengerDiameter * 0.5,
+                            passengerDiameter,
+                            passengerDiameter
+                    );*/
+
                     foregroundGraphicsContext.drawImage(
                             PASSENGER_SPRITE_SHEET,
                             passengerGraphicLocation.getSourceX(),
@@ -473,37 +472,6 @@ public class GraphicsController extends Controller {
                 }
             }
         }
-/*        } else {
-            // Draw each passenger
-            for (Passenger passenger : floor.getPassengersInFloor()) {
-                PassengerGraphicLocation passengerGraphicLocation
-                        = passenger.getPassengerGraphic().getGraphicLocation();
-*//*                // Draw passengers, if any
-                final double passengerDiameter = tileSize;
-
-                foregroundGraphicsContext.fillOval(
-                        passenger.getPassengerMovement().getPosition().getX()
-                                * tileSize - passengerDiameter * 0.5,
-                        passenger.getPassengerMovement().getPosition().getY()
-                                * tileSize - passengerDiameter * 0.5,
-                        passengerDiameter,
-                        passengerDiameter
-                );*//*
-                foregroundGraphicsContext.drawImage(
-                        PASSENGER_SPRITE_SHEET,
-                        passengerGraphicLocation.getSourceX(),
-                        passengerGraphicLocation.getSourceY(),
-                        passengerGraphicLocation.getSourceWidth(),
-                        passengerGraphicLocation.getSourceHeight(),
-                        passenger.getPassengerMovement().getPosition().getX()
-                                * tileSize - tileSize,
-                        passenger.getPassengerMovement().getPosition().getY()
-                                * tileSize - tileSize * 2,
-                        tileSize * 2,
-                        tileSize * 2 + tileSize * 0.25
-                );
-            }
-        }*/
 
         // If this amenity is also the currently selected amenity in the simulator, draw a circle around
         // said amenity
