@@ -27,7 +27,7 @@ public class StairEditor extends AmenityEditor {
         );
     }
 
-    public StairPortal draw(
+    public StairPortal createPortal(
             Patch currentPatch,
             boolean enabled,
             Floor currentFloor,
@@ -62,6 +62,12 @@ public class StairEditor extends AmenityEditor {
 
         // Otherwise, do nothing
         if (patchesClear) {
+            amenityBlocks.forEach(
+                    amenityBlock -> amenityBlock.getPatch().getFloor().getAmenityPatchSet().add(
+                            amenityBlock.getPatch()
+                    )
+            );
+
             return StairPortal.stairPortalFactory.create(
                     amenityBlocks,
                     enabled,
@@ -95,12 +101,20 @@ public class StairEditor extends AmenityEditor {
             if (upperStairPortal != null) {
                 for (Amenity.AmenityBlock amenityBlock : upperStairPortal.getAmenityBlocks()) {
                     amenityBlock.getPatch().setAmenityBlock(null);
+
+                    amenityBlock.getPatch().getFloor().getAmenityPatchSet().remove(
+                            amenityBlock.getPatch()
+                    );
                 }
             }
 
             if (lowerStairPortal != null) {
                 for (Amenity.AmenityBlock amenityBlock : lowerStairPortal.getAmenityBlocks()) {
                     amenityBlock.getPatch().setAmenityBlock(null);
+
+                    amenityBlock.getPatch().getFloor().getAmenityPatchSet().remove(
+                            amenityBlock.getPatch()
+                    );
                 }
             }
 
@@ -114,6 +128,10 @@ public class StairEditor extends AmenityEditor {
 
             for (Amenity.AmenityBlock amenityBlock : portal.getAmenityBlocks()) {
                 amenityBlock.getPatch().setAmenityBlock(null);
+
+                amenityBlock.getPatch().getFloor().getAmenityPatchSet().remove(
+                        amenityBlock.getPatch()
+                );
             }
         }
     }

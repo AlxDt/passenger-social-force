@@ -12,7 +12,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 
 import java.util.*;
 
-public class Patch extends BaseStationObject implements Environment {
+public class Patch extends BaseStationObject implements Environment, Comparable<Patch> {
     // Denotes the position of this patch based on a discrete row x column matrix
     private final MatrixPosition matrixPosition;
 
@@ -83,5 +83,27 @@ public class Patch extends BaseStationObject implements Environment {
     @Override
     public int hashCode() {
         return Objects.hash(matrixPosition);
+    }
+
+    @Override
+    public int compareTo(Patch patch) {
+        int thisRow = this.getMatrixPosition().getRow();
+        int patchRow = patch.getMatrixPosition().getRow();
+
+        int thisColumn = this.getMatrixPosition().getColumn();
+        int patchColumn = patch.getMatrixPosition().getColumn();
+
+        if (thisRow > patchRow) {
+            return 1;
+        } else if (thisRow == patchRow) {
+            return Integer.compare(thisColumn, patchColumn);
+        } else {
+            return -1;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "[" + this.getMatrixPosition().getRow() + ", " + this.getMatrixPosition().getColumn() + "]";
     }
 }

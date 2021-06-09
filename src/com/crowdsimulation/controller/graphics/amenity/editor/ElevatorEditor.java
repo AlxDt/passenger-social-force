@@ -33,7 +33,7 @@ public class ElevatorEditor extends AmenityEditor {
         );
     }
 
-    public ElevatorPortal draw(
+    public ElevatorPortal createPortal(
             Patch currentPatch,
             boolean enabled,
             Floor currentFloor,
@@ -68,6 +68,12 @@ public class ElevatorEditor extends AmenityEditor {
 
         // Otherwise, do nothing
         if (patchesClear) {
+            amenityBlocks.forEach(
+                    amenityBlock -> amenityBlock.getPatch().getFloor().getAmenityPatchSet().add(
+                            amenityBlock.getPatch()
+                    )
+            );
+
             return ElevatorPortal.elevatorPortalFactory.create(
                     amenityBlocks,
                     enabled,
@@ -107,12 +113,20 @@ public class ElevatorEditor extends AmenityEditor {
             if (upperElevatorPortal != null) {
                 for (Amenity.AmenityBlock amenityBlock : upperElevatorPortal.getAmenityBlocks()) {
                     amenityBlock.getPatch().setAmenityBlock(null);
+
+                    amenityBlock.getPatch().getFloor().getAmenityPatchSet().remove(
+                            amenityBlock.getPatch()
+                    );
                 }
             }
 
             if (lowerElevatorPortal != null) {
                 for (Amenity.AmenityBlock amenityBlock : lowerElevatorPortal.getAmenityBlocks()) {
                     amenityBlock.getPatch().setAmenityBlock(null);
+
+                    amenityBlock.getPatch().getFloor().getAmenityPatchSet().remove(
+                            amenityBlock.getPatch()
+                    );
                 }
             }
 
@@ -126,6 +140,10 @@ public class ElevatorEditor extends AmenityEditor {
 
             for (Amenity.AmenityBlock amenityBlock : portal.getAmenityBlocks()) {
                 amenityBlock.getPatch().setAmenityBlock(null);
+
+                amenityBlock.getPatch().getFloor().getAmenityPatchSet().remove(
+                        amenityBlock.getPatch()
+                );
             }
         }
     }

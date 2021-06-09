@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics.amenity.editor;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
@@ -52,6 +53,12 @@ public class WallEditor extends AmenityEditor {
 
             // Add this wall to the list of all walls on this floor
             Main.simulator.getCurrentFloor().getWalls().add(wallToAdd);
+
+            amenityBlocks.forEach(
+                    amenityBlock -> amenityBlock.getPatch().getFloor().getAmenityPatchSet().add(
+                            amenityBlock.getPatch()
+                    )
+            );
         }
     }
 
@@ -70,5 +77,12 @@ public class WallEditor extends AmenityEditor {
         Main.simulator.getCurrentFloor().getWalls().remove(
                 wallToDelete
         );
+
+        wallToDelete.getAmenityBlocks().forEach(amenityBlock -> {
+            Floor amenityFloor = amenityBlock.getPatch().getFloor();
+            Patch currentPatch = amenityBlock.getPatch();
+
+            amenityFloor.getAmenityPatchSet().remove(currentPatch);
+        });
     }
 }

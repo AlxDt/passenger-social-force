@@ -41,10 +41,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Semaphore;
+import java.util.stream.Collectors;
 
 public class GraphicsController extends Controller {
     private static final Image AMENITY_SPRITE_SHEET = new Image(AmenityGraphic.AMENITY_SPRITE_SHEET_URL);
@@ -127,15 +126,11 @@ public class GraphicsController extends Controller {
     public static void requestDrawPartialStationView(
             StackPane canvases,
             Floor floor,
-            int rowStart,
-            int columnStart,
-            int rowEnd,
-            int columnEnd,
             boolean background
     ) {
         javafx.application.Platform.runLater(() -> {
             // Tell the JavaFX thread that we'd like to draw on the canvas
-            drawStationView(canvases, floor, rowStart, columnStart, rowEnd, columnEnd, background);
+            drawStationView(canvases, floor, background);
         });
     }
 
@@ -151,10 +146,6 @@ public class GraphicsController extends Controller {
     private static void drawStationView(
             StackPane canvases,
             Floor floor,
-            int rowStart,
-            int columnStart,
-            int rowEnd,
-            int columnEnd,
             boolean background
     ) {
         // Get the canvases and their graphics contexts
@@ -173,17 +164,17 @@ public class GraphicsController extends Controller {
         // Clear everything in the respective canvas
         if (!background) {
             foregroundGraphicsContext.clearRect(
-                    rowStart * tileSize,
-                    columnStart * tileSize,
-                    rowEnd * tileSize,
-                    columnEnd * tileSize
+                    0,
+                    0,
+                    floor.getColumns() * tileSize,
+                    floor.getRows() * tileSize
             );
         } else {
-            backgroundGraphicsContext.clearRect(
-                    rowStart * tileSize,
-                    columnStart * tileSize,
-                    rowEnd * tileSize,
-                    columnEnd * tileSize
+            foregroundGraphicsContext.clearRect(
+                    0,
+                    0,
+                    floor.getColumns() * tileSize,
+                    floor.getRows() * tileSize
             );
 
             backgroundGraphicsContext.setFill(Color.WHITE);
@@ -197,272 +188,307 @@ public class GraphicsController extends Controller {
 
         boolean drawGraphicTransparently;
 
-        // Draw only the background (the environment) if requested
+/*        // Draw only the background (the environment) if requested
         // Draw only the foreground (the passengers) if otherwise
+        if (background) {*/
+        // Draw all the patches of this floor
+        // If the background is supposed to be drawn, draw from all the patches
+        // If not, draw only from the combined passenger and amenity set
+        List<Patch> patches;
+
         if (background) {
-            // Draw all the patches of this floor
-            for (int row = rowStart; row < rowEnd; row++) {
-                for (int column = columnStart; column < columnEnd; column++) {
-                    drawGraphicTransparently = false;
+            patches = Arrays.stream(floor.getPatches()).flatMap(Arrays::stream).collect(
+                    Collectors.toList()
+            );
+        } else {
+            // Combine this floor's amenity and passenger set into a single set
+            SortedSet<Patch> amenityPassengerSet = new TreeSet<>();
 
-                    // Get the current patch
-                    Patch currentPatch = floor.getPatch(row, column);
+            amenityPassengerSet.addAll(new ArrayList<>(floor.getAmenityPatchSet()));
+            amenityPassengerSet.addAll(new ArrayList<>(floor.getPassengerPatchSet()));
 
-                    // Draw graphics corresponding to whatever is in the content of the patch
-                    // If the patch has no amenity on it, just draw a blank patch
-                    Amenity.AmenityBlock patchAmenityBlock = currentPatch.getAmenityBlock();
-                    Color patchColor = null;
-                    Image firstPortalImage = null;
+            patches = new ArrayList<>(amenityPassengerSet);
+        }
 
-                    boolean currentPatchInFirstPortalBlock = false;
-                    Amenity.AmenityBlock firstPortalAmenityBlock = null;
+        for (Patch patch : patches) {
+            int row = patch.getMatrixPosition().getRow();
+            int column = patch.getMatrixPosition().getColumn();
 
-                    if (patchAmenityBlock == null) {
-                        // Check if the current patch is in the first portal position, if it exists
-                        if (GraphicsController.firstPortalAmenityBlocks != null) {
-                            for (Amenity.AmenityBlock amenityBlock : GraphicsController.firstPortalAmenityBlocks) {
-                                if (amenityBlock.getPatch().getMatrixPosition().equals(currentPatch.getMatrixPosition())) {
-                                    currentPatchInFirstPortalBlock = true;
-                                    firstPortalAmenityBlock = amenityBlock;
+            drawGraphicTransparently = false;
 
-                                    break;
-                                }
-                            }
-                        }
+            // Get the current patch
+            Patch currentPatch = floor.getPatch(row, column);
 
-                        // Draw the marker for first portal reference, if any has been drawn
-                        if (!currentPatchInFirstPortalBlock) {
-                            // There isn't an amenity on this patch, so just use the color corresponding to a blank
-                            // patch
-                            patchColor = Color.WHITE;
+            // Draw graphics corresponding to whatever is in the content of the patch
+            // If the patch has no amenity on it, just draw a blank patch
+            Amenity.AmenityBlock patchAmenityBlock = currentPatch.getAmenityBlock();
+            Color patchColor = null;
+            Image firstPortalImage = null;
 
-                            // Show the floor fields of the current target with the current floor field state
-                            Queueable target = Main.simulator.getCurrentFloorFieldTarget();
-                            QueueingFloorField.FloorFieldState floorFieldState
-                                    = Main.simulator.getCurrentFloorFieldState();
+            boolean currentPatchInFirstPortalBlock = false;
+            Amenity.AmenityBlock firstPortalAmenityBlock = null;
 
-                            Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
-                                    = currentPatch.getFloorFieldValues();
-                            Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
-                                    = floorFieldValues.get(target);
+            if (patchAmenityBlock == null) {
+                // Check if the current patch is in the first portal position, if it exists
+                if (GraphicsController.firstPortalAmenityBlocks != null) {
+                    for (Amenity.AmenityBlock amenityBlock : GraphicsController.firstPortalAmenityBlocks) {
+                        if (amenityBlock.getPatch().getMatrixPosition().equals(currentPatch.getMatrixPosition())) {
+                            currentPatchInFirstPortalBlock = true;
+                            firstPortalAmenityBlock = amenityBlock;
 
-                            // Draw something if there is a target associated with this patch
-                            if (floorFieldStateDoubleMap != null) {
-                                // If the current patch's floor field state matches the current floor field state, draw
-                                // a green or blue patch (depending on direction)
-                                if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
-                                    double value = floorFieldStateDoubleMap.get(floorFieldState);
-
-                                    // Map the colors of this patch to the its field value's intensity
-                                    patchColor = Color.hsb(
-                                            FLOOR_FIELD_COLORS.get(floorFieldState.getDirection()),
-                                            Main.simulator.isFloorFieldDrawing() ? value : 0.0,
-                                            Main.simulator.isFloorFieldDrawing() ? 1.0 : 0.97
-                                    );
-                                } else {
-                                    // There is a floor field value here with the same target, but it is not of the
-                                    // current floor field state
-                                    // Hence, just draw an unsaturated patch
-                                    patchColor = Color.hsb(
-                                            0,
-                                            0,
-                                            0.97
-                                    );
-                                }
-                            } else if (!floorFieldValues.isEmpty()) {
-                                // If there isn't a floor field with the current target, but the list of floor field
-                                // values isn't empty, there are still other floor field values on this patch
-                                // Hence, just draw an unsaturated patch
-                                patchColor = Color.hsb(
-                                        0,
-                                        0,
-                                        0.97
-                                );
-                            }
-                        } else {
-                            // Draw a de-saturated version of the first portal here
-                            drawGraphicTransparently = true;
-
-                            if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ESCALATOR) {
-                                switch (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()) {
-                                    case UP:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_front.png"
-                                        );
-
-                                        break;
-                                    case RIGHT:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_right.png"
-                                        );
-
-                                        break;
-                                    case DOWN:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_rear.png"
-                                        );
-
-                                        break;
-                                    case LEFT:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_left.png"
-                                        );
-
-                                        break;
-                                }
-                            } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.STAIRS) {
-                                switch (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()) {
-                                    case UP:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/stair/single/front/stair_single_front.png"
-                                        );
-
-                                        break;
-                                    case RIGHT:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/stair/single/right/stair_single_right.png"
-                                        );
-
-                                        break;
-                                    case DOWN:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/stair/single/rear/stair_single_rear.png"
-                                        );
-
-                                        break;
-                                    case LEFT:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/stair/single/left/stair_single_left.png"
-                                        );
-
-                                        break;
-                                }
-                            } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ELEVATOR) {
-                                switch (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()) {
-                                    case UP:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/elevator/closed/front/elevator_closed_front.png"
-                                        );
-
-                                        break;
-                                    case RIGHT:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/elevator/closed/right/elevator_closed_right.png"
-                                        );
-
-                                        break;
-                                    case DOWN:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/elevator/closed/rear/elevator_closed_rear.png"
-                                        );
-
-                                        break;
-                                    case LEFT:
-                                        firstPortalImage
-                                                = new Image(
-                                                "com/crowdsimulation/view/image/amenity/elevator/closed/left/elevator_closed_left.png"
-                                        );
-
-                                        break;
-                                }
-                            }
-                        }
-                    } else {
-                        Amenity patchAmenity = currentPatch.getAmenityBlock().getParent();
-
-                        // There is an amenity on this patch, so draw it according to its corresponding color
-                        // If floor field drawing is on, only color amenities which are of the current class
-                        if (Main.simulator.isFloorFieldDrawing()) {
-                            // Only color the current amenity - unsaturate the rest
-                            if (!patchAmenity.equals(Main.simulator.getCurrentFloorFieldTarget())) {
-                                drawGraphicTransparently = true;
-                            }
+                            break;
                         }
                     }
+                }
 
-                    // Draw the patch
-                    if (patchAmenityBlock != null) {
-                        Amenity patchAmenity = currentPatch.getAmenityBlock().getParent();
+                // Draw the marker for first portal reference, if any has been drawn
+                if (!currentPatchInFirstPortalBlock) {
+                    // There isn't an amenity on this patch, so just use the color corresponding to a blank
+                    // patch
+                    patchColor = Color.WHITE;
 
-                        if (patchAmenityBlock.hasGraphic()) {
-                            Drawable drawablePatchAmenity = (Drawable) patchAmenity;
+                    // Show the floor fields of the current target with the current floor field state
+                    Queueable target = Main.simulator.getCurrentFloorFieldTarget();
+                    QueueingFloorField.FloorFieldState floorFieldState
+                            = Main.simulator.getCurrentFloorFieldState();
 
-                            // If the amenity is disabled, draw transparently as well
-                            if (patchAmenity instanceof NonObstacle) {
-                                if (!((NonObstacle) patchAmenity).isEnabled()) {
-                                    drawGraphicTransparently = true;
-                                }
-                            }
+                    Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
+                            = currentPatch.getFloorFieldValues();
+                    Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
+                            = floorFieldValues.get(target);
 
-                            // Add transparency if needed
-                            if (drawGraphicTransparently) {
-                                backgroundGraphicsContext.setGlobalAlpha(0.2);
-                            }
+                    // Draw something if there is a target associated with this patch
+                    if (floorFieldStateDoubleMap != null) {
+                        // If the current patch's floor field state matches the current floor field state, draw
+                        // a green or blue patch (depending on direction)
+                        if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
+                            double value = floorFieldStateDoubleMap.get(floorFieldState);
 
-                            AmenityGraphicLocation amenityGraphicLocation = drawablePatchAmenity.getGraphicLocation();
-
-                            backgroundGraphicsContext.drawImage(
-                                    AMENITY_SPRITE_SHEET,
-                                    amenityGraphicLocation.getSourceX(),
-                                    amenityGraphicLocation.getSourceY(),
-                                    amenityGraphicLocation.getSourceWidth(),
-                                    amenityGraphicLocation.getSourceHeight(),
-                                    column * tileSize + drawablePatchAmenity.getGraphicObject()
-                                            .getAmenityGraphicOffset().getColumnOffset() * tileSize,
-                                    row * tileSize + drawablePatchAmenity.getGraphicObject()
-                                            .getAmenityGraphicOffset().getRowOffset() * tileSize,
-                                    tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
-                                            .getColumnSpan(),
-                                    tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
-                                            .getRowSpan()
+                            // Map the colors of this patch to the its field value's intensity
+                            patchColor = Color.hsb(
+                                    FLOOR_FIELD_COLORS.get(floorFieldState.getDirection()),
+                                    Main.simulator.isFloorFieldDrawing() ? value : 0.0,
+                                    Main.simulator.isFloorFieldDrawing() ? 1.0 : 0.97
                             );
-
-                            // Reset transparency if previously added
-                            if (drawGraphicTransparently) {
-                                backgroundGraphicsContext.setGlobalAlpha(1.0);
-                            }
-                        }
-                    } else if (currentPatchInFirstPortalBlock) {
-                        if (firstPortalAmenityBlock.hasGraphic()) {
-                            Drawable drawablePatchAmenity = (Drawable) firstPortalAmenityBlock.getParent();
-
-                            backgroundGraphicsContext.setGlobalAlpha(0.2);
-
-                            backgroundGraphicsContext.drawImage(
-                                    firstPortalImage,
-                                    column * tileSize,
-                                    row * tileSize,
-                                    tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
-                                            .getColumnSpan(),
-                                    tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
-                                            .getRowSpan()
+                        } else {
+                            // There is a floor field value here with the same target, but it is not of the
+                            // current floor field state
+                            // Hence, just draw an unsaturated patch
+                            patchColor = Color.hsb(
+                                    0,
+                                    0,
+                                    0.97
                             );
-
-                            backgroundGraphicsContext.setGlobalAlpha(1.0);
                         }
-                    } else {
-                        backgroundGraphicsContext.setFill(patchColor);
-                        backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
+                    } else if (!floorFieldValues.isEmpty()) {
+                        // If there isn't a floor field with the current target, but the list of floor field
+                        // values isn't empty, there are still other floor field values on this patch
+                        // Hence, just draw an unsaturated patch
+                        patchColor = Color.hsb(
+                                0,
+                                0,
+                                0.97
+                        );
+                    }
+                } else {
+                    // Draw a de-saturated version of the first portal here
+                    drawGraphicTransparently = true;
+
+                    if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ESCALATOR) {
+                        switch (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()) {
+                            case UP:
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_front.png"
+                                );
+
+                                break;
+                            case RIGHT:
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_right.png"
+                                );
+
+                                break;
+                            case DOWN:
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_rear.png"
+                                );
+
+                                break;
+                            case LEFT:
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/escalator/single/blank/escalator_left.png"
+                                );
+
+                                break;
+                        }
+                    } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.STAIRS) {
+                        switch (GraphicsController.currentAmenityFootprint.getCurrentRotation().getOrientation()) {
+                            case UP:
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/stair/single/front/stair_single_front.png"
+                                );
+
+                                break;
+                            case RIGHT:
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/stair/single/right/stair_single_right.png"
+                                );
+
+                                break;
+                            case DOWN:
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/stair/single/rear/stair_single_rear.png"
+                                );
+
+                                break;
+                            case LEFT:
+                                firstPortalImage
+                                        = new Image(
+                                        "com/crowdsimulation/view/image/amenity/stair/single/left/stair_single_left.png"
+                                );
+
+                                break;
+                        }
+                    } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.ELEVATOR) {
+                        firstPortalImage
+                                = new Image(
+                                "com/crowdsimulation/view/image/amenity/elevator/single/elevator_front.png"
+                        );
+                    }
+                }
+            } else {
+                Amenity patchAmenity = currentPatch.getAmenityBlock().getParent();
+
+                // There is an amenity on this patch, so draw it according to its corresponding color
+                // If floor field drawing is on, only color amenities which are of the current class
+                if (Main.simulator.isFloorFieldDrawing()) {
+                    // Only color the current amenity - unsaturate the rest
+                    if (!patchAmenity.equals(Main.simulator.getCurrentFloorFieldTarget())) {
+                        drawGraphicTransparently = true;
                     }
                 }
             }
-        } else {
+
+            // Draw the patch
+            if (patchAmenityBlock != null) {
+                Amenity patchAmenity = currentPatch.getAmenityBlock().getParent();
+
+                if (patchAmenityBlock.hasGraphic()) {
+                    Drawable drawablePatchAmenity = (Drawable) patchAmenity;
+
+                    // If the amenity is disabled, draw transparently as well
+                    if (patchAmenity instanceof NonObstacle) {
+                        if (!((NonObstacle) patchAmenity).isEnabled()) {
+                            drawGraphicTransparently = true;
+                        }
+                    }
+
+                    // Add transparency if needed
+                    if (drawGraphicTransparently) {
+                        backgroundGraphicsContext.setGlobalAlpha(0.2);
+                    }
+
+                    AmenityGraphicLocation amenityGraphicLocation = drawablePatchAmenity.getGraphicLocation();
+
+                    foregroundGraphicsContext.drawImage(
+                            AMENITY_SPRITE_SHEET,
+                            amenityGraphicLocation.getSourceX(),
+                            amenityGraphicLocation.getSourceY(),
+                            amenityGraphicLocation.getSourceWidth(),
+                            amenityGraphicLocation.getSourceHeight(),
+                            column * tileSize + drawablePatchAmenity.getGraphicObject()
+                                    .getAmenityGraphicOffset().getColumnOffset() * tileSize,
+                            row * tileSize + drawablePatchAmenity.getGraphicObject()
+                                    .getAmenityGraphicOffset().getRowOffset() * tileSize,
+                            tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                    .getColumnSpan(),
+                            tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                    .getRowSpan()
+                    );
+
+                    // Reset transparency if previously added
+                    if (drawGraphicTransparently) {
+                        backgroundGraphicsContext.setGlobalAlpha(1.0);
+                    }
+                }
+            } else if (currentPatchInFirstPortalBlock) {
+                if (firstPortalAmenityBlock.hasGraphic()) {
+                    Drawable drawablePatchAmenity = (Drawable) firstPortalAmenityBlock.getParent();
+
+                    backgroundGraphicsContext.setGlobalAlpha(0.2);
+
+                    backgroundGraphicsContext.drawImage(
+                            firstPortalImage,
+                            column * tileSize,
+                            row * tileSize,
+                            tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                    .getColumnSpan(),
+                            tileSize * drawablePatchAmenity.getGraphicObject().getAmenityGraphicScale()
+                                    .getRowSpan()
+                    );
+
+                    backgroundGraphicsContext.setGlobalAlpha(1.0);
+                }
+            } else {
+                backgroundGraphicsContext.setFill(patchColor);
+                backgroundGraphicsContext.fillRect(column * tileSize, row * tileSize, tileSize, tileSize);
+            }
+
+            // Draw each passenger in this patch, if the foreground is to bw drawn
+            if (!background) {
+                for (Passenger passenger : patch.getPassengers()) {
+                    PassengerGraphicLocation passengerGraphicLocation
+                            = passenger.getPassengerGraphic().getGraphicLocation();
+/*                // Draw passengers, if any
+                final double passengerDiameter = tileSize;
+
+                foregroundGraphicsContext.fillOval(
+                        passenger.getPassengerMovement().getPosition().getX()
+                                * tileSize - passengerDiameter * 0.5,
+                        passenger.getPassengerMovement().getPosition().getY()
+                                * tileSize - passengerDiameter * 0.5,
+                        passengerDiameter,
+                        passengerDiameter
+                );*/
+                    foregroundGraphicsContext.drawImage(
+                            PASSENGER_SPRITE_SHEET,
+                            passengerGraphicLocation.getSourceX(),
+                            passengerGraphicLocation.getSourceY(),
+                            passengerGraphicLocation.getSourceWidth(),
+                            passengerGraphicLocation.getSourceHeight(),
+                            passenger.getPassengerMovement().getPosition().getX()
+                                    * tileSize - tileSize,
+                            passenger.getPassengerMovement().getPosition().getY()
+                                    * tileSize - tileSize * 2,
+                            tileSize * 2,
+                            tileSize * 2 + tileSize * 0.25
+                    );
+                }
+            }
+        }
+/*        } else {
             // Draw each passenger
             for (Passenger passenger : floor.getPassengersInFloor()) {
                 PassengerGraphicLocation passengerGraphicLocation
                         = passenger.getPassengerGraphic().getGraphicLocation();
+*//*                // Draw passengers, if any
+                final double passengerDiameter = tileSize;
 
+                foregroundGraphicsContext.fillOval(
+                        passenger.getPassengerMovement().getPosition().getX()
+                                * tileSize - passengerDiameter * 0.5,
+                        passenger.getPassengerMovement().getPosition().getY()
+                                * tileSize - passengerDiameter * 0.5,
+                        passengerDiameter,
+                        passengerDiameter
+                );*//*
                 foregroundGraphicsContext.drawImage(
                         PASSENGER_SPRITE_SHEET,
                         passengerGraphicLocation.getSourceX(),
@@ -477,7 +503,7 @@ public class GraphicsController extends Controller {
                         tileSize * 2 + tileSize * 0.25
                 );
             }
-        }
+        }*/
 
         // If this amenity is also the currently selected amenity in the simulator, draw a circle around
         // said amenity
@@ -501,20 +527,8 @@ public class GraphicsController extends Controller {
                     CIRCLE_DIAMETER
             );
         }
-    }
-
-    // Draw all that is needed on the station view on the canvases
-    private static void drawStationView(StackPane canvases, Floor floor, boolean background) {
-        // Draw the entire station view
-        drawStationView(
-                canvases,
-                floor,
-                0,
-                0,
-                floor.getRows(),
-                floor.getColumns(),
-                background
-        );
+//
+//        System.out.println(Main.simulator.getCurrentFloor().getAmenityPatchSet().size() + ", " +Main.simulator.getCurrentFloor().getPassengerPatchSet().size());
     }
 
     // Draw the mouse listeners over the canvases
@@ -643,6 +657,7 @@ public class GraphicsController extends Controller {
                             Main.simulator.getBuildState() == Simulator.BuildState.EDITING_ONE
                                     && !Main.simulator.isPortalDrawing()
                                     && !Main.simulator.isFloorFieldDrawing()
+                                    && Main.simulator.getCurrentAmenity() != null
                                     && (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.SECURITY
                                     || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TICKET_BOOTH
                                     || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TURNSTILE

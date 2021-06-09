@@ -284,11 +284,6 @@ public class StationGate extends Gate {
     }
 
     @Override
-    public Passenger spawnPassenger() {
-        return Passenger.passengerFactory.create(this);
-    }
-
-    @Override
     public AmenityGraphic getGraphicObject() {
         return this.stationGateGraphic;
     }

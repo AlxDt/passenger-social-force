@@ -893,31 +893,6 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label simulationSpeedLabel,
             Slider simulationSpeedSlider
     ) {
-        playButton.setOnAction(event -> {
-            // Not yet running to running (play simulation)
-            if (!Main.simulator.isRunning()) {
-                // Update mode
-                Main.simulator.setOperationMode(Simulator.OperationMode.TESTING);
-                Main.mainScreenController.updatePromptText();
-
-                // The simulation will now be running
-                Main.simulator.setRunning(true);
-                Main.simulator.getPlaySemaphore().release();
-
-                playButton.setText("Pause");
-            } else {
-                // Update mode
-                Main.simulator.setOperationMode(Simulator.OperationMode.BUILDING);
-                Main.mainScreenController.updatePromptText();
-
-                // Running to not running (pause simulation)
-                // The simulation will now be pausing
-                Main.simulator.setRunning(false);
-
-                playButton.setText("Play");
-            }
-        });
-
         simulationSpeedLabel.setLabelFor(simulationSpeedSlider);
         simulationSpeedSlider.valueProperty().addListener(((observable, oldValue, newValue) -> {
             SimulationTime.SLEEP_TIME_MILLISECONDS.set((int) (1.0 / newValue.intValue() * 1000));

@@ -19,9 +19,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Floor extends BaseStationObject implements Environment {
@@ -36,6 +34,11 @@ public class Floor extends BaseStationObject implements Environment {
 
     // The row x column containing the patches which constitute this floor
     private final Patch[][] patches;
+
+    // Patch sets (for drawing purposes)
+    // List all patches occupied by passengers and amenities
+    private final SortedSet<Patch> amenityPatchSet;
+    private final SortedSet<Patch> passengerPatchSet;
 
     // Amenity lists
     private final List<StationGate> stationGates;
@@ -69,6 +72,10 @@ public class Floor extends BaseStationObject implements Environment {
         // Initialize the patches
         this.patches = new Patch[rows][columns];
         this.initializePatches();
+
+        // Initialize the patch set
+        this.amenityPatchSet = Collections.synchronizedSortedSet(new TreeSet<>());
+        this.passengerPatchSet = Collections.synchronizedSortedSet(new TreeSet<>());
 
         // Initialize the amenity lists
         this.stationGates = Collections.synchronizedList(new ArrayList<>());
@@ -108,6 +115,14 @@ public class Floor extends BaseStationObject implements Environment {
 
     public int getColumns() {
         return columns;
+    }
+
+    public SortedSet<Patch> getAmenityPatchSet() {
+        return amenityPatchSet;
+    }
+
+    public SortedSet<Patch> getPassengerPatchSet() {
+        return passengerPatchSet;
     }
 
     public List<StationGate> getStationGates() {

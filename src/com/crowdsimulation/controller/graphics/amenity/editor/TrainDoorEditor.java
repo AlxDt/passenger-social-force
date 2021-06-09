@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics.amenity.editor;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
@@ -54,6 +55,12 @@ public class TrainDoorEditor {
 
             // Add this station gate to the list of all train doors on this floor
             Main.simulator.getCurrentFloor().getTrainDoors().add(trainDoorToAdd);
+
+            amenityBlocks.forEach(
+                    amenityBlock -> amenityBlock.getPatch().getFloor().getAmenityPatchSet().add(
+                            amenityBlock.getPatch()
+                    )
+            );
         }
     }
 
@@ -82,5 +89,12 @@ public class TrainDoorEditor {
         Main.simulator.getCurrentFloor().getTrainDoors().remove(
                 trainDoorToDelete
         );
+
+        trainDoorToDelete.getAmenityBlocks().forEach(amenityBlock -> {
+            Floor amenityFloor = amenityBlock.getPatch().getFloor();
+            Patch currentPatch = amenityBlock.getPatch();
+
+            amenityFloor.getAmenityPatchSet().remove(currentPatch);
+        });
     }
 }

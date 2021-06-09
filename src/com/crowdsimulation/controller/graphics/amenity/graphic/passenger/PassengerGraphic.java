@@ -199,7 +199,7 @@ public class PassengerGraphic extends Graphic implements Changeable {
             this.graphics.add(newPassengerGraphicLocation);
         }
 
-        this.graphicIndex = 0;
+        this.graphicIndex = 2;
     }
 
     public Passenger getPassenger() {

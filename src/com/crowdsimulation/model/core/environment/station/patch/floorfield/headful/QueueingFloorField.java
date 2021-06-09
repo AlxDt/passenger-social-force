@@ -6,10 +6,7 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.Abstr
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class QueueingFloorField extends HeadfulFloorField {
     // Factory for queueing floor field creation
@@ -77,8 +74,10 @@ public class QueueingFloorField extends HeadfulFloorField {
             if (queueingFloorField.getApices().size() == amenity.getAttractors().size()) {
                 return false;
             } else {
-                // If it hasn't yet, add the patch to the list of apices
-                queueingFloorField.getApices().add(patch);
+                // If it hasn't yet, add the patch to the list of apices, if it isn't already in the list
+                if (!queueingFloorField.getApices().contains(patch)) {
+                    queueingFloorField.getApices().add(patch);
+                }
             }
         }
 
@@ -216,6 +215,19 @@ public class QueueingFloorField extends HeadfulFloorField {
             } else {
                 return "(any direction)";
             }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            FloorFieldState that = (FloorFieldState) o;
+            return direction == that.direction && state == that.state && target.equals(that.target);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(direction, state, target);
         }
     }
 

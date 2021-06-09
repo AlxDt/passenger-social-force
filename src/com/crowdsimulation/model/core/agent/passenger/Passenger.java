@@ -3,6 +3,7 @@ package com.crowdsimulation.model.core.agent.passenger;
 import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphic;
 import com.crowdsimulation.model.core.agent.Agent;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.simulator.Simulator;
@@ -33,7 +34,7 @@ public class Passenger extends PatchObject implements Agent {
         passengerFactory = new PassengerFactory();
     }
 
-    private Passenger(Gate gate) {
+    private Passenger(Patch spawnPatch) {
         this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
 
         // Set the graphic object of this passenger
@@ -45,17 +46,13 @@ public class Passenger extends PatchObject implements Agent {
         // Increment the number of passengers made by one
         Passenger.passengerCount++;
 
-        // Get the number of attractors in the gate
-        int numAttractors = gate.getAttractors().size();
-
-        // Randomly choose between the attractors to determine where the agent will spawn from
-        int randomAttractor = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(numAttractors);
+        Gate gate = (Gate) spawnPatch.getAmenityBlock().getParent();
 
         // Instantiate all movement-related fields
         this.passengerMovement = new PassengerMovement(
                 gate,
                 this,
-                gate.getAttractors().get(randomAttractor).getPatch().getPatchCenterCoordinates()
+                spawnPatch.getPatchCenterCoordinates()
         );
     }
 
@@ -76,8 +73,8 @@ public class Passenger extends PatchObject implements Agent {
     }
 
     public static class PassengerFactory extends StationObjectFactory {
-        public Passenger create(Gate gate) {
-            return new Passenger(gate);
+        public Passenger create(Patch spawnPatch) {
+            return new Passenger(spawnPatch);
         }
     }
 

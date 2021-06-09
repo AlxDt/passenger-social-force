@@ -2,6 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
 import java.util.List;
 
@@ -23,4 +24,16 @@ public interface Queueable {
 
     // Retrieve the queue object
     QueueObject getQueueObject();
+
+    static Queueable toQueueable(Amenity amenity) {
+        if (isQueueable(amenity)) {
+            return (Queueable) amenity;
+        } else {
+            return null;
+        }
+    }
+
+    static boolean isQueueable(Amenity amenity) {
+        return amenity instanceof Queueable;
+    }
 }

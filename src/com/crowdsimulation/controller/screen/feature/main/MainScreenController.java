@@ -15,6 +15,7 @@ import com.crowdsimulation.controller.screen.feature.portal.setup.EscalatorSetup
 import com.crowdsimulation.controller.screen.feature.portal.setup.PortalSetupController;
 import com.crowdsimulation.controller.screen.feature.portal.setup.StairSetupController;
 import com.crowdsimulation.controller.screen.service.main.InitializeMainScreenService;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -1456,6 +1457,33 @@ public class MainScreenController extends ScreenController {
     }
 
     @FXML
+    // Play the simulation
+    public void playAction() {
+        // Not yet running to running (play simulation)
+        if (!Main.simulator.isRunning()) {
+            // Update mode
+            Main.simulator.setOperationMode(Simulator.OperationMode.TESTING);
+            Main.mainScreenController.updatePromptText();
+
+            // The simulation will now be running
+            Main.simulator.setRunning(true);
+            Main.simulator.getPlaySemaphore().release();
+
+            playButton.setText("Pause");
+        } else {
+            // Update mode
+            Main.simulator.setOperationMode(Simulator.OperationMode.BUILDING);
+            Main.mainScreenController.updatePromptText();
+
+            // Running to not running (pause simulation)
+            // The simulation will now be pausing
+            Main.simulator.setRunning(false);
+
+            playButton.setText("Play");
+        }
+    }
+
+    @FXML
     // Reset the simulation
     public void resetAction() {
         Main.simulator.reset();
@@ -1465,6 +1493,12 @@ public class MainScreenController extends ScreenController {
 
         // Redraw the canvas
         drawStationViewFloorForeground(Main.simulator.getCurrentFloor(), false);
+
+        // If the simulator is running, stop it
+        if (Main.simulator.isRunning()) {
+            playAction();
+            playButton.setSelected(false);
+        }
     }
 
     @FXML
@@ -1504,11 +1538,10 @@ public class MainScreenController extends ScreenController {
 
     // Clear passengers in a single floor
     public void clearPassengersInFloor(Floor floor) {
-        // Clear passengers from each patch
-        for (Patch[] patchRow : floor.getPatches()) {
-            for (Patch patch : patchRow) {
-                patch.getPassengers().clear();
-            }
+        // Remove the relationship between the patch and the passenger
+        for (Passenger passenger : floor.getPassengersInFloor()) {
+            passenger.getPassengerMovement().getCurrentPatch().getPassengers().clear();
+            passenger.getPassengerMovement().setCurrentPatch(null);
         }
 
         // Remove all the passengers found in this floor from the station's master list of passengers
@@ -1518,6 +1551,9 @@ public class MainScreenController extends ScreenController {
 
         // Clear all passengers from this floor's passenger list
         floor.getPassengersInFloor().clear();
+
+        // Clear this floor's patch set
+        floor.getPassengerPatchSet().clear();
     }
 
     public void initializeStation(Station station, boolean drawListeners) {
@@ -2774,7 +2810,7 @@ public class MainScreenController extends ScreenController {
                                                 // peace
                                                 // Prepare the first portal that will be placed on this floor
                                                 StairPortal stairPortalToAdd
-                                                        = StairShaft.stairEditor.draw(
+                                                        = StairShaft.stairEditor.createPortal(
                                                         currentPatch,
                                                         Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                         Main.simulator.getCurrentFloor(),
@@ -2872,7 +2908,7 @@ public class MainScreenController extends ScreenController {
                                         }
                                     } else {
                                         // Prepare the second portal that will be placed on this floor
-                                        StairPortal stairPortalToAdd = StairShaft.stairEditor.draw(
+                                        StairPortal stairPortalToAdd = StairShaft.stairEditor.createPortal(
                                                 currentPatch,
                                                 Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                 Main.simulator.getCurrentFloor(),
@@ -3059,7 +3095,7 @@ public class MainScreenController extends ScreenController {
                                                 // peace
                                                 // Prepare the first portal that will be placed on this floor
                                                 EscalatorPortal escalatorPortalToAdd
-                                                        = EscalatorShaft.escalatorEditor.draw(
+                                                        = EscalatorShaft.escalatorEditor.createPortal(
                                                         currentPatch,
                                                         Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                         Main.simulator.getCurrentFloor(),
@@ -3158,7 +3194,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // Prepare the second portal that will be placed on this floor
                                         EscalatorPortal escalatorPortalToAdd
-                                                = EscalatorShaft.escalatorEditor.draw(
+                                                = EscalatorShaft.escalatorEditor.createPortal(
                                                 currentPatch,
                                                 Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                 Main.simulator.getCurrentFloor(),
@@ -3344,7 +3380,7 @@ public class MainScreenController extends ScreenController {
                                                 // peace
                                                 // Prepare the first portal that will be placed on this floor
                                                 ElevatorPortal elevatorPortalToAdd
-                                                        = ElevatorShaft.elevatorEditor.draw(
+                                                        = ElevatorShaft.elevatorEditor.createPortal(
                                                         currentPatch,
                                                         Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                         Main.simulator.getCurrentFloor(),
@@ -3443,7 +3479,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // Prepare the second portal that will be placed on this floor
                                         ElevatorPortal elevatorPortalToAdd
-                                                = ElevatorShaft.elevatorEditor.draw(
+                                                = ElevatorShaft.elevatorEditor.createPortal(
                                                 currentPatch,
                                                 Main.simulator.getProvisionalPortalShaft().isEnabled(),
                                                 Main.simulator.getCurrentFloor(),
@@ -4377,25 +4413,6 @@ public class MainScreenController extends ScreenController {
         }
     }
 
-    // Draw the interface partially
-    private void drawPartialInterface(
-            int rowStart,
-            int columnStart,
-            int rowEnd,
-            int columnEnd
-    ) {
-        // Initially draw the station environment, showing the current floor
-        drawPartialStationViewFloorBackground(
-                Main.simulator.getCurrentFloor(),
-                rowStart,
-                columnStart,
-                rowEnd,
-                columnEnd
-        );
-
-        // TODO: Then draw the passengers in the station
-    }
-
     // Draw the station view background given a current floor
     public void drawStationViewFloorBackground(Floor currentFloor) {
         GraphicsController.requestDrawStationView(
@@ -4429,26 +4446,6 @@ public class MainScreenController extends ScreenController {
             // Update the passenger counts
             updatePassengerCounts();
         });
-    }
-
-    // Draw the station view background given a current floor
-    private void drawPartialStationViewFloorBackground(
-            Floor currentFloor,
-            int rowStart,
-            int columnStart,
-            int rowEnd,
-            int columnEnd
-    ) {
-        // Draw each station in the train system onto its respective tab
-        GraphicsController.requestDrawPartialStationView(
-                interfaceStackPane,
-                currentFloor,
-                rowStart,
-                columnStart,
-                rowEnd,
-                columnEnd,
-                true
-        );
     }
 
     // Draw the mouse listeners

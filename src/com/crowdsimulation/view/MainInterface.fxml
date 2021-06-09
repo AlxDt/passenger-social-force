@@ -119,7 +119,7 @@
                                         <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
                                     </padding>
                                 </HBox>
-                                <TabPane fx:id="buildTabPane" prefHeight="642.0" prefWidth="250.0" side="RIGHT" tabClosingPolicy="UNAVAILABLE">
+                                <TabPane fx:id="buildTabPane" prefHeight="667.0" prefWidth="250.0" side="RIGHT" tabClosingPolicy="UNAVAILABLE">
                                     <tabs>
                                         <Tab text="Entrances &amp; Exits">
                                             <content>
@@ -471,7 +471,7 @@
                                           </HBox>
                                           <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                              <children>
-                                                <ToggleButton fx:id="playButton" mnemonicParsing="false" prefHeight="25.0" prefWidth="230.0" text="Play" />
+                                                <ToggleButton fx:id="playButton" mnemonicParsing="false" onAction="#playAction" prefHeight="25.0" prefWidth="230.0" text="Play" />
                                                 <Button fx:id="resetButton" mnemonicParsing="false" onAction="#resetAction" prefHeight="25.0" prefWidth="117.0" text="Reset" />
                                              </children>
                                           </HBox>
