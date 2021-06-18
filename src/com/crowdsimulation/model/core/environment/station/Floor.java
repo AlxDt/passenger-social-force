@@ -4,8 +4,8 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
-import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
+import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
+import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
@@ -173,8 +173,8 @@ public class Floor extends BaseStationObject implements Environment {
         return this.patches;
     }
 
-    public static List<Patch> get5x5Field(Patch centerPatch, double heading, boolean includeCenterPatch) {
-        final double fieldOfViewAngleDegrees = 135.0;
+    public static List<Patch> get7x7Field(Patch centerPatch, double heading, boolean includeCenterPatch) {
+        final double fieldOfViewAngleDegrees = 90.0;
 
         int truncatedX = (int) centerPatch.getPatchCenterCoordinates().getX();
         int truncatedY = (int) centerPatch.getPatchCenterCoordinates().getY();
@@ -182,8 +182,8 @@ public class Floor extends BaseStationObject implements Environment {
         Patch chosenPatch;
         List<Patch> patchesToExplore = new ArrayList<>();
 
-        for (int rowOffset = -2; rowOffset <= 2; rowOffset++) {
-            for (int columnOffset = -2; columnOffset <= 2; columnOffset++) {
+        for (int rowOffset = -3; rowOffset <= 3; rowOffset++) {
+            for (int columnOffset = -3; columnOffset <= 3; columnOffset++) {
                 boolean xCondition;
                 boolean yCondition;
 

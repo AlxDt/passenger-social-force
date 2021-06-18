@@ -29,13 +29,13 @@ public abstract class AmenityGraphic extends Graphic {
         // The designated graphic of the amenities
         final List<AmenityGraphicLocation> stationGateGraphic = new ArrayList<>();
         stationGateGraphic.add(new AmenityGraphicLocation(15, 0));
-        stationGateGraphic.add(new AmenityGraphicLocation(15, 2));
-        stationGateGraphic.add(new AmenityGraphicLocation(15, 4));
         stationGateGraphic.add(new AmenityGraphicLocation(15, 6));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 4));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 2));
         stationGateGraphic.add(new AmenityGraphicLocation(15, 8));
-        stationGateGraphic.add(new AmenityGraphicLocation(15, 10));
-        stationGateGraphic.add(new AmenityGraphicLocation(15, 12));
         stationGateGraphic.add(new AmenityGraphicLocation(15, 14));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 12));
+        stationGateGraphic.add(new AmenityGraphicLocation(15, 10));
         AMENITY_GRAPHICS.put(StationGate.class, stationGateGraphic);
 
         final List<AmenityGraphicLocation> securityGraphic = new ArrayList<>();

@@ -1,7 +1,7 @@
 package com.crowdsimulation.controller.graphics.amenity.footprint;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
+import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
 import java.util.ArrayList;

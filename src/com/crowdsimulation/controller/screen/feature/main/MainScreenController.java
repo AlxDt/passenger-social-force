@@ -1527,13 +1527,19 @@ public class MainScreenController extends ScreenController {
 
     // Clear all passengers in the station
     public void clearPassengersInStation(Station station) {
-        // TODO: Clear passengers from each queuable's passenger list
-
         // Clear passengers from each floor
         for (Floor floor : station.getFloors()) {
             clearPassengersInFloor(floor);
-        }
 
+            // Clear queued passengers in the elevator shafts in this station
+            for (ElevatorShaft elevatorShaft : station.getElevatorShafts()) {
+                ((Queueable) elevatorShaft.getLowerPortal()).getQueueObject().setPassengerServiced(null);
+                ((Queueable) elevatorShaft.getUpperPortal()).getQueueObject().setPassengerServiced(null);
+
+                ((Queueable) elevatorShaft.getLowerPortal()).getQueueObject().getPassengersQueueing().clear();
+                ((Queueable) elevatorShaft.getUpperPortal()).getQueueObject().getPassengersQueueing().clear();
+            }
+        }
     }
 
     // Clear passengers in a single floor
@@ -1554,6 +1560,19 @@ public class MainScreenController extends ScreenController {
 
         // Clear this floor's patch set
         floor.getPassengerPatchSet().clear();
+
+        // Clear all serviced passengers
+        List<Queueable> queueables = new ArrayList<>();
+
+        queueables.addAll(floor.getSecurities());
+        queueables.addAll(floor.getTicketBooths());
+        queueables.addAll(floor.getTurnstiles());
+        queueables.addAll(floor.getTrainDoors());
+
+        for (Queueable queueable : queueables) {
+            queueable.getQueueObject().setPassengerServiced(null);
+            queueable.getQueueObject().getPassengersQueueing().clear();
+        }
     }
 
     public void initializeStation(Station station, boolean drawListeners) {

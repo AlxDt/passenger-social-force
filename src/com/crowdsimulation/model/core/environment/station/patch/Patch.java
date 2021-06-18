@@ -5,12 +5,16 @@ import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.location.Coordinates;
-import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
+import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Patch extends BaseStationObject implements Environment, Comparable<Patch> {
     // Denotes the position of this patch based on a discrete row x column matrix
@@ -20,7 +24,7 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
     private final Coordinates patchCenterCoordinates;
 
     // Denotes the list of passengers that are currently on this patch
-    private final List<Passenger> passengers;
+    private final CopyOnWriteArrayList<Passenger> passengers;
 
     // Denotes the amenity block present on this patch
     private Amenity.AmenityBlock amenityBlock;
@@ -37,7 +41,7 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         this.matrixPosition = matrixPosition;
         this.patchCenterCoordinates = Coordinates.patchCenterCoordinates(this);
 
-        this.passengers = new ArrayList<>();
+        this.passengers = new CopyOnWriteArrayList<>();
         this.amenityBlock = null;
         this.floor = floor;
 
@@ -52,7 +56,7 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         return patchCenterCoordinates;
     }
 
-    public List<Passenger> getPassengers() {
+    public CopyOnWriteArrayList<Passenger> getPassengers() {
         return passengers;
     }
 

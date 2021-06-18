@@ -1,4 +1,4 @@
-package com.crowdsimulation.model.core.environment.station.patch.location;
+package com.crowdsimulation.model.core.environment.station.patch.position;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
@@ -44,20 +44,19 @@ public class Coordinates extends Location {
     }
 
     // Compute the distance between this coordinates and some other coordinates
-    public static double distance(Coordinates sourceCoordinates, Coordinates coordinates) {
-        double x = coordinates.getX();
-        double y = coordinates.getY();
+    public static double distance(Coordinates sourceCoordinates, Coordinates targetCoordinates) {
+        double x = targetCoordinates.getX();
+        double y = targetCoordinates.getY();
 
         return Math.sqrt(
                 Math.pow(x - sourceCoordinates.getX(), 2) + Math.pow(y - sourceCoordinates.getY(), 2)
         );
     }
 
-
     // Retrieve the heading (in radians) when it faces towards a given position
-    public static double headingTowards(Coordinates sourceCoordinates, Coordinates coordinates) {
-        double x = coordinates.getX();
-        double y = coordinates.getY();
+    public static double headingTowards(Coordinates sourceCoordinates, Coordinates targetCoordinates) {
+        double x = targetCoordinates.getX();
+        double y = targetCoordinates.getY();
 
         // Get the differences in the x and y values of the two positions
         double dx = x - sourceCoordinates.getX();
@@ -68,7 +67,7 @@ public class Coordinates extends Location {
         double adjacentLength = dx;
 
         // The length of the hypotenuse is the distance between this passenger and the given position
-        double hypotenuseLength = distance(sourceCoordinates, coordinates);
+        double hypotenuseLength = distance(sourceCoordinates, targetCoordinates);
 
         // The included angle between the adjacent and the hypotenuse is given by the arccosine of the ratio of the
         // length of the adjacent and the length of the hypotenuse
@@ -85,12 +84,12 @@ public class Coordinates extends Location {
 
     // See if the given coordinate is within the passenger's field of view
     public static boolean isWithinFieldOfView(Coordinates sourceCoordinates,
-                                              Coordinates coordinates,
+                                              Coordinates targetCoordinates,
                                               double heading,
                                               double maximumHeadingChange) {
         // A coordinate is within a field of view if the heading change required to face that coordinate is within the
         // specified maximum heading change
-        double headingTowardsCoordinate = headingTowards(sourceCoordinates, coordinates);
+        double headingTowardsCoordinate = headingTowards(sourceCoordinates, targetCoordinates);
 
         // Compute the absolute difference between the two headings
         double headingDifference = Coordinates.headingDifference(headingTowardsCoordinate, heading);

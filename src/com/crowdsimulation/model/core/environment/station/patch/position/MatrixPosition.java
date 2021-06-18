@@ -1,4 +1,4 @@
-package com.crowdsimulation.model.core.environment.station.patch.location;
+package com.crowdsimulation.model.core.environment.station.patch.position;
 
 import com.crowdsimulation.model.core.environment.station.Station;
 

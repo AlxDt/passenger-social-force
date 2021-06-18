@@ -13,8 +13,6 @@ import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.location.Location;
-import com.crowdsimulation.model.core.environment.station.patch.location.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
@@ -29,6 +27,8 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
+import com.crowdsimulation.model.core.environment.station.patch.position.Location;
+import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -410,6 +410,18 @@ public class GraphicsController extends Controller {
                                     .getRowSpan()
                     );
 
+/*                    foregroundGraphicsContext.setStroke(Color.VIOLET);
+
+                    if (drawablePatchAmenity instanceof Queueable) {
+                        foregroundGraphicsContext.strokeText(
+                                Arrays.toString(((Queueable) drawablePatchAmenity).getQueueObject().getPassengersQueueing().toArray()),
+                                column * tileSize + drawablePatchAmenity.getGraphicObject()
+                                        .getAmenityGraphicOffset().getColumnOffset() * tileSize,
+                                row * tileSize + drawablePatchAmenity.getGraphicObject()
+                                        .getAmenityGraphicOffset().getRowOffset() * tileSize - tileSize * 1
+                        );
+                    }*/
+
                     // Reset transparency if previously added
                     if (drawGraphicTransparently) {
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
@@ -455,6 +467,64 @@ public class GraphicsController extends Controller {
                             passengerDiameter,
                             passengerDiameter
                     );*/
+
+/*                    if (passenger.getPassengerMovement().getToExplore() != null) {
+                        foregroundGraphicsContext.setGlobalAlpha(0.25);
+                        foregroundGraphicsContext.setFill(Color.LIGHTGREEN);
+
+                        for (Patch explorePatch : passenger.getPassengerMovement().getToExplore()) {
+                            foregroundGraphicsContext.fillRect(
+                                    explorePatch.getPatchCenterCoordinates().getX()
+                                            * tileSize - tileSize * 0.5,
+                                    explorePatch.getPatchCenterCoordinates().getY()
+                                            * tileSize - tileSize * 0.5,
+                                    tileSize,
+                                    tileSize
+                            );
+                        }
+
+                        foregroundGraphicsContext.setGlobalAlpha(1.0);
+                    }*/
+
+                    switch (passenger.getPassengerMovement().getAction()) {
+                        case ASSEMBLING:
+                            foregroundGraphicsContext.setStroke(Color.ORANGE);
+
+                            break;
+                        case QUEUEING:
+                            foregroundGraphicsContext.setStroke(Color.RED);
+
+                            break;
+                        case HEADING_TO_QUEUEABLE:
+                            foregroundGraphicsContext.setStroke(Color.DARKRED);
+
+                            break;
+                        case SECURITY_CHECKING:
+                        case TRANSACTING_TICKET:
+                        case USING_TICKET:
+                            foregroundGraphicsContext.setStroke(Color.GREEN);
+
+                            break;
+                        default:
+                            foregroundGraphicsContext.setStroke(Color.BLACK);
+
+                            break;
+                    }
+
+                    foregroundGraphicsContext.strokeText(
+                            passenger.getIdentifier() + "",
+                            passenger.getPassengerMovement().getPosition().getX() * tileSize,
+                            passenger.getPassengerMovement().getPosition().getY() * tileSize + tileSize
+                    );
+
+                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
+                    Queueable q = passenger.getPassengerMovement().getGoalAmenityAsQueueable();
+
+                    foregroundGraphicsContext.strokeText(
+                            passenger.getIdentifier() + ": " + ((followed != null) ? followed.getIdentifier() : "-"),
+                            passenger.getPassengerMovement().getPosition().getX() * tileSize,
+                            passenger.getPassengerMovement().getPosition().getY() * tileSize + tileSize
+                    );
 
                     foregroundGraphicsContext.drawImage(
                             PASSENGER_SPRITE_SHEET,

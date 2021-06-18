@@ -91,6 +91,11 @@ public class Passenger extends PatchObject implements Agent {
         return Objects.hash(identifier);
     }
 
+    @Override
+    public String toString() {
+        return String.valueOf(this.identifier);
+    }
+
     // Denotes the gender of this passenger
     public enum Gender {
         FEMALE,

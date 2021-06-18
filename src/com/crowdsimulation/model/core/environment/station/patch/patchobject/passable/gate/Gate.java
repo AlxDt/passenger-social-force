@@ -21,7 +21,7 @@ public abstract class Gate extends NonObstacle implements Drawable {
         int randomAttractorIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(numAttractors);
 
         // Get a random attractor
-        AmenityBlock attractor = this.getAttractors().get(randomAttractorIndex);
+        AmenityBlock attractor = this.getAttractors().get(0);
 
         // If that random attractor is free from passengers, generate one
         if (attractor.getPatch().getPassengers().isEmpty()) {
