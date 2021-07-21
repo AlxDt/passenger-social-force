@@ -4,8 +4,6 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
-import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
@@ -18,6 +16,8 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
+import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
+import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -93,18 +93,6 @@ public class Floor extends BaseStationObject implements Environment {
         this.passengersInFloor = new CopyOnWriteArrayList<>();
     }
 
-    private void initializePatches() {
-        MatrixPosition matrixPosition;
-
-        for (int row = 0; row < rows; row++) {
-            for (int column = 0; column < columns; column++) {
-                matrixPosition = new MatrixPosition(row, column);
-
-                patches[row][column] = new Patch(this, matrixPosition);
-            }
-        }
-    }
-
     public Station getStation() {
         return station;
     }
@@ -153,12 +141,27 @@ public class Floor extends BaseStationObject implements Environment {
         return walls;
     }
 
+    private void initializePatches() {
+        MatrixPosition matrixPosition;
+
+        for (int row = 0; row < rows; row++) {
+            for (int column = 0; column < columns; column++) {
+                matrixPosition = new MatrixPosition(row, column);
+
+                patches[row][column] = new Patch(this, matrixPosition);
+            }
+        }
+    }
+
     public CopyOnWriteArrayList<Passenger> getPassengersInFloor() {
         return passengersInFloor;
     }
 
     public Patch getPatch(Coordinates coordinates) {
-        return getPatch((int) coordinates.getY(), (int) coordinates.getX());
+        return getPatch(
+                (int) (coordinates.getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS),
+                (int) (coordinates.getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS)
+        );
     }
 
     public Patch getPatch(MatrixPosition matrixPosition) {
@@ -173,11 +176,9 @@ public class Floor extends BaseStationObject implements Environment {
         return this.patches;
     }
 
-    public static List<Patch> get7x7Field(Patch centerPatch, double heading, boolean includeCenterPatch) {
-        final double fieldOfViewAngleDegrees = 90.0;
-
-        int truncatedX = (int) centerPatch.getPatchCenterCoordinates().getX();
-        int truncatedY = (int) centerPatch.getPatchCenterCoordinates().getY();
+    public static List<Patch> get7x7Field(Patch centerPatch, double heading, boolean includeCenterPatch, double fieldOfViewAngle) {
+        int truncatedX = (int) (centerPatch.getPatchCenterCoordinates().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS);
+        int truncatedY = (int) (centerPatch.getPatchCenterCoordinates().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS);
 
         Patch chosenPatch;
         List<Patch> patchesToExplore = new ArrayList<>();
@@ -228,7 +229,7 @@ public class Floor extends BaseStationObject implements Environment {
                             centerPatch.getPatchCenterCoordinates(),
                             chosenPatch.getPatchCenterCoordinates(),
                             heading,
-                            Math.toRadians(fieldOfViewAngleDegrees))) {
+                            fieldOfViewAngle)) {
                         patchesToExplore.add(chosenPatch);
                     }
                 }
@@ -237,159 +238,6 @@ public class Floor extends BaseStationObject implements Environment {
 
         return patchesToExplore;
     }
-
-    /*public int getNumGoals() {
-        return this.goals.size();
-    }*/
-
-/*    public void setType(int row, int column, Patch.Type type, int sequence) {
-        Patch patch = patches[row][column];
-
-        int index = -1;
-
-        // Only allow placement on clear patches
-        if (patch.getType() == Patch.Type.CLEAR) {
-            // Set the patch to its new state
-            if (type == Patch.Type.SPAWN) {
-                // Add to the starts list
-                this.starts.add(patch);
-            } else if (type == Patch.Type.TRANSACTION_AREA || type == Patch.Type.DESPAWN) {
-                if (type == Patch.Type.TRANSACTION_AREA) {
-                    patch.setWaitingTime(Patch.ENTRY_WAITING_TIME);
-                }
-
-                // Add to the goals list
-                if (sequence == this.goals.size()) {
-                    this.goals.add(new ArrayList<>());
-                }
-
-                this.goals.get(sequence).add(patch);
-                index = this.goals.get(sequence).size() - 1;
-            } else if (type == Patch.Type.OBSTACLE || type == Patch.Type.TICKET_BOOTH) {
-                // Add to the obstacles list
-                this.obstacles.add(patch);
-            }
-
-            // Change the state
-            patch.setType(type, sequence, index);
-        }
-    }*/
-
-/*    public void setFloorField(
-            Patch patch,
-            PassengerMovement.State state,
-            Patch associatedGoal,
-            double floorFieldValue) {
-        // A fix for when the JavaFX slider gives the maximum value as 0.999 and not 1.0
-        if (floorFieldValue >= 0.99) {
-            floorFieldValue = 1.0;
-        }
-
-        FloorField floorField = patch.getFloorFieldValues().get(state);
-
-//        floorField.setValue(floorField.getValue() + 1);
-        floorField.setValue(floorFieldValue);
-
-        // Set the goal this patch is associated to
-        floorField.setGoal(associatedGoal);
-
-        // Tell that associated goal patch to add this patch to the list of its associated patches, if it's not yet
-        // already there
-        if (!associatedGoal.getAssociatedPatches().contains(patch)) {
-            associatedGoal.getAssociatedPatches().add(patch);
-        }
-
-        // If the floor field value is 1, this is the apex patch of the floor field
-        if (floorFieldValue == 1.0) {
-            // Make sure that the apex doesn't exist yet
-//            assert floorField.getApex() == null;
-
-            floorField.setApex(patch);
-        }
-
-//        FloorField newFloorField
-//                = new FloorField(patch.getFloorFields().get(state).getValue() + 1.0, association);
-//
-//        patch.getFloorFields().put(state, newFloorField);
-    }*/
-
-/*    public double getMaximumFloorFieldValue(PassengerMovement.State state) {
-        // Get the maximum floor field value for the chosen state
-        double maximumFloorField = 0.0;
-
-        for (int row = 0; row < Main.simulator.getCurrentFloor().patches.length; row++) {
-            for (int column = 0; column < Main.simulator.getCurrentFloor().patches[0].length; column++) {
-                double currentFloorField
-                        = Main.simulator.getCurrentFloor().getPatch(row, column).getFloorFieldValues().get(state)
-                        .getValue();
-
-                if (currentFloorField > maximumFloorField) {
-                    maximumFloorField = currentFloorField;
-                }
-            }
-        }
-
-        return maximumFloorField;
-    }*/
-
-/*    public boolean checkGoal(Passenger passenger) {
-        // Get its goal
-        Patch goal = passenger.getPassengerMovement().getGoal();
-
-        // TODO: Take into account states other than transacting
-        return passenger.getPassengerMovement().getAction() == PassengerMovement.Action.TRANSACTING
-                && (int) passenger.getPassengerMovement().getPosition().getX() == goal.getMatrixPosition().getColumn()
-                && (int) passenger.getPassengerMovement().getPosition().getY() == goal.getMatrixPosition().getRow();
-    }*/
-
-/*    public boolean checkPass(Passenger passenger, boolean trainDoorsOpen) {
-        // Get its goal
-//        Patch goal = this.goals.get(passenger.getGoalsReached()).get(passenger.getIndexGoalChosen());
-        Patch goal = passenger.getPassengerMovement().getGoal();
-
-        if (goal.getType() == Patch.Type.TRANSACTION_AREA) {
-            if (goal.getWaitingTime() == 0) {
-                goal.setWaitingTime(Patch.ENTRY_WAITING_TIME);
-
-                return true;
-            } else {
-                goal.setWaitingTime(goal.getWaitingTime() - 1);
-
-                return false;
-            }
-        } else if (goal.getType() == Patch.Type.DESPAWN) {
-            return trainDoorsOpen;
-        }
-
-        return true;
-    }*/
-
-/*    public List<Patch> getGoalsAtSequence(int sequence) {
-        return goals.get(sequence);
-    }
-
-    public List<List<Patch>> getGoals() {
-        return goals;
-    }
-
-    public List<Patch> getGoalsFlattened() {
-        List<Patch> flattened = new ArrayList<>();
-
-        for (List<Patch> patches : this.goals) {
-            flattened.addAll(patches);
-        }
-
-        return flattened;
-    }
-
-    public Patch getGoalFromGoalId(String goalId) {
-        String[] split = goalId.split("-");
-
-        int sequence = Integer.parseInt(split[0].substring(1));
-        int index = Integer.parseInt(split[1]);
-
-        return this.goals.get(sequence).get(index);
-    }*/
 
     // Add a floor above or below the given current floor in a list of floors
     public static Floor addFloorAboveOrBelow(

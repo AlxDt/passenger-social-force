@@ -17,7 +17,7 @@ import java.util.List;
 
 public class TicketBooth extends Goal {
     // Denotes the type of tickets the ticket booth dispenses
-    private TicketBoothType ticketBoothType;
+    private TicketType ticketType;
 
     // Takes note of the passenger currently transacting in the ticket booth
     private Passenger passengerTransacting;
@@ -171,7 +171,7 @@ public class TicketBooth extends Goal {
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
             int waitingTime,
-            TicketBoothType ticketBoothType
+            TicketType ticketType
     ) {
         super(
                 amenityBlocks,
@@ -180,7 +180,7 @@ public class TicketBooth extends Goal {
                 new QueueObject()
         );
 
-        this.ticketBoothType = ticketBoothType;
+        this.ticketType = ticketType;
         this.passengerTransacting = null;
 
         // Initialize this ticket booth's floor field state
@@ -199,12 +199,12 @@ public class TicketBooth extends Goal {
         this.ticketBoothGraphic = new TicketBoothGraphic(this);
     }
 
-    public TicketBoothType getTicketBoothType() {
-        return ticketBoothType;
+    public TicketType getTicketBoothType() {
+        return ticketType;
     }
 
-    public void setTicketBoothType(TicketBoothType ticketBoothType) {
-        this.ticketBoothType = ticketBoothType;
+    public void setTicketBoothType(TicketType ticketType) {
+        this.ticketType = ticketType;
     }
 
     public Passenger getPassengerTransacting() {
@@ -318,26 +318,26 @@ public class TicketBooth extends Goal {
                 List<AmenityBlock> amenityBlocks,
                 boolean enabled,
                 int waitingTime,
-                TicketBoothType ticketBoothType
+                TicketType ticketType
         ) {
             return new TicketBooth(
                     amenityBlocks,
                     enabled,
                     waitingTime,
-                    ticketBoothType
+                    ticketType
             );
         }
     }
 
     // Lists the types of tickets this ticket booth dispenses
-    public enum TicketBoothType {
+    public enum TicketType {
         SINGLE_JOURNEY("Single journey"),
         STORED_VALUE("Stored value"),
         ALL_TICKET_TYPES("All ticket types");
 
         private final String name;
 
-        TicketBoothType(String name) {
+        TicketType(String name) {
             this.name = name;
         }
 

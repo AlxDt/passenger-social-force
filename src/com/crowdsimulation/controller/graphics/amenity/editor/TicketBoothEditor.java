@@ -14,7 +14,7 @@ public class TicketBoothEditor extends AmenityEditor {
             Patch currentPatch,
             boolean enabled,
             int waitingTime,
-            TicketBooth.TicketBoothType ticketBoothType
+            TicketBooth.TicketType ticketType
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
@@ -50,7 +50,7 @@ public class TicketBoothEditor extends AmenityEditor {
                     amenityBlocks,
                     enabled,
                     waitingTime,
-                    ticketBoothType
+                    ticketType
             );
 
             // Add this station gate to the list of all ticket booths on this floor
@@ -68,7 +68,7 @@ public class TicketBoothEditor extends AmenityEditor {
             TicketBooth ticketBoothToEdit,
             boolean enabled,
             int waitingTime,
-            TicketBooth.TicketBoothType ticketBoothType
+            TicketBooth.TicketType ticketType
     ) {
         ticketBoothToEdit.setEnabled(
                 enabled
@@ -79,7 +79,7 @@ public class TicketBoothEditor extends AmenityEditor {
         );
 
         ticketBoothToEdit.setTicketBoothType(
-                ticketBoothType
+                ticketType
         );
     }
 

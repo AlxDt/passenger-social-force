@@ -27,8 +27,10 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
+import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.position.Location;
 import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
+import com.crowdsimulation.model.core.environment.station.patch.position.Vector;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -185,6 +187,13 @@ public class GraphicsController extends Controller {
                     canvasHeight
             );
         }
+
+        markingsGraphicsContext.clearRect(
+                0,
+                0,
+                floor.getColumns() * tileSize,
+                floor.getRows() * tileSize
+        );
 
         // Draw all the patches of this floor
         // If the background is supposed to be drawn, draw from all the patches
@@ -410,6 +419,17 @@ public class GraphicsController extends Controller {
                                     .getRowSpan()
                     );
 
+                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
+
+                    if (queueable != null) {
+                        foregroundGraphicsContext.strokeText(
+                                (queueable.getQueueObject().getPassengerServiced() != null ? queueable.getQueueObject().getPassengerServiced().getIdentifier() + "" : "-") + ", " +
+                                        ((!queueable.getQueueObject().getPassengersQueueing().isEmpty()) ? queueable.getQueueObject().getPassengersQueueing().getFirst() + ">" + queueable.getQueueObject().getPassengersQueueing().getLast() : "-"),
+                                GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getX() * tileSize,
+                                GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getY() * tileSize + tileSize * 2
+                        );
+                    }
+
 /*                    foregroundGraphicsContext.setStroke(Color.VIOLET);
 
                     if (drawablePatchAmenity instanceof Queueable) {
@@ -468,7 +488,7 @@ public class GraphicsController extends Controller {
                             passengerDiameter
                     );*/
 
-/*                    if (passenger.getPassengerMovement().getToExplore() != null) {
+/*                    if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
                         foregroundGraphicsContext.setGlobalAlpha(0.25);
                         foregroundGraphicsContext.setFill(Color.LIGHTGREEN);
 
@@ -486,59 +506,339 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }*/
 
-                    switch (passenger.getPassengerMovement().getAction()) {
-                        case ASSEMBLING:
-                            foregroundGraphicsContext.setStroke(Color.ORANGE);
+/*                    if (passenger.getPassengerMovement().isStuck()) {
+                        foregroundGraphicsContext.setStroke(Color.VIOLET);
 
-                            break;
-                        case QUEUEING:
-                            foregroundGraphicsContext.setStroke(Color.RED);
+                        foregroundGraphicsContext.strokeText(
+                                passenger.getIdentifier() + "",
+                                passenger.getPassengerMovement().getPosition().getX() * tileSize,
+                                passenger.getPassengerMovement().getPosition().getY() * tileSize + tileSize
+                        );
+                    } else {
+                        switch (passenger.getPassengerMovement().getAction()) {
+                            case ASSEMBLING:
+                                foregroundGraphicsContext.setStroke(Color.ORANGE);
 
-                            break;
-                        case HEADING_TO_QUEUEABLE:
-                            foregroundGraphicsContext.setStroke(Color.DARKRED);
+                                break;
+                            case QUEUEING:
+                                foregroundGraphicsContext.setStroke(Color.RED);
 
-                            break;
-                        case SECURITY_CHECKING:
-                        case TRANSACTING_TICKET:
-                        case USING_TICKET:
-                            foregroundGraphicsContext.setStroke(Color.GREEN);
+                                break;
+                            case HEADING_TO_QUEUEABLE:
+                                foregroundGraphicsContext.setStroke(Color.DARKRED);
 
-                            break;
-                        default:
-                            foregroundGraphicsContext.setStroke(Color.BLACK);
+                                break;
+                            case SECURITY_CHECKING:
+                            case TRANSACTING_TICKET:
+                            case USING_TICKET:
+                                foregroundGraphicsContext.setStroke(Color.GREEN);
 
-                            break;
+                                break;
+                            default:
+                                foregroundGraphicsContext.setStroke(Color.BLACK);
+
+                                break;
+                        }
                     }
-
-                    foregroundGraphicsContext.strokeText(
-                            passenger.getIdentifier() + "",
-                            passenger.getPassengerMovement().getPosition().getX() * tileSize,
-                            passenger.getPassengerMovement().getPosition().getY() * tileSize + tileSize
-                    );
 
                     Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
                     Queueable q = passenger.getPassengerMovement().getGoalAmenityAsQueueable();
 
+                    if (*//*passenger.getPassengerMovement().isStuck() || passenger.getPassengerMovement().getAction() == PassengerMovement.Action.ASSEMBLING*//*true) {
+                        foregroundGraphicsContext.strokeText(
+                                passenger.getIdentifier() + ""*//* + " : " + ((followed != null) ? followed.getIdentifier() : "-")*//*,
+//                                    + "(" + String.format("%.2f", passenger.getPassengerMovement().getCurrentWalkingDistance()) + " m/s)" +
+//                                    ": " + passenger.getPassengerMovement().getMovementCounter() + "/" + passenger.getPassengerMovement().getNoMovementCounter() + "/" + passenger.getPassengerMovement().getStuckCounter()
+                                passenger.getPassengerMovement().getPosition().getX() * tileSize,
+                                passenger.getPassengerMovement().getPosition().getY() * tileSize + tileSize
+                        );
+                    }*/
+
+/*                    // Draw passenger patches in field of view
+                    if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
+                        foregroundGraphicsContext.setGlobalAlpha(0.25);
+                        foregroundGraphicsContext.setFill(Color.LIGHTGREEN);
+
+                        for (Patch explorePatch : passenger.getPassengerMovement().getToExplore()) {
+                            foregroundGraphicsContext.fillRect(
+                                    explorePatch.getPatchCenterCoordinates().getX()
+                                            / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                                    explorePatch.getPatchCenterCoordinates().getY()
+                                            / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                                    tileSize,
+                                    tileSize
+                            );
+                        }
+
+                        foregroundGraphicsContext.setGlobalAlpha(1.0);
+                    }*/
+
+/*                    // Draw passenger patches in field of view
+                    if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
+                        foregroundGraphicsContext.setGlobalAlpha(0.25);
+                        foregroundGraphicsContext.setFill(Color.LIGHTGREEN);
+
+                        for (Patch explorePatch : passenger.getPassengerMovement().getRecentPatches().keySet()) {
+                            foregroundGraphicsContext.fillRect(
+                                    explorePatch.getPatchCenterCoordinates().getX()
+                                            / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                                    explorePatch.getPatchCenterCoordinates().getY()
+                                            / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                                    tileSize,
+                                    tileSize
+                            );
+                        }
+
+                        foregroundGraphicsContext.setGlobalAlpha(1.0);
+                    }*/
+
+                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
+                    Queueable queueable = passenger.getPassengerMovement().getGoalAmenityAsQueueable();
+
+                    foregroundGraphicsContext.setStroke(Color.BLACK);
+
                     foregroundGraphicsContext.strokeText(
-                            passenger.getIdentifier() + ": " + ((followed != null) ? followed.getIdentifier() : "-"),
-                            passenger.getPassengerMovement().getPosition().getX() * tileSize,
-                            passenger.getPassengerMovement().getPosition().getY() * tileSize + tileSize
+                            passenger.getIdentifier() + " : " + ((followed != null) ? followed.getIdentifier() : "-"),
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
                     );
 
+/*                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
+
+                    foregroundGraphicsContext.strokeText(
+                            passenger.getPassengerMovement().getNoMovementCounter() + "",
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
+                    );*/
+
+/*
+                    foregroundGraphicsContext.strokeText(
+                            passenger.getIdentifier() + " : " + ((followed != null) ? followed.getIdentifier() : "-"),
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
+                    );
+*/
+
+                    // Draw passenger path
+                    if (passenger.getPassengerMovement().getCurrentPath() != null) {
+                        foregroundGraphicsContext.setFill(Color.VIOLET);
+                        foregroundGraphicsContext.setGlobalAlpha(0.25);
+
+                        int index = 0;
+
+                        for (Patch pathPatch : new ArrayList<>(passenger.getPassengerMovement().getCurrentPath())) {
+                            if (index == 0 || index == passenger.getPassengerMovement().getCurrentPath().size() - 1) {
+                                foregroundGraphicsContext.setFill(Color.ORANGERED);
+                            } else {
+                                foregroundGraphicsContext.setFill(Color.CORNFLOWERBLUE);
+                            }
+
+                            foregroundGraphicsContext.fillRect(
+                                    pathPatch.getPatchCenterCoordinates().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                            * tileSize - tileSize * 0.5,
+                                    pathPatch.getPatchCenterCoordinates().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                            * tileSize - tileSize * 0.5,
+                                    tileSize,
+                                    tileSize
+                            );
+
+                            index++;
+                        }
+
+                        foregroundGraphicsContext.setGlobalAlpha(1.0);
+                    }
+/*
+                    // Draw the passenger's current patch
+                    foregroundGraphicsContext.setFill(Color.GRAY);
+                    foregroundGraphicsContext.setGlobalAlpha(0.25);
+
+                    foregroundGraphicsContext.fillRect(
+                            passenger.getPassengerMovement().getCurrentPatch().getPatchCenterCoordinates().getX()
+                                    / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                            passenger.getPassengerMovement().getCurrentPatch().getPatchCenterCoordinates().getY()
+                                    / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                            tileSize,
+                            tileSize
+                    );*/
+
+                    foregroundGraphicsContext.setGlobalAlpha(1.9);
+
+                    // Show the status of the passenger through the color of its bounds
+                    if (passenger.getPassengerMovement().isStuck()) {
+                        foregroundGraphicsContext.setFill(Color.VIOLET);
+                    } else {
+                        switch (passenger.getPassengerMovement().getAction()) {
+                            case ASSEMBLING:
+                                foregroundGraphicsContext.setFill(Color.YELLOW);
+
+                                break;
+                            case QUEUEING:
+                                foregroundGraphicsContext.setFill(Color.ORANGE);
+
+                                break;
+                            case HEADING_TO_QUEUEABLE:
+                                foregroundGraphicsContext.setFill(Color.RED);
+
+                                break;
+                            case SECURITY_CHECKING:
+                            case TRANSACTING_TICKET:
+                            case USING_TICKET:
+                                foregroundGraphicsContext.setFill(Color.GREEN);
+
+                                break;
+                            default:
+                                foregroundGraphicsContext.setFill(Color.GRAY);
+
+                                break;
+                        }
+                    }
+
+                    // Draw the passenger's bounds
+                    final double passengerDiameter = tileSize;
+
+                    foregroundGraphicsContext.setGlobalAlpha(0.5);
+
+                    foregroundGraphicsContext.fillOval(
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getX()
+                                    * tileSize - passengerDiameter * 0.5,
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getY()
+                                    * tileSize - passengerDiameter * 0.5,
+                            passengerDiameter,
+                            passengerDiameter
+                    );
+
+/*                    if (passenger.getTicketType() == TicketBooth.TicketType.STORED_VALUE) {
+                        foregroundGraphicsContext.strokeOval(
+                                GraphicsController.getScaledPassengerCoordinates(passenger).getX()
+                                        * tileSize - passengerDiameter * 0.5,
+                                GraphicsController.getScaledPassengerCoordinates(passenger).getY()
+                                        * tileSize - passengerDiameter * 0.5,
+                                passengerDiameter,
+                                passengerDiameter
+                        );
+                    }*/
+
+                    foregroundGraphicsContext.setGlobalAlpha(1.0);
+
+                    // Draw the passenger sprite
                     foregroundGraphicsContext.drawImage(
                             PASSENGER_SPRITE_SHEET,
                             passengerGraphicLocation.getSourceX(),
                             passengerGraphicLocation.getSourceY(),
                             passengerGraphicLocation.getSourceWidth(),
                             passengerGraphicLocation.getSourceHeight(),
-                            passenger.getPassengerMovement().getPosition().getX()
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getX()
                                     * tileSize - tileSize,
-                            passenger.getPassengerMovement().getPosition().getY()
+                            GraphicsController.getScaledPassengerCoordinates(passenger).getY()
                                     * tileSize - tileSize * 2,
                             tileSize * 2,
                             tileSize * 2 + tileSize * 0.25
                     );
+
+                    // Draw vectors
+                    foregroundGraphicsContext.setStroke(Color.RED);
+
+                    final double vectorHeadDiameter = 0.1 * tileSize;
+
+                    for (
+                            Vector vector
+                            : new ArrayList<>(passenger.getPassengerMovement().getRepulsiveForceFromPassengers())
+                    ) {
+                        foregroundGraphicsContext.strokeLine(
+                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeOval(
+                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vectorHeadDiameter,
+                                vectorHeadDiameter
+                        );
+                    }
+
+                    foregroundGraphicsContext.setStroke(Color.ORANGE);
+
+                    for (
+                            Vector vector
+                            : new ArrayList<>(passenger.getPassengerMovement().getRepulsiveForcesFromObstacles())
+                    ) {
+                        foregroundGraphicsContext.strokeLine(
+                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeOval(
+                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vectorHeadDiameter,
+                                vectorHeadDiameter
+                        );
+                    }
+
+                    foregroundGraphicsContext.setStroke(Color.BLUE);
+
+                    Vector attractionVector = passenger.getPassengerMovement().getAttractiveForce();
+
+                    if (attractionVector != null) {
+                        foregroundGraphicsContext.strokeLine(
+                                attractionVector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                attractionVector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                attractionVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                attractionVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeOval(
+                                attractionVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                attractionVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vectorHeadDiameter,
+                                vectorHeadDiameter
+                        );
+                    }
+
+                    foregroundGraphicsContext.setStroke(Color.GREEN);
+
+                    Vector motivationVector = passenger.getPassengerMovement().getMotivationForce();
+
+                    if (motivationVector != null) {
+                        foregroundGraphicsContext.strokeLine(
+                                motivationVector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                motivationVector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                motivationVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                motivationVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeOval(
+                                motivationVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                motivationVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vectorHeadDiameter,
+                                vectorHeadDiameter
+                        );
+                    }
                 }
             }
         }
@@ -1027,5 +1327,18 @@ public class GraphicsController extends Controller {
         } else if (Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.OBSTACLE) {
             GraphicsController.currentAmenityFootprint = Wall.wallFootprint;
         }
+    }
+
+    public static Coordinates getScaledPassengerCoordinates(Passenger passenger) {
+        Coordinates passengerPosition = passenger.getPassengerMovement().getPosition();
+
+        return GraphicsController.getScaledCoordinates(passengerPosition);
+    }
+
+    public static Coordinates getScaledCoordinates(Coordinates coordinates) {
+        return new Coordinates(
+                coordinates.getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS,
+                coordinates.getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+        );
     }
 }

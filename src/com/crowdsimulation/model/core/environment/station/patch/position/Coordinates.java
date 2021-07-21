@@ -1,6 +1,7 @@
 package com.crowdsimulation.model.core.environment.station.patch.position;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.Objects;
 
@@ -9,20 +10,28 @@ public class Coordinates extends Location {
     private double x;
     private double y;
 
+    public Coordinates(Coordinates coordinates) {
+        this.x = coordinates.getX();
+        this.y = coordinates.getY();
+    }
+
     public Coordinates(double x, double y) {
         this.x = x;
         this.y = y;
     }
 
     // Get the central coordinates of the given patch
-    public static Coordinates patchCenterCoordinates(Patch patch) {
+    public static Coordinates getPatchCenterCoordinates(Patch patch) {
         // Retrieve the row and column positions of the patch
         double column = patch.getMatrixPosition().getColumn();
         double row = patch.getMatrixPosition().getRow();
 
         // Set the centered x and y coordinates
-        double centeredX = column + 0.5;
-        double centeredY = row + 0.5;
+//        double centeredX = column + 0.5;
+        double centeredX = column * Patch.PATCH_SIZE_IN_SQUARE_METERS + Patch.PATCH_SIZE_IN_SQUARE_METERS * 0.5;
+
+//        double centeredY = row + 0.5;
+        double centeredY = row * Patch.PATCH_SIZE_IN_SQUARE_METERS + Patch.PATCH_SIZE_IN_SQUARE_METERS * 0.5;
 
         return new Coordinates(centeredX, centeredY);
     }
@@ -51,6 +60,26 @@ public class Coordinates extends Location {
         return Math.sqrt(
                 Math.pow(x - sourceCoordinates.getX(), 2) + Math.pow(y - sourceCoordinates.getY(), 2)
         );
+    }
+
+    public static double distance(Patch sourcePatch, Patch targetPatch) {
+        // Check the cache first if the distance between the two given patches has already been computed beforehand
+        PatchPair patchPair = new Coordinates.PatchPair(sourcePatch, targetPatch);
+        Double cachedDistance = Simulator.DISTANCE_CACHE.get(patchPair);
+
+        // If it isn't in the cache yet, add it there dso we won't need to recompute it in the future
+        if (cachedDistance == null) {
+            double distance = Coordinates.distance(
+                    sourcePatch.getPatchCenterCoordinates(),
+                    targetPatch.getPatchCenterCoordinates()
+            );
+
+            Simulator.DISTANCE_CACHE.put(patchPair, distance);
+
+            return distance;
+        } else {
+            return cachedDistance;
+        }
     }
 
     // Retrieve the heading (in radians) when it faces towards a given position
@@ -83,10 +112,12 @@ public class Coordinates extends Location {
     }
 
     // See if the given coordinate is within the passenger's field of view
-    public static boolean isWithinFieldOfView(Coordinates sourceCoordinates,
-                                              Coordinates targetCoordinates,
-                                              double heading,
-                                              double maximumHeadingChange) {
+    public static boolean isWithinFieldOfView(
+            Coordinates sourceCoordinates,
+            Coordinates targetCoordinates,
+            double heading,
+            double maximumHeadingChange
+    ) {
         // A coordinate is within a field of view if the heading change required to face that coordinate is within the
         // specified maximum heading change
         double headingTowardsCoordinate = headingTowards(sourceCoordinates, targetCoordinates);
@@ -126,6 +157,17 @@ public class Coordinates extends Location {
         );
     }
 
+    public static Coordinates computeFuturePosition(Coordinates startingPosition, double heading, double magnitude) {
+        // Given the current position, the current heading, and the walking speed, the coordinates for the new
+        // position of the passenger are
+        // (x_current + cos(heading) * walking speed, y_current - sin(heading) * walking_distance)
+        double newX = startingPosition.getX() + Math.cos(heading) * magnitude;
+        double newY = startingPosition.getY() - Math.sin(heading) * magnitude;
+
+        // Then set the position of this passenger to the new coordinates
+        return new Coordinates(newX, newY);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -138,5 +180,28 @@ public class Coordinates extends Location {
     @Override
     public int hashCode() {
         return Objects.hash(x, y);
+    }
+
+    public static class PatchPair {
+        private final Patch patch1;
+        private final Patch patch2;
+
+        public PatchPair(Patch patch1, Patch patch2) {
+            this.patch1 = patch1;
+            this.patch2 = patch2;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PatchPair that = (PatchPair) o;
+            return patch1.equals(that.patch1) && patch2.equals(that.patch2);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(patch1, patch2);
+        }
     }
 }

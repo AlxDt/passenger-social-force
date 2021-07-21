@@ -3,7 +3,6 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
-import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.List;
 
@@ -14,11 +13,12 @@ public abstract class Gate extends NonObstacle implements Drawable {
 
     // Spawn a passenger in this position
     public Passenger spawnPassenger() {
-        // Get the number of attractors in the gate
-        int numAttractors = this.getAttractors().size();
-
-        // Randomly choose between the attractors to determine where the agent will spawn from
-        int randomAttractorIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(numAttractors);
+        // Check if all attractors in this amenity have no passengers
+        for (AmenityBlock attractor : this.getAttractors()) {
+            if (!attractor.getPatch().getPassengers().isEmpty()) {
+                return null;
+            }
+        }
 
         // Get a random attractor
         AmenityBlock attractor = this.getAttractors().get(0);

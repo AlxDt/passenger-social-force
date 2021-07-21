@@ -198,7 +198,7 @@ public class MainScreenController extends ScreenController {
     private Label ticketBoothModeLabel;
 
     @FXML
-    private ChoiceBox<TicketBooth.TicketBoothType> ticketBoothModeChoiceBox;
+    private ChoiceBox<TicketBooth.TicketType> ticketBoothModeChoiceBox;
 
     @FXML
     private Label ticketBoothIntervalLabel;
@@ -286,7 +286,7 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Button deleteTrackButton;
 
-    // Walls
+    // Obstacles
     // Wall
     @FXML
     private Label wallTypeLabel;
@@ -321,7 +321,6 @@ public class MainScreenController extends ScreenController {
     private Slider simulationSpeedSlider;
 
     // Passenger controls
-    // Platform controls
     @FXML
     private Text passengerCountStationText;
 
@@ -339,6 +338,10 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private Slider walkingSpeedSlider;
+
+    // Platform controls
+    @FXML
+    private ToggleButton openTrainDoorsButton;
 
     // Top bar
     // Top bar text prompt
@@ -509,6 +512,29 @@ public class MainScreenController extends ScreenController {
     protected void closeAction() {
     }
 
+    @Override
+    public void setElements() {
+        // Return to normal zoom size
+        interfaceStackPane.setScaleX(1.0);
+        interfaceStackPane.setScaleY(1.0);
+
+        // Set the canvas size, depending on the given row and column size
+        double rowsScaled = Main.simulator.getStation().getRows() * GraphicsController.tileSize;
+        double columnsScaled = Main.simulator.getStation().getColumns() * GraphicsController.tileSize;
+
+        interfaceStackPane.setPrefWidth(columnsScaled);
+        interfaceStackPane.setPrefHeight(rowsScaled);
+
+        backgroundCanvas.setWidth(columnsScaled);
+        backgroundCanvas.setHeight(rowsScaled);
+
+        foregroundCanvas.setWidth(columnsScaled);
+        foregroundCanvas.setHeight(rowsScaled);
+
+        markingsCanvas.setWidth(columnsScaled);
+        markingsCanvas.setHeight(rowsScaled);
+    }
+
     @FXML
     public void initialize() {
         // Initialize all UI elements and label references
@@ -627,51 +653,6 @@ public class MainScreenController extends ScreenController {
                 scrollPane,
                 interfaceStackPane
         );
-    }
-
-    public void performChoice() {
-        // Depending on the mode chosen by the user in the window before this, either start with a blank station, or
-        // load an already existing one
-        if ((boolean) this.getWindowInput().get(MainScreenController.INPUT_KEYS[0])) {
-            Main.hasMadeChoice = true;
-
-            int rows = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[1]);
-            int columns = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[2]);
-
-            // Initialize the blank station
-            Station blankStation = new Station(rows, columns);
-            initializeStation(blankStation, !GraphicsController.listenersDrawn);
-
-            // Listeners have already been drawn
-            if (!GraphicsController.listenersDrawn) {
-                GraphicsController.listenersDrawn = true;
-            }
-        } else {
-            loadStationAction();
-        }
-    }
-
-    @Override
-    public void setElements() {
-        // Return to normal zoom size
-        interfaceStackPane.setScaleX(1.0);
-        interfaceStackPane.setScaleY(1.0);
-
-        // Set the canvas size, depending on the given row and column size
-        double rowsScaled = Main.simulator.getStation().getRows() * GraphicsController.tileSize;
-        double columnsScaled = Main.simulator.getStation().getColumns() * GraphicsController.tileSize;
-
-        interfaceStackPane.setPrefWidth(columnsScaled);
-        interfaceStackPane.setPrefHeight(rowsScaled);
-
-        backgroundCanvas.setWidth(columnsScaled);
-        backgroundCanvas.setHeight(rowsScaled);
-
-        foregroundCanvas.setWidth(columnsScaled);
-        foregroundCanvas.setHeight(rowsScaled);
-
-        markingsCanvas.setWidth(columnsScaled);
-        markingsCanvas.setHeight(rowsScaled);
     }
 
     @FXML
@@ -1525,6 +1506,34 @@ public class MainScreenController extends ScreenController {
         drawStationViewFloorForeground(currentFloor, false);
     }
 
+    @FXML
+    // Open or close the train doors
+    public void toggleTrainDoorsAction() {
+        toggleTrainDoors();
+    }
+
+    public void performChoice() {
+        // Depending on the mode chosen by the user in the window before this, either start with a blank station, or
+        // load an already existing one
+        if ((boolean) this.getWindowInput().get(MainScreenController.INPUT_KEYS[0])) {
+            Main.hasMadeChoice = true;
+
+            int rows = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[1]);
+            int columns = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[2]);
+
+            // Initialize the blank station
+            Station blankStation = new Station(rows, columns);
+            initializeStation(blankStation, !GraphicsController.listenersDrawn);
+
+            // Listeners have already been drawn
+            if (!GraphicsController.listenersDrawn) {
+                GraphicsController.listenersDrawn = true;
+            }
+        } else {
+            loadStationAction();
+        }
+    }
+
     // Clear all passengers in the station
     public void clearPassengersInStation(Station station) {
         // Clear passengers from each floor
@@ -1572,6 +1581,16 @@ public class MainScreenController extends ScreenController {
         for (Queueable queueable : queueables) {
             queueable.getQueueObject().setPassengerServiced(null);
             queueable.getQueueObject().getPassengersQueueing().clear();
+        }
+    }
+
+    private void toggleTrainDoors() {
+        List<TrainDoor> trainDoors = Main.simulator.getCurrentFloor().getTrainDoors();
+
+        // Open each train door
+        // TODO: which satisfies the requirements
+        for (TrainDoor trainDoor : trainDoors) {
+            trainDoor.toggleTrainDoor();
         }
     }
 
@@ -4453,8 +4472,6 @@ public class MainScreenController extends ScreenController {
 
         requestUpdateInterfaceSimulationElements();
     }
-
-    // Decide whether to
 
     // Update the interface elements pertinent to the simulation
     private void requestUpdateInterfaceSimulationElements() {

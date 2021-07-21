@@ -19,6 +19,9 @@ public class TrainDoor extends Gate implements Queueable {
     // Denotes the platform side served by this train door
     private TrainDoorDirection platform;
 
+    // Denotes whether this train door is open and allows entry and exit of passengers
+    private boolean open;
+
     // Denotes the types of carriages supported by this train door
     private final List<TrainDoorCarriage> trainDoorCarriagesSupported;
 
@@ -111,6 +114,7 @@ public class TrainDoor extends Gate implements Queueable {
         super(amenityBlocks, enabled);
 
         this.platform = platform;
+        this.open = false;
         this.trainDoorCarriagesSupported = new ArrayList<>();
 
         setTrainDoorCarriagesSupported(trainDoorCarriagesSupported);
@@ -142,6 +146,14 @@ public class TrainDoor extends Gate implements Queueable {
         this.platform = platform;
     }
 
+    public boolean isOpen() {
+        return open;
+    }
+
+    public void toggleTrainDoor() {
+        this.open = !this.open;
+    }
+
     public List<TrainDoorCarriage> getTrainDoorCarriagesSupported() {
         return trainDoorCarriagesSupported;
     }
@@ -157,6 +169,18 @@ public class TrainDoor extends Gate implements Queueable {
 
     public QueueingFloorField.FloorFieldState getTrainDoorFloorFieldState() {
         return trainDoorFloorFieldState;
+    }
+
+    public static boolean isTrainDoor(Amenity amenity) {
+        return amenity instanceof TrainDoor;
+    }
+
+    public static TrainDoor asTrainDoor(Amenity amenity) {
+        if (isTrainDoor(amenity)) {
+            return (TrainDoor) amenity;
+        } else {
+            return null;
+        }
     }
 
     @Override

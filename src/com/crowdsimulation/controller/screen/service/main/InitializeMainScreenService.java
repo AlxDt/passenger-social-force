@@ -181,7 +181,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             // Ticket booth
             CheckBox ticketBoothEnableCheckBox,
             Label ticketBoothModeLabel,
-            ChoiceBox<TicketBooth.TicketBoothType> ticketBoothModeChoiceBox,
+            ChoiceBox<TicketBooth.TicketType> ticketBoothModeChoiceBox,
             Label ticketBoothIntervalLabel,
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
@@ -565,7 +565,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeConcourseAmenities(
             CheckBox ticketBoothEnableCheckBox,
             Label ticketBoothModeLabel,
-            ChoiceBox<TicketBooth.TicketBoothType> ticketBoothModeChoiceBox,
+            ChoiceBox<TicketBooth.TicketType> ticketBoothModeChoiceBox,
             Label ticketBoothIntervalLabel,
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
@@ -611,7 +611,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeTicketBooth(
             CheckBox ticketBoothEnableCheckBox,
             Label ticketBoothModeLabel,
-            ChoiceBox<TicketBooth.TicketBoothType> ticketBoothModeChoiceBox,
+            ChoiceBox<TicketBooth.TicketType> ticketBoothModeChoiceBox,
             Label ticketBoothIntervalLabel,
             Spinner<Integer> ticketBoothIntervalSpinner,
             Button saveTicketBoothButton,
@@ -622,9 +622,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
         ticketBoothModeLabel.setLabelFor(ticketBoothModeChoiceBox);
 
         ticketBoothModeChoiceBox.setItems(FXCollections.observableArrayList(
-                TicketBooth.TicketBoothType.SINGLE_JOURNEY,
-                TicketBooth.TicketBoothType.STORED_VALUE,
-                TicketBooth.TicketBoothType.ALL_TICKET_TYPES
+                TicketBooth.TicketType.SINGLE_JOURNEY,
+                TicketBooth.TicketType.STORED_VALUE,
+                TicketBooth.TicketType.ALL_TICKET_TYPES
         ));
         ticketBoothModeChoiceBox.getSelectionModel().select(0);
 

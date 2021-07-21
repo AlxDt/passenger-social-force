@@ -9,36 +9,7 @@ public class Vector {
 
     private double xDisplacement;
     private double yDisplacement;
-
-    public Vector() {
-
-    }
-
-    public Vector(
-            Coordinates startingPosition,
-            double heading,
-            Coordinates futurePosition
-    ) {
-        setVector(
-                startingPosition,
-                heading,
-                futurePosition
-        );
-    }
-
-    public Vector(
-            Coordinates startingPosition,
-            double heading,
-            Coordinates futurePosition,
-            double xDisplacement,
-            double yDisplacement
-    ) {
-        this.startingPosition = startingPosition;
-        this.heading = heading;
-        this.futurePosition = futurePosition;
-        this.xDisplacement = xDisplacement;
-        this.yDisplacement = yDisplacement;
-    }
+    private double magnitude;
 
     public Vector(Vector vector) {
         this.startingPosition = vector.getStartingPosition();
@@ -46,10 +17,52 @@ public class Vector {
         this.futurePosition = vector.getFuturePosition();
 
         this.xDisplacement = vector.getXDisplacement();
-        this.yDisplacement = vector.yDisplacement;
+        this.yDisplacement = vector.getYDisplacement();
+        this.magnitude = vector.getMagnitude();
     }
 
-    // Given the magnitude and direction, compute for the x and y displacements of the vector
+    // Create a vector given the starting position, the heading, and the future position
+    public Vector(
+            Coordinates startingPosition,
+            double heading,
+            Coordinates futurePosition,
+            double magnitude
+    ) {
+        setVector(
+                startingPosition,
+                heading,
+                futurePosition
+        );
+
+        this.magnitude = magnitude;
+    }
+
+    private static double computeMagnitude(Coordinates startingPosition, Coordinates futurePosition) {
+        return Coordinates.distance(
+                startingPosition,
+                futurePosition
+        );
+    }
+
+    // Create a vector given already-computed elements
+    public Vector(
+            Coordinates startingPosition,
+            double heading,
+            Coordinates futurePosition,
+            double xDisplacement,
+            double yDisplacement,
+            double magnitude
+    ) {
+        this.startingPosition = startingPosition;
+        this.heading = heading;
+        this.futurePosition = futurePosition;
+        this.xDisplacement = xDisplacement;
+        this.yDisplacement = yDisplacement;
+
+        this.magnitude = magnitude;
+    }
+
+    // Given the starting position, heading, and ending position compute for the x and y displacements of the vector
     public void setVector(
             Coordinates currentPosition,
             double currentHeading,
@@ -64,6 +77,40 @@ public class Vector {
         // They will be needed for adding and subtracting vectors
         this.xDisplacement = this.futurePosition.getX() - this.startingPosition.getX();
         this.yDisplacement = this.futurePosition.getY() - this.startingPosition.getY();
+
+        this.magnitude = Coordinates.distance(this.startingPosition, this.futurePosition);
+    }
+
+    // With the same starting position and magnitude, adjust the heading of the vector
+    public void adjustHeading(double newHeading) {
+        // Compute the new future position with a new heading
+        Coordinates futurePosition = Coordinates.computeFuturePosition(
+                this.startingPosition,
+                newHeading,
+                this.magnitude
+        );
+
+        this.setVector(
+                this.startingPosition,
+                newHeading,
+                futurePosition
+        );
+    }
+
+    // With the same starting position and heading, adjust the magnitude of the vector
+    public void adjustMagnitude(double newMagnitude) {
+        // Compute the new future position with a new magnitude
+        Coordinates futurePosition = Coordinates.computeFuturePosition(
+                this.startingPosition,
+                this.heading,
+                newMagnitude
+        );
+
+        this.setVector(
+                this.startingPosition,
+                this.heading,
+                futurePosition
+        );
     }
 
     public Coordinates getStartingPosition() {
@@ -84,6 +131,10 @@ public class Vector {
 
     public double getYDisplacement() {
         return yDisplacement;
+    }
+
+    public double getMagnitude() {
+        return magnitude;
     }
 
     // Given a list of vectors, compute for the resultant vector - the sum of all such vectors
@@ -118,7 +169,11 @@ public class Vector {
                     newHeading,
                     endingPosition,
                     sumX,
-                    sumY
+                    sumY,
+                    Vector.computeMagnitude(
+                            startingPosition,
+                            endingPosition
+                    )
             );
         } else {
             return null;

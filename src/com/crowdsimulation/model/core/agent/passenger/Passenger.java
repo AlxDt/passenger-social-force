@@ -6,6 +6,7 @@ import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.Objects;
@@ -20,6 +21,9 @@ public class Passenger extends PatchObject implements Agent {
     // Denotes the gender of this passenger
     // TODO: Move to passenger information object?
     private final Gender gender;
+
+    // Denotes the ticket type of this passenger
+    private final TicketBooth.TicketType ticketType;
 
     // Handles how this passenger is displayed
     private final PassengerGraphic passengerGraphic;
@@ -36,6 +40,12 @@ public class Passenger extends PatchObject implements Agent {
 
     private Passenger(Patch spawnPatch) {
         this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
+
+        final double singleJourneyPercentage = 0.0;
+
+        this.ticketType
+                = Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < singleJourneyPercentage
+                ? TicketBooth.TicketType.SINGLE_JOURNEY : TicketBooth.TicketType.STORED_VALUE;
 
         // Set the graphic object of this passenger
         this.passengerGraphic = new PassengerGraphic(this);
@@ -58,6 +68,10 @@ public class Passenger extends PatchObject implements Agent {
 
     public Gender getGender() {
         return gender;
+    }
+
+    public TicketBooth.TicketType getTicketType() {
+        return ticketType;
     }
 
     public PassengerGraphic getPassengerGraphic() {

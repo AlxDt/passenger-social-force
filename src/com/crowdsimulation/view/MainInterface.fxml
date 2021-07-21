@@ -538,7 +538,7 @@
                                           </HBox>
                                           <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                              <children>
-                                                <ToggleButton mnemonicParsing="false" prefHeight="25.0" prefWidth="231.0" text="Open train doors" />
+                                                <ToggleButton fx:id="openTrainDoorsButton" mnemonicParsing="false" onAction="#toggleTrainDoorsAction" prefHeight="25.0" prefWidth="231.0" text="Open train doors" />
                                              </children>
                                           </HBox>
                                        </children>
