@@ -7,6 +7,7 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
 import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.Objects;
@@ -41,7 +42,7 @@ public class Passenger extends PatchObject implements Agent {
     private Passenger(Patch spawnPatch) {
         this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
 
-        final double singleJourneyPercentage = 0.0;
+        final double singleJourneyPercentage = 0.5;
 
         this.ticketType
                 = Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < singleJourneyPercentage

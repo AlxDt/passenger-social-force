@@ -30,7 +30,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.position.Location;
 import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
-import com.crowdsimulation.model.core.environment.station.patch.position.Vector;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -419,7 +418,7 @@ public class GraphicsController extends Controller {
                                     .getRowSpan()
                     );
 
-                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
+/*                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
 
                     if (queueable != null) {
                         foregroundGraphicsContext.strokeText(
@@ -428,7 +427,7 @@ public class GraphicsController extends Controller {
                                 GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getX() * tileSize,
                                 GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getY() * tileSize + tileSize * 2
                         );
-                    }
+                    }*/
 
 /*                    foregroundGraphicsContext.setStroke(Color.VIOLET);
 
@@ -592,6 +591,7 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }*/
 
+/*
                     Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
                     Queueable queueable = passenger.getPassengerMovement().getGoalAmenityAsQueueable();
 
@@ -602,6 +602,7 @@ public class GraphicsController extends Controller {
                             GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
                             GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
                     );
+*/
 
 /*                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
 
@@ -707,7 +708,7 @@ public class GraphicsController extends Controller {
                             passengerDiameter
                     );
 
-/*                    if (passenger.getTicketType() == TicketBooth.TicketType.STORED_VALUE) {
+                    if (passenger.getTicketType() == TicketBooth.TicketType.STORED_VALUE) {
                         foregroundGraphicsContext.strokeOval(
                                 GraphicsController.getScaledPassengerCoordinates(passenger).getX()
                                         * tileSize - passengerDiameter * 0.5,
@@ -716,7 +717,7 @@ public class GraphicsController extends Controller {
                                 passengerDiameter,
                                 passengerDiameter
                         );
-                    }*/
+                    }
 
                     foregroundGraphicsContext.setGlobalAlpha(1.0);
 
@@ -735,7 +736,7 @@ public class GraphicsController extends Controller {
                             tileSize * 2 + tileSize * 0.25
                     );
 
-                    // Draw vectors
+/*                    // Draw vectors
                     foregroundGraphicsContext.setStroke(Color.RED);
 
                     final double vectorHeadDiameter = 0.1 * tileSize;
@@ -838,7 +839,7 @@ public class GraphicsController extends Controller {
                                 vectorHeadDiameter,
                                 vectorHeadDiameter
                         );
-                    }
+                    }*/
                 }
             }
         }

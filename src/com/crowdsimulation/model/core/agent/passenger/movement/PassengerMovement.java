@@ -898,8 +898,8 @@ public class PassengerMovement {
                             );
 
                             if (
-                                    distanceToObstacle <= slowdownStartDistance
-                                            && !patchAmenityBlock.isAttractor()
+                                    distanceToObstacle <= slowdownStartDistance/*
+                                            && !patchAmenityBlock.isAttractor()*/
                             ) {
                                 obstaclesEncountered.put(distanceToObstacle, patchAmenityBlock);
                             }
@@ -1039,8 +1039,8 @@ public class PassengerMovement {
                                     patchAmenityBlock.getPatch().getPatchCenterCoordinates(),
                                     this.proposedHeading,
                                     Math.toRadians(fieldOfViewAngleDegrees))
-                                    && */distanceToObstacle <= slowdownStartDistance
-                                && !patchAmenityBlock.isAttractor()
+                                    && */distanceToObstacle <= slowdownStartDistance/*
+                                && !patchAmenityBlock.isAttractor()*/
                         ) {
                             obstaclesEncountered.put(distanceToObstacle, patchAmenityBlock);
                         }
@@ -1143,10 +1143,36 @@ public class PassengerMovement {
                 vectorsToAdd.add(attractiveForce);
             }
         } else {
+            double newHeading;
+
+            if (this.currentPatch.getAmenityBlock() != null && this.currentPatch.getAmenityBlock().getParent() instanceof Turnstile) {
+                // First, get the apex of the floor field with the state of the passenger
+                Turnstile turnstile = (Turnstile) this.currentPatch.getAmenityBlock().getParent();
+
+                QueueingFloorField.FloorFieldState floorFieldState;
+                Patch apexLocation;
+
+                if (this.direction == Direction.BOARDING) {
+                    floorFieldState = turnstile.getTurnstileFloorFieldStateBoarding();
+                } else {
+                    floorFieldState = turnstile.getTurnstileFloorFieldStateAlighting();
+                }
+
+                apexLocation = turnstile.getQueueObject().getFloorFields().get(floorFieldState).getApices().get(0);
+
+                // Then compute the heading from the apex to the turnstile attractor
+                newHeading = Coordinates.headingTowards(
+                        apexLocation.getPatchCenterCoordinates(),
+                        turnstile.getAttractors().get(0).getPatch().getPatchCenterCoordinates()
+                );
+            } else {
+                newHeading = this.previousHeading;
+            }
+
             // Compute for the proposed future position
             proposedNewPosition = this.getFuturePosition(
                     this.position,
-                    this.previousHeading,
+                    newHeading,
                     this.preferredWalkingDistance
             );
 
@@ -1155,7 +1181,7 @@ public class PassengerMovement {
             // Get the attractive force of this passenger to the new position
             this.attractiveForce = this.computeAttractiveForce(
                     new Coordinates(this.position),
-                    this.previousHeading,
+                    newHeading,
                     proposedNewPosition,
                     this.preferredWalkingDistance
             );
@@ -1700,7 +1726,15 @@ public class PassengerMovement {
     public void reachGoal() {
         // Just in case the passenger isn't actually on its goal, but is adequately close to it, just move the passenger
         // there
-        this.setPosition(this.goalAttractor.getPatch().getPatchCenterCoordinates());
+        // Make sure to offset the passenger from the center a little so a force will be applied to this passenger
+        Coordinates patchCenter = this.goalAttractor.getPatch().getPatchCenterCoordinates();
+        Coordinates offsetPatchCenter = this.getFuturePosition(
+                patchCenter,
+                this.previousHeading,
+                Patch.PATCH_SIZE_IN_SQUARE_METERS * 0.1
+        );
+
+        this.setPosition(offsetPatchCenter);
 
         this.currentAmenity = this.goalAmenity;
     }
@@ -2118,13 +2152,13 @@ public class PassengerMovement {
             Amenity parent = amenityBlock.getParent();
 
             if (parent.equals(this.goalAmenity)) {
-                if (amenityBlock.isAttractor()) {
-                    return false;
+                return !amenityBlock.isAttractor();
+            } else {
+                if (parent instanceof Gate) {
+                    return !amenityBlock.isAttractor();
                 } else {
                     return true;
                 }
-            } else {
-                return true;
             }
         }
 

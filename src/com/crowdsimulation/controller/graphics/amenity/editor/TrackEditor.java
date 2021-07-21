@@ -14,7 +14,6 @@ public class TrackEditor extends AmenityEditor {
             Patch currentPatch,
             Track.TrackDirection trackDirection
     ) {
-        // TODO: create track block
         List<Amenity.AmenityBlock> amenityBlocks
                 = Track.TrackBlock.convertToAmenityBlocks(
                 currentPatch.getMatrixPosition().getRow(),
