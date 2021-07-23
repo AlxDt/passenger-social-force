@@ -88,17 +88,17 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
 
         List<MatrixPosition> neighboringPatchIndices = new ArrayList<>();
 
-//        if (patchRow - 1 >= 0 && patchColumn - 1 >= 0) {
-//            neighboringPatchIndices.add(new MatrixPosition(patchRow - 1, patchColumn - 1));
-//        }
+        if (patchRow - 1 >= 0 && patchColumn - 1 >= 0) {
+            neighboringPatchIndices.add(new MatrixPosition(patchRow - 1, patchColumn - 1));
+        }
 
         if (patchRow - 1 >= 0) {
             neighboringPatchIndices.add(new MatrixPosition(patchRow - 1, patchColumn));
         }
 
-//        if (patchRow - 1 >= 0 && patchColumn + 1 < this.getFloor().getColumns()) {
-//            neighboringPatchIndices.add(new MatrixPosition(patchRow - 1, patchColumn + 1));
-//        }
+        if (patchRow - 1 >= 0 && patchColumn + 1 < this.getFloor().getColumns()) {
+            neighboringPatchIndices.add(new MatrixPosition(patchRow - 1, patchColumn + 1));
+        }
 
         if (patchColumn - 1 >= 0) {
             neighboringPatchIndices.add(new MatrixPosition(patchRow, patchColumn - 1));
@@ -108,17 +108,17 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
             neighboringPatchIndices.add(new MatrixPosition(patchRow, patchColumn + 1));
         }
 
-//        if (patchRow + 1 < this.getFloor().getRows() && patchColumn - 1 >= 0) {
-//            neighboringPatchIndices.add(new MatrixPosition(patchRow + 1, patchColumn - 1));
-//        }
+        if (patchRow + 1 < this.getFloor().getRows() && patchColumn - 1 >= 0) {
+            neighboringPatchIndices.add(new MatrixPosition(patchRow + 1, patchColumn - 1));
+        }
 
         if (patchRow + 1 < this.getFloor().getRows()) {
             neighboringPatchIndices.add(new MatrixPosition(patchRow + 1, patchColumn));
         }
 
-//        if (patchRow + 1 < this.getFloor().getRows() && patchColumn + 1 < this.getFloor().getColumns()) {
-//            neighboringPatchIndices.add(new MatrixPosition(patchRow + 1, patchColumn + 1));
-//        }
+        if (patchRow + 1 < this.getFloor().getRows() && patchColumn + 1 < this.getFloor().getColumns()) {
+            neighboringPatchIndices.add(new MatrixPosition(patchRow + 1, patchColumn + 1));
+        }
 
         return neighboringPatchIndices;
     }

@@ -422,8 +422,8 @@ public class GraphicsController extends Controller {
 
                     if (queueable != null) {
                         foregroundGraphicsContext.strokeText(
-                                (queueable.getQueueObject().getPassengerServiced() != null ? queueable.getQueueObject().getPassengerServiced().getIdentifier() + "" : "-") + ", " +
-                                        ((!queueable.getQueueObject().getPassengersQueueing().isEmpty()) ? queueable.getQueueObject().getPassengersQueueing().getFirst() + ">" + queueable.getQueueObject().getPassengersQueueing().getLast() : "-"),
+                                *//*(queueable.getQueueObject().getPassengerServiced() != null ? *//*queueable.getQueueObject().getPassengerServiced().getIdentifier() + ""*//* + "" : "-") + ", " +
+                                        ((!queueable.getQueueObject().getPassengersQueueing().isEmpty()) ? queueable.getQueueObject().getPassengersQueueing().getFirst() + ">" + queueable.getQueueObject().getPassengersQueueing().getLast() : "-")*//*,
                                 GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getX() * tileSize,
                                 GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getY() * tileSize + tileSize * 2
                         );
@@ -591,7 +591,6 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }*/
 
-/*
                     Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
                     Queueable queueable = passenger.getPassengerMovement().getGoalAmenityAsQueueable();
 
@@ -602,7 +601,6 @@ public class GraphicsController extends Controller {
                             GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
                             GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
                     );
-*/
 
 /*                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
 
@@ -662,11 +660,13 @@ public class GraphicsController extends Controller {
                             tileSize
                     );*/
 
-                    foregroundGraphicsContext.setGlobalAlpha(1.9);
+                    foregroundGraphicsContext.setGlobalAlpha(1.0);
 
                     // Show the status of the passenger through the color of its bounds
                     if (passenger.getPassengerMovement().isStuck()) {
                         foregroundGraphicsContext.setFill(Color.VIOLET);
+                    } else if (passenger.getPassengerMovement().willPathFind()) {
+                        foregroundGraphicsContext.setFill(Color.BLUE);
                     } else {
                         switch (passenger.getPassengerMovement().getAction()) {
                             case ASSEMBLING:
