@@ -43,9 +43,9 @@ public class RoutePlan {
         DIRECTION_ROUTE_MAP.put(PassengerMovement.Direction.ALIGHTING, alightingPlanList);
     }
 
-    public RoutePlan() {
+    public RoutePlan(boolean isStoredValueCardHolder) {
         // All newly-spawned passengers will have a boarding route plan
-        setNextRoutePlan(PassengerMovement.Direction.BOARDING);
+        setNextRoutePlan(PassengerMovement.Direction.BOARDING, isStoredValueCardHolder);
 
         // Burn off the first amenity class in the route plan, as the passenger will have already spawned there
         setNextAmenityClass();
@@ -53,8 +53,15 @@ public class RoutePlan {
     }
 
     // Set the next route plan
-    public void setNextRoutePlan(PassengerMovement.Direction direction) {
-        this.currentRoutePlan = new ArrayList<>(DIRECTION_ROUTE_MAP.get(direction)).iterator();
+    public void setNextRoutePlan(PassengerMovement.Direction direction, boolean isStoredValueCardHolder) {
+        List<Class<? extends Amenity>> routePlan = new ArrayList<>(DIRECTION_ROUTE_MAP.get(direction));
+
+        // If the passenger is a stored value card holder, remove the ticket booth from its route plan
+        if (direction == PassengerMovement.Direction.BOARDING && isStoredValueCardHolder) {
+            routePlan.remove(TicketBooth.class);
+        }
+
+        this.currentRoutePlan = routePlan.iterator();
     }
 
     // Set the next amenity class in the route plan

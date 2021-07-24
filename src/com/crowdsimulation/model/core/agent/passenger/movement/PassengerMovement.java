@@ -88,8 +88,11 @@ public class PassengerMovement {
     // Denotes whether the passenger is temporarily waiting on an amenity to be vacant
     private boolean isWaitingOnAmenity;
 
-    // Denotes whether this passenger has encountered a blocking passenger who is in queue
-    private boolean hasEncounteredQueueingPassenger;
+    // Denotes whether this passenger has encountered the passenger to be followed in the queue
+    private boolean hasEncounteredPassengerToFollow;
+
+    // Denotes whether this passenger has encountered any queueing passenger
+    private boolean hasEncounteredAnyQueueingPassenger;
 
     // Denotes the passenger this passenger is currently following while assembling
     private Passenger passengerFollowedWhenAssembling;
@@ -192,7 +195,9 @@ public class PassengerMovement {
         this.currentAmenity = gate;
 
         // Assign the route plan of this passenger
-        this.routePlan = new RoutePlan();
+        this.routePlan = new RoutePlan(
+                this.parent.getTicketType() == TicketBooth.TicketType.STORED_VALUE
+        );
 
         // Assign the floor of this passenger
         this.currentFloor = gate.getAmenityBlocks().get(0).getPatch().getFloor();
@@ -358,8 +363,12 @@ public class PassengerMovement {
         return passengerFollowedWhenAssembling;
     }
 
-    public boolean hasEncounteredQueueingPassenger() {
-        return hasEncounteredQueueingPassenger;
+    public boolean hasEncounteredPassengerToFollow() {
+        return hasEncounteredPassengerToFollow;
+    }
+
+    public boolean hasEncounteredAnyQueueingPassenger() {
+        return hasEncounteredAnyQueueingPassenger;
     }
 
     public List<Patch> getToExplore() {
@@ -594,7 +603,8 @@ public class PassengerMovement {
         this.goalNearestQueueingPatch = null;
 
         // No passengers have been encountered yet
-        this.hasEncounteredQueueingPassenger = false;
+        this.hasEncounteredPassengerToFollow = false;
+        this.hasEncounteredAnyQueueingPassenger = false;
 
         // This passenger is not yet waiting
         this.isWaitingOnAmenity = false;
@@ -799,7 +809,7 @@ public class PassengerMovement {
 
         // If the size of the passenger's memory of recent patches is less than this number, the passenger is considered
         // to not have moved
-        final double noNewPatchesSeenThreshold = 3;
+        final double noNewPatchesSeenThreshold = 5;
 
         // The distance to another passenger before this passenger slows down
         final double slowdownStartDistance = 2.0;
@@ -886,7 +896,9 @@ public class PassengerMovement {
                     ) {
                         this.isStuck = true;
                         this.stuckCounter++;
-                    }
+                    }/* else {
+                        this.isReadyToFree = true;
+                    }*/
                 }
 
                 // Get the passengers within the current field of view in these patches
@@ -927,12 +939,9 @@ public class PassengerMovement {
                         for (Passenger otherPassenger : patch.getPassengers()) {
                             // Make sure that the passenger discovered isn't itself
                             if (!otherPassenger.equals(this.getParent())) {
-/*                            if (
-                                    this.action == Action.HEADING_TO_QUEUEABLE
-                                            || otherPassenger.getPassengerMovement().getAction() == Action.QUEUEING
-                            ) {
-
-                            }*/
+                                if (!this.hasEncounteredAnyQueueingPassenger && otherPassenger.getPassengerMovement().getState() == State.IN_QUEUE) {
+                                    this.hasEncounteredAnyQueueingPassenger = true;
+                                }
 
                                 if (
                                         otherPassenger.getPassengerMovement().getState() == State.WALKING
@@ -977,7 +986,7 @@ public class PassengerMovement {
 
                 // If there are no passengers within the field of view, good - move normally
                 if (nearestPassengerEntry == null/*|| nearestPassengerEntry.getValue().getPassengerMovement().getGoalAmenity() != null && !nearestPassengerEntry.getValue().getPassengerMovement().getGoalAmenity().equals(this.goalAmenity)*/) {
-                    this.hasEncounteredQueueingPassenger = this.passengerFollowedWhenAssembling != null;
+                    this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
 
                     // Get the attractive force of this passenger to the new position
                     this.attractiveForce = this.computeAttractiveForce(
@@ -997,7 +1006,7 @@ public class PassengerMovement {
                     // passengers
                     maximumStopDistance -= (maximumStopDistance - minimumStopDistance) * passengerDensity;
 
-                    this.hasEncounteredQueueingPassenger = this.passengerFollowedWhenAssembling != null;
+                    this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
 
                     // Else, just slow down and move towards the direction of that passenger in front
                     // The slowdown factor linearly depends on the distance between this passenger and the other
@@ -1123,18 +1132,18 @@ public class PassengerMovement {
                                     // Check if the other passenger is in a queueing or assembling with the same goal as
                                     // this passenger
                                     if (this.passengerFollowedWhenAssembling == null) {
-                                        this.hasEncounteredQueueingPassenger = false;
+                                        this.hasEncounteredPassengerToFollow = false;
                                     } else {
                                         if (this.passengerFollowedWhenAssembling.equals(otherPassenger)) {
                                             // If the other passenger encountered is already assembling, decide whether this
                                             // passenger will assemble too depending on whether the other passenger was selected
                                             // to be followed by this one
-                                            this.hasEncounteredQueueingPassenger
+                                            this.hasEncounteredPassengerToFollow
                                                     = (otherPassenger.getPassengerMovement().getAction() == Action.ASSEMBLING
                                                     || otherPassenger.getPassengerMovement().getAction() == Action.QUEUEING)
                                                     && otherPassenger.getPassengerMovement().getGoalAmenity().equals(this.goalAmenity);
                                         } else {
-                                            this.hasEncounteredQueueingPassenger = false;
+                                            this.hasEncounteredPassengerToFollow = false;
                                         }
                                     }
                                 }
@@ -1143,13 +1152,13 @@ public class PassengerMovement {
                                 // goal
                                 if (
                                         this.parent.getTicketType() == TicketBooth.TicketType.STORED_VALUE
-                                                && this.hasEncounteredQueueingPassenger
+                                                && this.hasEncounteredPassengerToFollow
                                 ) {
                                     this.hasPathfound = true;
                                 }
 
                                 hasEncounteredQueueingPassengerInLoop
-                                        = this.hasEncounteredQueueingPassenger;
+                                        = this.hasEncounteredPassengerToFollow;
 
                                 passengersProcessed++;
                             }
@@ -1201,7 +1210,7 @@ public class PassengerMovement {
                     this.preferredWalkingDistance
             );
 
-            this.hasEncounteredQueueingPassenger = this.passengerFollowedWhenAssembling != null;
+            this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
 
             // Get the attractive force of this passenger to the new position
             this.attractiveForce = this.computeAttractiveForce(
@@ -1395,9 +1404,24 @@ public class PassengerMovement {
 
                     // If the passenger has moved above the no-movement threshold for at least this number of ticks,
                     // remove the passenger from its stuck state
-                    if (this.isStuck && (this.movementCounter >= unstuckTicksThreshold || this.newPatchesSeenCounter >= unstuckTicksThreshold)) {
+                    if (
+                            this.isStuck
+                                    && (
+                                    (
+                                            this.state == State.IN_QUEUE
+                                                    && this.movementCounter >= unstuckTicksThreshold
+                                                    || this.state != State.IN_QUEUE
+                                                    && this.newPatchesSeenCounter >= unstuckTicksThreshold/*
+                                            || this.passengerFollowedWhenAssembling != null*/
+                                    )
+                            )
+                    ) {
                         this.isReadyToFree = true;
                     }
+
+/*                    if (this.isStuck && !((this.goalAttractor.getPatch().getPassengers().isEmpty() && (this.isAtQueueFront() || this.isServicedByGoal())) && this.noMovementCounter > noMovementTicksThreshold)) {
+                        this.isReadyToFree = true;
+                    }*/
 
                     this.timeSinceLeftPreviousGoal++;
 
@@ -1416,7 +1440,7 @@ public class PassengerMovement {
         }
 
         // If it reaches this point, there is no movement to be made
-        this.hasEncounteredQueueingPassenger = this.passengerFollowedWhenAssembling != null;
+        this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
 
         this.stop();
 
@@ -1754,6 +1778,8 @@ public class PassengerMovement {
 
     // Disable pathfinding for stored value card passengers
     public void endStoredValuePathfinding() {
+        this.currentPath = null;
+
         this.willPathfind = false;
         this.hasPathfound = true;
     }
@@ -1959,11 +1985,16 @@ public class PassengerMovement {
                         // But only follow passengers who are nearer to this passenger than to the chosen queueing
                         // patch and are within this passenger's walking distance and have a clear line of sight to
                         // this passenger
+                        double distanceToOtherPassenger = Coordinates.distance(
+                                this.position,
+                                passengerFollowedCandidate.getPassengerMovement().getPosition()
+                        );
+
                         final double rangeWhenPassengerIsFollowed = this.preferredWalkingDistance * 5.0;
 
                         if (
-                                    /*distanceToPassenger > rangeWhenPassengerIsFollowed
-                                            || */!hasClearLineOfSight(this.position, passengerFollowedCandidate.getPassengerMovement().getPosition(), true)
+                                /*distanceToOtherPassenger > rangeWhenPassengerIsFollowed
+                                        || */!hasClearLineOfSight(this.position, passengerFollowedCandidate.getPassengerMovement().getPosition(), true)
                         ) {
                             this.passengerFollowedWhenAssembling = null;
                             this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
@@ -2083,23 +2114,10 @@ public class PassengerMovement {
                     );
                 }
             }
-
-/*            this.currentPath = computePath(
-                    this.currentPatch,
-                    (this.getGoalAmenityAsQueueable().getQueueObject().getPassengersQueueing().isEmpty())
-                            ? this.goalPatch
-                            : this.getGoalAmenityAsQueueable().getQueueObject().getPassengersQueueing().getLast()
-                            .getPassengerMovement().getCurrentPatch()
-            );*/
         }
 
         // Get the first patch still unvisited in the path
         if (this.currentPath == null || this.currentPath.isEmpty()) {
-/*            *//*this.currentPath = *//*computePath(
-                    this.currentPatch,
-                    this.goalPatch
-            );*/
-
             return false;
         }
 

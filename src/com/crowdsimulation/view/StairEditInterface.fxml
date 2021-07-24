@@ -10,7 +10,7 @@
 <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
       prefHeight="147.0" prefWidth="367.0" spacing="10.0" xmlns="http://javafx.com/javafx/15.0.1"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.crowdsimulation.controller.screen.feature.portal.edit.StairEditController">
+      fx:controller="com.crowdsimulation.controller.controls.feature.portal.edit.StairEditController">
     <children>
         <Text fx:id="promptText" strokeType="OUTSIDE" strokeWidth="0.0" text="Edit the attributes of the staircase%s."
               textAlignment="CENTER" wrappingWidth="344.8515625"/>

@@ -7,7 +7,7 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGr
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphicLocation;
-import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
+import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -418,16 +418,16 @@ public class GraphicsController extends Controller {
                                     .getRowSpan()
                     );
 
-/*                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
+                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
 
                     if (queueable != null) {
                         foregroundGraphicsContext.strokeText(
-                                *//*(queueable.getQueueObject().getPassengerServiced() != null ? *//*queueable.getQueueObject().getPassengerServiced().getIdentifier() + ""*//* + "" : "-") + ", " +
-                                        ((!queueable.getQueueObject().getPassengersQueueing().isEmpty()) ? queueable.getQueueObject().getPassengersQueueing().getFirst() + ">" + queueable.getQueueObject().getPassengersQueueing().getLast() : "-")*//*,
+                                (queueable.getQueueObject().getPassengerServiced() != null ? queueable.getQueueObject().getPassengerServiced().getIdentifier() + "" + "" : "-") + ", " +
+                                        ((!queueable.getQueueObject().getPassengersQueueing().isEmpty()) ? queueable.getQueueObject().getPassengersQueueing().getFirst() + ">" + queueable.getQueueObject().getPassengersQueueing().getLast() : "-"),
                                 GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getX() * tileSize,
                                 GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getY() * tileSize + tileSize * 2
                         );
-                    }*/
+                    }
 
 /*                    foregroundGraphicsContext.setStroke(Color.VIOLET);
 
@@ -602,13 +602,13 @@ public class GraphicsController extends Controller {
                             GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
                     );
 
-/*                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
+//                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
 
-                    foregroundGraphicsContext.strokeText(
-                            passenger.getPassengerMovement().getNoMovementCounter() + "",
-                            GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
-                            GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
-                    );*/
+//                    foregroundGraphicsContext.strokeText(
+//                            passenger.getIdentifier() + ":" + passenger.getPassengerMovement().getMovementCounter() + ", " + passenger.getPassengerMovement().getNoMovementCounter(),
+//                            GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
+//                            GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
+//                    );
 
 /*
                     foregroundGraphicsContext.strokeText(

@@ -7,7 +7,7 @@
 <HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
       prefHeight="180.0" prefWidth="550.0" spacing="10.0" xmlns="http://javafx.com/javafx/15.0.1"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.crowdsimulation.controller.screen.feature.main.WelcomeController">
+      fx:controller="com.crowdsimulation.controller.controls.feature.main.WelcomeController">
     <children>
         <VBox alignment="BOTTOM_CENTER" prefHeight="150.0" prefWidth="243.0" spacing="10.0">
             <children>

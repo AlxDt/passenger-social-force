@@ -1,8 +1,8 @@
 package com.crowdsimulation.controller;
 
-import com.crowdsimulation.controller.screen.ScreenController;
-import com.crowdsimulation.controller.screen.feature.main.MainScreenController;
-import com.crowdsimulation.controller.screen.feature.main.WelcomeController;
+import com.crowdsimulation.controller.controls.ScreenController;
+import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
+import com.crowdsimulation.controller.controls.feature.main.WelcomeController;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

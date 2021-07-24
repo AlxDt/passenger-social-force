@@ -7,7 +7,7 @@
 <GridPane alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
           prefHeight="294.0" prefWidth="261.0" xmlns="http://javafx.com/javafx/15.0.1"
           xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.crowdsimulation.controller.screen.feature.floorfield.NormalFloorFieldController">
+          fx:controller="com.crowdsimulation.controller.controls.feature.floorfield.NormalFloorFieldController">
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" maxWidth="255.0" minWidth="10.0" prefWidth="206.0"/>
         <ColumnConstraints hgrow="SOMETIMES" maxWidth="205.0" minWidth="10.0" prefWidth="205.0"/>

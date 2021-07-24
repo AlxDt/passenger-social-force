@@ -7,7 +7,7 @@
 <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
       prefHeight="185.0" prefWidth="367.0" spacing="10.0" xmlns="http://javafx.com/javafx/15.0.1"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.crowdsimulation.controller.screen.feature.portal.setup.EscalatorSetupController">
+      fx:controller="com.crowdsimulation.controller.controls.feature.portal.setup.EscalatorSetupController">
     <children>
         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Set the attributes of the escalator system to be added."
               textAlignment="CENTER" wrappingWidth="348.8515625"/>

@@ -10,7 +10,7 @@
 <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
       prefHeight="122.0" prefWidth="325.0" spacing="10.0" xmlns="http://javafx.com/javafx/15.0.1"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.crowdsimulation.controller.screen.feature.portal.PortalFloorSelectorController">
+      fx:controller="com.crowdsimulation.controller.controls.feature.portal.PortalFloorSelectorController">
     <children>
         <Text fx:id="promptText" strokeType="OUTSIDE" strokeWidth="0.0"
               text="Select the floor where you want to have the second %s in." wrappingWidth="307.8515625"/>
