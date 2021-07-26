@@ -118,8 +118,11 @@ public class Security extends BlockableAmenity {
     }
 
     @Override
-    public QueueingFloorField retrieveFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        return this.getQueueObject().getFloorFields().get(
+    public QueueingFloorField retrieveFloorField(
+            QueueObject queueObject,
+            QueueingFloorField.FloorFieldState floorFieldState
+    ) {
+        return queueObject.getFloorFields().get(
                 floorFieldState
         );
     }
@@ -127,7 +130,7 @@ public class Security extends BlockableAmenity {
     @Override
     // Denotes whether the floor field for this security gate is complete
     public boolean isFloorFieldsComplete() {
-        QueueingFloorField queueingFloorField = retrieveFloorField(this.securityFloorFieldState);
+        QueueingFloorField queueingFloorField = retrieveFloorField(this.getQueueObject(), this.securityFloorFieldState);
 
         // The floor field of this queueable is complete when there are floor field values present with an apex patch
         // that is equal to the number of attractors in this queueable target
@@ -138,7 +141,7 @@ public class Security extends BlockableAmenity {
     // Clear all floor fields of the given floor field state in this security gate
     @Override
     public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
+        QueueingFloorField queueingFloorField = retrieveFloorField(this.getQueueObject(), floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,

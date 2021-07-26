@@ -76,6 +76,7 @@ public class GraphicsController extends Controller {
         FLOOR_FIELD_COLORS = new HashMap<>();
         FLOOR_FIELD_COLORS.put(PassengerMovement.Direction.BOARDING, 125);
         FLOOR_FIELD_COLORS.put(PassengerMovement.Direction.ALIGHTING, 225);
+        FLOOR_FIELD_COLORS.put(null, 300);
 
         GraphicsController.markedPatch = null;
 
@@ -591,7 +592,7 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }*/
 
-                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
+/*                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
                     Queueable queueable = passenger.getPassengerMovement().getGoalAmenityAsQueueable();
 
                     foregroundGraphicsContext.setStroke(Color.BLACK);
@@ -600,7 +601,7 @@ public class GraphicsController extends Controller {
                             passenger.getIdentifier() + " : " + ((followed != null) ? followed.getIdentifier() : "-"),
                             GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
                             GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
-                    );
+                    );*/
 
 //                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
 
@@ -618,7 +619,7 @@ public class GraphicsController extends Controller {
                     );
 */
 
-                    // Draw passenger path
+/*                    // Draw passenger path
                     if (passenger.getPassengerMovement().getCurrentPath() != null) {
                         foregroundGraphicsContext.setFill(Color.VIOLET);
                         foregroundGraphicsContext.setGlobalAlpha(0.25);
@@ -645,7 +646,7 @@ public class GraphicsController extends Controller {
                         }
 
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
-                    }
+                    }*/
 /*
                     // Draw the passenger's current patch
                     foregroundGraphicsContext.setFill(Color.GRAY);
@@ -660,6 +661,7 @@ public class GraphicsController extends Controller {
                             tileSize
                     );*/
 
+/*
                     foregroundGraphicsContext.setGlobalAlpha(1.0);
 
                     // Show the status of the passenger through the color of its bounds
@@ -720,6 +722,7 @@ public class GraphicsController extends Controller {
                     }
 
                     foregroundGraphicsContext.setGlobalAlpha(1.0);
+*/
 
                     // Draw the passenger sprite
                     foregroundGraphicsContext.drawImage(

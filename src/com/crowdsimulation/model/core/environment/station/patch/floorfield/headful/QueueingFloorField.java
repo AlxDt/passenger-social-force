@@ -3,8 +3,10 @@ package com.crowdsimulation.model.core.environment.station.patch.floorfield.head
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.AbstractFloorFieldObject;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 
 import java.util.*;
 
@@ -30,7 +32,16 @@ public class QueueingFloorField extends HeadfulFloorField {
         //   1) Register the patch where the floor field value is to be drawn to the target queueable's floor field
         //   2) Add the floor field value to the patch itself
         // In the target queueable, register the patch into the target's list of floor fields, if possible
-        if (QueueingFloorField.registerPatch(patch, target, floorFieldState, value)) {
+        if (
+                (floorFieldState instanceof PlatformFloorField.PlatformFloorFieldState) ?
+                        PlatformFloorField.registerPatch(
+                                patch,
+                                (TrainDoor) target,
+                                (PlatformFloorField.PlatformFloorFieldState) floorFieldState,
+                                value
+                        )
+                        : QueueingFloorField.registerPatch(patch, target, floorFieldState, value)
+        ) {
             // Add the floor field value to the patch itself
             // If the patch still doesn't have an entry for the target, add one and put the map there
             if (!patch.getFloorFieldValues().containsKey(target)) {
@@ -61,7 +72,7 @@ public class QueueingFloorField extends HeadfulFloorField {
             double value) {
         final double EPSILON = 1E-6;
 
-        QueueingFloorField queueingFloorField = target.retrieveFloorField(floorFieldState);
+        QueueingFloorField queueingFloorField = target.retrieveFloorField(target.getQueueObject(), floorFieldState);
         List<Patch> associatedPatches = queueingFloorField.getAssociatedPatches();
 
         Amenity amenity = ((Amenity) target);
@@ -71,7 +82,7 @@ public class QueueingFloorField extends HeadfulFloorField {
         // This is to make sure that there is only one apex in the floor field
         if (Math.abs(value - 1.0) < EPSILON) {
             // If it is, refuse to register the patch
-            if (queueingFloorField.getApices().size() == amenity.getAttractors().size()) {
+            if (queueingFloorField.getApices().size() == 1) {
                 return false;
             } else {
                 // If it hasn't yet, add the patch to the list of apices, if it isn't already in the list
@@ -109,7 +120,7 @@ public class QueueingFloorField extends HeadfulFloorField {
     ) {
         final double EPSILON = 1E-6;
 
-        QueueingFloorField queueingFloorField = target.retrieveFloorField(floorFieldState);
+        QueueingFloorField queueingFloorField = target.retrieveFloorField(target.getQueueObject(), floorFieldState);
 
         // Unregister the patch from this target
         queueingFloorField.getAssociatedPatches().remove(patch);
@@ -141,7 +152,16 @@ public class QueueingFloorField extends HeadfulFloorField {
 
             // Make sure that a floor field value exists with the given floor field state
             if (value != null) {
-                QueueingFloorField.unregisterPatch(patch, target, floorFieldState, value);
+                if (floorFieldState instanceof PlatformFloorField.PlatformFloorFieldState) {
+                    PlatformFloorField.unregisterPatch(
+                            patch,
+                            (TrainDoor) target,
+                            (PlatformFloorField.PlatformFloorFieldState) floorFieldState,
+                            value
+                    );
+                } else {
+                    QueueingFloorField.unregisterPatch(patch, target, floorFieldState, value);
+                }
 
                 // In the given patch, remove the entry with the reference to the queueable target
                 map.remove(floorFieldState);

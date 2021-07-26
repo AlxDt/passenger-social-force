@@ -3,8 +3,8 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
-import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.ElevatorGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.ElevatorGraphic;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -297,7 +297,6 @@ public class ElevatorPortal extends Portal implements Queueable {
         isOpen = open;
     }
 
-    @Override
     public QueueObject getQueueObject() {
         return queueObject;
     }
@@ -316,8 +315,10 @@ public class ElevatorPortal extends Portal implements Queueable {
     }
 
     @Override
-    public QueueingFloorField retrieveFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        return this.getQueueObject().getFloorFields().get(
+    public QueueingFloorField retrieveFloorField(
+            QueueObject queueObject,
+            QueueingFloorField.FloorFieldState floorFieldState) {
+        return queueObject.getFloorFields().get(
                 floorFieldState
         );
     }
@@ -326,12 +327,17 @@ public class ElevatorPortal extends Portal implements Queueable {
     // Denotes whether the floor field for this elevator portal is complete
     // Calling this method should work in either portal
     public boolean isFloorFieldsComplete() {
-        QueueingFloorField queueingFloorField = retrieveFloorField(this.elevatorPortalFloorFieldState);
+        QueueingFloorField queueingFloorField = retrieveFloorField(
+                this.queueObject,
+                this.elevatorPortalFloorFieldState
+        );
+
         QueueingFloorField queueingFloorFieldOther;
 
         ElevatorPortal otherPortal = (ElevatorPortal) this.getPair();
 
         queueingFloorFieldOther = otherPortal.retrieveFloorField(
+                otherPortal.getQueueObject(),
                 otherPortal.getElevatorPortalFloorFieldState()
         );
 
@@ -354,7 +360,10 @@ public class ElevatorPortal extends Portal implements Queueable {
     @Override
     // Clear all floor fields of this given floor field state in this elevator portal
     public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
+        QueueingFloorField queueingFloorField = retrieveFloorField(
+                this.queueObject,
+                floorFieldState
+        );
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,

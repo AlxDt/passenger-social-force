@@ -325,8 +325,11 @@ public class Turnstile extends BlockableAmenity {
     }
 
     @Override
-    public QueueingFloorField retrieveFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        return this.getQueueObject().getFloorFields().get(
+    public QueueingFloorField retrieveFloorField(
+            QueueObject queueObject,
+            QueueingFloorField.FloorFieldState floorFieldState
+    ) {
+        return queueObject.getFloorFields().get(
                 floorFieldState
         );
     }
@@ -340,8 +343,15 @@ public class Turnstile extends BlockableAmenity {
         boolean boardingCheck;
         boolean alightingCheck;
 
-        boardingFloorField = retrieveFloorField(turnstileFloorFieldStateBoarding);
-        alightingFloorField = retrieveFloorField(turnstileFloorFieldStateAlighting);
+        boardingFloorField = retrieveFloorField(
+                turnstileFloorFieldStateBoarding.getTarget().getQueueObject(),
+                turnstileFloorFieldStateBoarding
+        );
+
+        alightingFloorField = retrieveFloorField(
+                turnstileFloorFieldStateAlighting.getTarget().getQueueObject(),
+                turnstileFloorFieldStateAlighting
+        );
 
         // Despite the actual mode of the turnstile, always require that the user fill all (boarding and alighting)
         // floor fields
@@ -363,7 +373,7 @@ public class Turnstile extends BlockableAmenity {
     // Clear all floor fields of the given floor field state in this turnstile
     @Override
     public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        QueueingFloorField boardingFloorField = retrieveFloorField(floorFieldState);
+        QueueingFloorField boardingFloorField = retrieveFloorField(this.getQueueObject(), floorFieldState);
 
         QueueingFloorField.clearFloorField(
                 boardingFloorField,

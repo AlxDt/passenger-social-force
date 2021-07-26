@@ -4,6 +4,8 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.controls.feature.floorfield.NormalFloorFieldController;
 import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
@@ -25,7 +27,9 @@ public class InitializeNormalFloorFieldService {
             Label modeLabel,
             ChoiceBox<NormalFloorFieldController.FloorFieldMode> modeChoiceBox,
             Label directionLabel,
-            ChoiceBox<QueueingFloorField.FloorFieldState> floorFieldStateChoiceBox,
+            ChoiceBox<QueueingFloorField.FloorFieldState> directionChoiceBox,
+            Label locationLabel,
+            ChoiceBox<TrainDoor.TrainDoorEntranceLocation> locationChoiceBox,
             Label intensityLabel,
             Slider intensitySlider,
             TextField intensityTextField,
@@ -33,14 +37,11 @@ public class InitializeNormalFloorFieldService {
             Button deleteAllButton
     ) {
         modeLabel.setLabelFor(modeChoiceBox);
-
         modeChoiceBox.setItems(FXCollections.observableArrayList(
                 NormalFloorFieldController.FloorFieldMode.DRAWING,
                 NormalFloorFieldController.FloorFieldMode.DELETING
         ));
         modeChoiceBox.getSelectionModel().select(0);
-
-        directionLabel.setLabelFor(floorFieldStateChoiceBox);
 
         NormalFloorFieldController.FloorFieldMode initialFloorFieldMode
                 = modeChoiceBox.getSelectionModel().getSelectedItem();
@@ -59,15 +60,37 @@ public class InitializeNormalFloorFieldService {
             NormalFloorFieldController.updatePromptText(promptText, updatedFloorFieldMode);
         });
 
-        floorFieldStateChoiceBox.setOnAction(event -> {
+        directionLabel.setLabelFor(directionChoiceBox);
+        directionChoiceBox.setOnAction(event -> {
             // Set the floor field state as given in the choice box
             QueueingFloorField.FloorFieldState updatedFloorFieldState
-                    = floorFieldStateChoiceBox.getSelectionModel().getSelectedItem();
+                    = directionChoiceBox.getSelectionModel().getSelectedItem();
 
             MainScreenController.normalFloorFieldController.setFloorFieldState(updatedFloorFieldState);
 
             // Also update the floor field state
             Main.mainScreenController.updateFloorFieldState(updatedFloorFieldState);
+        });
+        directionChoiceBox.getSelectionModel().select(0);
+
+        locationLabel.setLabelFor(locationChoiceBox);
+        locationChoiceBox.setOnAction(event -> {
+            // Set the train door location as given in the choice box
+            TrainDoor.TrainDoorEntranceLocation updatedTrainDoorEntranceLocation
+                    = locationChoiceBox.getSelectionModel().getSelectedItem();
+
+            PlatformFloorField.PlatformFloorFieldState platformFloorFieldState
+                    = new PlatformFloorField.PlatformFloorFieldState(
+                    directionChoiceBox.getSelectionModel().getSelectedItem().getDirection(),
+                    directionChoiceBox.getSelectionModel().getSelectedItem().getState(),
+                    directionChoiceBox.getSelectionModel().getSelectedItem().getTarget(),
+                    updatedTrainDoorEntranceLocation
+            );
+
+            MainScreenController.normalFloorFieldController.setFloorFieldState(platformFloorFieldState);
+
+            // Also update the floor field state
+            Main.mainScreenController.updateFloorFieldState(platformFloorFieldState);
         });
 
         validateButton.disableProperty().bind(DRAWING_FLOOR_FIELD_MODE);

@@ -9,11 +9,14 @@ import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TrainDoor extends Gate implements Queueable {
     // Denotes the platform side served by this train door
@@ -29,10 +32,11 @@ public class TrainDoor extends Gate implements Queueable {
     public static final TrainDoorFactory trainDoorFactory;
 
     // Denotes the queueing object associated with all goals like this
-    private final QueueObject queueObject;
+    private final Map<TrainDoorEntranceLocation, QueueObject> queueObjects;
 
-    // Denotes the floor field state needed to access the floor fields of this train door
-    private final QueueingFloorField.FloorFieldState trainDoorFloorFieldState;
+    // Denotes the floor field states needed to access the floor fields of this train door
+    private final PlatformFloorField.PlatformFloorFieldState leftTrainDoorFloorFieldState;
+    private final PlatformFloorField.PlatformFloorFieldState rightTrainDoorFloorFieldState;
 
     // Handles how the train door is displayed
     private final TrainDoorGraphic trainDoorGraphic;
@@ -119,21 +123,44 @@ public class TrainDoor extends Gate implements Queueable {
 
         setTrainDoorCarriagesSupported(trainDoorCarriagesSupported);
 
-        this.queueObject = new QueueObject();
+        this.queueObjects = new HashMap<>();
+
+        if (platform == TrainDoorDirection.SOUTHBOUND || platform == TrainDoorDirection.EASTBOUND) {
+            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
+            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
+        } else {
+            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
+            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
+        }
 
         // Initialize this elevator portal's floor field state
         // A null in the floor field state means that it may accept any direction
-        this.trainDoorFloorFieldState = new QueueingFloorField.FloorFieldState(
+        this.leftTrainDoorFloorFieldState = new PlatformFloorField.PlatformFloorFieldState(
                 PassengerMovement.Direction.BOARDING,
                 PassengerMovement.State.IN_QUEUE,
-                this
+                this,
+                TrainDoorEntranceLocation.LEFT
+        );
+
+        this.rightTrainDoorFloorFieldState = new PlatformFloorField.PlatformFloorFieldState(
+                PassengerMovement.Direction.BOARDING,
+                PassengerMovement.State.IN_QUEUE,
+                this,
+                TrainDoorEntranceLocation.RIGHT
         );
 
         // Add a blank floor field
-        QueueingFloorField queueingFloorField = QueueingFloorField.queueingFloorFieldFactory.create(this);
+        PlatformFloorField leftPlatformFloorField = PlatformFloorField.platformFloorFieldFactory.create(this);
+        PlatformFloorField rightPlatformFloorField = PlatformFloorField.platformFloorFieldFactory.create(this);
 
         // Using the floor field state defined earlier, create the floor field
-        this.queueObject.getFloorFields().put(this.trainDoorFloorFieldState, queueingFloorField);
+        this.queueObjects.get(TrainDoorEntranceLocation.LEFT).getFloorFields().put(
+                this.leftTrainDoorFloorFieldState, leftPlatformFloorField
+        );
+
+        this.queueObjects.get(TrainDoorEntranceLocation.RIGHT).getFloorFields().put(
+                this.rightTrainDoorFloorFieldState, rightPlatformFloorField
+        );
 
         this.trainDoorGraphic = new TrainDoorGraphic(this);
     }
@@ -163,12 +190,28 @@ public class TrainDoor extends Gate implements Queueable {
         this.trainDoorCarriagesSupported.addAll(trainDoorCarriagesSupported);
     }
 
+    // Get whichever queue object has the shorter queue
     public QueueObject getQueueObject() {
-        return queueObject;
+        QueueObject leftQueueObject = this.queueObjects.get(TrainDoorEntranceLocation.LEFT);
+        QueueObject rightQueueObject = this.queueObjects.get(TrainDoorEntranceLocation.RIGHT);
+
+        if (leftQueueObject.getPassengersQueueing().size() <= rightQueueObject.getPassengersQueueing().size()) {
+            return leftQueueObject;
+        } else {
+            return rightQueueObject;
+        }
     }
 
-    public QueueingFloorField.FloorFieldState getTrainDoorFloorFieldState() {
-        return trainDoorFloorFieldState;
+    public Map<TrainDoorEntranceLocation, QueueObject> getQueueObjects() {
+        return queueObjects;
+    }
+
+    public PlatformFloorField.PlatformFloorFieldState getLeftTrainDoorFloorFieldState() {
+        return leftTrainDoorFloorFieldState;
+    }
+
+    public PlatformFloorField.PlatformFloorFieldState getRightTrainDoorFloorFieldState() {
+        return rightTrainDoorFloorFieldState;
     }
 
     public static boolean isTrainDoor(Amenity amenity) {
@@ -187,36 +230,68 @@ public class TrainDoor extends Gate implements Queueable {
     public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldStates() {
         List<QueueingFloorField.FloorFieldState> floorFieldStates = new ArrayList<>();
 
-        floorFieldStates.add(this.trainDoorFloorFieldState);
+        floorFieldStates.add(this.leftTrainDoorFloorFieldState);
+        floorFieldStates.add(this.rightTrainDoorFloorFieldState);
 
         return floorFieldStates;
     }
 
     @Override
-    public QueueingFloorField retrieveFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        return this.getQueueObject().getFloorFields().get(
-                floorFieldState
+    public QueueingFloorField retrieveFloorField(
+            QueueObject queueObject,
+            QueueingFloorField.FloorFieldState floorFieldState
+    ) {
+        PlatformFloorField.PlatformFloorFieldState platformFloorFieldState
+                = ((PlatformFloorField.PlatformFloorFieldState) floorFieldState);
+
+        // Get the corresponding queueing floor field
+        return queueObject.getFloorFields().get(
+                platformFloorFieldState
         );
     }
 
     @Override
     // Denotes whether the floor field for this elevator portal is complete
     public boolean isFloorFieldsComplete() {
-        QueueingFloorField queueingFloorField = retrieveFloorField(this.trainDoorFloorFieldState);
+        PlatformFloorField leftPlatformFloorField = (PlatformFloorField) retrieveFloorField(
+                this.getQueueObjects().get(TrainDoorEntranceLocation.LEFT),
+                this.leftTrainDoorFloorFieldState
+        );
+
+        PlatformFloorField rightPlatformFloorField = (PlatformFloorField) retrieveFloorField(
+                this.getQueueObjects().get(TrainDoorEntranceLocation.RIGHT),
+                this.rightTrainDoorFloorFieldState
+        );
 
         // The floor field of this queueable is complete when there are floor field values present with an apex patch
         // that is equal to the number of attractors in this queueable target
-        return queueingFloorField.getApices().size() == this.getAttractors().size()
-                && !queueingFloorField.getAssociatedPatches().isEmpty();
+        return leftPlatformFloorField.getApices().size() == 1 && !leftPlatformFloorField.getAssociatedPatches().isEmpty()
+                && rightPlatformFloorField.getApices().size() == 1 && !rightPlatformFloorField.getAssociatedPatches().isEmpty();
     }
 
     @Override
     // Clear all floor fields of the given floor field state in this train door waiting area
-    public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
+    public void deleteFloorField(
+            QueueingFloorField.FloorFieldState floorFieldState
+    ) {
+        PlatformFloorField.PlatformFloorFieldState platformFloorFieldState
+                = ((PlatformFloorField.PlatformFloorFieldState) floorFieldState);
 
-        QueueingFloorField.clearFloorField(
-                queueingFloorField,
+        // Get the location of the train door entrance from the given platform floor field state
+        TrainDoor.TrainDoorEntranceLocation trainDoorEntranceLocation
+                = platformFloorFieldState.getTrainDoorEntranceLocation();
+
+        // Then get the appropriate queue object corresponding to that location
+        QueueObject updatedQueueObject = this.getQueueObjects().get(trainDoorEntranceLocation);
+
+        PlatformFloorField platformFloorField
+                = (PlatformFloorField) platformFloorFieldState.getTarget().retrieveFloorField(
+                updatedQueueObject,
+                platformFloorFieldState
+        );
+
+        PlatformFloorField.clearFloorField(
+                platformFloorField,
                 floorFieldState
         );
     }
@@ -226,8 +301,8 @@ public class TrainDoor extends Gate implements Queueable {
         // Sweep through each and every floor field and delete them
         List<QueueingFloorField.FloorFieldState> floorFieldStates = retrieveFloorFieldStates();
 
-        for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
-            deleteFloorField(floorFieldState);
+        for (QueueingFloorField.FloorFieldState queueingFloorFieldState : floorFieldStates) {
+            deleteFloorField(queueingFloorFieldState);
         }
     }
 
@@ -324,6 +399,23 @@ public class TrainDoor extends Gate implements Queueable {
         private final String name;
 
         TrainDoorCarriage(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
+    }
+
+    // Denotes the location of a train door entrance
+    public enum TrainDoorEntranceLocation {
+        LEFT("Left entrance"),
+        RIGHT("Right entrance");
+
+        private final String name;
+
+        TrainDoorEntranceLocation(String name) {
             this.name = name;
         }
 

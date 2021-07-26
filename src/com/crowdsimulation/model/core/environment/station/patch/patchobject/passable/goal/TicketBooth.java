@@ -234,8 +234,11 @@ public class TicketBooth extends Goal {
     }
 
     @Override
-    public QueueingFloorField retrieveFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        return this.getQueueObject().getFloorFields().get(
+    public QueueingFloorField retrieveFloorField(
+            QueueObject queueObject,
+            QueueingFloorField.FloorFieldState floorFieldState
+    ) {
+        return queueObject.getFloorFields().get(
                 floorFieldState
         );
     }
@@ -243,7 +246,10 @@ public class TicketBooth extends Goal {
     @Override
     // Denotes whether the floor field for this ticket booth is complete
     public boolean isFloorFieldsComplete() {
-        QueueingFloorField queueingFloorField = retrieveFloorField(this.ticketBoothFloorFieldState);
+        QueueingFloorField queueingFloorField = retrieveFloorField(
+                this.getQueueObject(),
+                this.ticketBoothFloorFieldState
+        );
 
         // The floor field of this queueable is complete when there are floor field values present with an apex patch
         // that is equal to the number of attractors in this queueable target
@@ -254,7 +260,10 @@ public class TicketBooth extends Goal {
     @Override
     // Clear all floor fields of the given floor field state in this ticket booth
     public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        QueueingFloorField queueingFloorField = retrieveFloorField(floorFieldState);
+        QueueingFloorField queueingFloorField = retrieveFloorField(
+                this.getQueueObject(),
+                floorFieldState
+        );
 
         QueueingFloorField.clearFloorField(
                 queueingFloorField,

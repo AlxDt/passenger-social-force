@@ -11,7 +11,7 @@ public interface Queueable {
     List<QueueingFloorField.FloorFieldState> retrieveFloorFieldStates();
 
     // Retrieves a floor field of this queueable, given the state
-    QueueingFloorField retrieveFloorField(QueueingFloorField.FloorFieldState floorFieldState);
+    QueueingFloorField retrieveFloorField(QueueObject queueObject, QueueingFloorField.FloorFieldState floorFieldState);
 
     // Denotes whether this queueable's floor fields are filled
     boolean isFloorFieldsComplete();

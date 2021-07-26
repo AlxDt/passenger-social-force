@@ -64,7 +64,6 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
     }
 
 
-    @Override
     public QueueObject getQueueObject() {
         return this.queueObject;
     }

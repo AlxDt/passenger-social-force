@@ -5,7 +5,9 @@ import com.crowdsimulation.controller.controls.ScreenController;
 import com.crowdsimulation.controller.controls.alert.AlertController;
 import com.crowdsimulation.controller.controls.service.floorfield.InitializeNormalFloorFieldService;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -16,6 +18,8 @@ import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class NormalFloorFieldController extends ScreenController {
@@ -34,6 +38,12 @@ public class NormalFloorFieldController extends ScreenController {
 
     @FXML
     private ChoiceBox<QueueingFloorField.FloorFieldState> floorFieldStateChoiceBox;
+
+    @FXML
+    private Label locationLabel;
+
+    @FXML
+    private ChoiceBox<TrainDoor.TrainDoorEntranceLocation> locationChoiceBox;
 
     @FXML
     private Label intensityLabel;
@@ -57,6 +67,8 @@ public class NormalFloorFieldController extends ScreenController {
 
     private QueueingFloorField.FloorFieldState floorFieldState;
 
+    private TrainDoor.TrainDoorEntranceLocation trainDoorEntranceLocation;
+
     public NormalFloorFieldController() {
         this.root = null;
 
@@ -64,6 +76,8 @@ public class NormalFloorFieldController extends ScreenController {
         this.floorFieldMode = new SimpleObjectProperty<>(FloorFieldMode.DRAWING);
 
         this.floorFieldState = null;
+
+        this.trainDoorEntranceLocation = TrainDoor.TrainDoorEntranceLocation.LEFT;
     }
 
     @FXML
@@ -102,6 +116,8 @@ public class NormalFloorFieldController extends ScreenController {
                 modeChoiceBox,
                 directionLabel,
                 floorFieldStateChoiceBox,
+                directionLabel,
+                locationChoiceBox,
                 intensityLabel,
                 intensitySlider,
                 intensityTextField,
@@ -174,6 +190,14 @@ public class NormalFloorFieldController extends ScreenController {
         this.floorFieldState = floorFieldState;
     }
 
+    public TrainDoor.TrainDoorEntranceLocation getTrainDoorEntranceLocation() {
+        return trainDoorEntranceLocation;
+    }
+
+    public void setTrainDoorEntranceLocation(TrainDoor.TrainDoorEntranceLocation trainDoorEntranceLocation) {
+        this.trainDoorEntranceLocation = trainDoorEntranceLocation;
+    }
+
     public static void updatePromptText(Text promptText, NormalFloorFieldController.FloorFieldMode floorFieldMode) {
         String promptString = null;
 
@@ -202,14 +226,35 @@ public class NormalFloorFieldController extends ScreenController {
     public void updateDirectionChoiceBox() {
         // Initialize the elements of the choice box with directions based on the floor field states of the current
         // target
-        List<QueueingFloorField.FloorFieldState> floorFieldStates
-                = Main.simulator.getCurrentFloorFieldTarget().retrieveFloorFieldStates();
+/*        List<QueueingFloorField.FloorFieldState> initialFloorFields = new ArrayList<>();
+
+        for (QueueingFloorField.FloorFieldState floorFieldState : Main.simulator.getCurrentFloorFieldTarget().retrieveFloorFieldStates()) {
+            QueueingFloorField.FloorFieldState revisedFloorFieldState
+        }
+        */
+        HashSet<QueueingFloorField.FloorFieldState> floorFieldStateSet = new HashSet<>(Main.simulator.getCurrentFloorFieldTarget().retrieveFloorFieldStates());
+
+        List<QueueingFloorField.FloorFieldState> floorFieldStates = new ArrayList<>(floorFieldStateSet);
 
         floorFieldStateChoiceBox.setItems(FXCollections.observableArrayList(
                 floorFieldStates
         ));
 
         floorFieldStateChoiceBox.getSelectionModel().select(0);
+    }
+
+    public void updateLocationChoiceBox() {
+        if (Main.simulator.getCurrentFloorFieldTarget() instanceof TrainDoor) {
+            locationChoiceBox.setDisable(false);
+
+            locationChoiceBox.setItems(FXCollections.observableArrayList(
+                    TrainDoor.TrainDoorEntranceLocation.LEFT,
+                    TrainDoor.TrainDoorEntranceLocation.RIGHT
+            ));
+            locationChoiceBox.getSelectionModel().select(0);
+        } else {
+            locationChoiceBox.setDisable(true);
+        }
     }
 
     public enum FloorFieldMode {

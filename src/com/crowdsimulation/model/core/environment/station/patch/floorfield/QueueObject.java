@@ -3,7 +3,6 @@ package com.crowdsimulation.model.core.environment.station.patch.floorfield;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;

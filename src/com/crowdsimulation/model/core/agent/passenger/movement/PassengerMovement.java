@@ -4,7 +4,9 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
@@ -1900,17 +1902,6 @@ public class PassengerMovement {
         boolean willFaceQueueingPatch;
         Patch proposedGoalPatch;
 
-/*        // Check if the passenger is rerouting
-        // If it is, get the heading towards the next patch in the generated path
-        if (this.willPathfind || this.action == Action.REROUTING) {
-            // Get the heading towards the goal patch, which was set as the next patch in the path
-            newHeading = Coordinates.headingTowards(
-                    this.position,
-                    this.goalPatch.getPatchCenterCoordinates()
-            );
-
-            this.proposedHeading = newHeading;
-        } else {*/
         // iI the passenger is already heading for a queueable, no need to seek its floor fields again, as
         // it has already done so, and is now just heading to the goal itself
         // If it has floor fields, get the heading towards the nearest floor field value
@@ -1920,15 +1911,76 @@ public class PassengerMovement {
             if (this.goalNearestQueueingPatch == null) {
                 // If the next floor field has not yet been set for this queueing patch, set it
                 if (this.goalFloorFieldState == null && this.goalFloorField == null) {
-                    this.goalFloorFieldState = new QueueingFloorField.FloorFieldState(
-                            this.direction,
-                            State.IN_QUEUE,
-                            this.getGoalAmenityAsQueueable()
-                    );
+                    Queueable queueable = this.getGoalAmenityAsQueueable();
 
-                    this.goalFloorField = ((Queueable) this.goalAmenity).retrieveFloorField(
-                            this.goalFloorFieldState
-                    );
+                    if (queueable instanceof TrainDoor) {
+                        TrainDoor trainDoor = (TrainDoor) queueable;
+
+                        // If the next goal is a train door, pick one of the left and right entrances
+                        // Choose whichever is closest and has the least passengers queueing
+                        QueueObject chosenEntrance;
+                        TrainDoor.TrainDoorEntranceLocation chosenLocation;
+
+                        QueueObject leftEntrance
+                                = ((TrainDoor) queueable)
+                                .getQueueObjects().get(TrainDoor.TrainDoorEntranceLocation.LEFT);
+
+                        QueueObject rightEntrance
+                                = ((TrainDoor) queueable)
+                                .getQueueObjects().get(TrainDoor.TrainDoorEntranceLocation.RIGHT);
+
+                        double leftEntrancePassengersQueueing = leftEntrance.getPassengersQueueing().size();
+                        double rightEntrancePassengersQueueing = rightEntrance.getPassengersQueueing().size();
+
+                        // Choose the entrance with the least passengers
+                        if (leftEntrancePassengersQueueing < rightEntrancePassengersQueueing) {
+                            chosenEntrance = leftEntrance;
+                            chosenLocation = TrainDoor.TrainDoorEntranceLocation.LEFT;
+
+                            this.goalAttractor = trainDoor.getAttractors().get(0);
+                        } else if (leftEntrancePassengersQueueing > rightEntrancePassengersQueueing) {
+                            chosenEntrance = rightEntrance;
+                            chosenLocation = TrainDoor.TrainDoorEntranceLocation.RIGHT;
+
+                            this.goalAttractor = trainDoor.getAttractors().get(0);
+                        } else {
+                            // If thw queue lengths are equal, pick one randomly
+                            if (Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean()) {
+                                chosenEntrance = leftEntrance;
+                                chosenLocation = TrainDoor.TrainDoorEntranceLocation.LEFT;
+
+                                this.goalAttractor = trainDoor.getAttractors().get(0);
+                            } else {
+                                chosenEntrance = rightEntrance;
+                                chosenLocation = TrainDoor.TrainDoorEntranceLocation.RIGHT;
+
+                                this.goalAttractor = trainDoor.getAttractors().get(1);
+                            }
+                        }
+
+                        this.goalFloorFieldState = new PlatformFloorField.PlatformFloorFieldState(
+                                this.direction,
+                                State.IN_QUEUE,
+                                this.getGoalAmenityAsQueueable(),
+                                chosenLocation
+                        );
+
+                        this.goalFloorField = queueable.retrieveFloorField(
+                                chosenEntrance,
+                                this.goalFloorFieldState
+                        );
+                    } else {
+                        this.goalFloorFieldState = new QueueingFloorField.FloorFieldState(
+                                this.direction,
+                                State.IN_QUEUE,
+                                this.getGoalAmenityAsQueueable()
+                        );
+
+                        this.goalFloorField = queueable.retrieveFloorField(
+                                queueable.getQueueObject(),
+                                this.goalFloorFieldState
+                        );
+                    }
                 }
 
                 this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
@@ -1974,7 +2026,11 @@ public class PassengerMovement {
                     if (
                             passengerFollowedCandidate == null
                                     || passengerFollowedCandidate.equals(this.parent)
-                                    || !passengerFollowedCandidate.equals(this.parent) && passengerFollowedCandidate.getPassengerMovement().getPassengerFollowedWhenAssembling() != null && passengerFollowedCandidate.getPassengerMovement().getPassengerFollowedWhenAssembling().equals(this.parent)
+                                    || !passengerFollowedCandidate.equals(this.parent)
+                                    && passengerFollowedCandidate.getPassengerMovement()
+                                    .getPassengerFollowedWhenAssembling() != null
+                                    && passengerFollowedCandidate.getPassengerMovement()
+                                    .getPassengerFollowedWhenAssembling().equals(this.parent)
                     ) {
                         this.passengerFollowedWhenAssembling = null;
                         this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
@@ -1985,16 +2041,8 @@ public class PassengerMovement {
                         // But only follow passengers who are nearer to this passenger than to the chosen queueing
                         // patch and are within this passenger's walking distance and have a clear line of sight to
                         // this passenger
-                        double distanceToOtherPassenger = Coordinates.distance(
-                                this.position,
-                                passengerFollowedCandidate.getPassengerMovement().getPosition()
-                        );
-
-                        final double rangeWhenPassengerIsFollowed = this.preferredWalkingDistance * 5.0;
-
                         if (
-                                /*distanceToOtherPassenger > rangeWhenPassengerIsFollowed
-                                        || */!hasClearLineOfSight(this.position, passengerFollowedCandidate.getPassengerMovement().getPosition(), true)
+                                !hasClearLineOfSight(this.position, passengerFollowedCandidate.getPassengerMovement().getPosition(), true)
                         ) {
                             this.passengerFollowedWhenAssembling = null;
                             this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
@@ -2003,7 +2051,6 @@ public class PassengerMovement {
                             willFaceQueueingPatch = true;
                         } else {
                             this.passengerFollowedWhenAssembling = passengerFollowedCandidate;
-//                            proposedGoalPatch = passengerFollowedCandidate.getPassengerMovement().getCurrentPatch();
                             proposedGoalPatch = this.goalNearestQueueingPatch;
 
                             willFaceQueueingPatch = false;

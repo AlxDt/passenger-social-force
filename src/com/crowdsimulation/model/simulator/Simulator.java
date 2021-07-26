@@ -71,6 +71,7 @@ public class Simulator {
 
     private Queueable currentFloorFieldTarget;
     private QueueingFloorField.FloorFieldState currentFloorFieldState;
+    private boolean isDrawingPlatformFloorField;
 
     // Simulator variables
     private final AtomicBoolean running;

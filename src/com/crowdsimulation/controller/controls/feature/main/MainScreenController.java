@@ -1,8 +1,6 @@
 package com.crowdsimulation.controller.controls.feature.main;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.graphics.GraphicsController;
-import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.*;
 import com.crowdsimulation.controller.controls.ScreenController;
 import com.crowdsimulation.controller.controls.alert.AlertController;
 import com.crowdsimulation.controller.controls.feature.floorfield.NormalFloorFieldController;
@@ -15,11 +13,14 @@ import com.crowdsimulation.controller.controls.feature.portal.setup.EscalatorSet
 import com.crowdsimulation.controller.controls.feature.portal.setup.PortalSetupController;
 import com.crowdsimulation.controller.controls.feature.portal.setup.StairSetupController;
 import com.crowdsimulation.controller.controls.service.main.InitializeMainScreenService;
+import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.*;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
@@ -2704,6 +2705,7 @@ public class MainScreenController extends ScreenController {
 
                                     // Update the direction choice box
                                     MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
+                                    MainScreenController.normalFloorFieldController.updateLocationChoiceBox();
 
                                     // Also take note of the current floor field state
                                     QueueingFloorField.FloorFieldState floorFieldState
@@ -3621,6 +3623,7 @@ public class MainScreenController extends ScreenController {
 
                                     // Update the direction choice box
                                     MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
+                                    MainScreenController.normalFloorFieldController.updateLocationChoiceBox();
 
                                     // Also take note of the current floor field state
                                     QueueingFloorField.FloorFieldState floorFieldState
@@ -3747,6 +3750,7 @@ public class MainScreenController extends ScreenController {
 
                                     // Update the direction choice box
                                     MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
+                                    MainScreenController.normalFloorFieldController.updateLocationChoiceBox();
 
                                     // Also take note of the current floor field state
                                     QueueingFloorField.FloorFieldState floorFieldState
@@ -3885,6 +3889,7 @@ public class MainScreenController extends ScreenController {
 
                                     // Update the direction choice box
                                     MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
+                                    MainScreenController.normalFloorFieldController.updateLocationChoiceBox();
 
                                     // Also take note of the current floor field state
                                     QueueingFloorField.FloorFieldState floorFieldState
@@ -4033,12 +4038,13 @@ public class MainScreenController extends ScreenController {
 
                                     // Update the direction choice box
                                     MainScreenController.normalFloorFieldController.updateDirectionChoiceBox();
+                                    MainScreenController.normalFloorFieldController.updateLocationChoiceBox();
 
                                     // Also take note of the current floor field state
-                                    QueueingFloorField.FloorFieldState floorFieldState
+                                    PlatformFloorField.FloorFieldState platformFloorFieldState
                                             = normalFloorFieldController.getFloorFieldState();
 
-                                    Main.simulator.setCurrentFloorFieldState(floorFieldState);
+                                    Main.simulator.setCurrentFloorFieldState(platformFloorFieldState);
 
                                     trainDoorEnableCheckBox.setSelected(
                                             trainDoorToEdit.isEnabled()
@@ -4074,7 +4080,7 @@ public class MainScreenController extends ScreenController {
                                     // If a floor field value is supposed to be drawn, then go ahead and draw
                                     if (MainScreenController.normalFloorFieldController.getFloorFieldMode()
                                             == NormalFloorFieldController.FloorFieldMode.DRAWING) {
-                                        if (!QueueingFloorField.addFloorFieldValue(
+                                        if (!PlatformFloorField.addFloorFieldValue(
                                                 currentPatch,
                                                 target,
                                                 normalFloorFieldController.getFloorFieldState(),
