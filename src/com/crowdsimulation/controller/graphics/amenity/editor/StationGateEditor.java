@@ -6,6 +6,7 @@ import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class StationGateEditor extends AmenityEditor {
             boolean enabled,
             double chancePerSecond,
             StationGate.StationGateMode stationGateMode,
-            StationGate.StationGatePassengerTravelDirection stationGatePassengerTravelDirection
+            List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
@@ -52,7 +53,7 @@ public class StationGateEditor extends AmenityEditor {
                     enabled,
                     chancePerSecond,
                     stationGateMode,
-                    stationGatePassengerTravelDirection
+                    stationGatePassengerTravelDirections
             );
 
             // Add this station gate to the list of all station gates on this floor
@@ -71,7 +72,7 @@ public class StationGateEditor extends AmenityEditor {
             boolean stationGateEnabled,
             double chancePerSecond,
             StationGate.StationGateMode stationGateMode,
-            StationGate.StationGatePassengerTravelDirection stationGateDirection
+            List<TrainDoor.TravelDirection> stationGateDirection
     ) {
         stationGateToEdit.setEnabled(
                 stationGateEnabled
@@ -85,7 +86,7 @@ public class StationGateEditor extends AmenityEditor {
                 stationGateMode
         );
 
-        stationGateToEdit.setStationGatePassengerTravelDirection(
+        stationGateToEdit.setPassengerTravelDirectionsSpawned(
                 stationGateDirection
         );
     }

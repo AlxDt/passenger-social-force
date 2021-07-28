@@ -21,7 +21,7 @@ public class StationGate extends Gate {
     private StationGateMode stationGateMode;
 
     // Denotes the direction of passengers this station gate produces
-    private StationGatePassengerTravelDirection stationGatePassengerTravelDirection;
+    private List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections;
 
     // Factory for station gate creation
     public static final StationGateFactory stationGateFactory;
@@ -258,13 +258,15 @@ public class StationGate extends Gate {
             boolean enabled,
             double chancePerSecond,
             StationGateMode stationGateMode,
-            StationGatePassengerTravelDirection stationGatePassengerTravelDirection
+            List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections
     ) {
         super(amenityBlocks, enabled);
 
         this.chancePerSecond = chancePerSecond;
         this.stationGateMode = stationGateMode;
-        this.stationGatePassengerTravelDirection = stationGatePassengerTravelDirection;
+        this.stationGatePassengerTravelDirections = new ArrayList<>();
+
+        setPassengerTravelDirectionsSpawned(stationGatePassengerTravelDirections);
 
         this.stationGateGraphic = new StationGateGraphic(this);
     }
@@ -285,14 +287,13 @@ public class StationGate extends Gate {
         this.stationGateMode = stationGateMode;
     }
 
-    public StationGatePassengerTravelDirection getStationGatePassengerTravelDirection() {
-        return stationGatePassengerTravelDirection;
+    public List<TrainDoor.TravelDirection> getStationGatePassengerTravelDirections() {
+        return stationGatePassengerTravelDirections;
     }
 
-    public void setStationGatePassengerTravelDirection(
-            StationGatePassengerTravelDirection stationGatePassengerTravelDirection
-    ) {
-        this.stationGatePassengerTravelDirection = stationGatePassengerTravelDirection;
+    public void setPassengerTravelDirectionsSpawned(List<TrainDoor.TravelDirection> travelDirections) {
+        this.stationGatePassengerTravelDirections.clear();
+        this.stationGatePassengerTravelDirections.addAll(travelDirections);
     }
 
     @Override
@@ -325,32 +326,9 @@ public class StationGate extends Gate {
 
         // Get the pool of possible travel directions of the passengers to be spawned, depending on the settings of this
         // passenger gate
-        List<TrainDoor.TravelDirection> travelDirections = new ArrayList<>();
-
-        if (this.stationGatePassengerTravelDirection == StationGatePassengerTravelDirection.NORTHBOUND) {
-            travelDirections.add(TrainDoor.TravelDirection.NORTHBOUND);
-        } else if (this.stationGatePassengerTravelDirection == StationGatePassengerTravelDirection.SOUTHBOUND) {
-            travelDirections.add(TrainDoor.TravelDirection.SOUTHBOUND);
-        } else if (
-                this.stationGatePassengerTravelDirection
-                        == StationGatePassengerTravelDirection.NORTHBOUND_AND_SOUTHBOUND
-        ) {
-            travelDirections.add(TrainDoor.TravelDirection.NORTHBOUND);
-            travelDirections.add(TrainDoor.TravelDirection.SOUTHBOUND);
-        } else if (this.stationGatePassengerTravelDirection == StationGatePassengerTravelDirection.EASTBOUND) {
-            travelDirections.add(TrainDoor.TravelDirection.EASTBOUND);
-        } else if (this.stationGatePassengerTravelDirection == StationGatePassengerTravelDirection.WESTBOUND) {
-            travelDirections.add(TrainDoor.TravelDirection.WESTBOUND);
-        } else if (
-                this.stationGatePassengerTravelDirection == StationGatePassengerTravelDirection.EASTBOUND_AND_WESTBOUND
-        ) {
-            travelDirections.add(TrainDoor.TravelDirection.EASTBOUND);
-            travelDirections.add(TrainDoor.TravelDirection.WESTBOUND);
-        }
-
         // From this pool of travel directions, pick a random one
-        int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(travelDirections.size());
-        TrainDoor.TravelDirection travelDirectionChosen = travelDirections.get(randomIndex);
+        int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.stationGatePassengerTravelDirections.size());
+        TrainDoor.TravelDirection travelDirectionChosen = this.stationGatePassengerTravelDirections.get(randomIndex);
 
         // If that random attractor is free from passengers, generate one
         if (attractor.getPatch().getPassengers().isEmpty()) {
@@ -416,37 +394,15 @@ public class StationGate extends Gate {
                 boolean enabled,
                 double chancePerSecond,
                 StationGateMode stationGateMode,
-                StationGatePassengerTravelDirection stationGatePassengerTravelDirection
+                List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections
         ) {
             return new StationGate(
                     amenityBlocks,
                     enabled,
                     chancePerSecond,
                     stationGateMode,
-                    stationGatePassengerTravelDirection
+                    stationGatePassengerTravelDirections
             );
-        }
-    }
-
-    // The platform direction this train door waiting area is at
-    public enum StationGatePassengerTravelDirection {
-        NORTHBOUND("Northbound"),
-        SOUTHBOUND("Southbound"),
-        NORTHBOUND_AND_SOUTHBOUND("Northbound and southbound"),
-        EASTBOUND("Eastbound"),
-        WESTBOUND("Westbound"),
-        EASTBOUND_AND_WESTBOUND("Eastbound and westbound"),
-        ALL_DIRECTIONS("All directions");
-
-        private final String name;
-
-        StationGatePassengerTravelDirection(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return this.name;
         }
     }
 }

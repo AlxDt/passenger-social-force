@@ -2,12 +2,12 @@ package com.crowdsimulation.controller.graphics;
 
 import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphicLocation;
-import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -619,15 +619,15 @@ public class GraphicsController extends Controller {
                     );
 */
 
-/*                    // Draw passenger path
+                    // Draw passenger path
                     if (passenger.getPassengerMovement().getCurrentPath() != null) {
                         foregroundGraphicsContext.setFill(Color.VIOLET);
                         foregroundGraphicsContext.setGlobalAlpha(0.25);
 
                         int index = 0;
 
-                        for (Patch pathPatch : new ArrayList<>(passenger.getPassengerMovement().getCurrentPath())) {
-                            if (index == 0 || index == passenger.getPassengerMovement().getCurrentPath().size() - 1) {
+                        for (Patch pathPatch : new ArrayList<>(passenger.getPassengerMovement().getCurrentPath().getPath())) {
+                            if (index == 0 || index == passenger.getPassengerMovement().getCurrentPath().getPath().size() - 1) {
                                 foregroundGraphicsContext.setFill(Color.ORANGERED);
                             } else {
                                 foregroundGraphicsContext.setFill(Color.CORNFLOWERBLUE);
@@ -646,7 +646,7 @@ public class GraphicsController extends Controller {
                         }
 
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
-                    }*/
+                    }
 /*
                     // Draw the passenger's current patch
                     foregroundGraphicsContext.setFill(Color.GRAY);

@@ -480,7 +480,9 @@ public class PassengerMovement {
         PathCache pathCache = this.currentFloor.getPathCache();
 
         Patch.PatchPair patchPair = new Patch.PatchPair(startingPatch, goalPatch);
-        PassengerPath cachedPath = pathCache.get(patchPair);
+        PathCache.PathCacheKey pathCacheKey
+                = new PathCache.PathCacheKey(patchPair, includeStartingPatch, includeGoalPatch);
+        PassengerPath cachedPath = pathCache.get(pathCacheKey);
 
         // If the path connecting these patches have already been computed, use that instead
         if (cachedPath != null) {
@@ -556,7 +558,7 @@ public class PassengerMovement {
 
                 PassengerPath passengerPath = new PassengerPath(path, length);
 
-                pathCache.put(patchPair, passengerPath);
+                pathCache.put(pathCacheKey, passengerPath);
 
                 return passengerPath;
             }
@@ -602,7 +604,7 @@ public class PassengerMovement {
         }
 
         // There are no paths from the origin to the destination patches
-        pathCache.put(patchPair, null);
+        pathCache.put(pathCacheKey, null);
 
         return null;
     }
@@ -714,8 +716,8 @@ public class PassengerMovement {
                     PassengerPath path = computePath(
                             this.currentPatch,
                             attractor.getPatch(),
-                            false,
-                            false
+                            this.timeSinceLeftPreviousGoal > 0,
+                            this.timeSinceLeftPreviousGoal > 0
                     );
 
                     if (path != null) {
@@ -741,7 +743,7 @@ public class PassengerMovement {
                 currentAmenity = candidateAttractor.getParent();
 
                 if (currentAmenity instanceof TrainDoor) {
-                   TrainDoor trainDoor = ((TrainDoor) currentAmenity);
+                    TrainDoor trainDoor = ((TrainDoor) currentAmenity);
 
                     currentTrainDoorEntranceLocation
                             = trainDoor.getTrainDoorEntranceLocationFromAttractor(candidateAttractor);

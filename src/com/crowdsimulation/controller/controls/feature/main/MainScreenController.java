@@ -124,7 +124,7 @@ public class MainScreenController extends ScreenController {
     private Label stationGateDirectionLabel;
 
     @FXML
-    private ChoiceBox<StationGate.StationGatePassengerTravelDirection> stationGateDirectionChoiceBox;
+    private ListView<TrainDoor.TravelDirection> stationGateDirectionListView;
 
     @FXML
     private Label stationGateSpawnLabel;
@@ -568,7 +568,7 @@ public class MainScreenController extends ScreenController {
                 stationGateModeLabel,
                 stationGateModeChoiceBox,
                 stationGateDirectionLabel,
-                stationGateDirectionChoiceBox,
+                stationGateDirectionListView,
                 stationGateSpawnLabel,
                 stationGateSpawnSpinner,
                 saveStationGateButton,
@@ -1911,21 +1911,31 @@ public class MainScreenController extends ScreenController {
     private void saveSingleAmenityInFloor(Amenity amenityToSave) {
         switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
-                StationGate stationGateToEdit = (StationGate) amenityToSave;
+                if (!stationGateDirectionListView.getSelectionModel().isEmpty()) {
+                    StationGate stationGateToEdit = (StationGate) amenityToSave;
 
-                boolean wasEnabledPrior = stationGateToEdit.isEnabled();
+                    boolean wasEnabledPrior = stationGateToEdit.isEnabled();
 
-                StationGate.stationGateEditor.edit(
-                        stationGateToEdit,
-                        stationGateEnableCheckBox.isSelected(),
-                        stationGateSpawnSpinner.getValue() / 100.0,
-                        stationGateModeChoiceBox.getValue(),
-                        stationGateDirectionChoiceBox.getValue()
-                );
+                    StationGate.stationGateEditor.edit(
+                            stationGateToEdit,
+                            stationGateEnableCheckBox.isSelected(),
+                            stationGateSpawnSpinner.getValue() / 100.0,
+                            stationGateModeChoiceBox.getValue(),
+                            stationGateDirectionListView.getSelectionModel().getSelectedItems()
+                    );
 
-                // Update the graphic if needed
-                if (wasEnabledPrior != stationGateEnableCheckBox.isSelected()) {
-                    ((StationGateGraphic) stationGateToEdit.getGraphicObject()).change();
+                    // Update the graphic if needed
+                    if (wasEnabledPrior != stationGateEnableCheckBox.isSelected()) {
+                        ((StationGateGraphic) stationGateToEdit.getGraphicObject()).change();
+                    }
+                } else {
+                    AlertController.showSimpleAlert(
+                            "Station entrance/exit addition failed",
+                            "No travel directions selected",
+                            "Please select the travel directions of the passengers that may come from this" +
+                                    " gate.",
+                            Alert.AlertType.ERROR
+                    );
                 }
 
                 break;
@@ -2084,8 +2094,18 @@ public class MainScreenController extends ScreenController {
         switch (Main.simulator.getBuildSubcategory()) {
             case STATION_ENTRANCE_EXIT:
                 // Edit all station gates
-                for (StationGate stationGateToEdit : Main.simulator.getCurrentFloor().getStationGates()) {
-                    saveSingleAmenityInFloor(stationGateToEdit);
+                if (!stationGateDirectionListView.getSelectionModel().isEmpty()) {
+                    for (StationGate stationGateToEdit : Main.simulator.getCurrentFloor().getStationGates()) {
+                        saveSingleAmenityInFloor(stationGateToEdit);
+                    }
+                } else {
+                    AlertController.showSimpleAlert(
+                            "Station entrance/exit addition failed",
+                            "No travel directions selected",
+                            "Please select the travel directions of the passengers that may come from this" +
+                                    " gate.",
+                            Alert.AlertType.ERROR
+                    );
                 }
 
                 break;
@@ -2617,13 +2637,23 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(StationGate.class);
 
-                                StationGate.stationGateEditor.draw(
-                                        currentPatch,
-                                        stationGateEnableCheckBox.isSelected(),
-                                        stationGateSpawnSpinner.getValue() / 100.0,
-                                        stationGateModeChoiceBox.getValue(),
-                                        stationGateDirectionChoiceBox.getValue()
-                                );
+                                if (!stationGateDirectionListView.getSelectionModel().isEmpty()) {
+                                    StationGate.stationGateEditor.draw(
+                                            currentPatch,
+                                            stationGateEnableCheckBox.isSelected(),
+                                            stationGateSpawnSpinner.getValue() / 100.0,
+                                            stationGateModeChoiceBox.getValue(),
+                                            stationGateDirectionListView.getSelectionModel().getSelectedItems()
+                                    );
+                                } else {
+                                    AlertController.showSimpleAlert(
+                                            "Station entrance/exit addition failed",
+                                            "No travel directions selected",
+                                            "Please select the travel directions of the passengers that may" +
+                                                    " come from this gate.",
+                                            Alert.AlertType.ERROR
+                                    );
+                                }
                             } else {
                                 // If clicked on an existing amenity, switch to editing mode, then open that
                                 // amenity's controls
@@ -2654,9 +2684,14 @@ public class MainScreenController extends ScreenController {
                                         stationGateToEdit.getStationGateMode()
                                 );
 
-                                stationGateDirectionChoiceBox.setValue(
-                                        stationGateToEdit.getStationGatePassengerTravelDirection()
-                                );
+                                stationGateDirectionListView.getSelectionModel().clearSelection();
+
+                                for (
+                                        TrainDoor.TravelDirection travelDirection
+                                        : stationGateToEdit.getStationGatePassengerTravelDirections()
+                                ) {
+                                    stationGateDirectionListView.getSelectionModel().select(travelDirection);
+                                }
                             } else {
                                 // If there is no amenity there, just do nothing
                                 if (Main.simulator.currentAmenityProperty().isNotNull().get()) {

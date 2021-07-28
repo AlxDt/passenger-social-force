@@ -151,7 +151,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
             Label stationGateDirectionLabel,
-            ChoiceBox<StationGate.StationGatePassengerTravelDirection> stationGateDirectionChoiceBox,
+            ListView<TrainDoor.TravelDirection> stationGateDirectionListView,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -238,7 +238,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 stationGateModeLabel,
                 stationGateModeChoiceBox,
                 stationGateDirectionLabel,
-                stationGateDirectionChoiceBox,
+                stationGateDirectionListView,
                 stationGateSpawnLabel,
                 stationGateSpinner,
                 saveStationGateButton,
@@ -389,7 +389,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
             Label stationGateDirectionLabel,
-            ChoiceBox<StationGate.StationGatePassengerTravelDirection> stationGateDirectionChoiceBox,
+            ListView<TrainDoor.TravelDirection> stationGateDirectionListView,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -408,7 +408,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 stationGateModeLabel,
                 stationGateModeChoiceBox,
                 stationGateDirectionLabel,
-                stationGateDirectionChoiceBox,
+                stationGateDirectionListView,
                 stationGateSpawnLabel,
                 stationGateSpinner,
                 saveStationGateButton,
@@ -433,7 +433,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
             Label stationGateDirectionLabel,
-            ChoiceBox<StationGate.StationGatePassengerTravelDirection> stationGateDirectionChoiceBox,
+            ListView<TrainDoor.TravelDirection> stationGateDirectionListView,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -448,17 +448,15 @@ public class InitializeMainScreenService extends InitializeScreenService {
         ));
         stationGateModeChoiceBox.getSelectionModel().select(0);
 
-        stationGateDirectionLabel.setLabelFor(stationGateDirectionChoiceBox);
+        stationGateDirectionLabel.setLabelFor(stationGateDirectionListView);
 
-        stationGateDirectionChoiceBox.setItems(FXCollections.observableArrayList(
-                StationGate.StationGatePassengerTravelDirection.NORTHBOUND,
-                StationGate.StationGatePassengerTravelDirection.SOUTHBOUND,
-                StationGate.StationGatePassengerTravelDirection.NORTHBOUND_AND_SOUTHBOUND,
-                StationGate.StationGatePassengerTravelDirection.EASTBOUND,
-                StationGate.StationGatePassengerTravelDirection.WESTBOUND,
-                StationGate.StationGatePassengerTravelDirection.EASTBOUND_AND_WESTBOUND
+        stationGateDirectionListView.setItems(FXCollections.observableArrayList(
+                TrainDoor.TravelDirection.NORTHBOUND,
+                TrainDoor.TravelDirection.SOUTHBOUND,
+                TrainDoor.TravelDirection.EASTBOUND,
+                TrainDoor.TravelDirection.WESTBOUND
         ));
-        stationGateDirectionChoiceBox.getSelectionModel().select(0);
+        stationGateDirectionListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         stationGateSpawnLabel.setLabelFor(stationGateSpinner);
 
@@ -471,7 +469,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         stationGateEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
         stationGateModeChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
-        stationGateDirectionChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        stationGateDirectionListView.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
         stationGateSpinner.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
         saveStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
