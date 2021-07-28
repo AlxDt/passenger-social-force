@@ -5,6 +5,7 @@ import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprin
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.EscalatorGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -278,6 +279,11 @@ public class EscalatorPortal extends Portal {
         string += "\n" + this.escalatorShaft.getEscalatorDirection();
 
         return string;
+    }
+
+    @Override
+    public Passenger spawnPassenger() {
+        return null;
     }
 
     // Escalator portal block

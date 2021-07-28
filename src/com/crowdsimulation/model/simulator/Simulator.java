@@ -21,7 +21,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
-import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -85,12 +84,9 @@ public class Simulator {
 
     // Simulation variables
     private final List<Passenger> passengersToDespawn;
-    public static final HashMap<Coordinates.PatchPair, Double> DISTANCE_CACHE;
 
     static {
         RANDOM_NUMBER_GENERATOR = new Random();
-
-        DISTANCE_CACHE = new HashMap<>();
     }
 
     public Simulator() {
@@ -457,9 +453,7 @@ public class Simulator {
             if (stationGate.getStationGateMode() != StationGate.StationGateMode.EXIT) {
                 // Spawn passengers depending on the spawn frequency of the station gate
                 if (stationGate.getChancePerSecond() > randomNumber) {
-//                    if (floor.getPassengersInFloor().size() <= 15) {
                     spawnPassenger(floor, stationGate);
-//                    }
                 }
             }
         }
@@ -488,11 +482,11 @@ public class Simulator {
         PassengerMovement passengerMovement = passenger.getPassengerMovement();
 
         // Get the three passenger movement states
-        PassengerMovement.Direction direction = passengerMovement.getDirection();
+        PassengerMovement.Disposition disposition = passengerMovement.getDirection();
         PassengerMovement.State state = passengerMovement.getState();
         PassengerMovement.Action action = passengerMovement.getAction();
 
-        switch (direction) {
+        switch (disposition) {
             case BOARDING:
                 // The passenger has entered the station and is heading towards the platform to board the train
                 switch (state) {

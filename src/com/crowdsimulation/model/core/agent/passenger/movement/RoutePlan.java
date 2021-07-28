@@ -11,7 +11,7 @@ import java.util.*;
 
 public class RoutePlan {
     // Contains the list of pattern plans
-    public static final Map<PassengerMovement.Direction, List<Class<? extends Amenity>>> DIRECTION_ROUTE_MAP;
+    public static final Map<PassengerMovement.Disposition, List<Class<? extends Amenity>>> DIRECTION_ROUTE_MAP;
 
     // Denotes the current route plan of the passenger which owns this
     private Iterator<Class<? extends Amenity>> currentRoutePlan;
@@ -38,14 +38,14 @@ public class RoutePlan {
         alightingPlanList.add(Turnstile.class);
         alightingPlanList.add(StationGate.class);
 
-        DIRECTION_ROUTE_MAP.put(PassengerMovement.Direction.BOARDING, boardingPlanList);
-        DIRECTION_ROUTE_MAP.put(PassengerMovement.Direction.RIDING_TRAIN, null);
-        DIRECTION_ROUTE_MAP.put(PassengerMovement.Direction.ALIGHTING, alightingPlanList);
+        DIRECTION_ROUTE_MAP.put(PassengerMovement.Disposition.BOARDING, boardingPlanList);
+        DIRECTION_ROUTE_MAP.put(PassengerMovement.Disposition.RIDING_TRAIN, null);
+        DIRECTION_ROUTE_MAP.put(PassengerMovement.Disposition.ALIGHTING, alightingPlanList);
     }
 
     public RoutePlan(boolean isStoredValueCardHolder) {
         // All newly-spawned passengers will have a boarding route plan
-        setNextRoutePlan(PassengerMovement.Direction.BOARDING, isStoredValueCardHolder);
+        setNextRoutePlan(PassengerMovement.Disposition.BOARDING, isStoredValueCardHolder);
 
         // Burn off the first amenity class in the route plan, as the passenger will have already spawned there
         setNextAmenityClass();
@@ -53,11 +53,11 @@ public class RoutePlan {
     }
 
     // Set the next route plan
-    public void setNextRoutePlan(PassengerMovement.Direction direction, boolean isStoredValueCardHolder) {
-        List<Class<? extends Amenity>> routePlan = new ArrayList<>(DIRECTION_ROUTE_MAP.get(direction));
+    public void setNextRoutePlan(PassengerMovement.Disposition disposition, boolean isStoredValueCardHolder) {
+        List<Class<? extends Amenity>> routePlan = new ArrayList<>(DIRECTION_ROUTE_MAP.get(disposition));
 
         // If the passenger is a stored value card holder, remove the ticket booth from its route plan
-        if (direction == PassengerMovement.Direction.BOARDING && isStoredValueCardHolder) {
+        if (disposition == PassengerMovement.Disposition.BOARDING && isStoredValueCardHolder) {
             routePlan.remove(TicketBooth.class);
         }
 

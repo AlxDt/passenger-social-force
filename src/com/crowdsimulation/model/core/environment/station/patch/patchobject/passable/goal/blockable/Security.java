@@ -77,7 +77,7 @@ public class Security extends BlockableAmenity {
 
         // Initialize this security gate's floor field state
         this.securityFloorFieldState = new QueueingFloorField.FloorFieldState(
-                PassengerMovement.Direction.BOARDING,
+                PassengerMovement.Disposition.BOARDING,
                 PassengerMovement.State.IN_QUEUE,
                 this
         );
@@ -87,6 +87,9 @@ public class Security extends BlockableAmenity {
 
         // Using the floor field state defined earlier, create the floor field
         this.getQueueObject().getFloorFields().put(this.securityFloorFieldState, queueingFloorField);
+
+        // Define the relationships between the queue objects and the attractors
+        this.getQueueObjectAmenityBlockMap().put(this.getQueueObject(), this.getAttractors().get(0));
 
         this.securityGraphic = new SecurityGraphic(this);
     }

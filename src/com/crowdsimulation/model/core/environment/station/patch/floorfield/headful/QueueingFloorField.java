@@ -203,21 +203,21 @@ public class QueueingFloorField extends HeadfulFloorField {
     // A combination of a passenger's direction, state, and current target, this object is used for the differentiation
     // of floor fields
     public static class FloorFieldState extends AbstractFloorFieldObject {
-        private final PassengerMovement.Direction direction;
+        private final PassengerMovement.Disposition disposition;
         private final PassengerMovement.State state;
         private final Queueable target;
 
         public FloorFieldState(
-                PassengerMovement.Direction direction,
+                PassengerMovement.Disposition disposition,
                 PassengerMovement.State state,
                 Queueable target) {
-            this.direction = direction;
+            this.disposition = disposition;
             this.state = state;
             this.target = target;
         }
 
-        public PassengerMovement.Direction getDirection() {
-            return direction;
+        public PassengerMovement.Disposition getDirection() {
+            return disposition;
         }
 
         public PassengerMovement.State getState() {
@@ -230,8 +230,8 @@ public class QueueingFloorField extends HeadfulFloorField {
 
         @Override
         public String toString() {
-            if (direction != null) {
-                return direction.toString();
+            if (disposition != null) {
+                return disposition.toString();
             } else {
                 return "(any direction)";
             }
@@ -242,12 +242,12 @@ public class QueueingFloorField extends HeadfulFloorField {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             FloorFieldState that = (FloorFieldState) o;
-            return direction == that.direction && state == that.state && target.equals(that.target);
+            return disposition == that.disposition && state == that.state && target.equals(that.target);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(direction, state, target);
+            return Objects.hash(disposition, state, target);
         }
     }
 

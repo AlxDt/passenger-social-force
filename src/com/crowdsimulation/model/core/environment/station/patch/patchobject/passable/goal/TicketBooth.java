@@ -185,7 +185,7 @@ public class TicketBooth extends Goal {
 
         // Initialize this ticket booth's floor field state
         this.ticketBoothFloorFieldState = new QueueingFloorField.FloorFieldState(
-                PassengerMovement.Direction.BOARDING,
+                PassengerMovement.Disposition.BOARDING,
                 PassengerMovement.State.IN_QUEUE,
                 this
         );
@@ -195,6 +195,9 @@ public class TicketBooth extends Goal {
 
         // Using the floor field state defined earlier, create the floor field
         this.getQueueObject().getFloorFields().put(this.ticketBoothFloorFieldState, queueingFloorField);
+
+        // Define the relationships between the queue objects and the attractors
+        this.getQueueObjectAmenityBlockMap().put(this.getQueueObject(), this.getAttractors().get(0));
 
         this.ticketBoothGraphic = new TicketBoothGraphic(this);
     }

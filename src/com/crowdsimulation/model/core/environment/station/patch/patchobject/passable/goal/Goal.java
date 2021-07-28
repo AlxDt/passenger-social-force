@@ -6,7 +6,9 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Draw
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class Goal extends NonObstacle implements Queueable, Drawable {
     // Denotes the waiting time before this goal lets the passenger pass (s)
@@ -18,6 +20,9 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
     // Denotes the queueing object associated with all goals like this
     private final QueueObject queueObject;
 
+    // Maps queue objects into their corresponding attractors
+    private final Map<QueueObject, AmenityBlock> queueObjectAmenityBlockMap;
+
     protected Goal(List<AmenityBlock> amenityBlocks, boolean enabled, int waitingTime, QueueObject queueObject) {
         super(amenityBlocks, enabled);
 
@@ -25,6 +30,7 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
         this.waitingTimeLeft = this.waitingTime;
 
         this.queueObject = queueObject;
+        this.queueObjectAmenityBlockMap = new HashMap<>();
     }
 
     public int getWaitingTime() {
@@ -33,6 +39,14 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
 
     public void setWaitingTime(int waitingTime) {
         this.waitingTime = waitingTime;
+    }
+
+    public QueueObject getQueueObject() {
+        return this.queueObject;
+    }
+
+    public Map<QueueObject, AmenityBlock> getQueueObjectAmenityBlockMap() {
+        return queueObjectAmenityBlockMap;
     }
 
     // Check if this goal will now allow a passenger to pass
@@ -61,11 +75,6 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
         } else {
             return null;
         }
-    }
-
-
-    public QueueObject getQueueObject() {
-        return this.queueObject;
     }
 
     // Goal factory

@@ -15,6 +15,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
+import com.crowdsimulation.model.simulator.cache.DistanceCache;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -43,6 +44,9 @@ public class Station extends BaseStationObject implements Environment {
     // The list of passengers in this station
     private final CopyOnWriteArrayList<Passenger> passengersInStation;
 
+    // Caches for optimized performance
+    private final DistanceCache distanceCache;
+
     public Station(int rows, int columns) {
         this.name = DEFAULT_STATION_NAME;
         this.floors = Collections.synchronizedList(new ArrayList<>());
@@ -55,6 +59,8 @@ public class Station extends BaseStationObject implements Environment {
         this.elevatorShafts = Collections.synchronizedList(new ArrayList<>());
 
         this.passengersInStation = new CopyOnWriteArrayList<>();
+
+        this.distanceCache = new DistanceCache();
 
         // Initially, the station has one floor
         Floor.addFloor(this, this.floors, 0, rows, columns);
@@ -94,6 +100,10 @@ public class Station extends BaseStationObject implements Environment {
 
     public CopyOnWriteArrayList<Passenger> getPassengersInStation() {
         return passengersInStation;
+    }
+
+    public DistanceCache getDistanceCache() {
+        return distanceCache;
     }
 
     // Validate both the station layout and its floor fields as one
@@ -175,10 +185,10 @@ public class Station extends BaseStationObject implements Environment {
         // For each station gate, check if there exists a complete path from start to end (for both boarding and
         // alighting passengers)
         List<Class<? extends Amenity>> boardingPlan
-                = RoutePlan.DIRECTION_ROUTE_MAP.get(PassengerMovement.Direction.BOARDING);
+                = RoutePlan.DIRECTION_ROUTE_MAP.get(PassengerMovement.Disposition.BOARDING);
 
         List<Class<? extends Amenity>> alightingPlan
-                = RoutePlan.DIRECTION_ROUTE_MAP.get(PassengerMovement.Direction.ALIGHTING);
+                = RoutePlan.DIRECTION_ROUTE_MAP.get(PassengerMovement.Disposition.ALIGHTING);
 
         Class<? extends Amenity> currentAmenity;
         Class<? extends Amenity> nextAmenity;

@@ -19,6 +19,7 @@ import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -118,6 +119,12 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     private ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox;
+
+    @FXML
+    private Label stationGateDirectionLabel;
+
+    @FXML
+    private ChoiceBox<StationGate.StationGatePassengerTravelDirection> stationGateDirectionChoiceBox;
 
     @FXML
     private Label stationGateSpawnLabel;
@@ -256,7 +263,7 @@ public class MainScreenController extends ScreenController {
     private Label trainDoorDirectionLabel;
 
     @FXML
-    private ChoiceBox<TrainDoor.TrainDoorDirection> trainDoorDirectionChoiceBox;
+    private ChoiceBox<TrainDoor.TravelDirection> trainDoorDirectionChoiceBox;
 
     @FXML
     private Label trainDoorCarriageLabel;
@@ -560,6 +567,8 @@ public class MainScreenController extends ScreenController {
                 stationGateEnableCheckBox,
                 stationGateModeLabel,
                 stationGateModeChoiceBox,
+                stationGateDirectionLabel,
+                stationGateDirectionChoiceBox,
                 stationGateSpawnLabel,
                 stationGateSpawnSpinner,
                 saveStationGateButton,
@@ -1580,8 +1589,15 @@ public class MainScreenController extends ScreenController {
         queueables.addAll(floor.getTrainDoors());
 
         for (Queueable queueable : queueables) {
-            queueable.getQueueObject().setPassengerServiced(null);
-            queueable.getQueueObject().getPassengersQueueing().clear();
+            if (queueable instanceof TrainDoor) {
+                for (QueueObject queueObject : ((TrainDoor) queueable).getQueueObjects().values()) {
+                    queueObject.setPassengerServiced(null);
+                    queueObject.getPassengersQueueing().clear();
+                }
+            } else {
+                queueable.getQueueObject().setPassengerServiced(null);
+                queueable.getQueueObject().getPassengersQueueing().clear();
+            }
         }
     }
 
@@ -1903,7 +1919,8 @@ public class MainScreenController extends ScreenController {
                         stationGateToEdit,
                         stationGateEnableCheckBox.isSelected(),
                         stationGateSpawnSpinner.getValue() / 100.0,
-                        stationGateModeChoiceBox.getValue()
+                        stationGateModeChoiceBox.getValue(),
+                        stationGateDirectionChoiceBox.getValue()
                 );
 
                 // Update the graphic if needed
@@ -2005,7 +2022,7 @@ public class MainScreenController extends ScreenController {
                 if (!trainDoorCarriageListView.getSelectionModel().isEmpty()) {
                     TrainDoor trainDoorToEdit = (TrainDoor) amenityToSave;
 
-                    TrainDoor.TrainDoorDirection priorPlatform = trainDoorToEdit.getPlatform();
+                    TrainDoor.TravelDirection priorPlatform = trainDoorToEdit.getPlatform();
 
                     TrainDoor.trainDoorEditor.edit(
                             trainDoorToEdit,
@@ -2604,7 +2621,8 @@ public class MainScreenController extends ScreenController {
                                         currentPatch,
                                         stationGateEnableCheckBox.isSelected(),
                                         stationGateSpawnSpinner.getValue() / 100.0,
-                                        stationGateModeChoiceBox.getValue()
+                                        stationGateModeChoiceBox.getValue(),
+                                        stationGateDirectionChoiceBox.getValue()
                                 );
                             } else {
                                 // If clicked on an existing amenity, switch to editing mode, then open that
@@ -2634,6 +2652,10 @@ public class MainScreenController extends ScreenController {
 
                                 stationGateModeChoiceBox.setValue(
                                         stationGateToEdit.getStationGateMode()
+                                );
+
+                                stationGateDirectionChoiceBox.setValue(
+                                        stationGateToEdit.getStationGatePassengerTravelDirection()
                                 );
                             } else {
                                 // If there is no amenity there, just do nothing

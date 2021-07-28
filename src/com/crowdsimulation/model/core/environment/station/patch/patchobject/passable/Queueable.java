@@ -5,6 +5,7 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
 import java.util.List;
+import java.util.Map;
 
 public interface Queueable {
     // Retrieves the floor field states of this queueable

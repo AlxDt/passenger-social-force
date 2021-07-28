@@ -269,13 +269,13 @@ public class Turnstile extends BlockableAmenity {
 
         // Initialize this turnstile's floor field states
         this.turnstileFloorFieldStateBoarding = new QueueingFloorField.FloorFieldState(
-                PassengerMovement.Direction.BOARDING,
+                PassengerMovement.Disposition.BOARDING,
                 PassengerMovement.State.IN_QUEUE,
                 this
         );
 
         this.turnstileFloorFieldStateAlighting = new QueueingFloorField.FloorFieldState(
-                PassengerMovement.Direction.ALIGHTING,
+                PassengerMovement.Disposition.ALIGHTING,
                 PassengerMovement.State.IN_QUEUE,
                 this
         );
@@ -289,6 +289,9 @@ public class Turnstile extends BlockableAmenity {
         // Using the floor field states defined earlier, create the floor fields
         this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateBoarding, floorFieldBoarding);
         this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateAlighting, floorFieldAlighting);
+
+        // Define the relationships between the queue objects and the attractors
+//        this.getQueueObjectAmenityBlockMap().get()
 
         this.turnstileGraphic = new TurnstileGraphic(this);
     }

@@ -169,4 +169,27 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
     public String toString() {
         return "[" + this.getMatrixPosition().getRow() + ", " + this.getMatrixPosition().getColumn() + "]";
     }
+
+    public static class PatchPair implements Environment {
+        private final Patch patch1;
+        private final Patch patch2;
+
+        public PatchPair(Patch patch1, Patch patch2) {
+            this.patch1 = patch1;
+            this.patch2 = patch2;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PatchPair that = (PatchPair) o;
+            return patch1.equals(that.patch1) && patch2.equals(that.patch2);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(patch1, patch2);
+        }
+    }
 }

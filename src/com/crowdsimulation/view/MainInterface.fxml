@@ -142,6 +142,12 @@
                                                                                         <ChoiceBox fx:id="stationGateModeChoiceBox" prefHeight="25.0" prefWidth="156.0" />
                                                                                     </children>
                                                                                 </HBox>
+                                                            <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                                               <children>
+                                                                  <Label fx:id="stationGateDirectionLabel" text="Spawns:" />
+                                                                  <ChoiceBox fx:id="stationGateDirectionChoiceBox" prefHeight="25.0" prefWidth="147.0" />
+                                                               </children>
+                                                            </HBox>
                                                                                 <HBox alignment="CENTER" layoutX="10.0" layoutY="183.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                                                                     <children>
                                                                                         <Label fx:id="stationGateSpawnLabel" text="Spawn frequency (%):" />

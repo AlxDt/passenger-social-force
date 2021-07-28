@@ -5,6 +5,7 @@ import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprin
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.ElevatorGraphic;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
@@ -15,7 +16,9 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ElevatorPortal extends Portal implements Queueable {
     // Denotes the elevator shaft which contains this elevator portal
@@ -29,6 +32,9 @@ public class ElevatorPortal extends Portal implements Queueable {
 
     // Denotes the queueing object associated with all goals like this
     private final QueueObject queueObject;
+
+    // Maps queue objects into their corresponding attractors
+    private final Map<QueueObject, AmenityBlock> queueObjectAmenityBlockMap;
 
     // Denotes the floor field state needed to access the floor fields of this security gate
     private final QueueingFloorField.FloorFieldState elevatorPortalFloorFieldState;
@@ -282,6 +288,9 @@ public class ElevatorPortal extends Portal implements Queueable {
         // Using the floor field state defined earlier, create the floor field
         this.queueObject.getFloorFields().put(this.elevatorPortalFloorFieldState, queueingFloorField);
 
+        // Define the relationships between the queue objects and the attractors
+        this.queueObjectAmenityBlockMap = new HashMap<>();
+
         this.elevatorPortalGraphic = new ElevatorGraphic(this);
     }
 
@@ -401,6 +410,11 @@ public class ElevatorPortal extends Portal implements Queueable {
         string += "\n" + "Connects to floor #" + numberFloorServed;
 
         return string;
+    }
+
+    @Override
+    public Passenger spawnPassenger() {
+        return null;
     }
 
     // Elevator portal block

@@ -13,7 +13,7 @@ public class TrainDoorEditor {
     public void draw(
             Patch currentPatch,
             boolean enabled,
-            TrainDoor.TrainDoorDirection trainDoorDirection,
+            TrainDoor.TravelDirection travelDirection,
             List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
@@ -49,7 +49,7 @@ public class TrainDoorEditor {
             TrainDoor trainDoorToAdd = TrainDoor.trainDoorFactory.create(
                     amenityBlocks,
                     enabled,
-                    trainDoorDirection,
+                    travelDirection,
                     trainDoorCarriages
             );
 
@@ -67,7 +67,7 @@ public class TrainDoorEditor {
     public void edit(
             TrainDoor trainDoorToEdit,
             boolean enabled,
-            TrainDoor.TrainDoorDirection trainDoorDirection,
+            TrainDoor.TravelDirection travelDirection,
             List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
         trainDoorToEdit.setEnabled(
@@ -75,7 +75,7 @@ public class TrainDoorEditor {
         );
 
         trainDoorToEdit.setPlatform(
-                trainDoorDirection
+                travelDirection
         );
 
         trainDoorToEdit.setTrainDoorCarriagesSupported(

@@ -1,9 +1,9 @@
 package com.crowdsimulation.controller.controls.service.main;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
 import com.crowdsimulation.controller.controls.service.InitializeScreenService;
+import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
@@ -150,6 +150,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             CheckBox stationGateEnableCheckBox,
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
+            Label stationGateDirectionLabel,
+            ChoiceBox<StationGate.StationGatePassengerTravelDirection> stationGateDirectionChoiceBox,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -202,7 +204,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             // Train boarding area
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TrainDoorDirection> trainDoorDirectionChoiceBox,
+            ChoiceBox<TrainDoor.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
             Button saveTrainDoorButton,
@@ -235,6 +237,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 stationGateEnableCheckBox,
                 stationGateModeLabel,
                 stationGateModeChoiceBox,
+                stationGateDirectionLabel,
+                stationGateDirectionChoiceBox,
                 stationGateSpawnLabel,
                 stationGateSpinner,
                 saveStationGateButton,
@@ -384,6 +388,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             CheckBox stationGateEnableCheckBox,
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
+            Label stationGateDirectionLabel,
+            ChoiceBox<StationGate.StationGatePassengerTravelDirection> stationGateDirectionChoiceBox,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -401,6 +407,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 stationGateEnableCheckBox,
                 stationGateModeLabel,
                 stationGateModeChoiceBox,
+                stationGateDirectionLabel,
+                stationGateDirectionChoiceBox,
                 stationGateSpawnLabel,
                 stationGateSpinner,
                 saveStationGateButton,
@@ -424,6 +432,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             CheckBox stationGateEnableCheckBox,
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
+            Label stationGateDirectionLabel,
+            ChoiceBox<StationGate.StationGatePassengerTravelDirection> stationGateDirectionChoiceBox,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -438,6 +448,18 @@ public class InitializeMainScreenService extends InitializeScreenService {
         ));
         stationGateModeChoiceBox.getSelectionModel().select(0);
 
+        stationGateDirectionLabel.setLabelFor(stationGateDirectionChoiceBox);
+
+        stationGateDirectionChoiceBox.setItems(FXCollections.observableArrayList(
+                StationGate.StationGatePassengerTravelDirection.NORTHBOUND,
+                StationGate.StationGatePassengerTravelDirection.SOUTHBOUND,
+                StationGate.StationGatePassengerTravelDirection.NORTHBOUND_AND_SOUTHBOUND,
+                StationGate.StationGatePassengerTravelDirection.EASTBOUND,
+                StationGate.StationGatePassengerTravelDirection.WESTBOUND,
+                StationGate.StationGatePassengerTravelDirection.EASTBOUND_AND_WESTBOUND
+        ));
+        stationGateDirectionChoiceBox.getSelectionModel().select(0);
+
         stationGateSpawnLabel.setLabelFor(stationGateSpinner);
 
         stationGateSpinner.setValueFactory(
@@ -449,6 +471,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         stationGateEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
         stationGateModeChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        stationGateDirectionChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
         stationGateSpinner.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
         saveStationGateButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
@@ -696,7 +719,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializePlatformAmenities(
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TrainDoorDirection> trainDoorDirectionChoiceBox,
+            ChoiceBox<TrainDoor.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
             Button saveTrainDoorButton,
@@ -730,7 +753,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeTrainBoardingArea(
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TrainDoorDirection> trainDoorDirectionChoiceBox,
+            ChoiceBox<TrainDoor.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriagesListView,
             Button saveTrainDoorButton,
@@ -740,10 +763,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
         trainDoorDirectionLabel.setLabelFor(trainDoorDirectionChoiceBox);
 
         trainDoorDirectionChoiceBox.setItems(FXCollections.observableArrayList(
-                TrainDoor.TrainDoorDirection.NORTHBOUND,
-                TrainDoor.TrainDoorDirection.SOUTHBOUND,
-                TrainDoor.TrainDoorDirection.WESTBOUND,
-                TrainDoor.TrainDoorDirection.EASTBOUND
+                TrainDoor.TravelDirection.NORTHBOUND,
+                TrainDoor.TravelDirection.SOUTHBOUND,
+                TrainDoor.TravelDirection.WESTBOUND,
+                TrainDoor.TravelDirection.EASTBOUND
         ));
         trainDoorDirectionChoiceBox.getSelectionModel().select(0);
 

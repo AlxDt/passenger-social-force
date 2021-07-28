@@ -1,7 +1,8 @@
 package com.crowdsimulation.model.core.environment.station.patch.position;
 
+import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.simulator.Simulator;
+import com.crowdsimulation.model.simulator.cache.DistanceCache;
 
 import java.util.Objects;
 
@@ -62,19 +63,21 @@ public class Coordinates extends Location {
         );
     }
 
-    public static double distance(Patch sourcePatch, Patch targetPatch) {
+    public static double distance(Station station, Patch sourcePatch, Patch targetPatch) {
         // Check the cache first if the distance between the two given patches has already been computed beforehand
-        PatchPair patchPair = new Coordinates.PatchPair(sourcePatch, targetPatch);
-        Double cachedDistance = Simulator.DISTANCE_CACHE.get(patchPair);
+        DistanceCache distanceCache = station.getDistanceCache();
 
-        // If it isn't in the cache yet, add it there dso we won't need to recompute it in the future
+        Patch.PatchPair patchPair = new Patch.PatchPair(sourcePatch, targetPatch);
+        Double cachedDistance = distanceCache.get(patchPair);
+
+        // If it isn't in the cache yet, add it there so we won't need to recompute it in the future
         if (cachedDistance == null) {
             double distance = Coordinates.distance(
                     sourcePatch.getPatchCenterCoordinates(),
                     targetPatch.getPatchCenterCoordinates()
             );
 
-            Simulator.DISTANCE_CACHE.put(patchPair, distance);
+            distanceCache.put(patchPair, distance);
 
             return distance;
         } else {
@@ -180,28 +183,5 @@ public class Coordinates extends Location {
     @Override
     public int hashCode() {
         return Objects.hash(x, y);
-    }
-
-    public static class PatchPair {
-        private final Patch patch1;
-        private final Patch patch2;
-
-        public PatchPair(Patch patch1, Patch patch2) {
-            this.patch1 = patch1;
-            this.patch2 = patch2;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            PatchPair that = (PatchPair) o;
-            return patch1.equals(that.patch1) && patch2.equals(that.patch2);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(patch1, patch2);
-        }
     }
 }

@@ -6,6 +6,7 @@ import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
 import com.crowdsimulation.model.simulator.Simulator;
@@ -39,7 +40,7 @@ public class Passenger extends PatchObject implements Agent {
         passengerFactory = new PassengerFactory();
     }
 
-    private Passenger(Patch spawnPatch) {
+    private Passenger(Patch spawnPatch, TrainDoor.TravelDirection travelDirection) {
         this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
 
         final double singleJourneyPercentage = 1.0;
@@ -63,7 +64,8 @@ public class Passenger extends PatchObject implements Agent {
         this.passengerMovement = new PassengerMovement(
                 gate,
                 this,
-                spawnPatch.getPatchCenterCoordinates()
+                spawnPatch.getPatchCenterCoordinates(),
+                travelDirection
         );
     }
 
@@ -88,8 +90,8 @@ public class Passenger extends PatchObject implements Agent {
     }
 
     public static class PassengerFactory extends StationObjectFactory {
-        public Passenger create(Patch spawnPatch) {
-            return new Passenger(spawnPatch);
+        public Passenger create(Patch spawnPatch, TrainDoor.TravelDirection travelDirection) {
+            return new Passenger(spawnPatch, travelDirection);
         }
     }
 

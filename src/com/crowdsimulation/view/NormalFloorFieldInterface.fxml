@@ -52,8 +52,8 @@
         </HBox>
         <HBox alignment="CENTER" layoutX="20.0" layoutY="118.0" prefHeight="100.0" prefWidth="242.0" spacing="10.0" GridPane.columnSpan="2" GridPane.rowIndex="2">
             <children>
-                <Label fx:id="directionLabel" text="Direction:" />
-                <ChoiceBox fx:id="floorFieldStateChoiceBox" prefHeight="25.0" prefWidth="179.0" />
+                <Label fx:id="directionLabel" text="Disposition:" />
+                <ChoiceBox fx:id="floorFieldStateChoiceBox" prefHeight="25.0" prefWidth="170.0" />
             </children>
         </HBox>
       <HBox alignment="CENTER" layoutX="20.0" layoutY="148.0" prefHeight="100.0" prefWidth="242.0" spacing="10.0" GridPane.columnSpan="2" GridPane.rowIndex="3">

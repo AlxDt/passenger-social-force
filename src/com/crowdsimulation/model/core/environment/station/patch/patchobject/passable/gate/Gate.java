@@ -12,25 +12,7 @@ public abstract class Gate extends NonObstacle implements Drawable {
     }
 
     // Spawn a passenger in this position
-    public Passenger spawnPassenger() {
-        // Check if all attractors in this amenity have no passengers
-        for (AmenityBlock attractor : this.getAttractors()) {
-            if (!attractor.getPatch().getPassengers().isEmpty()) {
-                return null;
-            }
-        }
-
-        // Get a random attractor
-        AmenityBlock attractor = this.getAttractors().get(0);
-
-        // If that random attractor is free from passengers, generate one
-        if (attractor.getPatch().getPassengers().isEmpty()) {
-            return Passenger.passengerFactory.create(attractor.getPatch());
-        } else {
-            // Else, do nothing, so return null
-            return null;
-        }
-    }
+    public abstract Passenger spawnPassenger();
 
     // Despawn a passenger in this position
     public void despawnPassenger(Passenger passenger) {

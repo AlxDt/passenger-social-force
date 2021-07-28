@@ -5,6 +5,7 @@ import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprin
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.TrainDoorGraphic;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 public class TrainDoor extends Gate implements Queueable {
     // Denotes the platform side served by this train door
-    private TrainDoorDirection platform;
+    private TravelDirection platform;
 
     // Denotes whether this train door is open and allows entry and exit of passengers
     private boolean open;
@@ -33,6 +34,9 @@ public class TrainDoor extends Gate implements Queueable {
 
     // Denotes the queueing object associated with all goals like this
     private final Map<TrainDoorEntranceLocation, QueueObject> queueObjects;
+
+    // Maps queue objects into their corresponding attractors
+    private final Map<QueueObject, AmenityBlock> queueObjectAmenityBlockMap;
 
     // Denotes the floor field states needed to access the floor fields of this train door
     private final PlatformFloorField.PlatformFloorFieldState leftTrainDoorFloorFieldState;
@@ -112,7 +116,7 @@ public class TrainDoor extends Gate implements Queueable {
     protected TrainDoor(
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
-            TrainDoorDirection platform,
+            TravelDirection platform,
             List<TrainDoorCarriage> trainDoorCarriagesSupported
     ) {
         super(amenityBlocks, enabled);
@@ -125,29 +129,52 @@ public class TrainDoor extends Gate implements Queueable {
 
         this.queueObjects = new HashMap<>();
 
-        if (platform == TrainDoorDirection.SOUTHBOUND || platform == TrainDoorDirection.EASTBOUND) {
-            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
-            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
-        } else {
-            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
-            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
-        }
-
         // Initialize this elevator portal's floor field state
         // A null in the floor field state means that it may accept any direction
         this.leftTrainDoorFloorFieldState = new PlatformFloorField.PlatformFloorFieldState(
-                PassengerMovement.Direction.BOARDING,
+                PassengerMovement.Disposition.BOARDING,
                 PassengerMovement.State.IN_QUEUE,
                 this,
                 TrainDoorEntranceLocation.LEFT
         );
 
         this.rightTrainDoorFloorFieldState = new PlatformFloorField.PlatformFloorFieldState(
-                PassengerMovement.Direction.BOARDING,
+                PassengerMovement.Disposition.BOARDING,
                 PassengerMovement.State.IN_QUEUE,
                 this,
                 TrainDoorEntranceLocation.RIGHT
         );
+
+        // Define the relationships between the queue objects and the attractors
+        this.queueObjectAmenityBlockMap = new HashMap<>();
+
+        if (platform == TravelDirection.SOUTHBOUND || platform == TravelDirection.EASTBOUND) {
+            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
+            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
+
+            this.queueObjectAmenityBlockMap.put(
+                    this.getQueueObjects().get(TrainDoorEntranceLocation.LEFT),
+                    this.getAttractors().get(0)
+            );
+
+            this.queueObjectAmenityBlockMap.put(
+                    this.getQueueObjects().get(TrainDoorEntranceLocation.RIGHT),
+                    this.getAttractors().get(1)
+            );
+        } else {
+            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
+            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
+
+            this.queueObjectAmenityBlockMap.put(
+                    this.getQueueObjects().get(TrainDoorEntranceLocation.RIGHT),
+                    this.getAttractors().get(0)
+            );
+
+            this.queueObjectAmenityBlockMap.put(
+                    this.getQueueObjects().get(TrainDoorEntranceLocation.LEFT),
+                    this.getAttractors().get(1)
+            );
+        }
 
         // Add a blank floor field
         PlatformFloorField leftPlatformFloorField = PlatformFloorField.platformFloorFieldFactory.create(this);
@@ -165,11 +192,11 @@ public class TrainDoor extends Gate implements Queueable {
         this.trainDoorGraphic = new TrainDoorGraphic(this);
     }
 
-    public TrainDoorDirection getPlatform() {
+    public TravelDirection getPlatform() {
         return platform;
     }
 
-    public void setPlatform(TrainDoorDirection platform) {
+    public void setPlatform(TravelDirection platform) {
         this.platform = platform;
     }
 
@@ -192,14 +219,15 @@ public class TrainDoor extends Gate implements Queueable {
 
     // Get whichever queue object has the shorter queue
     public QueueObject getQueueObject() {
-        QueueObject leftQueueObject = this.queueObjects.get(TrainDoorEntranceLocation.LEFT);
+/*        QueueObject leftQueueObject = this.queueObjects.get(TrainDoorEntranceLocation.LEFT);
         QueueObject rightQueueObject = this.queueObjects.get(TrainDoorEntranceLocation.RIGHT);
 
         if (leftQueueObject.getPassengersQueueing().size() <= rightQueueObject.getPassengersQueueing().size()) {
             return leftQueueObject;
         } else {
             return rightQueueObject;
-        }
+        }*/
+        return null;
     }
 
     public Map<TrainDoorEntranceLocation, QueueObject> getQueueObjects() {
@@ -223,6 +251,28 @@ public class TrainDoor extends Gate implements Queueable {
             return (TrainDoor) amenity;
         } else {
             return null;
+        }
+    }
+
+    public QueueObject getQueueObjectFromTrainDoorEntranceLocation(
+            TrainDoorEntranceLocation trainDoorEntranceLocation
+    ) {
+        return this.queueObjects.get(trainDoorEntranceLocation);
+    }
+
+    public TrainDoorEntranceLocation getTrainDoorEntranceLocationFromAttractor(AmenityBlock attractor) {
+        if (this.platform == TravelDirection.SOUTHBOUND || this.platform == TravelDirection.EASTBOUND) {
+            if (this.getAttractors().indexOf(attractor) == 0) {
+                return TrainDoorEntranceLocation.LEFT;
+            } else {
+                return TrainDoorEntranceLocation.RIGHT;
+            }
+        } else {
+            if (this.getAttractors().indexOf(attractor) == 0) {
+                return TrainDoorEntranceLocation.RIGHT;
+            } else {
+                return TrainDoorEntranceLocation.LEFT;
+            }
         }
     }
 
@@ -321,6 +371,11 @@ public class TrainDoor extends Gate implements Queueable {
         return this.trainDoorGraphic.getGraphicLocation();
     }
 
+    @Override
+    public Passenger spawnPassenger() {
+        return null;
+    }
+
     // Train door block
     public static class TrainDoorBlock extends Amenity.AmenityBlock {
         public static TrainDoor.TrainDoorBlock.TrainDoorBlockFactory trainDoorBlockFactory;
@@ -356,20 +411,20 @@ public class TrainDoor extends Gate implements Queueable {
         public TrainDoor create(
                 List<AmenityBlock> amenityBlocks,
                 boolean enabled,
-                TrainDoorDirection trainDoorDirection,
+                TravelDirection travelDirection,
                 List<TrainDoorCarriage> trainDoorCarriagesSupported
         ) {
             return new TrainDoor(
                     amenityBlocks,
                     enabled,
-                    trainDoorDirection,
+                    travelDirection,
                     trainDoorCarriagesSupported
             );
         }
     }
 
     // The platform direction this train door waiting area is at
-    public enum TrainDoorDirection {
+    public enum TravelDirection {
         NORTHBOUND("Northbound"),
         SOUTHBOUND("Southbound"),
         EASTBOUND("Eastbound"),
@@ -377,7 +432,7 @@ public class TrainDoor extends Gate implements Queueable {
 
         private final String name;
 
-        TrainDoorDirection(String name) {
+        TravelDirection(String name) {
             this.name = name;
         }
 

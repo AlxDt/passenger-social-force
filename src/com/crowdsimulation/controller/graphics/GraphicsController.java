@@ -50,7 +50,7 @@ public class GraphicsController extends Controller {
     private static final Image AMENITY_SPRITE_SHEET = new Image(AmenityGraphic.AMENITY_SPRITE_SHEET_URL);
     private static final Image PASSENGER_SPRITE_SHEET = new Image(PassengerGraphic.PASSENGER_SPRITE_SHEET_URL);
 
-    private static final Map<PassengerMovement.Direction, Integer> FLOOR_FIELD_COLORS;
+    private static final Map<PassengerMovement.Disposition, Integer> FLOOR_FIELD_COLORS;
     private static final String TOOLTIP_TEMPLATE = "Row %r, column %c\n\n%p";
 
     public static Floor floorNextPortal;
@@ -74,8 +74,8 @@ public class GraphicsController extends Controller {
 
     static {
         FLOOR_FIELD_COLORS = new HashMap<>();
-        FLOOR_FIELD_COLORS.put(PassengerMovement.Direction.BOARDING, 125);
-        FLOOR_FIELD_COLORS.put(PassengerMovement.Direction.ALIGHTING, 225);
+        FLOOR_FIELD_COLORS.put(PassengerMovement.Disposition.BOARDING, 125);
+        FLOOR_FIELD_COLORS.put(PassengerMovement.Disposition.ALIGHTING, 225);
         FLOOR_FIELD_COLORS.put(null, 300);
 
         GraphicsController.markedPatch = null;
@@ -419,7 +419,7 @@ public class GraphicsController extends Controller {
                                     .getRowSpan()
                     );
 
-                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
+/*                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
 
                     if (queueable != null) {
                         foregroundGraphicsContext.strokeText(
@@ -428,7 +428,7 @@ public class GraphicsController extends Controller {
                                 GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getX() * tileSize,
                                 GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getY() * tileSize + tileSize * 2
                         );
-                    }
+                    }*/
 
 /*                    foregroundGraphicsContext.setStroke(Color.VIOLET);
 

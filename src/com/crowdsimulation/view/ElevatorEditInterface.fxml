@@ -41,7 +41,7 @@
                         <CheckBox fx:id="elevatorEnableCheckbox" layoutX="10.0" layoutY="15.0" mnemonicParsing="false"
                                   selected="true" text="Enable elevator"/>
                         <Label fx:id="elevatorDirectionLabel" layoutX="10.0" layoutY="122.0"
-                               text="Initial position and direction:" GridPane.rowIndex="4"/>
+                               text="Initial position and disposition:" GridPane.rowIndex="4"/>
                         <ChoiceBox fx:id="elevatorDirectionChoiceBox" prefWidth="150.0" GridPane.columnIndex="1"
                                    GridPane.rowIndex="4"/>
                     </children>

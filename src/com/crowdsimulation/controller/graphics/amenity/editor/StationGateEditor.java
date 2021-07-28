@@ -14,7 +14,8 @@ public class StationGateEditor extends AmenityEditor {
             Patch currentPatch,
             boolean enabled,
             double chancePerSecond,
-            StationGate.StationGateMode stationGateMode
+            StationGate.StationGateMode stationGateMode,
+            StationGate.StationGatePassengerTravelDirection stationGatePassengerTravelDirection
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
@@ -50,7 +51,8 @@ public class StationGateEditor extends AmenityEditor {
                     amenityBlocks,
                     enabled,
                     chancePerSecond,
-                    stationGateMode
+                    stationGateMode,
+                    stationGatePassengerTravelDirection
             );
 
             // Add this station gate to the list of all station gates on this floor
@@ -68,7 +70,8 @@ public class StationGateEditor extends AmenityEditor {
             StationGate stationGateToEdit,
             boolean stationGateEnabled,
             double chancePerSecond,
-            StationGate.StationGateMode stationGateMode
+            StationGate.StationGateMode stationGateMode,
+            StationGate.StationGatePassengerTravelDirection stationGateDirection
     ) {
         stationGateToEdit.setEnabled(
                 stationGateEnabled
@@ -80,6 +83,10 @@ public class StationGateEditor extends AmenityEditor {
 
         stationGateToEdit.setStationGateMode(
                 stationGateMode
+        );
+
+        stationGateToEdit.setStationGatePassengerTravelDirection(
+                stationGateDirection
         );
     }
 

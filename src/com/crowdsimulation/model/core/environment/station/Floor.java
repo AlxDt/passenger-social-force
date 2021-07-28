@@ -18,6 +18,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
+import com.crowdsimulation.model.simulator.cache.PathCache;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -55,6 +56,9 @@ public class Floor extends BaseStationObject implements Environment {
     // Passengers in this floor
     private final CopyOnWriteArrayList<Passenger> passengersInFloor;
 
+    // Caches for optimized performance
+    private final PathCache pathCache;
+
     // Factory for floor creation
     private static final Floor.FloorFactory floorFactory;
 
@@ -91,6 +95,9 @@ public class Floor extends BaseStationObject implements Environment {
 
         // Initialize the passenger list
         this.passengersInFloor = new CopyOnWriteArrayList<>();
+
+        // Initialize caches
+        this.pathCache = new PathCache();
     }
 
     public Station getStation() {
@@ -155,6 +162,10 @@ public class Floor extends BaseStationObject implements Environment {
 
     public CopyOnWriteArrayList<Passenger> getPassengersInFloor() {
         return passengersInFloor;
+    }
+
+    public PathCache getPathCache() {
+        return pathCache;
     }
 
     public Patch getPatch(Coordinates coordinates) {

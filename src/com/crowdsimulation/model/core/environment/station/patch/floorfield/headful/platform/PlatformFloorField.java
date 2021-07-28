@@ -111,12 +111,12 @@ public class PlatformFloorField extends QueueingFloorField {
         private final TrainDoor.TrainDoorEntranceLocation trainDoorEntranceLocation;
 
         public PlatformFloorFieldState(
-                PassengerMovement.Direction direction,
+                PassengerMovement.Disposition disposition,
                 PassengerMovement.State state,
                 Queueable target,
                 TrainDoor.TrainDoorEntranceLocation trainDoorEntranceLocation
         ) {
-            super(direction, state, target);
+            super(disposition, state, target);
 
             this.trainDoorEntranceLocation = trainDoorEntranceLocation;
         }

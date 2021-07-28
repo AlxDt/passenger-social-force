@@ -5,6 +5,7 @@ import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprin
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.StairGraphic;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -277,6 +278,11 @@ public class StairPortal extends Portal {
         string += "\n" + "Connects to floor #" + numberFloorServed;
 
         return string;
+    }
+
+    @Override
+    public Passenger spawnPassenger() {
+        return null;
     }
 
     // Stair portal block
