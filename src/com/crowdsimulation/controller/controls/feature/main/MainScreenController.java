@@ -2813,9 +2813,7 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "The maximum number of 1.0 values for this floor field " +
-                                                            "(" + target.getAttractors().size() + ") has already been " +
-                                                            "reached.",
+                                                    "This floor field already has an apex.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }
@@ -3721,9 +3719,7 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "The maximum number of 1.0 values for this floor field " +
-                                                            "(" + target.getAttractors().size() + ") has already been " +
-                                                            "reached.",
+                                                    "This floor field already has an apex.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }
@@ -3859,9 +3855,7 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "The maximum number of 1.0 values for this floor field " +
-                                                            "(" + target.getAttractors().size() + ") has already been " +
-                                                            "reached.",
+                                                    "This floor field already has an apex.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }
@@ -4000,9 +3994,7 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "The maximum number of 1.0 values for this floor field " +
-                                                            "(" + target.getAttractors().size() + ") has already been " +
-                                                            "reached.",
+                                                    "This floor field already has an apex.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }
@@ -4148,9 +4140,7 @@ public class MainScreenController extends ScreenController {
                                             AlertController.showSimpleAlert(
                                                     "Floor field value addition failed",
                                                     "Failed to add a floor field value here",
-                                                    "The maximum number of 1.0 values for this floor field " +
-                                                            "(" + target.getAttractors().size() + ") has already been " +
-                                                            "reached.",
+                                                    "This floor field already has an apex.",
                                                     Alert.AlertType.ERROR
                                             );
                                         }

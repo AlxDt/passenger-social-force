@@ -44,7 +44,7 @@ public class PlatformFloorField extends QueueingFloorField {
         // This is to make sure that there is only one apex in the floor field
         if (Math.abs(value - 1.0) < EPSILON) {
             // If it is, refuse to register the patch
-            if (platformFloorField.getApices().size() == trainDoor.getAttractors().size()) {
+            if (platformFloorField.getApices().size() == 1) {
                 return false;
             } else {
                 // If it hasn't yet, add the patch to the list of apices, if it isn't already in the list
