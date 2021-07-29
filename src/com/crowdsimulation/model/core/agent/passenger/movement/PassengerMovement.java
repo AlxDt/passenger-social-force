@@ -51,6 +51,9 @@ public class PassengerMovement {
     // Denotes the amenity the passenger is currently in, if any
     private Amenity currentAmenity;
 
+    // Denotes the current floor field value of the patch the passenger is on when queueing, if any
+    private Double currentFloorFieldValue;
+
     // Denotes the patch of the passenger's goal
     private Patch goalPatch;
 
@@ -135,7 +138,7 @@ public class PassengerMovement {
     private int timeSinceLeftPreviousGoal;
 
     // Denotes the time until the passenger accelerates fully from non-movement
-    final int ticksUntilFullyAccelerated;
+    private final int ticksUntilFullyAccelerated;
 
     // Denotes the time the passenger has spent accelerating or moving at a constant speed so far without slowing down
     // or stopping
@@ -158,6 +161,7 @@ public class PassengerMovement {
 
     // Denotes the patches to explore for obstacles or passengers
     private List<Patch> toExplore;
+    private Patch chosenQueueingPatch;
 
     // Denotes the recent patches this passenger has been in
     private final HashMap<Patch, Integer> recentPatches;
@@ -226,8 +230,9 @@ public class PassengerMovement {
         this.state = State.WALKING;
         this.action = Action.WILL_QUEUE;
 
-        this.toExplore = new ArrayList<>();
         this.recentPatches = new HashMap<>();
+
+        this.toExplore = new ArrayList<>();
 
         repulsiveForceFromPassengers = new ArrayList<>();
         repulsiveForcesFromObstacles = new ArrayList<>();
@@ -388,6 +393,10 @@ public class PassengerMovement {
 
     public boolean hasEncounteredAnyQueueingPassenger() {
         return hasEncounteredAnyQueueingPassenger;
+    }
+
+    public Patch getChosenQueueingPatch() {
+        return chosenQueueingPatch;
     }
 
     public List<Patch> getToExplore() {
@@ -636,6 +645,8 @@ public class PassengerMovement {
         this.goalAttractor = null;
         this.goalTrainDoorEntranceLocation = null;
 
+        this.currentFloorFieldValue = null;
+
         // Take note of the floor field state of this passenger
         this.goalFloorFieldState = null;
 
@@ -675,6 +686,9 @@ public class PassengerMovement {
 
         // This passenger has no recent patches yet
         this.recentPatches.clear();
+
+        // Reset debugging variables
+        this.chosenQueueingPatch = null;
 
         // This passenger is not yet stuck
         this.free();
@@ -983,7 +997,7 @@ public class PassengerMovement {
         List<Patch> patchesToExplore
                 = Floor.get7x7Field(this.currentPatch, this.proposedHeading, true, Math.toRadians(360.0));
 
-        this.toExplore = patchesToExplore;
+//        this.toExplore = patchesToExplore;
 
         // Clear vectors from the previous computations
         this.repulsiveForceFromPassengers.clear();
@@ -2055,8 +2069,6 @@ public class PassengerMovement {
                     Queueable queueable = this.getGoalAmenityAsQueueable();
 
                     if (queueable instanceof TrainDoor) {
-                        TrainDoor trainDoor = (TrainDoor) queueable;
-
                         this.goalFloorFieldState = new PlatformFloorField.PlatformFloorFieldState(
                                 this.disposition,
                                 State.IN_QUEUE,
@@ -2326,14 +2338,24 @@ public class PassengerMovement {
     private Patch getBestQueueingPatch() {
         // Get the patches to explore
         List<Patch> patchesToExplore
-                = Floor.get7x7Field(this.currentPatch, this.proposedHeading, true, this.fieldOfViewAngle);
+                = Floor.get7x7Field(this.currentPatch, this.proposedHeading, false, Math.toRadians(90.0));
 
         this.toExplore = patchesToExplore;
 
+        if (patchesToExplore.contains(this.currentPatch)) {
+            System.out.println("oops");
+        }
+
         // Collect the patches with the highest floor field values
-        List<Patch> highestPatches = new ArrayList<>();
+//        List<Patch> highestPatches = new ArrayList<>();
+        List<Patch> floorFieldCandidates = new ArrayList<>();
+        List<Double> floorFieldValueCandidates = new ArrayList<>();
 
         double maximumFloorFieldValue = 0.0;
+        double bestFloorFieldValue = 0.0;
+        double valueSum = 0.0;
+
+        double headingChange;
 
         for (Patch patch : patchesToExplore) {
             Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
@@ -2347,11 +2369,11 @@ public class PassengerMovement {
                             this.goalFloorFieldState
                     ) != null
             ) {
-                double floorFieldValue = patch.getFloorFieldValues()
+                double futureFloorFieldValue = patch.getFloorFieldValues()
                         .get(this.getGoalAmenityAsQueueable())
                         .get(this.goalFloorFieldState);
 
-                if (floorFieldValue >= maximumFloorFieldValue) {
+/*                if (floorFieldValue >= maximumFloorFieldValue) {
                     if (floorFieldValue > maximumFloorFieldValue) {
                         maximumFloorFieldValue = floorFieldValue;
 
@@ -2359,53 +2381,119 @@ public class PassengerMovement {
                     }
 
                     highestPatches.add(patch);
+                }*/
+
+                headingChange = Coordinates.headingDifference(
+                        this.proposedHeading,
+                        Coordinates.headingTowards(
+                                this.position,
+                                patch.getPatchCenterCoordinates()
+                        )
+                );
+
+                if (currentFloorFieldValue == null || futureFloorFieldValue >= currentFloorFieldValue) {
+//                    if (headingChange <= Math.toRadians(45.0)) {
+                        valueSum += futureFloorFieldValue;
+
+                        floorFieldCandidates.add(patch);
+                        floorFieldValueCandidates.add(futureFloorFieldValue);
+//                    } else {
+//                        System.out.println("too big");
+//                    }
                 }
             }
         }
 
         // If it gets to this point without finding a floor field value greater than zero, return early
-        if (maximumFloorFieldValue == 0.0) {
+        if (floorFieldCandidates.isEmpty()) {
+//            this.currentFloorFieldValue = null;
+
             return null;
         }
 
-        // If there are more than one highest valued-patches, choose the one where it would take the least heading
-        // difference
-        Patch chosenPatch = highestPatches.get(0)/* = null*/;
+        Patch chosenPatch;
+        int choiceIndex = 0;
 
-        List<Double> headingChanges = new ArrayList<>();
-//        List<Double> distances = new ArrayList<>();
+        // Use the floor field values as weights to choose among patches
+        for (
+                double randomNumber = Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() * valueSum;
+                choiceIndex < floorFieldValueCandidates.size() - 1;
+                choiceIndex++) {
+            randomNumber -= floorFieldValueCandidates.get(choiceIndex);
 
-        double headingToHighestPatch;
-        double headingChangeRequired;
-
-//        double distance;
-
-        for (Patch patch : highestPatches) {
-            headingToHighestPatch = Coordinates.headingTowards(this.position, patch.getPatchCenterCoordinates());
-            headingChangeRequired = Coordinates.headingDifference(this.proposedHeading, headingToHighestPatch);
-
-            double headingChangeRequiredDegrees = Math.toDegrees(headingChangeRequired);
-
-            headingChanges.add(headingChangeRequiredDegrees);
-
-/*            distance = Coordinates.distance(this.position, patch.getPatchCenterCoordinates());
-
-            distances.add(distance);*/
-        }
-
-        double minimumHeadingChange = Double.MAX_VALUE;
-
-        for (int index = 0; index < highestPatches.size(); index++) {
-//            double individualScore = headingChanges.get(index) * 1.0 + (distances.get(index) * 10.0) * 0.0;
-            double individualScore = headingChanges.get(index);
-
-            if (individualScore < minimumHeadingChange) {
-                minimumHeadingChange = individualScore;
-                chosenPatch = highestPatches.get(index);
+            if (randomNumber <= 0.0) {
+                break;
             }
         }
 
+        chosenPatch = floorFieldCandidates.get(choiceIndex);
+        this.currentFloorFieldValue = chosenPatch.getFloorFieldValues()
+                .get(this.getGoalAmenityAsQueueable())
+                .get(this.goalFloorFieldState);
+
+////        // If it gets to this point without finding a floor field value greater than zero, return early
+////        if (maximumFloorFieldValue == 0.0) {
+////            return null;
+////        }
+//
+//        // If there are more than one highest valued-patches, choose the one where it would take the least heading
+//        // difference
+//        Patch chosenPatch = highestPatches.get(0)/* = null*/;
+//
+//        List<Double> headingChanges = new ArrayList<>();
+////        List<Double> distances = new ArrayList<>();
+//
+//        double headingToHighestPatch;
+//        double headingChangeRequired;
+//
+////        double distance;
+//
+//        for (Patch patch : highestPatches) {
+//            headingToHighestPatch = Coordinates.headingTowards(this.position, patch.getPatchCenterCoordinates());
+//            headingChangeRequired = Coordinates.headingDifference(this.proposedHeading, headingToHighestPatch);
+//
+//            double headingChangeRequiredDegrees = Math.toDegrees(headingChangeRequired);
+//
+//            headingChanges.add(headingChangeRequiredDegrees);
+//
+///*            distance = Coordinates.distance(this.position, patch.getPatchCenterCoordinates());
+//
+//            distances.add(distance);*/
+//        }
+//
+//        double minimumHeadingChange = Double.MAX_VALUE;
+//
+//        for (int index = 0; index < highestPatches.size(); index++) {
+////            double individualScore = headingChanges.get(index) * 1.0 + (distances.get(index) * 10.0) * 0.0;
+//            double individualScore = headingChanges.get(index);
+//
+//            if (individualScore < minimumHeadingChange) {
+//                minimumHeadingChange = individualScore;
+//                chosenPatch = highestPatches.get(index);
+//            }
+//        }
+//
+//        double headingChange = Coordinates.headingDifference(
+//                this.proposedHeading,
+//                Coordinates.headingTowards(
+//                        this.position,
+//                        chosenPatch.getPatchCenterCoordinates()
+//                )
+//        );
+
+//        System.out.println(Math.toDegrees(headingChange) + ":" + this.parent.getIdentifier());
+
+//        if (headingChange <= Math.toRadians(90.0)) {
+//            this.chosenQueueingPatch = chosenPatch;
+//
+        this.chosenQueueingPatch = chosenPatch;
         return chosenPatch;
+//        } else {
+//            System.out.println("big turn by " + this.parent.getIdentifier());
+////            this.currentFloorFieldValue = null;
+//
+//            return null;
+//        }
     }
 
     // Check if the given patch has an obstacle

@@ -554,7 +554,7 @@ public class GraphicsController extends Controller {
                         );
                     }*/
 
-/*                    // Draw passenger patches in field of view
+                    // Draw passenger patches in field of view
                     if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
                         foregroundGraphicsContext.setGlobalAlpha(0.25);
                         foregroundGraphicsContext.setFill(Color.LIGHTGREEN);
@@ -571,7 +571,30 @@ public class GraphicsController extends Controller {
                         }
 
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
-                    }*/
+                    }
+
+                    foregroundGraphicsContext.setFill(Color.VIOLET);
+
+                    Patch chosenQueueingPatch = passenger.getPassengerMovement().getChosenQueueingPatch();
+
+                    if (chosenQueueingPatch != null) {
+                        foregroundGraphicsContext.fillRect(
+                                chosenQueueingPatch.getPatchCenterCoordinates().getX()
+                                        / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                                chosenQueueingPatch.getPatchCenterCoordinates().getY()
+                                        / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                                tileSize,
+                                tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeText(
+                                passenger.getIdentifier() + "",
+                                chosenQueueingPatch.getPatchCenterCoordinates().getX()
+                                        / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                                chosenQueueingPatch.getPatchCenterCoordinates().getY()
+                                        / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5
+                        );
+                    }
 
 /*                    // Draw passenger patches in field of view
                     if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
@@ -592,7 +615,7 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }*/
 
-/*                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
+                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
                     Queueable queueable = passenger.getPassengerMovement().getGoalAmenityAsQueueable();
 
                     foregroundGraphicsContext.setStroke(Color.BLACK);
@@ -601,7 +624,7 @@ public class GraphicsController extends Controller {
                             passenger.getIdentifier() + " : " + ((followed != null) ? followed.getIdentifier() : "-"),
                             GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
                             GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
-                    );*/
+                    );
 
 //                    Passenger followed = passenger.getPassengerMovement().getPassengerFollowedWhenAssembling();
 
