@@ -362,7 +362,12 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button clearPassengersStationButton,
             Text passengerCountFloorText,
             Button clearPassengersFloorButton,
-            CheckBox disciplinedCheckBox
+            // Platform controls
+            Label platformDirectionLabel,
+            ChoiceBox<TrainDoor.TravelDirection> platformDirectionChoiceBox,
+            Label platformCarriagesLabel,
+            ChoiceBox<TrainDoor.TrainDoorCarriage> platformCarriagesChoiceBox,
+            ToggleButton openTrainDoorsButton
     ) {
         initializeSimulationControls(
                 elapsedTimeText,
@@ -376,10 +381,18 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 passengerCountStationText,
                 clearPassengersStationButton,
                 passengerCountFloorText,
-                clearPassengersFloorButton,
-                disciplinedCheckBox
+                clearPassengersFloorButton
+        );
+
+        initializePlatformControls(
+                platformDirectionLabel,
+                platformDirectionChoiceBox,
+                platformCarriagesLabel,
+                platformCarriagesChoiceBox,
+                openTrainDoorsButton
         );
     }
+
 
     // Initialize the entrances and exits build category UI controls
     private static void initializeEntrancesAndExits(
@@ -922,10 +935,39 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Text passengerCountStationText,
             Button clearPassengersStationButton,
             Text passengerCountFloorText,
-            Button clearPassengersFloorButton,
-            CheckBox disciplinedCheckBox
+            Button clearPassengersFloorButton
     ) {
-        
+
+    }
+
+    private static void initializePlatformControls(
+            Label platformDirectionLabel,
+            ChoiceBox<TrainDoor.TravelDirection> platformDirectionChoiceBox,
+            Label platformCarriagesLabel,
+            ChoiceBox<TrainDoor.TrainDoorCarriage> platformCarriagesChoiceBox,
+            ToggleButton openTrainDoorsButton
+    ) {
+        platformDirectionLabel.setLabelFor(platformDirectionChoiceBox);
+
+        platformDirectionChoiceBox.setItems(FXCollections.observableArrayList(
+                TrainDoor.TravelDirection.NORTHBOUND,
+                TrainDoor.TravelDirection.SOUTHBOUND,
+                TrainDoor.TravelDirection.WESTBOUND,
+                TrainDoor.TravelDirection.EASTBOUND
+        ));
+        platformDirectionChoiceBox.getSelectionModel().select(0);
+
+        platformCarriagesLabel.setLabelFor(platformDirectionChoiceBox);
+
+        platformCarriagesChoiceBox.setItems(FXCollections.observableArrayList(
+                TrainDoor.TrainDoorCarriage.LRT_1_FIRST_GENERATION,
+                TrainDoor.TrainDoorCarriage.LRT_1_SECOND_GENERATION,
+                TrainDoor.TrainDoorCarriage.LRT_1_THIRD_GENERATION,
+                TrainDoor.TrainDoorCarriage.LRT_2_FIRST_GENERATION,
+                TrainDoor.TrainDoorCarriage.MRT_3_FIRST_GENERATION,
+                TrainDoor.TrainDoorCarriage.MRT_3_SECOND_GENERATION
+        ));
+        platformCarriagesChoiceBox.getSelectionModel().select(0);
     }
 
     public static void initializeScrollPane(

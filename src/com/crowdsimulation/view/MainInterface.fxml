@@ -526,22 +526,17 @@
                                        <children>
                                           <HBox alignment="CENTER" prefHeight="30.0" prefWidth="282.0" spacing="10.0">
                                              <children>
-                                                <Label text="Direction:" />
-                                                <ChoiceBox prefHeight="25.0" prefWidth="165.0" />
+                                                <Label fx:id="platformDirectionLabel" text="Direction:" />
+                                                <ChoiceBox fx:id="platformDirectionChoiceBox" prefHeight="25.0" prefWidth="165.0" />
                                              </children>
                                           </HBox>
                                           <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                              <children>
-                                                <Label text="Carriages:" />
-                                                <ChoiceBox prefHeight="25.0" prefWidth="164.0" />
+                                                <Label fx:id="platformCarriagesLabel" text="Trainset:" />
+                                                <ChoiceBox fx:id="platformCarriagesChoiceBox" prefHeight="25.0" prefWidth="164.0" />
                                              </children>
                                           </HBox>
-                                          <HBox alignment="CENTER" layoutX="10.0" layoutY="45.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
-                                             <children>
-                                                <CheckBox fx:id="disciplinedCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="231.0" text="Disciplined queueing" />
-                                             </children>
-                                          </HBox>
-                                          <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                          <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
                                              <children>
                                                 <ToggleButton fx:id="openTrainDoorsButton" mnemonicParsing="false" onAction="#toggleTrainDoorsAction" prefHeight="25.0" prefWidth="231.0" text="Open train doors" />
                                              </children>

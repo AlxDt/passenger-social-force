@@ -341,10 +341,19 @@ public class MainScreenController extends ScreenController {
     @FXML
     private Button clearPassengersFloorButton;
 
-    @FXML
-    private CheckBox disciplinedCheckBox;
-
     // Platform controls
+    @FXML
+    private Label platformDirectionLabel;
+
+    @FXML
+    private ChoiceBox<TrainDoor.TravelDirection> platformDirectionChoiceBox;
+
+    @FXML
+    private Label platformCarriagesLabel;
+
+    @FXML
+    private ChoiceBox<TrainDoor.TrainDoorCarriage> platformCarriagesChoiceBox;
+
     @FXML
     private ToggleButton openTrainDoorsButton;
 
@@ -652,7 +661,12 @@ public class MainScreenController extends ScreenController {
                 clearPassengersStationButton,
                 passengerCountFloorText,
                 clearPassengersFloorButton,
-                disciplinedCheckBox
+                // Platform controls
+                platformDirectionLabel,
+                platformDirectionChoiceBox,
+                platformCarriagesLabel,
+                platformCarriagesChoiceBox,
+                openTrainDoorsButton
         );
 
         InitializeMainScreenService.initializeScrollPane(
@@ -1515,7 +1529,17 @@ public class MainScreenController extends ScreenController {
     @FXML
     // Open or close the train doors
     public void toggleTrainDoorsAction() {
-        toggleTrainDoors();
+        if (!toggleTrainDoors(platformDirectionChoiceBox.getValue(), platformCarriagesChoiceBox.getValue())) {
+            AlertController.showSimpleAlert(
+                    "No train doors opened",
+                    "No train doors opened",
+                    "The given platform direction and trainset supported do not match any train door" +
+                            " waiting areas.",
+                    Alert.AlertType.ERROR
+            );
+
+            openTrainDoorsButton.setSelected(false);
+        }
     }
 
     public void performChoice() {
@@ -1604,14 +1628,27 @@ public class MainScreenController extends ScreenController {
         }
     }
 
-    private void toggleTrainDoors() {
+    private boolean toggleTrainDoors(
+            TrainDoor.TravelDirection travelDirection,
+            TrainDoor.TrainDoorCarriage trainDoorCarriage
+    ) {
         List<TrainDoor> trainDoors = Main.simulator.getCurrentFloor().getTrainDoors();
 
-        // Open each train door
-        // TODO: which satisfies the requirements
+        boolean hasTrainDoorOpened = false;
+
+        // Open each train door given the parameters in the interface
         for (TrainDoor trainDoor : trainDoors) {
-            trainDoor.toggleTrainDoor();
+            if (
+                    trainDoor.getPlatform() == travelDirection
+                            && trainDoor.getTrainDoorCarriagesSupported().contains(trainDoorCarriage)
+            ) {
+                trainDoor.toggleTrainDoor();
+
+                hasTrainDoorOpened = true;
+            }
         }
+
+        return hasTrainDoorOpened;
     }
 
     public void initializeStation(Station station, boolean drawListeners) {
