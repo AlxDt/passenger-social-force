@@ -5,17 +5,13 @@ import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprin
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.BaseStationObject;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
+import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +30,7 @@ public abstract class Amenity extends PatchObject implements Environment {
         if (this.amenityBlocks != null) {
             // Set the parent of each amenity block to this amenity
             // In turn, set the contents of the patch in each amenity block to the amenity block
-            // Also, all this amenity's attractors to the pertinent list
+            // Also, set all this amenity's attractors to the pertinent list
             this.attractors = new ArrayList<>();
 
             for (AmenityBlock amenityBlock : this.amenityBlocks) {
@@ -127,7 +123,10 @@ public abstract class Amenity extends PatchObject implements Environment {
 
                 assert getAmenityBlockFactory(amenityBlockTemplate.getAmenityClass()) != null;
 
-                AmenityBlock amenityBlock = getAmenityBlockFactory(amenityBlockTemplate.getAmenityClass()).create(
+                AmenityBlockFactory amenityBlockFactory
+                        = getAmenityBlockFactory(amenityBlockTemplate.getAmenityClass());
+
+                AmenityBlock amenityBlock = amenityBlockFactory.create(
                         patch,
                         amenityBlockTemplate.isAttractor(),
                         amenityBlockTemplate.hasGraphic(),
@@ -147,18 +146,10 @@ public abstract class Amenity extends PatchObject implements Environment {
                 return Security.SecurityBlock.securityBlockFactory;
             } else if (amenityClass == Turnstile.class) {
                 return Turnstile.TurnstileBlock.turnstileBlockFactory;
-            } else if (amenityClass == TrainDoor.class) {
-                return TrainDoor.TrainDoorBlock.trainDoorBlockFactory;
             } else if (amenityClass == Track.class) {
                 return Track.TrackBlock.trackBlockFactory;
             } else if (amenityClass == TicketBooth.class) {
                 return TicketBooth.TicketBoothBlock.ticketBoothBlockFactory;
-            } else if (amenityClass == StairPortal.class) {
-                return StairPortal.StairPortalBlock.stairPortalBlockFactory;
-            } else if (amenityClass == EscalatorPortal.class) {
-                return EscalatorPortal.EscalatorPortalBlock.escalatorPortalBlockFactory;
-            } else if (amenityClass == ElevatorPortal.class) {
-                return ElevatorPortal.ElevatorPortalBlock.elevatorPortalBlockFactory;
             } else if (amenityClass == Wall.class) {
                 return Wall.WallBlock.wallBlockFactory;
             } else {

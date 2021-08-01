@@ -2748,23 +2748,37 @@ public class PassengerMovement {
             if (parent instanceof NonObstacle && ((NonObstacle) parent).isEnabled()) {
                 if (parent.equals(this.goalAmenity)) {
                     if (parent instanceof Queueable) {
-//                        if (parent instanceof TrainDoor) {
-//                            return !((TrainDoor) parent).isOpen();
-//                        } else {
                         Passenger passengerServiced = this.goalQueueObject.getPassengerServiced();
 
                         if (passengerServiced != null && passengerServiced.equals(this.parent)) {
-                            return !amenityBlock.isAttractor();
+                            if (amenityBlock instanceof Gate.GateBlock) {
+                                Gate.GateBlock gateBlock = ((Gate.GateBlock) amenityBlock);
+
+                                return !amenityBlock.isAttractor() && !gateBlock.isSpawner();
+                            } else {
+                                return !amenityBlock.isAttractor();
+                            }
                         } else {
                             return true;
                         }
-//                        }
                     } else {
-                        return !amenityBlock.isAttractor();
+                        if (amenityBlock instanceof Gate.GateBlock) {
+                            Gate.GateBlock gateBlock = ((Gate.GateBlock) amenityBlock);
+
+                            return !amenityBlock.isAttractor() && !gateBlock.isSpawner();
+                        } else {
+                            return !amenityBlock.isAttractor();
+                        }
                     }
                 } else {
                     if (parent instanceof Gate) {
-                        return !amenityBlock.isAttractor();
+                        if (amenityBlock instanceof Gate.GateBlock) {
+                            Gate.GateBlock gateBlock = ((Gate.GateBlock) amenityBlock);
+
+                            return !amenityBlock.isAttractor() && !gateBlock.isSpawner();
+                        } else {
+                            return !amenityBlock.isAttractor();
+                        }
                     } else {
                         return true;
                     }

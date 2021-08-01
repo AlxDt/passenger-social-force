@@ -2,12 +2,12 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.graphics.amenity.editor.StationGateEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.footprint.GateFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.StationGateGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class StationGate extends Gate {
     private StationGateMode stationGateMode;
 
     // Denotes the direction of passengers this station gate produces
-    private List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections;
+    private final List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections;
 
     // Factory for station gate creation
     public static final StationGateFactory stationGateFactory;
@@ -50,39 +50,43 @@ public class StationGate extends Gate {
         AmenityFootprint.Rotation upView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
-        upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 0,
                 0,
                 StationGate.class,
+                false,
                 true,
                 false
         );
 
-        upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlockN10 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 -1,
                 0,
                 StationGate.class,
+                false,
                 false,
                 true
         );
 
-        upBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlockN11 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 -1,
                 1,
                 StationGate.class,
                 false,
+                false,
                 false
         );
 
-        upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlock01 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 0,
                 1,
                 StationGate.class,
                 true,
+                false,
                 false
         );
 
@@ -102,38 +106,42 @@ public class StationGate extends Gate {
         AmenityFootprint.Rotation rightView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
 
-        rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        rightBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 rightView.getOrientation(),
                 0,
                 0,
                 StationGate.class,
+                false,
                 true,
                 true
         );
 
-        rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        rightBlock01 = new GateFootprint.GateRotation.GateBlockTemplate(
                 rightView.getOrientation(),
                 0,
                 1,
                 StationGate.class,
                 false,
+                false,
                 false
         );
 
-        rightBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        rightBlock10 = new GateFootprint.GateRotation.GateBlockTemplate(
                 rightView.getOrientation(),
                 1,
                 0,
                 StationGate.class,
                 true,
+                false,
                 false
         );
 
-        rightBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        rightBlock11 = new GateFootprint.GateRotation.GateBlockTemplate(
                 rightView.getOrientation(),
                 1,
                 1,
                 StationGate.class,
+                false,
                 false,
                 false
         );
@@ -154,38 +162,42 @@ public class StationGate extends Gate {
         AmenityFootprint.Rotation downView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
 
-        downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        downBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 downView.getOrientation(),
                 0,
                 0,
                 StationGate.class,
+                false,
                 true,
                 false
         );
 
-        downBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        downBlock0N1 = new GateFootprint.GateRotation.GateBlockTemplate(
                 downView.getOrientation(),
                 0,
                 -1,
                 StationGate.class,
                 true,
+                false,
                 true
         );
 
-        downBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        downBlock1N1 = new GateFootprint.GateRotation.GateBlockTemplate(
                 downView.getOrientation(),
                 1,
                 -1,
                 StationGate.class,
                 false,
+                false,
                 false
         );
 
-        downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        downBlock10 = new GateFootprint.GateRotation.GateBlockTemplate(
                 downView.getOrientation(),
                 1,
                 0,
                 StationGate.class,
+                false,
                 false,
                 false
         );
@@ -206,38 +218,42 @@ public class StationGate extends Gate {
         AmenityFootprint.Rotation leftView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
 
-        leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        leftBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 leftView.getOrientation(),
                 0,
                 0,
                 StationGate.class,
+                false,
                 true,
                 false
         );
 
-        leftBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        leftBlockN1N1 = new GateFootprint.GateRotation.GateBlockTemplate(
                 leftView.getOrientation(),
                 -1,
                 -1,
                 StationGate.class,
                 false,
+                false,
                 true
         );
 
-        leftBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        leftBlockN10 = new GateFootprint.GateRotation.GateBlockTemplate(
                 leftView.getOrientation(),
                 -1,
                 0,
                 StationGate.class,
                 true,
+                false,
                 false
         );
 
-        leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        leftBlock0N1 = new GateFootprint.GateRotation.GateBlockTemplate(
                 leftView.getOrientation(),
                 0,
                 -1,
                 StationGate.class,
+                false,
                 false,
                 false
         );
@@ -314,15 +330,22 @@ public class StationGate extends Gate {
     @Override
     // Spawn a passenger in this position
     public Passenger spawnPassenger() {
-        // Check if all attractors in this amenity have no passengers
+        // Check if all attractors and spawners in this amenity have no passengers
         for (AmenityBlock attractor : this.getAttractors()) {
             if (!attractor.getPatch().getPassengers().isEmpty()) {
                 return null;
             }
         }
 
+        for (GateBlock spawner : this.getSpawners()) {
+            if (!spawner.getPatch().getPassengers().isEmpty()) {
+                return null;
+            }
+        }
+
         // TODO: Consider if entrance/exit only
-        AmenityBlock attractor = this.getAttractors().get(0);
+//        AmenityBlock attractor = this.getAttractors().get(0);
+        GateBlock spawner = this.getSpawners().get(0);
 
         // Get the pool of possible travel directions of the passengers to be spawned, depending on the settings of this
         // passenger gate
@@ -330,9 +353,9 @@ public class StationGate extends Gate {
         int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.stationGatePassengerTravelDirections.size());
         TrainDoor.TravelDirection travelDirectionChosen = this.stationGatePassengerTravelDirections.get(randomIndex);
 
-        // If that random attractor is free from passengers, generate one
-        if (attractor.getPatch().getPassengers().isEmpty()) {
-            return Passenger.passengerFactory.create(attractor.getPatch(), travelDirectionChosen);
+        // If that spawner is free from passengers, generate one
+        if (spawner.getPatch().getPassengers().isEmpty()) {
+            return Passenger.passengerFactory.create(spawner.getPatch(), travelDirectionChosen);
         } else {
             // Else, do nothing, so return null
             return null;
@@ -358,29 +381,46 @@ public class StationGate extends Gate {
     }
 
     // Station gate block
-    public static class StationGateBlock extends Amenity.AmenityBlock {
+    public static class StationGateBlock extends Gate.GateBlock {
         public static StationGateBlockFactory stationGateBlockFactory;
 
         static {
             stationGateBlockFactory = new StationGateBlockFactory();
         }
 
-        private StationGateBlock(Patch patch, boolean attractor, boolean hasGraphic) {
-            super(patch, attractor, hasGraphic);
+        private StationGateBlock(Patch patch, boolean attractor, boolean spawner, boolean hasGraphic) {
+            super(patch, attractor, spawner, hasGraphic);
         }
 
         // Station gate block factory
-        public static class StationGateBlockFactory extends Amenity.AmenityBlock.AmenityBlockFactory {
+        public static class StationGateBlockFactory extends Gate.GateBlock.GateBlockFactory {
             @Override
-            public StationGateBlock create(
+            public StationGate.StationGateBlock create(
                     Patch patch,
                     boolean attractor,
                     boolean hasGraphic,
                     AmenityFootprint.Rotation.Orientation... orientation
             ) {
-                return new StationGateBlock(
+                return new StationGate.StationGateBlock(
                         patch,
                         attractor,
+                        false,
+                        hasGraphic
+                );
+            }
+
+            @Override
+            public StationGate.StationGateBlock create(
+                    Patch patch,
+                    boolean attractor,
+                    boolean spawner,
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
+            ) {
+                return new StationGate.StationGateBlock(
+                        patch,
+                        attractor,
+                        spawner,
                         hasGraphic
                 );
             }

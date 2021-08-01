@@ -2,6 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.graphics.amenity.editor.TrainDoorEditor;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.footprint.GateFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.TrainDoorGraphic;
@@ -13,7 +14,6 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
-import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,39 +67,43 @@ public class TrainDoor extends Gate implements Queueable {
         AmenityFootprint.Rotation upView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
-        upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 0,
                 0,
                 TrainDoor.class,
                 true,
+                false,
                 true
         );
 
-        upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlock01 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 0,
                 1,
                 TrainDoor.class,
                 false,
+                true,
                 false
         );
 
-        upBlock02 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlock02 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 0,
                 2,
                 TrainDoor.class,
                 false,
+                true,
                 false
         );
 
-        upBlock03 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlock03 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 0,
                 3,
                 TrainDoor.class,
                 true,
+                false,
                 false
         );
 
@@ -220,14 +224,6 @@ public class TrainDoor extends Gate implements Queueable {
 
     // Get whichever queue object has the shorter queue
     public QueueObject getQueueObject() {
-/*        QueueObject leftQueueObject = this.queueObjects.get(TrainDoorEntranceLocation.LEFT);
-        QueueObject rightQueueObject = this.queueObjects.get(TrainDoorEntranceLocation.RIGHT);
-
-        if (leftQueueObject.getPassengersQueueing().size() <= rightQueueObject.getPassengersQueueing().size()) {
-            return leftQueueObject;
-        } else {
-            return rightQueueObject;
-        }*/
         return null;
     }
 
@@ -402,19 +398,19 @@ public class TrainDoor extends Gate implements Queueable {
     }
 
     // Train door block
-    public static class TrainDoorBlock extends Amenity.AmenityBlock {
+    public static class TrainDoorBlock extends Gate.GateBlock {
         public static TrainDoor.TrainDoorBlock.TrainDoorBlockFactory trainDoorBlockFactory;
 
         static {
             trainDoorBlockFactory = new TrainDoor.TrainDoorBlock.TrainDoorBlockFactory();
         }
 
-        private TrainDoorBlock(Patch patch, boolean attractor, boolean hasGraphic) {
-            super(patch, attractor, hasGraphic);
+        private TrainDoorBlock(Patch patch, boolean attractor, boolean spawner, boolean hasGraphic) {
+            super(patch, attractor, spawner, hasGraphic);
         }
 
         // Train door block factory
-        public static class TrainDoorBlockFactory extends Amenity.AmenityBlock.AmenityBlockFactory {
+        public static class TrainDoorBlockFactory extends Gate.GateBlock.GateBlockFactory {
             @Override
             public TrainDoor.TrainDoorBlock create(
                     Patch patch,
@@ -425,6 +421,23 @@ public class TrainDoor extends Gate implements Queueable {
                 return new TrainDoor.TrainDoorBlock(
                         patch,
                         attractor,
+                        false,
+                        hasGraphic
+                );
+            }
+
+            @Override
+            public TrainDoor.TrainDoorBlock create(
+                    Patch patch,
+                    boolean attractor,
+                    boolean spawner,
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
+            ) {
+                return new TrainDoor.TrainDoorBlock(
+                        patch,
+                        attractor,
+                        spawner,
                         hasGraphic
                 );
             }

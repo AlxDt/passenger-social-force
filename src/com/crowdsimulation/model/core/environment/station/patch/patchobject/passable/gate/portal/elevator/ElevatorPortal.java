@@ -2,6 +2,7 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.footprint.GateFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.ElevatorGraphic;
@@ -11,9 +12,10 @@ import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,39 +62,43 @@ public class ElevatorPortal extends Portal implements Queueable {
         AmenityFootprint.Rotation upView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.UP);
 
-        upBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 0,
                 0,
                 ElevatorPortal.class,
+                false,
                 true,
                 false
         );
 
-        upBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlockN10 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 -1,
                 0,
                 ElevatorPortal.class,
+                false,
                 false,
                 true
         );
 
-        upBlockN11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlockN11 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 -1,
                 1,
                 ElevatorPortal.class,
                 false,
+                false,
                 false
         );
 
-        upBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        upBlock01 = new GateFootprint.GateRotation.GateBlockTemplate(
                 upView.getOrientation(),
                 0,
                 1,
                 ElevatorPortal.class,
                 true,
+                false,
                 false
         );
 
@@ -112,38 +118,42 @@ public class ElevatorPortal extends Portal implements Queueable {
         AmenityFootprint.Rotation rightView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.RIGHT);
 
-        rightBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        rightBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 rightView.getOrientation(),
                 0,
                 0,
                 ElevatorPortal.class,
+                false,
                 true,
                 true
         );
 
-        rightBlock01 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        rightBlock01 = new GateFootprint.GateRotation.GateBlockTemplate(
                 rightView.getOrientation(),
                 0,
                 1,
                 ElevatorPortal.class,
                 false,
+                false,
                 false
         );
 
-        rightBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        rightBlock10 = new GateFootprint.GateRotation.GateBlockTemplate(
                 rightView.getOrientation(),
                 1,
                 0,
                 ElevatorPortal.class,
                 true,
+                false,
                 false
         );
 
-        rightBlock11 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        rightBlock11 = new GateFootprint.GateRotation.GateBlockTemplate(
                 rightView.getOrientation(),
                 1,
                 1,
                 ElevatorPortal.class,
+                false,
                 false,
                 false
         );
@@ -164,38 +174,42 @@ public class ElevatorPortal extends Portal implements Queueable {
         AmenityFootprint.Rotation downView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.DOWN);
 
-        downBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        downBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 downView.getOrientation(),
                 0,
                 0,
                 ElevatorPortal.class,
+                false,
                 true,
                 false
         );
 
-        downBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        downBlock0N1 = new GateFootprint.GateRotation.GateBlockTemplate(
                 downView.getOrientation(),
                 0,
                 -1,
                 ElevatorPortal.class,
                 true,
+                false,
                 true
         );
 
-        downBlock1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        downBlock1N1 = new GateFootprint.GateRotation.GateBlockTemplate(
                 downView.getOrientation(),
                 1,
                 -1,
                 ElevatorPortal.class,
                 false,
+                false,
                 false
         );
 
-        downBlock10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        downBlock10 = new GateFootprint.GateRotation.GateBlockTemplate(
                 downView.getOrientation(),
                 1,
                 0,
                 ElevatorPortal.class,
+                false,
                 false,
                 false
         );
@@ -216,38 +230,42 @@ public class ElevatorPortal extends Portal implements Queueable {
         AmenityFootprint.Rotation leftView
                 = new AmenityFootprint.Rotation(AmenityFootprint.Rotation.Orientation.LEFT);
 
-        leftBlock00 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        leftBlock00 = new GateFootprint.GateRotation.GateBlockTemplate(
                 leftView.getOrientation(),
                 0,
                 0,
                 ElevatorPortal.class,
+                false,
                 true,
                 false
         );
 
-        leftBlockN1N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        leftBlockN1N1 = new GateFootprint.GateRotation.GateBlockTemplate(
                 leftView.getOrientation(),
                 -1,
                 -1,
                 ElevatorPortal.class,
                 false,
+                false,
                 true
         );
 
-        leftBlockN10 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        leftBlockN10 = new GateFootprint.GateRotation.GateBlockTemplate(
                 leftView.getOrientation(),
                 -1,
                 0,
                 ElevatorPortal.class,
                 true,
+                false,
                 false
         );
 
-        leftBlock0N1 = new AmenityFootprint.Rotation.AmenityBlockTemplate(
+        leftBlock0N1 = new GateFootprint.GateRotation.GateBlockTemplate(
                 leftView.getOrientation(),
                 0,
                 -1,
                 ElevatorPortal.class,
+                false,
                 false,
                 false
         );
@@ -418,19 +436,19 @@ public class ElevatorPortal extends Portal implements Queueable {
     }
 
     // Elevator portal block
-    public static class ElevatorPortalBlock extends Amenity.AmenityBlock {
+    public static class ElevatorPortalBlock extends Gate.GateBlock {
         public static ElevatorPortal.ElevatorPortalBlock.ElevatorPortalBlockFactory elevatorPortalBlockFactory;
 
         static {
             elevatorPortalBlockFactory = new ElevatorPortal.ElevatorPortalBlock.ElevatorPortalBlockFactory();
         }
 
-        private ElevatorPortalBlock(Patch patch, boolean attractor, boolean hasGraphic) {
-            super(patch, attractor, hasGraphic);
+        private ElevatorPortalBlock(Patch patch, boolean attractor, boolean spawner, boolean hasGraphic) {
+            super(patch, attractor, spawner, hasGraphic);
         }
 
         // Elevator portal block factory
-        public static class ElevatorPortalBlockFactory extends Amenity.AmenityBlock.AmenityBlockFactory {
+        public static class ElevatorPortalBlockFactory extends Gate.GateBlock.GateBlockFactory {
             @Override
             public ElevatorPortal.ElevatorPortalBlock create(
                     Patch patch,
@@ -441,6 +459,23 @@ public class ElevatorPortal extends Portal implements Queueable {
                 return new ElevatorPortal.ElevatorPortalBlock(
                         patch,
                         attractor,
+                        false,
+                        hasGraphic
+                );
+            }
+
+            @Override
+            public ElevatorPortal.ElevatorPortalBlock create(
+                    Patch patch,
+                    boolean attractor,
+                    boolean spawner,
+                    boolean hasGraphic,
+                    AmenityFootprint.Rotation.Orientation... orientation
+            ) {
+                return new ElevatorPortal.ElevatorPortalBlock(
+                        patch,
+                        attractor,
+                        spawner,
                         hasGraphic
                 );
             }

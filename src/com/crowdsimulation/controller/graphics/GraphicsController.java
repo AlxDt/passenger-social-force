@@ -4,6 +4,7 @@ import com.crowdsimulation.controller.Controller;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
 import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprint;
+import com.crowdsimulation.controller.graphics.amenity.footprint.GateFootprint;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphic;
@@ -1262,7 +1263,8 @@ public class GraphicsController extends Controller {
         GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
 
         Color markingColor = Color.hsb(0, 0, 0.25, 0.5);
-        Color extraMarkingColor = Color.hsb(30, 1.0, 0.5, 0.5);
+        Color attractorColor = Color.hsb(30, 1.0, 0.5, 0.5);
+        Color spawnerColor = Color.hsb(90, 1.0, 0.5, 0.5);
         Color strokeColor = Color.hsb(0, 0, 0.25, 0.1);
 
         // Draw the markings at that patch location
@@ -1285,11 +1287,22 @@ public class GraphicsController extends Controller {
                         int patchRow = cursorRow + amenityBlockTemplate.getOffset().getRowOffset();
                         int patchColumn = cursorColumn + amenityBlockTemplate.getOffset().getColumnOffset();
 
-                        // If there is an attractor on this patch, draw a different color
-                        if (!amenityBlockTemplate.isAttractor()) {
-                            graphicsContext.setFill(markingColor);
+                        // If there is an attractor or spawner on this patch, draw a different color
+                        if (amenityBlockTemplate.isAttractor()) {
+                            graphicsContext.setFill(attractorColor);
                         } else {
-                            graphicsContext.setFill(extraMarkingColor);
+                            if (amenityBlockTemplate instanceof GateFootprint.GateRotation.GateBlockTemplate) {
+                                GateFootprint.GateRotation.GateBlockTemplate gateBlockTemplate
+                                        = ((GateFootprint.GateRotation.GateBlockTemplate) amenityBlockTemplate);
+
+                                if (gateBlockTemplate.isSpawner()) {
+                                    graphicsContext.setFill(spawnerColor);
+                                } else {
+                                    graphicsContext.setFill(markingColor);
+                                }
+                            } else {
+                                graphicsContext.setFill(markingColor);
+                            }
                         }
 
                         // Draw the rectangle there

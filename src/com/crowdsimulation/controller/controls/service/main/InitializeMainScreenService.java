@@ -475,7 +475,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(
                         1,
                         100,
-                        50)
+                        10)
         );
 
         stationGateEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);

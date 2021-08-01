@@ -5,6 +5,7 @@ import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class TrainDoorEditor {
             List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
-                = Amenity.AmenityBlock.convertToAmenityBlocks(
+                = Gate.GateBlock.convertToGateBlocks(
                 currentPatch,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation()
                         .getAmenityBlockTemplates()

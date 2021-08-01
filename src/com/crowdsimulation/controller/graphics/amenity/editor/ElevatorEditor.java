@@ -5,6 +5,7 @@ import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 
@@ -40,7 +41,7 @@ public class ElevatorEditor extends AmenityEditor {
             ElevatorShaft elevatorShaft
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
-                = Amenity.AmenityBlock.convertToAmenityBlocks(
+                = Gate.GateBlock.convertToGateBlocks(
                 currentPatch,
                 GraphicsController.currentAmenityFootprint.getCurrentRotation()
                         .getAmenityBlockTemplates()
