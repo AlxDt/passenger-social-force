@@ -25,7 +25,10 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -446,15 +449,25 @@ public class Simulator {
         // Generate a number from 0.0 to 1.0
         double randomNumber;
 
+        // Spawn boarding passengers from the station gate
         for (StationGate stationGate : floor.getStationGates()) {
             randomNumber = RANDOM_NUMBER_GENERATOR.nextDouble();
 
             // Only deal with station gates which have entrances
-            if (stationGate.getStationGateMode() != StationGate.StationGateMode.EXIT) {
+            if (
+                    stationGate.isEnabled()
+                            && stationGate.getStationGateMode() != StationGate.StationGateMode.EXIT
+            ) {
                 // Spawn passengers depending on the spawn frequency of the station gate
                 if (stationGate.getChancePerSecond() > randomNumber) {
                     spawnPassenger(floor, stationGate);
                 }
+            }
+        }
+
+        // Spawn alighting passengers from the train doors
+        for (TrainDoor trainDoor : floor.getTrainDoors()) {
+            if (trainDoor.isOpen()) {
             }
         }
 
@@ -532,8 +545,22 @@ public class Simulator {
                                         passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
                                         state = PassengerMovement.State.IN_QUEUE;
 
-                                        passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
-                                        action = PassengerMovement.Action.QUEUEING;
+                                        if (passengerMovement.isNextAmenityTrainDoor()) {
+                                            passengerMovement.setAction(PassengerMovement.Action.WAITING_FOR_TRAIN);
+                                            action = PassengerMovement.Action.WAITING_FOR_TRAIN;
+                                        } else {
+                                            passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
+                                            action = PassengerMovement.Action.QUEUEING;
+                                        }
+
+                                        // If this passenger is a stored value card holder, signal that there will be
+                                        // no more need to pathfind
+                                        if (
+                                                passengerMovement.getParent().getTicketType()
+                                                        == TicketBooth.TicketType.STORED_VALUE
+                                        ) {
+                                            passengerMovement.endStoredValuePathfinding();
+                                        }
                                     }
                                 } else {
                                     // If the passenger has reached its non-queueable goal, transition into the appropriate
@@ -725,8 +752,13 @@ public class Simulator {
                             // If the passenger has reached the patch with the nearest floor field value, transition
                             // into the "queueing" action
                             if (passengerMovement.hasReachedQueueingFloorField()) {
-                                passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
-                                action = PassengerMovement.Action.QUEUEING;
+                                if (passengerMovement.isNextAmenityTrainDoor()) {
+                                    passengerMovement.setAction(PassengerMovement.Action.WAITING_FOR_TRAIN);
+                                    action = PassengerMovement.Action.WAITING_FOR_TRAIN;
+                                } else {
+                                    passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
+                                    action = PassengerMovement.Action.QUEUEING;
+                                }
                             }
 
                             // Check if this passenger has not encountered a queueing passenger anymore
@@ -789,6 +821,106 @@ public class Simulator {
                                     passengerMovement.stop();
                                 }
                             }
+                        } else if (action == PassengerMovement.Action.WAITING_FOR_TRAIN) {
+                            if (passengerMovement.isReadyToFree()) {
+                                // Then this passenger will not be stuck anymore
+                                passengerMovement.free();
+                            }
+
+//                            // Have the passenger waiting for the amenity to be vacant
+//                            // TODO: Add waiting for turn state
+//                            passengerMovement.beginWaitingOnAmenity();
+//
+//                            // Check first if the goal of this passenger is not currently serving other passengers
+//                            // If it is, the passenger will now transition into the "heading to queueable" action
+//                            // Do nothing if there is another passenger still being serviced
+//                            if (passengerMovement.isGoalFree()/* && passengerMovement.isAtQueueFront()*/) {
+//                                // The amenity is vacant, so no need to wait anymore
+//                                passengerMovement.endWaitingOnAmenity();
+//
+//                                // Have the amenity mark this passenger as the one to be served next
+//                                passengerMovement.beginServicingThisPassenger();
+
+                            if (passengerMovement.willEnterTrain()) {
+                                // Check first if the goal of this passenger is not currently serving other passengers
+                                // If it is, the passenger will now transition into the "heading to queueable" action
+                                // Do nothing if there is another passenger still being serviced
+//                                if (passengerMovement.isGoalFree()/* && passengerMovement.isAtQueueFront()*/) {
+                                // The amenity is vacant, so no need to wait anymore
+//                                passengerMovement.endWaitingOnAmenity();
+
+                                // Have the amenity mark this passenger as the one to be served next
+                                passengerMovement.beginServicingThisPassenger();
+
+                                passengerMovement.setAction(PassengerMovement.Action.HEADING_TO_TRAIN_DOOR);
+                                action = PassengerMovement.Action.HEADING_TO_TRAIN_DOOR;
+
+                                // Then this passenger will not be stuck anymore
+                                passengerMovement.free();
+//                                } else {
+//                                    // Just stop and wait
+//                                    passengerMovement.stop();
+//                                }
+                            } else {
+                                // In its neighboring patches, look for the patch with the highest floor field
+                                passengerMovement.chooseBestQueueingPatch();
+
+                                // Make this passenger face that patch
+                                passengerMovement.faceNextPosition();
+
+                                // Move towards that patch
+                                passengerMovement.moveSocialForce();
+                            }
+
+                            ////
+
+/*                            // The passenger is still queueing, so follow the path set by the floor field and its values
+                            // Only move if the passenger is not waiting for the amenity to be vacant
+                            if (!passengerMovement.isWaitingOnAmenity()) {
+                                // In its neighboring patches, look for the patch with the highest floor field
+                                passengerMovement.chooseBestQueueingPatch();
+
+                                // Make this passenger face that patch
+                                passengerMovement.faceNextPosition();
+
+                                // Move towards that patch
+                                passengerMovement.moveSocialForce();
+                            }
+
+                            if (passengerMovement.isReadyToFree()) {
+                                // Then this passenger will not be stuck anymore
+                                passengerMovement.free();
+                            }
+
+                            // Check if the passenger is on one of the current floor field's apices
+                            // If not, keep following the floor field until it is reached
+                            if (passengerMovement.hasReachedQueueingFloorFieldApex()) {
+                                // Have the passenger waiting for the amenity to be vacant
+                                // TODO: Add waiting for turn state
+                                passengerMovement.beginWaitingOnAmenity();
+
+                                if (passengerMovement.willEnterTrain()) {
+                                    // Check first if the goal of this passenger is not currently serving other passengers
+                                    // If it is, the passenger will now transition into the "heading to queueable" action
+                                    // Do nothing if there is another passenger still being serviced
+                                    if (passengerMovement.isGoalFree()*//* && passengerMovement.isAtQueueFront()*//*) {
+                                        // The amenity is vacant, so no need to wait anymore
+                                        passengerMovement.endWaitingOnAmenity();
+
+                                        // Have the amenity mark this passenger as the one to be served next
+                                        passengerMovement.beginServicingThisPassenger();
+
+                                        passengerMovement.setAction(PassengerMovement.Action.HEADING_TO_QUEUEABLE);
+                                        action = PassengerMovement.Action.HEADING_TO_QUEUEABLE;
+
+                                        // Then this passenger will not be stuck anymore
+                                        passengerMovement.free();
+                                    } else {
+                                        // Just stop and wait
+                                        passengerMovement.stop();
+                                    }
+                                }
+                            }*/
                         } else if (action == PassengerMovement.Action.HEADING_TO_QUEUEABLE) {
                             // Check if the passenger is now in the goal
                             if (passengerMovement.hasReachedGoal()) {
@@ -809,16 +941,8 @@ public class Simulator {
                                         action = PassengerMovement.Action.USING_TICKET;
                                     }
                                 } else {
-                                    // Either the next goal is a train door, or an elevator
-                                    if (passengerMovement.getGoalAmenity() instanceof TrainDoor) {
-                                        // TODO: Wait until open train door button is set
-                                        // Transition into the "in queueable" state and the appropriate action
-                                        passengerMovement.setState(PassengerMovement.State.IN_QUEUEABLE);
-                                        state = PassengerMovement.State.IN_NONQUEUEABLE;
-
-                                        passengerMovement.setAction(PassengerMovement.Action.BOARDING_TRAIN);
-                                        action = PassengerMovement.Action.BOARDING_TRAIN;
-                                    } else if (passengerMovement.getGoalAmenity() instanceof ElevatorPortal) {
+                                    // Either the next goal is an elevator
+                                    if (passengerMovement.getGoalAmenity() instanceof ElevatorPortal) {
                                         // TODO: The next goal is an elevator, so change to the appropriate actions and
                                         // states
                                     }
@@ -831,28 +955,63 @@ public class Simulator {
                                 passengerMovement.faceNextPosition();
 
                                 // Then make the passenger move towards that goal
-//                        passengerMovement.attemptMovement();
                                 passengerMovement.moveSocialForce();
+                            }
+                        } else if (action == PassengerMovement.Action.HEADING_TO_TRAIN_DOOR) {
+                            // Check if the passenger is now in the goal
+                            if (passengerMovement.hasReachedGoal()) {
+                                if (passengerMovement.willEnterTrain()) {
+                                    // Transition into the "in queueable" state and the appropriate action
+                                    passengerMovement.setState(PassengerMovement.State.IN_QUEUEABLE);
+                                    state = PassengerMovement.State.IN_NONQUEUEABLE;
+
+                                    passengerMovement.setAction(PassengerMovement.Action.BOARDING_TRAIN);
+                                    action = PassengerMovement.Action.BOARDING_TRAIN;
+                                } else {
+                                    passengerMovement.endServicingThisPassenger();
+
+                                    // The train door has closed, so revert to waiting for a train
+                                    passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
+                                    state = PassengerMovement.State.IN_QUEUE;
+
+                                    passengerMovement.setAction(PassengerMovement.Action.WAITING_FOR_TRAIN);
+                                    action = PassengerMovement.Action.WAITING_FOR_TRAIN;
+                                }
+                            } else {
+                                if (passengerMovement.willEnterTrain()) {
+                                    // The passenger has exited its goal's floor field and is now headed to the goal itself
+                                    passengerMovement.chooseGoal();
+
+                                    // Make this passenger face the set goal, or its queueing area
+                                    passengerMovement.faceNextPosition();
+
+                                    // Then make the passenger move towards that goal
+                                    passengerMovement.moveSocialForce();
+                                } else {
+                                    passengerMovement.endServicingThisPassenger();
+
+                                    // The train door has closed, so revert to waiting for a train
+                                    passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
+                                    state = PassengerMovement.State.IN_QUEUE;
+
+                                    passengerMovement.setAction(PassengerMovement.Action.WAITING_FOR_TRAIN);
+                                    action = PassengerMovement.Action.WAITING_FOR_TRAIN;
+                                }
                             }
                         }
                     case IN_QUEUEABLE:
                         if (action == PassengerMovement.Action.BOARDING_TRAIN) {
-                            // Check if the passenger is willing to enter the train doors
-                            // If it is, despawn the passenger
-                            // If not, wait for an additional second
-                            if (passengerMovement.willEnterTrain()) {
-                                // Have the passenger set its current goal
-                                passengerMovement.reachGoal();
+                            // Have this passenger's goal wrap up serving this passenger
+                            passengerMovement.endServicingThisPassenger();
 
-                                // Have this passenger's goal wrap up serving this passenger
-                                passengerMovement.endServicingThisPassenger();
+                            // Leave the queue
+                            passengerMovement.leaveQueue();
 
-                                // Leave the queue
-                                passengerMovement.leaveQueue();
+                            // Have the passenger set its current goal
+                            passengerMovement.reachGoal();
 
-                                // Then have this passenger marked for despawning
-                                this.passengersToDespawn.add(passenger);
-                            }
+                            // Then have this passenger marked for despawning
+                            this.passengersToDespawn.add(passenger);
                         } else if (
                                 action == PassengerMovement.Action.ASCENDING
                                         || action == PassengerMovement.Action.DESCENDING
@@ -873,7 +1032,7 @@ public class Simulator {
                             // Check if the passenger is allowed passage by the goal
                             // If it is, proceed to the next state
                             // If not, wait for an additional second
-                            if (passengerMovement.isAllowedPass()) {
+                            if (passengerMovement.isAllowedPass() && passengerMovement.isFirstStepPositionFree()) {
                                 // Have this passenger's goal wrap up serving this passenger
                                 passengerMovement.endServicingThisPassenger();
 

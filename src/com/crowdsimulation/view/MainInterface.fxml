@@ -493,9 +493,9 @@
                               </VBox>
                            </content>
                         </TitledPane>
-                        <TitledPane animated="false" collapsible="false" prefHeight="214.0" prefWidth="286.0" text="Passengers">
+                        <TitledPane animated="false" collapsible="false" prefHeight="163.0" prefWidth="250.0" text="Passengers">
                            <content>
-                              <VBox prefHeight="200.0" prefWidth="100.0">
+                              <VBox prefHeight="200.0" prefWidth="248.0">
                                  <children>
                                     <VBox alignment="CENTER" prefHeight="70.0" prefWidth="230.0" spacing="10.0">
                                        <children>
@@ -512,12 +512,6 @@
                                           </HBox>
                                           <Button fx:id="clearPassengersFloorButton" layoutX="11.0" layoutY="63.0" mnemonicParsing="false" onAction="#clearPassengersFloorAction" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers in this floor" />
                                           <HBox alignment="CENTER" layoutX="10.0" layoutY="37.0" prefHeight="100.0" prefWidth="200.0" />
-                                          <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
-                                             <children>
-                                                <Label fx:id="walkingSpeedLabel" prefHeight="17.0" prefWidth="133.0" text="Walking speed (m/s):" />
-                                                <Slider fx:id="walkingSpeedSlider" blockIncrement="0.1" majorTickUnit="0.5" max="2.0" min="0.5" minorTickCount="1" prefHeight="38.0" prefWidth="126.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="1.0" />
-                                             </children>
-                                          </HBox>
                                        </children>
                                     </VBox>
                                  </children>
@@ -540,6 +534,11 @@
                                              <children>
                                                 <Label text="Carriages:" />
                                                 <ChoiceBox prefHeight="25.0" prefWidth="164.0" />
+                                             </children>
+                                          </HBox>
+                                          <HBox alignment="CENTER" layoutX="10.0" layoutY="45.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                             <children>
+                                                <CheckBox fx:id="disciplinedCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="231.0" text="Disciplined queueing" />
                                              </children>
                                           </HBox>
                                           <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="30.0" prefWidth="230.0" spacing="10.0">

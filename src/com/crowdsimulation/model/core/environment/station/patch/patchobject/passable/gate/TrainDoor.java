@@ -13,6 +13,7 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -374,6 +375,30 @@ public class TrainDoor extends Gate implements Queueable {
     @Override
     public Passenger spawnPassenger() {
         return null;
+/*        // TODO: Spawn from spawners
+        // Check if all attractors in this amenity have no passengers
+        for (AmenityBlock attractor : this.getAttractors()) {
+            if (!attractor.getPatch().getPassengers().isEmpty()) {
+                return null;
+            }
+        }
+
+        // TODO: Consider if entrance/exit only
+        AmenityBlock attractor = this.getAttractors().get(0);
+
+        // Get the pool of possible travel directions of the passengers to be spawned, depending on the settings of this
+        // passenger gate
+        // From this pool of travel directions, pick a random one
+        int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.stationGatePassengerTravelDirections.size());
+        TrainDoor.TravelDirection travelDirectionChosen = this.stationGatePassengerTravelDirections.get(randomIndex);
+
+        // If that random attractor is free from passengers, generate one
+        if (attractor.getPatch().getPassengers().isEmpty()) {
+            return Passenger.passengerFactory.create(attractor.getPatch(), travelDirectionChosen);
+        } else {
+            // Else, do nothing, so return null
+            return null;
+        }*/
     }
 
     // Train door block

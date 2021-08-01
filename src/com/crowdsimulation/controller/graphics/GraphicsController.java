@@ -30,6 +30,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.position.Location;
 import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
+import com.crowdsimulation.model.core.environment.station.patch.position.Vector;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -554,7 +555,7 @@ public class GraphicsController extends Controller {
                         );
                     }*/
 
-                    // Draw passenger patches in field of view
+/*                    // Draw passenger patches in field of view
                     if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
                         foregroundGraphicsContext.setGlobalAlpha(0.25);
                         foregroundGraphicsContext.setFill(Color.LIGHTGREEN);
@@ -571,9 +572,9 @@ public class GraphicsController extends Controller {
                         }
 
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
-                    }
+                    }*/
 
-                    foregroundGraphicsContext.setFill(Color.VIOLET);
+/*                    foregroundGraphicsContext.setFill(Color.VIOLET);
 
                     Patch chosenQueueingPatch = passenger.getPassengerMovement().getChosenQueueingPatch();
 
@@ -590,11 +591,11 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.strokeText(
                                 passenger.getIdentifier() + "",
                                 chosenQueueingPatch.getPatchCenterCoordinates().getX()
-                                        / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+                                        / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25,
                                 chosenQueueingPatch.getPatchCenterCoordinates().getY()
-                                        / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5
+                                        / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25
                         );
-                    }
+                    }*/
 
 /*                    // Draw passenger patches in field of view
                     if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
@@ -684,7 +685,6 @@ public class GraphicsController extends Controller {
                             tileSize
                     );*/
 
-/*
                     foregroundGraphicsContext.setGlobalAlpha(1.0);
 
                     // Show the status of the passenger through the color of its bounds
@@ -699,7 +699,7 @@ public class GraphicsController extends Controller {
 
                                 break;
                             case QUEUEING:
-                                foregroundGraphicsContext.setFill(Color.ORANGE);
+                                foregroundGraphicsContext.setFill(Color.DARKORANGE);
 
                                 break;
                             case HEADING_TO_QUEUEABLE:
@@ -710,6 +710,14 @@ public class GraphicsController extends Controller {
                             case TRANSACTING_TICKET:
                             case USING_TICKET:
                                 foregroundGraphicsContext.setFill(Color.GREEN);
+
+                                break;
+                            case WAITING_FOR_TRAIN:
+                                foregroundGraphicsContext.setFill(Color.GOLD);
+
+                                break;
+                            case HEADING_TO_TRAIN_DOOR:
+                                foregroundGraphicsContext.setFill(Color.YELLOWGREEN);
 
                                 break;
                             default:
@@ -745,7 +753,6 @@ public class GraphicsController extends Controller {
                     }
 
                     foregroundGraphicsContext.setGlobalAlpha(1.0);
-*/
 
                     // Draw the passenger sprite
                     foregroundGraphicsContext.drawImage(
@@ -762,7 +769,7 @@ public class GraphicsController extends Controller {
                             tileSize * 2 + tileSize * 0.25
                     );
 
-/*                    // Draw vectors
+                    // Draw vectors
                     foregroundGraphicsContext.setStroke(Color.RED);
 
                     final double vectorHeadDiameter = 0.1 * tileSize;
@@ -865,7 +872,7 @@ public class GraphicsController extends Controller {
                                 vectorHeadDiameter,
                                 vectorHeadDiameter
                         );
-                    }*/
+                    }
                 }
             }
         }

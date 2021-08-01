@@ -8,6 +8,7 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.Queue
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
@@ -159,6 +160,9 @@ public class PassengerMovement {
     // Denotes whether this passenger should take a step forward after it left its goal
     private boolean shouldStepForward;
 
+    // Denotes whether this passenger should stop and wait at the platform
+    private boolean shouldStopAtPlatform;
+
     // Denotes the patches to explore for obstacles or passengers
     private List<Patch> toExplore;
     private Patch chosenQueueingPatch;
@@ -270,10 +274,7 @@ public class PassengerMovement {
             SortedSet<Patch> previousPatchSet = previousPatch.getFloor().getPassengerPatchSet();
             SortedSet<Patch> newPatchSet = newPatch.getFloor().getPassengerPatchSet();
 
-            if (
-                    previousPatchSet.contains(previousPatch)
-                            && previousPatch.getPassengers().isEmpty()
-            ) {
+            if (previousPatchSet.contains(previousPatch) && hasNoPassenger(previousPatch)) {
                 previousPatchSet.remove(previousPatch);
             }
 
@@ -628,6 +629,11 @@ public class PassengerMovement {
         return Goal.isGoal(this.goalAmenity);
     }
 
+    // Check whether the current goal amenity is a train door or not
+    public boolean isNextAmenityTrainDoor() {
+        return TrainDoor.isTrainDoor(this.goalAmenity);
+    }
+
     // Check whether the passenger has just left the goal (if the passenger is at a certain number of ticks since
     // leaving the goal)
     public boolean hasJustLeftGoal() {
@@ -665,6 +671,9 @@ public class PassengerMovement {
 
         // Set whether this passenger is set to step forward
         this.shouldStepForward = shouldStepForwardFirst;
+
+        // The passenger will not stop at the platform yet
+        this.shouldStopAtPlatform = false;
 
         // This passenger is not following anyone yet
         this.passengerFollowedWhenAssembling = null;
@@ -716,8 +725,16 @@ public class PassengerMovement {
             HashMap<Amenity.AmenityBlock, Double> distancesToAttractors = new HashMap<>();
 
             for (Amenity amenity : amenityListInFloor) {
+                // Only considered enabled amenities
+                NonObstacle nonObstacle = ((NonObstacle) amenity);
+
+                // Only consider enabled amenities
+                if (!nonObstacle.isEnabled()) {
+                    continue;
+                }
+
+                // Only consider train doors which match this passenger's travel direction
                 if (amenity instanceof TrainDoor) {
-                    // Only consider train doors which match this passenger's travel direction
                     TrainDoor trainDoor = ((TrainDoor) amenity);
 
                     if (trainDoor.getPlatform() != this.travelDirection) {
@@ -773,7 +790,7 @@ public class PassengerMovement {
                 double attractorScore;
 
                 if (!(currentAmenity instanceof Security)) {
-                    final double passengerPenalty = 1.5;
+                    final double passengerPenalty = (currentAmenity instanceof TrainDoor) ? 10.0 : 5.0;
 
                     attractorScore
                             = candidateDistance + currentQueueObject.getPassengersQueueing().size() * passengerPenalty;
@@ -997,7 +1014,7 @@ public class PassengerMovement {
         List<Patch> patchesToExplore
                 = Floor.get7x7Field(this.currentPatch, this.proposedHeading, true, Math.toRadians(360.0));
 
-//        this.toExplore = patchesToExplore;
+        this.toExplore = patchesToExplore;
 
         // Clear vectors from the previous computations
         this.repulsiveForceFromPassengers.clear();
@@ -1039,36 +1056,300 @@ public class PassengerMovement {
             // Compute for the proposed future position
             proposedNewPosition = this.getFuturePosition(this.preferredWalkingDistance);
 
-            // If this passenger is queueing, the only social forces that apply are attractive forces to passengers
-            // and obstacles (if not in queueing action)
-            if (this.state == State.IN_QUEUE) {
-                // Do not check for stuckness when already heading to the queueable
-                if (this.action != Action.HEADING_TO_QUEUEABLE) {
+            boolean willEnterTrain = this.isNextAmenityTrainDoor() && this.willEnterTrain();
+
+            if (willEnterTrain && this.shouldStopAtPlatform) {
+                this.shouldStopAtPlatform = false;
+            }
+
+            if (!this.shouldStopAtPlatform) {
+                // If this passenger is queueing, the only social forces that apply are attractive forces to passengers
+                // and obstacles (if not in queueing action)
+                if (
+                        !willEnterTrain && this.state == State.IN_QUEUE
+                ) {
+                    // Do not check for stuckness when already heading to the queueable
+                    if (this.action != Action.HEADING_TO_QUEUEABLE) {
+                        // If the passenger hasn't already been moving for a while, consider the passenger stuck, and implement some
+                        // measures to free this passenger
+                        if (
+                                this.isStuck
+                                        || (
+                                        this.action != Action.WAITING_FOR_TRAIN
+                                                && this.hasNoPassenger(
+                                                this.goalAttractor.getPatch()
+                                        ) && (
+                                                this.isAtQueueFront() || this.isServicedByGoal()
+                                        )
+                                ) && this.noMovementCounter > noMovementTicksThreshold
+                            /*&& this.parent.getTicketType() != TicketBooth.TicketType.STORED_VALUE*/
+                        ) {
+                            this.isStuck = true;
+                            this.stuckCounter++;
+                        }/* else {
+                        this.isReadyToFree = true;
+                    }*/
+                    }
+
+                    // Get the passengers within the current field of view in these patches
+                    // If there are any other passengers within this field of view, this passenger is at least guaranteed to
+                    // slow down
+                    TreeMap<Double, Passenger> passengersWithinFieldOfView = new TreeMap<>();
+
+                    // Look around the patches that fall on the passenger's field of view
+                    for (Patch patch : patchesToExplore) {
+                        // Do not apply social forces from obstacles if the passenger is in the queueing action, i.e., when the
+                        // passenger is following a floor field
+                        // If this patch has an obstacle, take note of it to add a repulsive force from it later
+                        if (this.action != Action.QUEUEING) {
+                            Amenity.AmenityBlock patchAmenityBlock = patch.getAmenityBlock();
+
+                            // Get the distance between this passenger and the obstacle on this patch
+                            if (hasObstacle(patch)) {
+                                // Take note of the obstacle density in this area
+                                numberOfObstacles++;
+
+                                // If the distance is less than or equal to the specified minimum repulsion distance, compute
+                                // for the magnitude of the repulsion force
+                                double distanceToObstacle = Coordinates.distance(
+                                        this.position,
+                                        patchAmenityBlock.getPatch().getPatchCenterCoordinates()
+                                );
+
+                                if (
+                                        distanceToObstacle <= slowdownStartDistance/*
+                                            && !patchAmenityBlock.isAttractor()*/
+                                ) {
+                                    obstaclesEncountered.put(distanceToObstacle, patchAmenityBlock);
+                                }
+                            }
+                        }
+
+                        if (!this.isStuck) {
+                            for (Passenger otherPassenger : patch.getPassengers()) {
+                                // Make sure that the passenger discovered isn't itself
+                                if (!otherPassenger.equals(this.getParent())) {
+                                    if (!this.hasEncounteredAnyQueueingPassenger && otherPassenger.getPassengerMovement().getState() == State.IN_QUEUE) {
+                                        this.hasEncounteredAnyQueueingPassenger = true;
+                                    }
+
+                                    if (
+                                            this.action != Action.HEADING_TO_QUEUEABLE
+//                                        otherPassenger.getPassengerMovement().getState() == State.WALKING
+//                                                || this.action != Action.HEADING_TO_QUEUEABLE
+//                                                && otherPassenger.getPassengerMovement().getGoalAmenity() != null && otherPassenger.getPassengerMovement().getGoalAmenity().equals(this.getGoalAmenity())
+//                                                && (this.passengerFollowedWhenAssembling == null || this.passengerFollowedWhenAssembling.equals(otherPassenger))
+                                    ) {
+                                        // Take note of the passenger density in this area
+                                        numberOfPassengers++;
+
+                                        // Check if this passenger is within the field of view and within the slowdown distance
+                                        double distanceToPassenger = Coordinates.distance(
+                                                this.position,
+                                                otherPassenger.getPassengerMovement().getPosition()
+                                        );
+
+                                        if (Coordinates.isWithinFieldOfView(
+                                                this.position,
+                                                otherPassenger.getPassengerMovement().getPosition(),
+                                                this.proposedHeading,
+                                                this.fieldOfViewAngle)
+                                                && distanceToPassenger <= slowdownStartDistance) {
+                                            passengersWithinFieldOfView.put(distanceToPassenger, otherPassenger);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Compute the perceived density of the passengers
+                    // Assuming the maximum density a passenger sees within its environment is 3 before it thinks the crowd
+                    // is very dense, rate the perceived density of the surroundings by dividing the number of people by the
+                    // maximum tolerated number of passengers
+                    final double maximumDensityTolerated = 3.0;
+                    final double passengerDensity
+                            = (numberOfPassengers > maximumDensityTolerated ? maximumDensityTolerated : numberOfPassengers)
+                            / maximumDensityTolerated;
+
+                    // For each passenger found within the slowdown distance, get the nearest one, if there is any
+                    Map.Entry<Double, Passenger> nearestPassengerEntry = passengersWithinFieldOfView.firstEntry();
+
+                    // If there are no passengers within the field of view, good - move normally
+                    if (nearestPassengerEntry == null/*|| nearestPassengerEntry.getValue().getPassengerMovement().getGoalAmenity() != null && !nearestPassengerEntry.getValue().getPassengerMovement().getGoalAmenity().equals(this.goalAmenity)*/) {
+                        this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
+
+                        // Get the attractive force of this passenger to the new position
+                        this.attractiveForce = this.computeAttractiveForce(
+                                new Coordinates(this.position),
+                                this.proposedHeading,
+                                proposedNewPosition,
+                                this.preferredWalkingDistance
+                        );
+
+                        vectorsToAdd.add(attractiveForce);
+                    } else {
+                        // Get a random (but weighted) floor field value around the other passenger
+                        Patch floorFieldPatch = this.getBestQueueingPatchAroundPassenger(
+                                nearestPassengerEntry.getValue()
+                        );
+                        this.chosenQueueingPatch = floorFieldPatch;
+
+                        // Check the distance of that nearest passenger to this passenger
+                        double distanceToNearestPassenger = nearestPassengerEntry.getKey();
+
+                        // Modify the maximum stopping distance depending on the density of the environment
+                        // That is, the denser the surroundings, the less space this passenger will allow between other
+                        // passengers
+                        maximumStopDistance -= (maximumStopDistance - minimumStopDistance) * passengerDensity;
+
+                        this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
+
+                        // Else, just slow down and move towards the direction of that passenger in front
+                        // The slowdown factor linearly depends on the distance between this passenger and the other
+                        final double slowdownFactor
+                                = (distanceToNearestPassenger - maximumStopDistance)
+                                / (slowdownStartDistance - maximumStopDistance);
+
+                        double computedWalkingDistance = slowdownFactor * this.preferredWalkingDistance;
+
+                        if (this.isNextAmenityTrainDoor() && floorFieldPatch != null) {
+                            Double floorFieldValue = null;
+                            Map<QueueingFloorField.FloorFieldState, Double> floorFieldValues
+                                    = floorFieldPatch.getFloorFieldValues().get(this.getGoalAmenityAsQueueable());
+
+                            if (floorFieldValues != null) {
+                                floorFieldValue = floorFieldValues.get(this.goalFloorFieldState);
+                            }
+
+                            this.currentFloorFieldValue = floorFieldValue;
+
+                            if (
+                                    floorFieldValue != null
+                                            && Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < floorFieldValue
+                            ) {
+                                this.shouldStopAtPlatform = true;
+                            } else {
+                                // Only head towards that patch if the distance from that patch to the goal is further than the
+                                // distance from this passenger to the goal
+                                double distanceFromChosenPatchToGoal = Coordinates.distance(
+                                        this.currentFloor.getStation(),
+                                        floorFieldPatch,
+                                        this.goalAttractor.getPatch()
+                                );
+
+                                double distanceFromThisPassengerToGoal = Coordinates.distance(
+                                        this.currentFloor.getStation(),
+                                        this.currentPatch,
+                                        this.goalAttractor.getPatch()
+                                );
+
+                                double revisedHeading;
+                                Coordinates revisedPosition;
+
+                                if (distanceFromChosenPatchToGoal < distanceFromThisPassengerToGoal) {
+                                    if (!this.getGoalAmenityAsTrainDoor().isOpen()) {
+                                        // Get the heading towards that patch
+                                        revisedHeading = Coordinates.headingTowards(
+                                                this.position,
+                                                floorFieldPatch.getPatchCenterCoordinates()
+                                        );
+                                    } else {
+                                        revisedHeading = Coordinates.headingTowards(
+                                                this.position,
+                                                this.goalAttractor.getPatch().getPatchCenterCoordinates()
+                                        );
+                                    }
+
+                                    revisedPosition = this.getFuturePosition(
+                                            this.position,
+                                            revisedHeading,
+                                            computedWalkingDistance
+                                    );
+
+                                    // Get the attractive force of this passenger to the new position
+                                    this.attractiveForce = this.computeAttractiveForce(
+                                            new Coordinates(this.position),
+                                            revisedHeading,
+                                            revisedPosition,
+                                            computedWalkingDistance
+                                    );
+
+                                    vectorsToAdd.add(attractiveForce);
+
+                                    for (
+                                            Map.Entry<Double, Passenger> otherPassengerEntry
+                                            : passengersWithinFieldOfView.entrySet()
+                                    ) {
+                                        // Then compute the repulsive force from this passenger
+                                        // Compute the perceived density of the passengers
+                                        // Assuming the maximum density a passenger sees within its environment is 5 before it thinks the crowd
+                                        // is very dense, rate the perceived density of the surroundings by dividing the number of people by the
+                                        // maximum tolerated number of passengers
+                                        final int maximumPassengerCountTolerated = 5;
+
+                                        // The distance by which the repulsion starts to kick in will depend on the density of the passenger's
+                                        // surroundings
+                                        final int minimumPassengerCount = 1;
+                                        final double maximumDistance = 2.0;
+                                        final int maximumPassengerCount = 5;
+                                        final double minimumDistance = 0.7;
+
+                                        double computedMaximumDistance = computeMaximumRepulsionDistance(
+                                                numberOfObstacles,
+                                                maximumPassengerCountTolerated,
+                                                minimumPassengerCount,
+                                                maximumDistance,
+                                                maximumPassengerCount,
+                                                minimumDistance
+                                        );
+
+                                        Vector passengerRepulsiveForce = computeSocialForceFromPassenger(
+                                                otherPassengerEntry.getValue(),
+                                                otherPassengerEntry.getKey(),
+                                                computedMaximumDistance,
+                                                minimumPassengerStopDistance,
+                                                this.preferredWalkingDistance
+                                        );
+
+                                        // Add the computed vector to the list of vectors
+                                        this.repulsiveForceFromPassengers.add(passengerRepulsiveForce);
+                                    }
+                                }
+                            }
+                        } else {
+                            Coordinates revisedPosition = this.getFuturePosition(computedWalkingDistance);
+
+                            // Get the attractive force of this passenger to the new position
+                            this.attractiveForce = this.computeAttractiveForce(
+                                    new Coordinates(this.position),
+                                    this.proposedHeading,
+                                    revisedPosition,
+                                    computedWalkingDistance
+                            );
+
+                            vectorsToAdd.add(attractiveForce);
+                        }
+                    }
+                } else {
                     // If the passenger hasn't already been moving for a while, consider the passenger stuck, and implement some
                     // measures to free this passenger
                     if (
-                            this.isStuck
-                                    || (this.goalAttractor.getPatch().getPassengers().isEmpty() && (this.isAtQueueFront() || this.isServicedByGoal())) && this.noMovementCounter > noMovementTicksThreshold
-                        /*&& this.parent.getTicketType() != TicketBooth.TicketType.STORED_VALUE*/
+                            this.isStuck || this.noNewPatchesSeenCounter > noNewPatchesSeenTicksThreshold
                     ) {
                         this.isStuck = true;
                         this.stuckCounter++;
-                    }/* else {
-                        this.isReadyToFree = true;
-                    }*/
-                }
+                    }
 
-                // Get the passengers within the current field of view in these patches
-                // If there are any other passengers within this field of view, this passenger is at least guaranteed to
-                // slow down
-                TreeMap<Double, Passenger> passengersWithinFieldOfView = new TreeMap<>();
+                    boolean hasEncounteredQueueingPassengerInLoop = false;
 
-                // Look around the patches that fall on the passenger's field of view
-                for (Patch patch : patchesToExplore) {
-                    // Do not apply social forces from obstacles if the passenger is in the queueing action, i.e., when the
-                    // passenger is following a floor field
-                    // If this patch has an obstacle, take note of it to add a repulsive force from it later
-                    if (this.action != Action.QUEUEING) {
+                    // Only apply the social forces of a set number of passengers and obstacles
+                    int passengersProcessed = 0;
+                    final int passengersProcessedLimit = 10;
+
+                    // Look around the patches that fall on the passenger's field of view
+                    for (Patch patch : patchesToExplore) {
+                        // If this patch has an obstacle, take note of it to add a repulsive force from it later
                         Amenity.AmenityBlock patchAmenityBlock = patch.getAmenityBlock();
 
                         // Get the distance between this passenger and the obstacle on this patch
@@ -1084,66 +1365,111 @@ public class PassengerMovement {
                             );
 
                             if (
-                                    distanceToObstacle <= slowdownStartDistance/*
-                                            && !patchAmenityBlock.isAttractor()*/
+                            /*Coordinates.isWithinFieldOfView(
+                                    this.position,
+                                    patchAmenityBlock.getPatch().getPatchCenterCoordinates(),
+                                    this.proposedHeading,
+                                    Math.toRadians(fieldOfViewAngleDegrees))
+                                    && */distanceToObstacle <= slowdownStartDistance/*
+                                && !patchAmenityBlock.isAttractor()*/
                             ) {
                                 obstaclesEncountered.put(distanceToObstacle, patchAmenityBlock);
                             }
                         }
-                    }
 
-                    if (!this.isStuck) {
+                        // Inspect each passenger in each patch in the patches in the field of view
                         for (Passenger otherPassenger : patch.getPassengers()) {
+                            if (passengersProcessed == passengersProcessedLimit) {
+                                break;
+                            }
+
                             // Make sure that the passenger discovered isn't itself
                             if (!otherPassenger.equals(this.getParent())) {
-                                if (!this.hasEncounteredAnyQueueingPassenger && otherPassenger.getPassengerMovement().getState() == State.IN_QUEUE) {
-                                    this.hasEncounteredAnyQueueingPassenger = true;
-                                }
+                                // Take note of the passenger density in this area
+                                numberOfPassengers++;
 
-                                if (
-                                        otherPassenger.getPassengerMovement().getState() == State.WALKING
-                                                || this.action != Action.HEADING_TO_QUEUEABLE
-                                                && otherPassenger.getPassengerMovement().getGoalAmenity() != null && otherPassenger.getPassengerMovement().getGoalAmenity().equals(this.getGoalAmenity())
-                                                && (this.passengerFollowedWhenAssembling == null || this.passengerFollowedWhenAssembling.equals(otherPassenger))
-                                ) {
-                                    // Take note of the passenger density in this area
-                                    numberOfPassengers++;
+                                // Get the distance between this passenger and the other passenger
+                                double distanceToOtherPassenger = Coordinates.distance(
+                                        this.position,
+                                        otherPassenger.getPassengerMovement().getPosition()
+                                );
 
-                                    // Check if this passenger is within the field of view and within the slowdown distance
-                                    double distanceToPassenger = Coordinates.distance(
-                                            this.position,
-                                            otherPassenger.getPassengerMovement().getPosition()
+                                // If the distance is less than or equal to the distance when repulsion is supposed to kick in,
+                                // compute for the magnitude of that repulsion force
+                                if (distanceToOtherPassenger <= slowdownStartDistance) {
+                                    // Compute the perceived density of the passengers
+                                    // Assuming the maximum density a passenger sees within its environment is 3 before it thinks the crowd
+                                    // is very dense, rate the perceived density of the surroundings by dividing the number of people by the
+                                    // maximum tolerated number of passengers
+                                    final int maximumPassengerCountTolerated = 5;
+
+                                    // The distance by which the repulsion starts to kick in will depend on the density of the passenger's
+                                    // surroundings
+                                    final int minimumPassengerCount = 1;
+                                    final double maximumDistance = 2.0;
+                                    final int maximumPassengerCount = 5;
+                                    final double minimumDistance = 0.7;
+
+                                    double computedMaximumDistance = computeMaximumRepulsionDistance(
+                                            numberOfObstacles,
+                                            maximumPassengerCountTolerated,
+                                            minimumPassengerCount,
+                                            maximumDistance,
+                                            maximumPassengerCount,
+                                            minimumDistance
                                     );
 
-                                    if (Coordinates.isWithinFieldOfView(
-                                            this.position,
-                                            otherPassenger.getPassengerMovement().getPosition(),
-                                            this.proposedHeading,
-                                            this.fieldOfViewAngle)
-                                            && distanceToPassenger <= slowdownStartDistance) {
-                                        passengersWithinFieldOfView.put(distanceToPassenger, otherPassenger);
+                                    Vector passengerRepulsiveForce = computeSocialForceFromPassenger(
+                                            otherPassenger,
+                                            distanceToOtherPassenger,
+                                            computedMaximumDistance,
+                                            minimumPassengerStopDistance,
+                                            this.preferredWalkingDistance
+                                    );
+
+                                    // Add the computed vector to the list of vectors
+                                    this.repulsiveForceFromPassengers.add(passengerRepulsiveForce);
+
+                                    // Also, check this passenger's state
+                                    // If this passenger is queueing, set the relevant variable - it will stay true even if just
+                                    // one nearby passenger has activated it
+                                    if (!hasEncounteredQueueingPassengerInLoop) {
+                                        // Check if the other passenger is in a queueing or assembling with the same goal as
+                                        // this passenger
+                                        if (this.passengerFollowedWhenAssembling == null) {
+                                            this.hasEncounteredPassengerToFollow = false;
+                                        } else {
+                                            if (this.passengerFollowedWhenAssembling.equals(otherPassenger)) {
+                                                // If the other passenger encountered is already assembling, decide whether this
+                                                // passenger will assemble too depending on whether the other passenger was selected
+                                                // to be followed by this one
+                                                this.hasEncounteredPassengerToFollow
+                                                        = (otherPassenger.getPassengerMovement().getAction() == Action.ASSEMBLING
+                                                        || otherPassenger.getPassengerMovement().getAction() == Action.QUEUEING)
+                                                        && otherPassenger.getPassengerMovement().getGoalAmenity().equals(this.goalAmenity);
+                                            } else {
+                                                this.hasEncounteredPassengerToFollow = false;
+                                            }
+                                        }
                                     }
+
+                                    // If a queueing passenger has been encountered, do not pathfind anymore for for this
+                                    // goal
+                                    if (
+                                            this.parent.getTicketType() == TicketBooth.TicketType.STORED_VALUE
+                                                    && this.hasEncounteredPassengerToFollow
+                                    ) {
+                                        this.hasPathfound = true;
+                                    }
+
+                                    hasEncounteredQueueingPassengerInLoop
+                                            = this.hasEncounteredPassengerToFollow;
+
+                                    passengersProcessed++;
                                 }
                             }
                         }
                     }
-                }
-
-                // Compute the perceived density of the passengers
-                // Assuming the maximum density a passenger sees within its environment is 3 before it thinks the crowd
-                // is very dense, rate the perceived density of the surroundings by dividing the number of people by the
-                // maximum tolerated number of passengers
-                final double maximumDensityTolerated = 3.0;
-                final double passengerDensity
-                        = (numberOfPassengers > maximumDensityTolerated ? maximumDensityTolerated : numberOfPassengers)
-                        / maximumDensityTolerated;
-
-                // For each passenger found within the slowdown distance, get the nearest one, if there is any
-                Map.Entry<Double, Passenger> nearestPassengerEntry = passengersWithinFieldOfView.firstEntry();
-
-                // If there are no passengers within the field of view, good - move normally
-                if (nearestPassengerEntry == null/*|| nearestPassengerEntry.getValue().getPassengerMovement().getGoalAmenity() != null && !nearestPassengerEntry.getValue().getPassengerMovement().getGoalAmenity().equals(this.goalAmenity)*/) {
-                    this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
 
                     // Get the attractive force of this passenger to the new position
                     this.attractiveForce = this.computeAttractiveForce(
@@ -1154,234 +1480,33 @@ public class PassengerMovement {
                     );
 
                     vectorsToAdd.add(attractiveForce);
-                } else {
-                    // Check the distance of that nearest passenger to this passenger
-                    double distanceToNearestPassenger = nearestPassengerEntry.getKey();
-
-                    // Modify the maximum stopping distance depending on the density of the environment
-                    // That is, the denser the surroundings, the less space this passenger will allow between other
-                    // passengers
-                    maximumStopDistance -= (maximumStopDistance - minimumStopDistance) * passengerDensity;
-
-                    this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
-
-                    // Else, just slow down and move towards the direction of that passenger in front
-                    // The slowdown factor linearly depends on the distance between this passenger and the other
-                    final double slowdownFactor
-                            = (distanceToNearestPassenger - maximumStopDistance)
-                            / (slowdownStartDistance - maximumStopDistance);
-
-                    double computedWalkingDistance = slowdownFactor * this.preferredWalkingDistance;
-
-                    Coordinates revisedPosition = this.getFuturePosition(computedWalkingDistance);
-
-                    // Get the attractive force of this passenger to the new position
-                    this.attractiveForce = this.computeAttractiveForce(
-                            new Coordinates(this.position),
-                            this.proposedHeading,
-                            revisedPosition,
-                            computedWalkingDistance
-                    );
-
-                    vectorsToAdd.add(attractiveForce);
                 }
-            } else {
-                // If the passenger hasn't already been moving for a while, consider the passenger stuck, and implement some
-                // measures to free this passenger
-                if (this.isStuck || this.noNewPatchesSeenCounter > noNewPatchesSeenTicksThreshold) {
-                    this.isStuck = true;
-                    this.stuckCounter++;
-                }
+            }
+        } else {
+            proposedNewPosition = this.computeFirstStepPosition();
 
-                boolean hasEncounteredQueueingPassengerInLoop = false;
-
-                // Only apply the social forces of a set number of passengers and obstacles
-                int passengersProcessed = 0;
-                final int passengersProcessedLimit = 5;
-
-                // Look around the patches that fall on the passenger's field of view
-                for (Patch patch : patchesToExplore) {
-                    // If this patch has an obstacle, take note of it to add a repulsive force from it later
-                    Amenity.AmenityBlock patchAmenityBlock = patch.getAmenityBlock();
-
-                    // Get the distance between this passenger and the obstacle on this patch
-                    if (hasObstacle(patch)) {
-                        // Take note of the obstacle density in this area
-                        numberOfObstacles++;
-
-                        // If the distance is less than or equal to the specified minimum repulsion distance, compute
-                        // for the magnitude of the repulsion force
-                        double distanceToObstacle = Coordinates.distance(
-                                this.position,
-                                patchAmenityBlock.getPatch().getPatchCenterCoordinates()
-                        );
-
-                        if (
-                            /*Coordinates.isWithinFieldOfView(
-                                    this.position,
-                                    patchAmenityBlock.getPatch().getPatchCenterCoordinates(),
-                                    this.proposedHeading,
-                                    Math.toRadians(fieldOfViewAngleDegrees))
-                                    && */distanceToObstacle <= slowdownStartDistance/*
-                                && !patchAmenityBlock.isAttractor()*/
-                        ) {
-                            obstaclesEncountered.put(distanceToObstacle, patchAmenityBlock);
-                        }
-                    }
-
-                    // Inspect each passenger in each patch in the patches in the field of view
-                    for (Passenger otherPassenger : patch.getPassengers()) {
-                        if (passengersProcessed == passengersProcessedLimit) {
-                            break;
-                        }
-
-                        // Make sure that the passenger discovered isn't itself
-                        if (!otherPassenger.equals(this.getParent())) {
-                            // Take note of the passenger density in this area
-                            numberOfPassengers++;
-
-                            // Get the distance between this passenger and the other passenger
-                            double distanceToOtherPassenger = Coordinates.distance(
-                                    this.position,
-                                    otherPassenger.getPassengerMovement().getPosition()
-                            );
-
-                            // If the distance is less than or equal to the distance when repulsion is supposed to kick in,
-                            // compute for the magnitude of that repulsion force
-                            if (distanceToOtherPassenger <= slowdownStartDistance) {
-                                // Compute the perceived density of the passengers
-                                // Assuming the maximum density a passenger sees within its environment is 3 before it thinks the crowd
-                                // is very dense, rate the perceived density of the surroundings by dividing the number of people by the
-                                // maximum tolerated number of passengers
-                                final int maximumPassengerCountTolerated = 5;
-
-                                // The distance by which the repulsion starts to kick in will depend on the density of the passenger's
-                                // surroundings
-                                final int minimumObstacleCount = 1;
-                                final double maximumDistance = 2.0;
-                                final int maximumObstacleCount = 2;
-                                final double minimumDistance = 0.7;
-
-                                double computedMaximumDistance = computeMaximumRepulsionDistance(
-                                        numberOfObstacles,
-                                        maximumPassengerCountTolerated,
-                                        minimumObstacleCount,
-                                        maximumDistance,
-                                        maximumObstacleCount,
-                                        minimumDistance
-                                );
-
-                                Vector passengerRepulsiveForce = computeSocialForceFromPassenger(
-                                        otherPassenger,
-                                        distanceToOtherPassenger,
-                                        computedMaximumDistance,
-                                        minimumPassengerStopDistance,
-                                        this.preferredWalkingDistance
-                                );
-
-                                // Add the computed vector to the list of vectors
-                                this.repulsiveForceFromPassengers.add(passengerRepulsiveForce);
-
-                                // Also, check this passenger's state
-                                // If this passenger is queueing, set the relevant variable - it will stay true even if just
-                                // one nearby passenger has activated it
-                                if (!hasEncounteredQueueingPassengerInLoop) {
-                                    // Check if the other passenger is in a queueing or assembling with the same goal as
-                                    // this passenger
-                                    if (this.passengerFollowedWhenAssembling == null) {
-                                        this.hasEncounteredPassengerToFollow = false;
-                                    } else {
-                                        if (this.passengerFollowedWhenAssembling.equals(otherPassenger)) {
-                                            // If the other passenger encountered is already assembling, decide whether this
-                                            // passenger will assemble too depending on whether the other passenger was selected
-                                            // to be followed by this one
-                                            this.hasEncounteredPassengerToFollow
-                                                    = (otherPassenger.getPassengerMovement().getAction() == Action.ASSEMBLING
-                                                    || otherPassenger.getPassengerMovement().getAction() == Action.QUEUEING)
-                                                    && otherPassenger.getPassengerMovement().getGoalAmenity().equals(this.goalAmenity);
-                                        } else {
-                                            this.hasEncounteredPassengerToFollow = false;
-                                        }
-                                    }
-                                }
-
-                                // If a queueing passenger has been encountered, do not pathfind anymore for for this
-                                // goal
-                                if (
-                                        this.parent.getTicketType() == TicketBooth.TicketType.STORED_VALUE
-                                                && this.hasEncounteredPassengerToFollow
-                                ) {
-                                    this.hasPathfound = true;
-                                }
-
-                                hasEncounteredQueueingPassengerInLoop
-                                        = this.hasEncounteredPassengerToFollow;
-
-                                passengersProcessed++;
-                            }
-                        }
-                    }
-                }
+            // Check if the patch representing the future position has someone on it
+            // Only proceed when there is no one there
+            if (this.hasNoPassenger(this.currentFloor.getPatch(proposedNewPosition))) {
+                this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
 
                 // Get the attractive force of this passenger to the new position
                 this.attractiveForce = this.computeAttractiveForce(
                         new Coordinates(this.position),
-                        this.proposedHeading,
+                        Coordinates.headingTowards(
+                                this.position,
+                                proposedNewPosition
+                        ),
                         proposedNewPosition,
                         this.preferredWalkingDistance
                 );
 
                 vectorsToAdd.add(attractiveForce);
+
+                // Do not automatically (without influence from social forces of surrounding passengers and obstacles step
+                // forward again for now
+                this.shouldStepForward = false;
             }
-        } else {
-            double newHeading;
-
-            if (this.currentPatch.getAmenityBlock() != null && this.currentPatch.getAmenityBlock().getParent() instanceof Turnstile) {
-                // First, get the apex of the floor field with the state of the passenger
-                Turnstile turnstile = (Turnstile) this.currentPatch.getAmenityBlock().getParent();
-
-                QueueingFloorField.FloorFieldState floorFieldState;
-                Patch apexLocation;
-
-                if (this.disposition == Disposition.BOARDING) {
-                    floorFieldState = turnstile.getTurnstileFloorFieldStateBoarding();
-                } else {
-                    floorFieldState = turnstile.getTurnstileFloorFieldStateAlighting();
-                }
-
-                apexLocation = turnstile.getQueueObject().getFloorFields().get(floorFieldState).getApices().get(0);
-
-                // Then compute the heading from the apex to the turnstile attractor
-                newHeading = Coordinates.headingTowards(
-                        apexLocation.getPatchCenterCoordinates(),
-                        turnstile.getAttractors().get(0).getPatch().getPatchCenterCoordinates()
-                );
-            } else {
-                newHeading = this.previousHeading;
-            }
-
-            // Compute for the proposed future position
-            proposedNewPosition = this.getFuturePosition(
-                    this.position,
-                    newHeading,
-                    this.preferredWalkingDistance
-            );
-
-            this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
-
-            // Get the attractive force of this passenger to the new position
-            this.attractiveForce = this.computeAttractiveForce(
-                    new Coordinates(this.position),
-                    newHeading,
-                    proposedNewPosition,
-                    this.preferredWalkingDistance
-            );
-
-            vectorsToAdd.add(attractiveForce);
-
-            // Do not automatically (without influence from social forces of surrounding passengers and obstacles step
-            // forward again for now
-            this.shouldStepForward = false;
         }
 
         // Here ends the few ticks of grace period for the passenger to leave its starting patch
@@ -1406,7 +1531,7 @@ public class PassengerMovement {
         );
 
         // If the resultant vector is null (i.e., no change in position), simply don't move at all
-        if (partialMotivationForce != null) {
+        if (!this.shouldStopAtPlatform && partialMotivationForce != null) {
             // The distance by which the repulsion starts to kick in will depend on the density of the passenger's
             // surroundings
             final int minimumObstacleCount = 1;
@@ -1506,7 +1631,8 @@ public class PassengerMovement {
                                     this.preferredWalkingDistance * 0.25
                             );
 
-                            freeSpaceFound = hasClearLineOfSight(this.position, newFuturePosition, false);
+                            freeSpaceFound
+                                    = hasClearLineOfSight(this.position, newFuturePosition, false);
 
                             attempts++;
                         } while (attempts < attemptLimit && !freeSpaceFound);
@@ -1612,6 +1738,67 @@ public class PassengerMovement {
         this.ticksAcceleratedOrMaintainedSpeed = 0;
 
         return false;
+    }
+
+    private double computeTurnstileFirstStepHeading() {
+        double newHeading;
+
+        // First, get the apex of the floor field with the state of the passenger
+        Turnstile turnstile = (Turnstile) this.currentPatch.getAmenityBlock().getParent();
+
+        QueueingFloorField.FloorFieldState floorFieldState;
+        Patch apexLocation;
+
+        if (this.disposition == Disposition.BOARDING) {
+            floorFieldState = turnstile.getTurnstileFloorFieldStateBoarding();
+        } else {
+            floorFieldState = turnstile.getTurnstileFloorFieldStateAlighting();
+        }
+
+        apexLocation = turnstile.getQueueObject().getFloorFields().get(floorFieldState).getApices().get(0);
+
+        // Then compute the heading from the apex to the turnstile attractor
+        newHeading = Coordinates.headingTowards(
+                apexLocation.getPatchCenterCoordinates(),
+                turnstile.getAttractors().get(0).getPatch().getPatchCenterCoordinates()
+        );
+
+        return newHeading;
+    }
+
+    private double computeFirstStepHeading() {
+        double newHeading;
+
+        if (
+                this.currentPatch.getAmenityBlock() != null
+                        && this.currentPatch.getAmenityBlock().getParent() instanceof Turnstile
+        ) {
+            newHeading = computeTurnstileFirstStepHeading();
+        } else {
+            newHeading = this.previousHeading;
+        }
+
+        return newHeading;
+    }
+
+    private Coordinates computeFirstStepPosition() {
+        double newHeading = computeFirstStepHeading();
+
+        // Compute for the proposed future position
+        return this.getFuturePosition(
+                this.position,
+                newHeading,
+                this.preferredWalkingDistance
+        );
+
+    }
+
+    public boolean isFirstStepPositionFree() {
+        return hasNoPassenger(this.currentFloor.getPatch(this.computeFirstStepPosition()));
+    }
+
+    private boolean hasNoPassenger(Patch patch) {
+        return patch.getPassengers().isEmpty();
     }
 
     private Vector computeAttractiveForce(
@@ -2043,10 +2230,7 @@ public class PassengerMovement {
         // Remove this passenger from its current floor's patch set, if necessary
         SortedSet<Patch> currentPatchSet = this.currentPatch.getFloor().getPassengerPatchSet();
 
-        if (
-                currentPatchSet.contains(this.currentPatch)
-                        && this.currentPatch.getPassengers().isEmpty()
-        ) {
+        if (currentPatchSet.contains(this.currentPatch) && hasNoPassenger(this.currentPatch)) {
             currentPatchSet.remove(this.currentPatch);
         }
     }
@@ -2054,14 +2238,19 @@ public class PassengerMovement {
     // Have the passenger face its current goal, or its queueing area, or the passenger at the end of the queue
     public void faceNextPosition() {
         double newHeading;
-        boolean willFaceQueueingPatch;
+        boolean willFaceQueueingPatch = false;
+        boolean willFaceApex = false;
         Patch proposedGoalPatch;
 
         // iI the passenger is already heading for a queueable, no need to seek its floor fields again, as
         // it has already done so, and is now just heading to the goal itself
         // If it has floor fields, get the heading towards the nearest floor field value
         // If it doesn't have floor fields, just get the heading towards the goal itself
-        if (this.action != Action.HEADING_TO_QUEUEABLE && this.goalAmenity instanceof Queueable) {
+        if (
+                this.action != Action.HEADING_TO_QUEUEABLE
+                        && this.action != Action.HEADING_TO_TRAIN_DOOR
+                        && this.goalAmenity instanceof Queueable
+        ) {
             // If a queueing patch has not yet been set for this goal, set it
             if (this.goalNearestQueueingPatch == null) {
                 // If the next floor field has not yet been set for this queueing patch, set it
@@ -2112,59 +2301,72 @@ public class PassengerMovement {
                     this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
                     proposedGoalPatch = this.goalNearestQueueingPatch;
 
+                    willFaceApex = false;
                     willFaceQueueingPatch = true;
                 } else {
-                    Passenger passengerFollowedCandidate;
-
-                    // If there are passengers queueing, join the queue and follow either the last person in the queue
-                    // or the person before this
-                    if (action == Action.WILL_QUEUE) {
-                        passengerFollowedCandidate = passengerQueue.getLast();
-                    } else {
-                        int passengerFollowedCandidateIndex = passengerQueue.indexOf(this.parent) - 1;
-
-                        if (passengerFollowedCandidateIndex >= 0) {
-                            passengerFollowedCandidate
-                                    = passengerQueue.get(passengerFollowedCandidateIndex);
-                        } else {
-                            passengerFollowedCandidate = null;
-                        }
-                    }
-
-                    // But if the person to be followed is this person itself, or is not assembling, or follows this
-                    // person too (forming a cycle), disregard it, and just follow the queueing patch
-                    // Otherwise, follow that passenger
-                    if (
-                            passengerFollowedCandidate == null
-                                    || passengerFollowedCandidate.equals(this.parent)
-                                    || !passengerFollowedCandidate.equals(this.parent)
-                                    && passengerFollowedCandidate.getPassengerMovement()
-                                    .getPassengerFollowedWhenAssembling() != null
-                                    && passengerFollowedCandidate.getPassengerMovement()
-                                    .getPassengerFollowedWhenAssembling().equals(this.parent)
-                    ) {
+                    if (this.isNextAmenityTrainDoor()) {
                         this.passengerFollowedWhenAssembling = null;
                         this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
                         proposedGoalPatch = this.goalNearestQueueingPatch;
 
+                        willFaceApex = false;
                         willFaceQueueingPatch = true;
                     } else {
-                        // But only follow passengers who are nearer to this passenger than to the chosen queueing
-                        // patch and are within this passenger's walking distance and have a clear line of sight to
-                        // this passenger
+                        Passenger passengerFollowedCandidate;
+
+                        // If there are passengers queueing, join the queue and follow either the last person in the queue
+                        // or the person before this
+                        if (action == Action.WILL_QUEUE) {
+                            passengerFollowedCandidate = passengerQueue.getLast();
+                        } else {
+                            int passengerFollowedCandidateIndex = passengerQueue.indexOf(this.parent) - 1;
+
+                            if (passengerFollowedCandidateIndex >= 0) {
+                                passengerFollowedCandidate
+                                        = passengerQueue.get(passengerFollowedCandidateIndex);
+                            } else {
+                                passengerFollowedCandidate = null;
+                            }
+                        }
+
+                        // But if the person to be followed is this person itself, or is not assembling, or follows this
+                        // person too (forming a cycle), disregard it, and just follow the queueing patch
+                        // Otherwise, follow that passenger
                         if (
-                                !hasClearLineOfSight(this.position, passengerFollowedCandidate.getPassengerMovement().getPosition(), true)
+                                passengerFollowedCandidate == null
+                                        || passengerFollowedCandidate.equals(this.parent)
+                                        || !passengerFollowedCandidate.equals(this.parent)
+                                        && passengerFollowedCandidate.getPassengerMovement()
+                                        .getPassengerFollowedWhenAssembling() != null
+                                        && passengerFollowedCandidate.getPassengerMovement()
+                                        .getPassengerFollowedWhenAssembling().equals(this.parent)
                         ) {
                             this.passengerFollowedWhenAssembling = null;
                             this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
                             proposedGoalPatch = this.goalNearestQueueingPatch;
 
+                            willFaceApex = false;
                             willFaceQueueingPatch = true;
                         } else {
-                            this.passengerFollowedWhenAssembling = passengerFollowedCandidate;
-                            proposedGoalPatch = this.goalNearestQueueingPatch;
+                            // But only follow passengers who are nearer to this passenger than to the chosen queueing
+                            // patch and are within this passenger's walking distance and have a clear line of sight to
+                            // this passenger
+                            if (
+                                    !hasClearLineOfSight(this.position, passengerFollowedCandidate.getPassengerMovement().getPosition(), true)
+                            ) {
+                                this.passengerFollowedWhenAssembling = null;
+                                this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
+                                proposedGoalPatch = this.goalNearestQueueingPatch;
 
-                            willFaceQueueingPatch = false;
+                                willFaceQueueingPatch = true;
+                            } else {
+                                this.passengerFollowedWhenAssembling = passengerFollowedCandidate;
+                                proposedGoalPatch = this.goalNearestQueueingPatch;
+
+                                willFaceApex = false;
+                                willFaceQueueingPatch = false;
+
+                            }
                         }
                     }
                 }
@@ -2172,10 +2374,16 @@ public class PassengerMovement {
                 this.passengerFollowedWhenAssembling = null;
                 proposedGoalPatch = this.goalNearestQueueingPatch;
 
+                willFaceApex = false;
                 willFaceQueueingPatch = true;
             }
 
-            if (willFaceQueueingPatch) {
+            if (willFaceApex) {
+                newHeading = Coordinates.headingTowards(
+                        this.position,
+                        this.goalNearestQueueingPatch.getPatchCenterCoordinates()
+                );
+            } else if (willFaceQueueingPatch) {
                 newHeading = Coordinates.headingTowards(
                         this.position,
                         this.goalNearestQueueingPatch.getPatchCenterCoordinates()
@@ -2262,7 +2470,10 @@ public class PassengerMovement {
                 // If the last passenger is not assembling, simply head for the goal patch instead
                 Passenger lastPassenger = passengersQueueing.getLast();
 
-                if (lastPassenger.getPassengerMovement().getAction() == Action.ASSEMBLING) {
+                if (
+                        !this.isNextAmenityTrainDoor()
+                                || lastPassenger.getPassengerMovement().getAction() == Action.ASSEMBLING
+                ) {
                     this.currentPath = computePath(
                             this.currentPatch,
                             lastPassenger.getPassengerMovement().getCurrentPatch(),
@@ -2334,30 +2545,14 @@ public class PassengerMovement {
         return nearestPatch;
     }
 
-    // Get the next queueing patch in a floor field given the current floor field state
-    private Patch getBestQueueingPatch() {
-        // Get the patches to explore
-        List<Patch> patchesToExplore
-                = Floor.get7x7Field(this.currentPatch, this.proposedHeading, false, Math.toRadians(90.0));
-
-        this.toExplore = patchesToExplore;
-
-        if (patchesToExplore.contains(this.currentPatch)) {
-            System.out.println("oops");
-        }
-
+    private Patch computeBestQueueingPatchWeighted(List<Patch> floorFieldList) {
         // Collect the patches with the highest floor field values
-//        List<Patch> highestPatches = new ArrayList<>();
         List<Patch> floorFieldCandidates = new ArrayList<>();
         List<Double> floorFieldValueCandidates = new ArrayList<>();
 
-        double maximumFloorFieldValue = 0.0;
-        double bestFloorFieldValue = 0.0;
         double valueSum = 0.0;
 
-        double headingChange;
-
-        for (Patch patch : patchesToExplore) {
+        for (Patch patch : floorFieldList) {
             Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
                     = patch.getFloorFieldValues().get(this.getGoalAmenityAsQueueable());
 
@@ -2373,40 +2568,20 @@ public class PassengerMovement {
                         .get(this.getGoalAmenityAsQueueable())
                         .get(this.goalFloorFieldState);
 
-/*                if (floorFieldValue >= maximumFloorFieldValue) {
-                    if (floorFieldValue > maximumFloorFieldValue) {
-                        maximumFloorFieldValue = floorFieldValue;
+//                if (currentFloorFieldValue == null) {
+                valueSum += futureFloorFieldValue;
 
-                        highestPatches.clear();
-                    }
-
-                    highestPatches.add(patch);
-                }*/
-
-                headingChange = Coordinates.headingDifference(
-                        this.proposedHeading,
-                        Coordinates.headingTowards(
-                                this.position,
-                                patch.getPatchCenterCoordinates()
-                        )
-                );
-
-                if (currentFloorFieldValue == null || futureFloorFieldValue >= currentFloorFieldValue) {
-//                    if (headingChange <= Math.toRadians(45.0)) {
-                        valueSum += futureFloorFieldValue;
-
-                        floorFieldCandidates.add(patch);
-                        floorFieldValueCandidates.add(futureFloorFieldValue);
-//                    } else {
-//                        System.out.println("too big");
-//                    }
-                }
+                floorFieldCandidates.add(patch);
+                floorFieldValueCandidates.add(futureFloorFieldValue);
+//                }
             }
         }
 
         // If it gets to this point without finding a floor field value greater than zero, return early
         if (floorFieldCandidates.isEmpty()) {
-//            this.currentFloorFieldValue = null;
+//            if (this.getGoalAmenityAsTrainDoor() != null) {
+//                this.computeBestQueueingPatchWeighted(floorFieldList);
+//            }
 
             return null;
         }
@@ -2427,73 +2602,138 @@ public class PassengerMovement {
         }
 
         chosenPatch = floorFieldCandidates.get(choiceIndex);
-        this.currentFloorFieldValue = chosenPatch.getFloorFieldValues()
-                .get(this.getGoalAmenityAsQueueable())
-                .get(this.goalFloorFieldState);
-
-////        // If it gets to this point without finding a floor field value greater than zero, return early
-////        if (maximumFloorFieldValue == 0.0) {
-////            return null;
-////        }
-//
-//        // If there are more than one highest valued-patches, choose the one where it would take the least heading
-//        // difference
-//        Patch chosenPatch = highestPatches.get(0)/* = null*/;
-//
-//        List<Double> headingChanges = new ArrayList<>();
-////        List<Double> distances = new ArrayList<>();
-//
-//        double headingToHighestPatch;
-//        double headingChangeRequired;
-//
-////        double distance;
-//
-//        for (Patch patch : highestPatches) {
-//            headingToHighestPatch = Coordinates.headingTowards(this.position, patch.getPatchCenterCoordinates());
-//            headingChangeRequired = Coordinates.headingDifference(this.proposedHeading, headingToHighestPatch);
-//
-//            double headingChangeRequiredDegrees = Math.toDegrees(headingChangeRequired);
-//
-//            headingChanges.add(headingChangeRequiredDegrees);
-//
-///*            distance = Coordinates.distance(this.position, patch.getPatchCenterCoordinates());
-//
-//            distances.add(distance);*/
-//        }
-//
-//        double minimumHeadingChange = Double.MAX_VALUE;
-//
-//        for (int index = 0; index < highestPatches.size(); index++) {
-////            double individualScore = headingChanges.get(index) * 1.0 + (distances.get(index) * 10.0) * 0.0;
-//            double individualScore = headingChanges.get(index);
-//
-//            if (individualScore < minimumHeadingChange) {
-//                minimumHeadingChange = individualScore;
-//                chosenPatch = highestPatches.get(index);
-//            }
-//        }
-//
-//        double headingChange = Coordinates.headingDifference(
-//                this.proposedHeading,
-//                Coordinates.headingTowards(
-//                        this.position,
-//                        chosenPatch.getPatchCenterCoordinates()
-//                )
-//        );
-
-//        System.out.println(Math.toDegrees(headingChange) + ":" + this.parent.getIdentifier());
-
-//        if (headingChange <= Math.toRadians(90.0)) {
-//            this.chosenQueueingPatch = chosenPatch;
-//
-        this.chosenQueueingPatch = chosenPatch;
         return chosenPatch;
-//        } else {
-//            System.out.println("big turn by " + this.parent.getIdentifier());
-////            this.currentFloorFieldValue = null;
-//
-//            return null;
-//        }
+    }
+
+    // Get the next queueing patch in a floor field given the current floor field state
+    private Patch computeBestQueueingPatch(List<Patch> floorFieldList) {
+        // Collect the patches with the highest floor field values
+        List<Patch> highestPatches = new ArrayList<>();
+
+        double maximumFloorFieldValue = 0.0;
+
+        for (Patch patch : floorFieldList) {
+            Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
+                    = patch.getFloorFieldValues().get(this.getGoalAmenityAsQueueable());
+
+            if (
+                    !patch.getFloorFieldValues().isEmpty()
+                            && floorFieldStateDoubleMap != null
+                            && !floorFieldStateDoubleMap.isEmpty()
+                            && floorFieldStateDoubleMap.get(
+                            this.goalFloorFieldState
+                    ) != null
+            ) {
+                double floorFieldValue = patch.getFloorFieldValues()
+                        .get(this.getGoalAmenityAsQueueable())
+                        .get(this.goalFloorFieldState);
+
+                if (floorFieldValue >= maximumFloorFieldValue) {
+                    if (floorFieldValue > maximumFloorFieldValue) {
+                        maximumFloorFieldValue = floorFieldValue;
+
+                        highestPatches.clear();
+                    }
+
+                    highestPatches.add(patch);
+                }
+            }
+        }
+
+        // If it gets to this point without finding a floor field value greater than zero, return early
+        if (maximumFloorFieldValue == 0.0) {
+            return null;
+        }
+
+        // If there are more than one highest valued-patches, choose the one where it would take the least heading
+        // difference
+        Patch chosenPatch = highestPatches.get(0)/* = null*/;
+
+        List<Double> headingChanges = new ArrayList<>();
+        List<Double> distances = new ArrayList<>();
+
+        double headingToHighestPatch;
+        double headingChangeRequired;
+
+        double distance;
+
+        for (Patch patch : highestPatches) {
+            headingToHighestPatch = Coordinates.headingTowards(this.position, patch.getPatchCenterCoordinates());
+            headingChangeRequired = Coordinates.headingDifference(this.proposedHeading, headingToHighestPatch);
+
+            double headingChangeRequiredDegrees = Math.toDegrees(headingChangeRequired);
+
+            headingChanges.add(headingChangeRequiredDegrees);
+
+            distance = Coordinates.distance(this.position, patch.getPatchCenterCoordinates());
+            distances.add(distance);
+        }
+
+        double minimumHeadingChange = Double.MAX_VALUE;
+
+        for (int index = 0; index < highestPatches.size(); index++) {
+            double individualScore = headingChanges.get(index) * 0.5 + (distances.get(index) * 10.0) * 0.5;
+
+            if (individualScore < minimumHeadingChange) {
+                minimumHeadingChange = individualScore;
+                chosenPatch = highestPatches.get(index);
+            }
+        }
+
+        return chosenPatch;
+    }
+
+    private Patch getBestQueueingPatch() {
+        // Get the patches to explore
+        List<Patch> patchesToExplore
+                = Floor.get7x7Field(
+                this.currentPatch, this.proposedHeading, false, Math.toRadians(90.0)
+        );
+
+        this.toExplore = patchesToExplore;
+
+        Patch chosenPatch = this.computeBestQueueingPatch(patchesToExplore);
+
+        if (chosenPatch == null) {
+            return null;
+        }
+
+        return chosenPatch;
+    }
+
+    // Get the best queueing patch around the current patch of another passenger given the current floor field state
+    private Patch getBestQueueingPatchAroundPassenger(Passenger otherPassenger) {
+        // Get the other passenger's patch
+        Patch otherPassengerPatch = otherPassenger.getPassengerMovement().getCurrentPatch();
+
+        // Get the neighboring patches of that patch
+        List<Patch> neighboringPatches = otherPassengerPatch.getNeighbors();
+
+        // Remove the patch containing this passenger
+        neighboringPatches.remove(this.currentPatch);
+
+        // Only add patches with the fewest passengers
+        List<Patch> neighboringPatchesWithFewestPassengers = new ArrayList<>();
+        int minimumPassengerCount = Integer.MAX_VALUE;
+
+        for (Patch neighboringPatch : neighboringPatches) {
+            int neighboringPatchPassengerCount = neighboringPatch.getPassengers().size();
+
+            if (neighboringPatchPassengerCount < minimumPassengerCount) {
+                neighboringPatchesWithFewestPassengers.clear();
+
+                minimumPassengerCount = neighboringPatchPassengerCount;
+            }
+
+            if (neighboringPatchPassengerCount == minimumPassengerCount) {
+                neighboringPatchesWithFewestPassengers.add(neighboringPatch);
+            }
+        }
+
+        // Choose a floor field patch from this
+        Patch chosenPatch = this.computeBestQueueingPatchWeighted(neighboringPatchesWithFewestPassengers);
+
+        return chosenPatch;
     }
 
     // Check if the given patch has an obstacle
@@ -2505,14 +2745,32 @@ public class PassengerMovement {
         } else {
             Amenity parent = amenityBlock.getParent();
 
-            if (parent.equals(this.goalAmenity)) {
-                return !amenityBlock.isAttractor();
-            } else {
-                if (parent instanceof Gate) {
-                    return !amenityBlock.isAttractor();
+            if (parent instanceof NonObstacle && ((NonObstacle) parent).isEnabled()) {
+                if (parent.equals(this.goalAmenity)) {
+                    if (parent instanceof Queueable) {
+//                        if (parent instanceof TrainDoor) {
+//                            return !((TrainDoor) parent).isOpen();
+//                        } else {
+                        Passenger passengerServiced = this.goalQueueObject.getPassengerServiced();
+
+                        if (passengerServiced != null && passengerServiced.equals(this.parent)) {
+                            return !amenityBlock.isAttractor();
+                        } else {
+                            return true;
+                        }
+//                        }
+                    } else {
+                        return !amenityBlock.isAttractor();
+                    }
                 } else {
-                    return true;
+                    if (parent instanceof Gate) {
+                        return !amenityBlock.isAttractor();
+                    } else {
+                        return true;
+                    }
                 }
+            } else {
+                return true;
             }
         }
 
@@ -2635,6 +2893,8 @@ public class PassengerMovement {
         ASSEMBLING,
         QUEUEING,
         HEADING_TO_QUEUEABLE,
+        HEADING_TO_TRAIN_DOOR,
+        WAITING_FOR_TRAIN,
         /* In goal actions */
         SECURITY_CHECKING,
         TRANSACTING_TICKET,
@@ -2647,13 +2907,5 @@ public class PassengerMovement {
         RIDING_TRAIN,
         /* Final actions */
         EXITING_STATION
-    }
-
-    public enum MovementSignal {
-        WALK_FREELY,
-        QUEUE_FREELY,
-        QUEUE_SLOWLY,
-        HALT_PASSENGER,
-        HALT_ZERO_FORCE,
     }
 }

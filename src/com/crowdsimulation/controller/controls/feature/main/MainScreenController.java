@@ -342,10 +342,7 @@ public class MainScreenController extends ScreenController {
     private Button clearPassengersFloorButton;
 
     @FXML
-    private Label walkingSpeedLabel;
-
-    @FXML
-    private Slider walkingSpeedSlider;
+    private CheckBox disciplinedCheckBox;
 
     // Platform controls
     @FXML
@@ -655,8 +652,7 @@ public class MainScreenController extends ScreenController {
                 clearPassengersStationButton,
                 passengerCountFloorText,
                 clearPassengersFloorButton,
-                walkingSpeedLabel,
-                walkingSpeedSlider
+                disciplinedCheckBox
         );
 
         InitializeMainScreenService.initializeScrollPane(
@@ -1557,6 +1553,13 @@ public class MainScreenController extends ScreenController {
 
                 ((Queueable) elevatorShaft.getLowerPortal()).getQueueObject().getPassengersQueueing().clear();
                 ((Queueable) elevatorShaft.getUpperPortal()).getQueueObject().getPassengersQueueing().clear();
+            }
+
+            // Close all open train doors
+            for (TrainDoor trainDoor : floor.getTrainDoors()) {
+                if (trainDoor.isOpen()) {
+                    trainDoor.toggleTrainDoor();
+                }
             }
         }
     }

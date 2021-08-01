@@ -362,8 +362,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button clearPassengersStationButton,
             Text passengerCountFloorText,
             Button clearPassengersFloorButton,
-            Label walkingSpeedLabel,
-            Slider walkingSpeedSlider
+            CheckBox disciplinedCheckBox
     ) {
         initializeSimulationControls(
                 elapsedTimeText,
@@ -378,8 +377,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 clearPassengersStationButton,
                 passengerCountFloorText,
                 clearPassengersFloorButton,
-                walkingSpeedLabel,
-                walkingSpeedSlider
+                disciplinedCheckBox
         );
     }
 
@@ -925,10 +923,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button clearPassengersStationButton,
             Text passengerCountFloorText,
             Button clearPassengersFloorButton,
-            Label walkingSpeedLabel,
-            Slider walkingSpeedSlider
+            CheckBox disciplinedCheckBox
     ) {
-
+        
     }
 
     public static void initializeScrollPane(
