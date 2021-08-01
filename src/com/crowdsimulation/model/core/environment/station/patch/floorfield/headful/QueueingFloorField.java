@@ -3,10 +3,10 @@ package com.crowdsimulation.model.core.environment.station.patch.floorfield.head
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.AbstractFloorFieldObject;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 
 import java.util.*;
 
@@ -32,16 +32,22 @@ public class QueueingFloorField extends HeadfulFloorField {
         //   1) Register the patch where the floor field value is to be drawn to the target queueable's floor field
         //   2) Add the floor field value to the patch itself
         // In the target queueable, register the patch into the target's list of floor fields, if possible
-        if (
-                (floorFieldState instanceof PlatformFloorField.PlatformFloorFieldState) ?
-                        PlatformFloorField.registerPatch(
-                                patch,
-                                (TrainDoor) target,
-                                (PlatformFloorField.PlatformFloorFieldState) floorFieldState,
-                                value
-                        )
-                        : QueueingFloorField.registerPatch(patch, target, floorFieldState, value)
-        ) {
+        boolean success;
+
+        if (target instanceof Turnstile) {
+            success = TurnstileFloorField.registerPatch(patch, (Turnstile) target, floorFieldState, value);
+        } else if (floorFieldState instanceof PlatformFloorField.PlatformFloorFieldState) {
+            success = PlatformFloorField.registerPatch(
+                    patch,
+                    (TrainDoor) target,
+                    (PlatformFloorField.PlatformFloorFieldState) floorFieldState,
+                    value
+            );
+        } else {
+            success = QueueingFloorField.registerPatch(patch, target, floorFieldState, value);
+        }
+
+        if (success) {
             // Add the floor field value to the patch itself
             // If the patch still doesn't have an entry for the target, add one and put the map there
             if (!patch.getFloorFieldValues().containsKey(target)) {
@@ -152,7 +158,9 @@ public class QueueingFloorField extends HeadfulFloorField {
 
             // Make sure that a floor field value exists with the given floor field state
             if (value != null) {
-                if (floorFieldState instanceof PlatformFloorField.PlatformFloorFieldState) {
+                if (floorFieldState instanceof QueueingFloorField.FloorFieldState) {
+                    TurnstileFloorField.unregisterPatch(patch, (Turnstile) target, floorFieldState, value);
+                } else if (floorFieldState instanceof PlatformFloorField.PlatformFloorFieldState) {
                     PlatformFloorField.unregisterPatch(
                             patch,
                             (TrainDoor) target,
@@ -216,7 +224,7 @@ public class QueueingFloorField extends HeadfulFloorField {
             this.target = target;
         }
 
-        public PassengerMovement.Disposition getDirection() {
+        public PassengerMovement.Disposition getDisposition() {
             return disposition;
         }
 

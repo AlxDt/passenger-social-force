@@ -16,12 +16,14 @@ import com.crowdsimulation.controller.controls.service.main.InitializeMainScreen
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.*;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.TurnstileFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
@@ -124,7 +126,7 @@ public class MainScreenController extends ScreenController {
     private Label stationGateDirectionLabel;
 
     @FXML
-    private ListView<TrainDoor.TravelDirection> stationGateDirectionListView;
+    private ListView<PassengerMovement.TravelDirection> stationGateDirectionListView;
 
     @FXML
     private Label stationGateSpawnLabel;
@@ -263,7 +265,7 @@ public class MainScreenController extends ScreenController {
     private Label trainDoorDirectionLabel;
 
     @FXML
-    private ChoiceBox<TrainDoor.TravelDirection> trainDoorDirectionChoiceBox;
+    private ChoiceBox<PassengerMovement.TravelDirection> trainDoorDirectionChoiceBox;
 
     @FXML
     private Label trainDoorCarriageLabel;
@@ -346,7 +348,7 @@ public class MainScreenController extends ScreenController {
     private Label platformDirectionLabel;
 
     @FXML
-    private ChoiceBox<TrainDoor.TravelDirection> platformDirectionChoiceBox;
+    private ChoiceBox<PassengerMovement.TravelDirection> platformDirectionChoiceBox;
 
     @FXML
     private Label platformCarriagesLabel;
@@ -1616,7 +1618,12 @@ public class MainScreenController extends ScreenController {
         queueables.addAll(floor.getTrainDoors());
 
         for (Queueable queueable : queueables) {
-            if (queueable instanceof TrainDoor) {
+            if (queueable instanceof Turnstile) {
+                for (QueueObject queueObject : ((Turnstile) queueable).getQueueObjects().values()) {
+                    queueObject.setPassengerServiced(null);
+                    queueObject.getPassengersQueueing().clear();
+                }
+            } else if (queueable instanceof TrainDoor) {
                 for (QueueObject queueObject : ((TrainDoor) queueable).getQueueObjects().values()) {
                     queueObject.setPassengerServiced(null);
                     queueObject.getPassengersQueueing().clear();
@@ -1629,7 +1636,7 @@ public class MainScreenController extends ScreenController {
     }
 
     private boolean toggleTrainDoors(
-            TrainDoor.TravelDirection travelDirection,
+            PassengerMovement.TravelDirection travelDirection,
             TrainDoor.TrainDoorCarriage trainDoorCarriage
     ) {
         List<TrainDoor> trainDoors = Main.simulator.getCurrentFloor().getTrainDoors();
@@ -2072,7 +2079,7 @@ public class MainScreenController extends ScreenController {
                 if (!trainDoorCarriageListView.getSelectionModel().isEmpty()) {
                     TrainDoor trainDoorToEdit = (TrainDoor) amenityToSave;
 
-                    TrainDoor.TravelDirection priorPlatform = trainDoorToEdit.getPlatform();
+                    PassengerMovement.TravelDirection priorPlatform = trainDoorToEdit.getPlatform();
 
                     TrainDoor.trainDoorEditor.edit(
                             trainDoorToEdit,
@@ -2727,7 +2734,7 @@ public class MainScreenController extends ScreenController {
                                 stationGateDirectionListView.getSelectionModel().clearSelection();
 
                                 for (
-                                        TrainDoor.TravelDirection travelDirection
+                                        PassengerMovement.TravelDirection travelDirection
                                         : stationGateToEdit.getStationGatePassengerTravelDirections()
                                 ) {
                                     stationGateDirectionListView.getSelectionModel().select(travelDirection);
@@ -3983,10 +3990,10 @@ public class MainScreenController extends ScreenController {
                                     MainScreenController.normalFloorFieldController.updateLocationChoiceBox();
 
                                     // Also take note of the current floor field state
-                                    QueueingFloorField.FloorFieldState floorFieldState
+                                    TurnstileFloorField.FloorFieldState turnstileFloorFieldState
                                             = normalFloorFieldController.getFloorFieldState();
 
-                                    Main.simulator.setCurrentFloorFieldState(floorFieldState);
+                                    Main.simulator.setCurrentFloorFieldState(turnstileFloorFieldState);
 
                                     turnstileEnableCheckBox.setSelected(
                                             turnstileToEdit.isEnabled()
@@ -4023,7 +4030,7 @@ public class MainScreenController extends ScreenController {
                                     // If a floor field value is supposed to be drawn, then go ahead and draw
                                     if (MainScreenController.normalFloorFieldController.getFloorFieldMode()
                                             == NormalFloorFieldController.FloorFieldMode.DRAWING) {
-                                        if (!QueueingFloorField.addFloorFieldValue(
+                                        if (!TurnstileFloorField.addFloorFieldValue(
                                                 currentPatch,
                                                 target,
                                                 normalFloorFieldController.getFloorFieldState(),
@@ -4041,7 +4048,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // If a floor field value is supposed to be deleted, then go ahead and
                                         // delete it
-                                        QueueingFloorField.deleteFloorFieldValue(
+                                        TurnstileFloorField.deleteFloorFieldValue(
                                                 currentPatch,
                                                 target,
                                                 normalFloorFieldController.getFloorFieldState()
@@ -4187,7 +4194,7 @@ public class MainScreenController extends ScreenController {
                                     } else {
                                         // If a floor field value is supposed to be deleted, then go ahead and
                                         // delete it
-                                        QueueingFloorField.deleteFloorFieldValue(
+                                        PlatformFloorField.deleteFloorFieldValue(
                                                 currentPatch,
                                                 target,
                                                 normalFloorFieldController.getFloorFieldState()

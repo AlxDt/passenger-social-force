@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Security extends BlockableAmenity {
-    // Denotes whether to block passengers from passing through
-    private boolean blockEntry;
+    // Denotes the queueing object associated with this security gate
+    private final QueueObject queueObject;
 
     // Factory for security gate creation
     public static final SecurityFactory securityFactory;
@@ -71,9 +71,11 @@ public class Security extends BlockableAmenity {
                 amenityBlocks,
                 enabled,
                 waitingTime,
-                new QueueObject(),
                 blockPassengers
         );
+
+        // Initialize this turnstile's queue objects
+        this.queueObject = new QueueObject();
 
         // Initialize this security gate's floor field state
         this.securityFloorFieldState = new QueueingFloorField.FloorFieldState(
@@ -92,14 +94,6 @@ public class Security extends BlockableAmenity {
         this.getQueueObjectAmenityBlockMap().put(this.getQueueObject(), this.getAttractors().get(0));
 
         this.securityGraphic = new SecurityGraphic(this);
-    }
-
-    public boolean isBlockEntry() {
-        return blockEntry;
-    }
-
-    public void setBlockEntry(boolean blockEntry) {
-        this.blockEntry = blockEntry;
     }
 
     public QueueingFloorField.FloorFieldState getSecurityFloorFieldState() {
@@ -160,6 +154,11 @@ public class Security extends BlockableAmenity {
         for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
             deleteFloorField(floorFieldState);
         }
+    }
+
+    @Override
+    public QueueObject getQueueObject() {
+        return this.queueObject;
     }
 
     @Override

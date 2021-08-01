@@ -274,7 +274,7 @@ public class GraphicsController extends Controller {
 
                             // Map the colors of this patch to the its field value's intensity
                             patchColor = Color.hsb(
-                                    FLOOR_FIELD_COLORS.get(floorFieldState.getDirection()),
+                                    FLOOR_FIELD_COLORS.get(floorFieldState.getDisposition()),
                                     Main.simulator.isFloorFieldDrawing() ? value : 0.0,
                                     Main.simulator.isFloorFieldDrawing() ? 1.0 : 0.97
                             );

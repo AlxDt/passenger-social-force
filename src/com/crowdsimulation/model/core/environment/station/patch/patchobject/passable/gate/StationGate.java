@@ -7,6 +7,7 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGr
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.StationGateGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.simulator.Simulator;
 
@@ -21,7 +22,7 @@ public class StationGate extends Gate {
     private StationGateMode stationGateMode;
 
     // Denotes the direction of passengers this station gate produces
-    private final List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections;
+    private final List<PassengerMovement.TravelDirection> stationGatePassengerTravelDirections;
 
     // Factory for station gate creation
     public static final StationGateFactory stationGateFactory;
@@ -274,7 +275,7 @@ public class StationGate extends Gate {
             boolean enabled,
             double chancePerSecond,
             StationGateMode stationGateMode,
-            List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections
+            List<PassengerMovement.TravelDirection> stationGatePassengerTravelDirections
     ) {
         super(amenityBlocks, enabled);
 
@@ -303,11 +304,11 @@ public class StationGate extends Gate {
         this.stationGateMode = stationGateMode;
     }
 
-    public List<TrainDoor.TravelDirection> getStationGatePassengerTravelDirections() {
+    public List<PassengerMovement.TravelDirection> getStationGatePassengerTravelDirections() {
         return stationGatePassengerTravelDirections;
     }
 
-    public void setPassengerTravelDirectionsSpawned(List<TrainDoor.TravelDirection> travelDirections) {
+    public void setPassengerTravelDirectionsSpawned(List<PassengerMovement.TravelDirection> travelDirections) {
         this.stationGatePassengerTravelDirections.clear();
         this.stationGatePassengerTravelDirections.addAll(travelDirections);
     }
@@ -351,7 +352,7 @@ public class StationGate extends Gate {
         // passenger gate
         // From this pool of travel directions, pick a random one
         int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.stationGatePassengerTravelDirections.size());
-        TrainDoor.TravelDirection travelDirectionChosen = this.stationGatePassengerTravelDirections.get(randomIndex);
+        PassengerMovement.TravelDirection travelDirectionChosen = this.stationGatePassengerTravelDirections.get(randomIndex);
 
         // If that spawner is free from passengers, generate one
         if (spawner.getPatch().getPassengers().isEmpty()) {
@@ -434,7 +435,7 @@ public class StationGate extends Gate {
                 boolean enabled,
                 double chancePerSecond,
                 StationGateMode stationGateMode,
-                List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections
+                List<PassengerMovement.TravelDirection> stationGatePassengerTravelDirections
         ) {
             return new StationGate(
                     amenityBlocks,

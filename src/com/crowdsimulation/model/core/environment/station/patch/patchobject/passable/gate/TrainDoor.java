@@ -11,7 +11,7 @@ import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class TrainDoor extends Gate implements Queueable {
     // Denotes the platform side served by this train door
-    private TravelDirection platform;
+    private PassengerMovement.TravelDirection platform;
 
     // Denotes whether this train door is open and allows entry and exit of passengers
     private boolean open;
@@ -121,7 +121,7 @@ public class TrainDoor extends Gate implements Queueable {
     protected TrainDoor(
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
-            TravelDirection platform,
+            PassengerMovement.TravelDirection platform,
             List<TrainDoorCarriage> trainDoorCarriagesSupported
     ) {
         super(amenityBlocks, enabled);
@@ -153,7 +153,7 @@ public class TrainDoor extends Gate implements Queueable {
         // Define the relationships between the queue objects and the attractors
         this.queueObjectAmenityBlockMap = new HashMap<>();
 
-        if (platform == TravelDirection.SOUTHBOUND || platform == TravelDirection.EASTBOUND) {
+        if (platform == PassengerMovement.TravelDirection.SOUTHBOUND || platform == PassengerMovement.TravelDirection.EASTBOUND) {
             this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
             this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
 
@@ -197,11 +197,11 @@ public class TrainDoor extends Gate implements Queueable {
         this.trainDoorGraphic = new TrainDoorGraphic(this);
     }
 
-    public TravelDirection getPlatform() {
+    public PassengerMovement.TravelDirection getPlatform() {
         return platform;
     }
 
-    public void setPlatform(TravelDirection platform) {
+    public void setPlatform(PassengerMovement.TravelDirection platform) {
         this.platform = platform;
     }
 
@@ -258,7 +258,7 @@ public class TrainDoor extends Gate implements Queueable {
     }
 
     public TrainDoorEntranceLocation getTrainDoorEntranceLocationFromAttractor(AmenityBlock attractor) {
-        if (this.platform == TravelDirection.SOUTHBOUND || this.platform == TravelDirection.EASTBOUND) {
+        if (this.platform == PassengerMovement.TravelDirection.SOUTHBOUND || this.platform == PassengerMovement.TravelDirection.EASTBOUND) {
             if (this.getAttractors().indexOf(attractor) == 0) {
                 return TrainDoorEntranceLocation.LEFT;
             } else {
@@ -449,7 +449,7 @@ public class TrainDoor extends Gate implements Queueable {
         public TrainDoor create(
                 List<AmenityBlock> amenityBlocks,
                 boolean enabled,
-                TravelDirection travelDirection,
+                PassengerMovement.TravelDirection travelDirection,
                 List<TrainDoorCarriage> trainDoorCarriagesSupported
         ) {
             return new TrainDoor(
@@ -458,25 +458,6 @@ public class TrainDoor extends Gate implements Queueable {
                     travelDirection,
                     trainDoorCarriagesSupported
             );
-        }
-    }
-
-    // The platform direction this train door waiting area is at
-    public enum TravelDirection {
-        NORTHBOUND("Northbound"),
-        SOUTHBOUND("Southbound"),
-        EASTBOUND("Eastbound"),
-        WESTBOUND("Westbound");
-
-        private final String name;
-
-        TravelDirection(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return this.name;
         }
     }
 

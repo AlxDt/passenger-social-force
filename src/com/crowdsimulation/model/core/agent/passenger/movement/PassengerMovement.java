@@ -5,8 +5,8 @@ import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
@@ -89,7 +89,7 @@ public class PassengerMovement {
     private Floor currentFloor;
 
     // Denotes the direction of travel of the passenger
-    private TrainDoor.TravelDirection travelDirection;
+    private TravelDirection travelDirection;
 
     // Denotes the disposition of the passenger - whether the passenger is about to ride a train, or the passenger is
     // about to depart the station (macroscopic state)
@@ -180,7 +180,7 @@ public class PassengerMovement {
             Gate gate,
             Passenger parent,
             Coordinates coordinates,
-            TrainDoor.TravelDirection travelDirection
+            TravelDirection travelDirection
     ) {
         this.parent = parent;
 
@@ -773,7 +773,14 @@ public class PassengerMovement {
 
                 currentAmenity = candidateAttractor.getParent();
 
-                if (currentAmenity instanceof TrainDoor) {
+                if (currentAmenity instanceof Turnstile) {
+                    Turnstile turnstile = ((Turnstile) currentAmenity);
+
+                    currentQueueObject
+                            = turnstile.getQueueObjects().get(this.disposition);
+
+                    currentTrainDoorEntranceLocation = null;
+                } else if (currentAmenity instanceof TrainDoor) {
                     TrainDoor trainDoor = ((TrainDoor) currentAmenity);
 
                     currentTrainDoorEntranceLocation
@@ -783,8 +790,9 @@ public class PassengerMovement {
                 } else {
                     Queueable queueable = ((Queueable) currentAmenity);
 
-                    currentTrainDoorEntranceLocation = null;
                     currentQueueObject = queueable.getQueueObject();
+
+                    currentTrainDoorEntranceLocation = null;
                 }
 
                 double attractorScore;
@@ -1755,7 +1763,9 @@ public class PassengerMovement {
             floorFieldState = turnstile.getTurnstileFloorFieldStateAlighting();
         }
 
-        apexLocation = turnstile.getQueueObject().getFloorFields().get(floorFieldState).getApices().get(0);
+        apexLocation
+                = turnstile.getQueueObjects().get(this.disposition).getFloorFields().get(floorFieldState).getApices()
+                .get(0);
 
         // Then compute the heading from the apex to the turnstile attractor
         newHeading = Coordinates.headingTowards(
@@ -2257,7 +2267,18 @@ public class PassengerMovement {
                 if (this.goalFloorFieldState == null && this.goalFloorField == null) {
                     Queueable queueable = this.getGoalAmenityAsQueueable();
 
-                    if (queueable instanceof TrainDoor) {
+                    if (queueable instanceof Turnstile) {
+                        this.goalFloorFieldState = new QueueingFloorField.FloorFieldState(
+                                this.disposition,
+                                State.IN_QUEUE,
+                                this.getGoalAmenityAsQueueable()
+                        );
+
+                        this.goalFloorField = queueable.retrieveFloorField(
+                                this.goalQueueObject,
+                                this.goalFloorFieldState
+                        );
+                    } else if (queueable instanceof TrainDoor) {
                         this.goalFloorFieldState = new PlatformFloorField.PlatformFloorFieldState(
                                 this.disposition,
                                 State.IN_QUEUE,
@@ -2281,6 +2302,13 @@ public class PassengerMovement {
                                 this.goalFloorFieldState
                         );
                     }
+                }
+
+                if (this.goalFloorField == null) {
+                    this.getGoalAmenityAsQueueable().retrieveFloorField(
+                            this.goalQueueObject,
+                            this.goalFloorFieldState
+                    );
                 }
 
                 this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
@@ -2921,5 +2949,23 @@ public class PassengerMovement {
         RIDING_TRAIN,
         /* Final actions */
         EXITING_STATION
+    }
+
+    public enum TravelDirection {
+        NORTHBOUND("Northbound"),
+        SOUTHBOUND("Southbound"),
+        EASTBOUND("Eastbound"),
+        WESTBOUND("Westbound");
+
+        private final String name;
+
+        TravelDirection(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
     }
 }

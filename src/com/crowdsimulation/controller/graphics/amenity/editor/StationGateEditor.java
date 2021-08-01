@@ -2,12 +2,12 @@ package com.crowdsimulation.controller.graphics.amenity.editor;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public class StationGateEditor extends AmenityEditor {
             boolean enabled,
             double chancePerSecond,
             StationGate.StationGateMode stationGateMode,
-            List<TrainDoor.TravelDirection> stationGatePassengerTravelDirections
+            List<PassengerMovement.TravelDirection> stationGatePassengerTravelDirections
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Gate.GateBlock.convertToGateBlocks(
@@ -73,7 +73,7 @@ public class StationGateEditor extends AmenityEditor {
             boolean stationGateEnabled,
             double chancePerSecond,
             StationGate.StationGateMode stationGateMode,
-            List<TrainDoor.TravelDirection> stationGateDirection
+            List<PassengerMovement.TravelDirection> stationGateDirection
     ) {
         stationGateToEdit.setEnabled(
                 stationGateEnabled

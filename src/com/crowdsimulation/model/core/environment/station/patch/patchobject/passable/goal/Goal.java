@@ -17,19 +17,15 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
     // Denotes the time left to wait until this goal allows a passenger to pass
     private int waitingTimeLeft;
 
-    // Denotes the queueing object associated with all goals like this
-    private final QueueObject queueObject;
-
     // Maps queue objects into their corresponding attractors
     private final Map<QueueObject, AmenityBlock> queueObjectAmenityBlockMap;
 
-    protected Goal(List<AmenityBlock> amenityBlocks, boolean enabled, int waitingTime, QueueObject queueObject) {
+    protected Goal(List<AmenityBlock> amenityBlocks, boolean enabled, int waitingTime) {
         super(amenityBlocks, enabled);
 
         this.waitingTime = waitingTime;
         this.waitingTimeLeft = this.waitingTime;
 
-        this.queueObject = queueObject;
         this.queueObjectAmenityBlockMap = new HashMap<>();
     }
 
@@ -39,10 +35,6 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
 
     public void setWaitingTime(int waitingTime) {
         this.waitingTime = waitingTime;
-    }
-
-    public QueueObject getQueueObject() {
-        return this.queueObject;
     }
 
     public Map<QueueObject, AmenityBlock> getQueueObjectAmenityBlockMap() {

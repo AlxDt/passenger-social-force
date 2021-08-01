@@ -4,6 +4,7 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
 import com.crowdsimulation.controller.controls.service.InitializeScreenService;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
@@ -151,7 +152,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
             Label stationGateDirectionLabel,
-            ListView<TrainDoor.TravelDirection> stationGateDirectionListView,
+            ListView<PassengerMovement.TravelDirection> stationGateDirectionListView,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -204,7 +205,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             // Train boarding area
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TravelDirection> trainDoorDirectionChoiceBox,
+            ChoiceBox<PassengerMovement.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
             Button saveTrainDoorButton,
@@ -364,7 +365,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button clearPassengersFloorButton,
             // Platform controls
             Label platformDirectionLabel,
-            ChoiceBox<TrainDoor.TravelDirection> platformDirectionChoiceBox,
+            ChoiceBox<PassengerMovement.TravelDirection> platformDirectionChoiceBox,
             Label platformCarriagesLabel,
             ChoiceBox<TrainDoor.TrainDoorCarriage> platformCarriagesChoiceBox,
             ToggleButton openTrainDoorsButton
@@ -400,7 +401,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
             Label stationGateDirectionLabel,
-            ListView<TrainDoor.TravelDirection> stationGateDirectionListView,
+            ListView<PassengerMovement.TravelDirection> stationGateDirectionListView,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -444,7 +445,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Label stationGateModeLabel,
             ChoiceBox<StationGate.StationGateMode> stationGateModeChoiceBox,
             Label stationGateDirectionLabel,
-            ListView<TrainDoor.TravelDirection> stationGateDirectionListView,
+            ListView<PassengerMovement.TravelDirection> stationGateDirectionListView,
             Label stationGateSpawnLabel,
             Spinner<Integer> stationGateSpinner,
             Button saveStationGateButton,
@@ -462,10 +463,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
         stationGateDirectionLabel.setLabelFor(stationGateDirectionListView);
 
         stationGateDirectionListView.setItems(FXCollections.observableArrayList(
-                TrainDoor.TravelDirection.NORTHBOUND,
-                TrainDoor.TravelDirection.SOUTHBOUND,
-                TrainDoor.TravelDirection.EASTBOUND,
-                TrainDoor.TravelDirection.WESTBOUND
+                PassengerMovement.TravelDirection.NORTHBOUND,
+                PassengerMovement.TravelDirection.SOUTHBOUND,
+                PassengerMovement.TravelDirection.EASTBOUND,
+                PassengerMovement.TravelDirection.WESTBOUND
         ));
         stationGateDirectionListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
@@ -728,7 +729,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializePlatformAmenities(
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TravelDirection> trainDoorDirectionChoiceBox,
+            ChoiceBox<PassengerMovement.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
             Button saveTrainDoorButton,
@@ -762,7 +763,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeTrainBoardingArea(
             CheckBox trainDoorEnableCheckBox,
             Label trainDoorDirectionLabel,
-            ChoiceBox<TrainDoor.TravelDirection> trainDoorDirectionChoiceBox,
+            ChoiceBox<PassengerMovement.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriagesListView,
             Button saveTrainDoorButton,
@@ -772,10 +773,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
         trainDoorDirectionLabel.setLabelFor(trainDoorDirectionChoiceBox);
 
         trainDoorDirectionChoiceBox.setItems(FXCollections.observableArrayList(
-                TrainDoor.TravelDirection.NORTHBOUND,
-                TrainDoor.TravelDirection.SOUTHBOUND,
-                TrainDoor.TravelDirection.WESTBOUND,
-                TrainDoor.TravelDirection.EASTBOUND
+                PassengerMovement.TravelDirection.NORTHBOUND,
+                PassengerMovement.TravelDirection.SOUTHBOUND,
+                PassengerMovement.TravelDirection.WESTBOUND,
+                PassengerMovement.TravelDirection.EASTBOUND
         ));
         trainDoorDirectionChoiceBox.getSelectionModel().select(0);
 
@@ -942,7 +943,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
     private static void initializePlatformControls(
             Label platformDirectionLabel,
-            ChoiceBox<TrainDoor.TravelDirection> platformDirectionChoiceBox,
+            ChoiceBox<PassengerMovement.TravelDirection> platformDirectionChoiceBox,
             Label platformCarriagesLabel,
             ChoiceBox<TrainDoor.TrainDoorCarriage> platformCarriagesChoiceBox,
             ToggleButton openTrainDoorsButton
@@ -950,10 +951,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
         platformDirectionLabel.setLabelFor(platformDirectionChoiceBox);
 
         platformDirectionChoiceBox.setItems(FXCollections.observableArrayList(
-                TrainDoor.TravelDirection.NORTHBOUND,
-                TrainDoor.TravelDirection.SOUTHBOUND,
-                TrainDoor.TravelDirection.WESTBOUND,
-                TrainDoor.TravelDirection.EASTBOUND
+                PassengerMovement.TravelDirection.NORTHBOUND,
+                PassengerMovement.TravelDirection.SOUTHBOUND,
+                PassengerMovement.TravelDirection.WESTBOUND,
+                PassengerMovement.TravelDirection.EASTBOUND
         ));
         platformDirectionChoiceBox.getSelectionModel().select(0);
 

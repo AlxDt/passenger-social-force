@@ -13,9 +13,8 @@ public abstract class BlockableAmenity extends Goal {
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
             int waitingTime,
-            QueueObject queueObject,
             boolean blockEntry) {
-        super(amenityBlocks, enabled, waitingTime, queueObject);
+        super(amenityBlocks, enabled, waitingTime);
 
         this.blockEntry = blockEntry;
     }

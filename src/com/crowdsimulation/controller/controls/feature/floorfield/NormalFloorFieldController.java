@@ -5,7 +5,6 @@ import com.crowdsimulation.controller.controls.ScreenController;
 import com.crowdsimulation.controller.controls.alert.AlertController;
 import com.crowdsimulation.controller.controls.service.floorfield.InitializeNormalFloorFieldService;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import javafx.beans.property.SimpleDoubleProperty;

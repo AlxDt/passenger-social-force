@@ -22,6 +22,9 @@ public class TicketBooth extends Goal {
     // Takes note of the passenger currently transacting in the ticket booth
     private Passenger passengerTransacting;
 
+    // Denotes the queueing object associated with this ticket booth
+    private final QueueObject queueObject;
+
     // Factory for ticket booth
     public static final TicketBoothFactory ticketBoothFactory;
 
@@ -176,9 +179,11 @@ public class TicketBooth extends Goal {
         super(
                 amenityBlocks,
                 enabled,
-                waitingTime,
-                new QueueObject()
+                waitingTime
         );
+
+        // Initialize this turnstile's queue objects
+        this.queueObject = new QueueObject();
 
         this.ticketType = ticketType;
         this.passengerTransacting = null;
@@ -282,6 +287,11 @@ public class TicketBooth extends Goal {
         for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
             deleteFloorField(floorFieldState);
         }
+    }
+
+    @Override
+    public QueueObject getQueueObject() {
+        return this.queueObject;
     }
 
     @Override

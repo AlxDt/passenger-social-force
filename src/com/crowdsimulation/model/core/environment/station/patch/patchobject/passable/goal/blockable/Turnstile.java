@@ -8,22 +8,26 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.Turnstile
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.TurnstileFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Turnstile extends BlockableAmenity {
     // Denotes the current mode of this turnstile
     private TurnstileMode turnstileMode;
 
+    // Denotes the queueing object associated with this turnstile
+    private final HashMap<PassengerMovement.Disposition, QueueObject> queueObjects;
+
     // Factory for turnstile creation
     public static final TurnstileFactory turnstileFactory;
 
     // Denotes the floor field states needed to access the floor fields of this turnstile
-    private final QueueingFloorField.FloorFieldState turnstileFloorFieldStateBoarding;
-    private final QueueingFloorField.FloorFieldState turnstileFloorFieldStateAlighting;
+    private final TurnstileFloorField.FloorFieldState turnstileFloorFieldStateBoarding;
+    private final TurnstileFloorField.FloorFieldState turnstileFloorFieldStateAlighting;
 
     // Handles how this turnstile is displayed
     private final TurnstileGraphic turnstileGraphic;
@@ -263,18 +267,23 @@ public class Turnstile extends BlockableAmenity {
                 amenityBlocks,
                 enabled,
                 waitingTime,
-                new QueueObject(),
                 blockEntry
         );
 
+        // Initialize this turnstile's queue objects
+        this.queueObjects = new HashMap<>();
+
+        this.queueObjects.put(PassengerMovement.Disposition.BOARDING, new QueueObject());
+        this.queueObjects.put(PassengerMovement.Disposition.ALIGHTING, new QueueObject());
+
         // Initialize this turnstile's floor field states
-        this.turnstileFloorFieldStateBoarding = new QueueingFloorField.FloorFieldState(
+        this.turnstileFloorFieldStateBoarding = new TurnstileFloorField.FloorFieldState(
                 PassengerMovement.Disposition.BOARDING,
                 PassengerMovement.State.IN_QUEUE,
                 this
         );
 
-        this.turnstileFloorFieldStateAlighting = new QueueingFloorField.FloorFieldState(
+        this.turnstileFloorFieldStateAlighting = new TurnstileFloorField.FloorFieldState(
                 PassengerMovement.Disposition.ALIGHTING,
                 PassengerMovement.State.IN_QUEUE,
                 this
@@ -283,15 +292,21 @@ public class Turnstile extends BlockableAmenity {
         this.turnstileMode = turnstileMode;
 
         // Add blank floor fields, one for each direction
-        QueueingFloorField floorFieldBoarding = QueueingFloorField.queueingFloorFieldFactory.create(this);
-        QueueingFloorField floorFieldAlighting = QueueingFloorField.queueingFloorFieldFactory.create(this);
+        TurnstileFloorField floorFieldBoarding
+                = TurnstileFloorField.turnstileFloorFieldFactory.create(this);
+        TurnstileFloorField floorFieldAlighting
+                = TurnstileFloorField.turnstileFloorFieldFactory.create(this);
 
         // Using the floor field states defined earlier, create the floor fields
-        this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateBoarding, floorFieldBoarding);
-        this.getQueueObject().getFloorFields().put(this.turnstileFloorFieldStateAlighting, floorFieldAlighting);
+        this.queueObjects.get(PassengerMovement.Disposition.BOARDING).getFloorFields().put(
+                this.turnstileFloorFieldStateBoarding,
+                floorFieldBoarding
+        );
 
-        // Define the relationships between the queue objects and the attractors
-//        this.getQueueObjectAmenityBlockMap().get()
+        this.queueObjects.get(PassengerMovement.Disposition.ALIGHTING).getFloorFields().put(
+                this.turnstileFloorFieldStateAlighting,
+                floorFieldAlighting
+        );
 
         this.turnstileGraphic = new TurnstileGraphic(this);
     }
@@ -304,11 +319,15 @@ public class Turnstile extends BlockableAmenity {
         this.turnstileMode = turnstileMode;
     }
 
-    public QueueingFloorField.FloorFieldState getTurnstileFloorFieldStateBoarding() {
+    public HashMap<PassengerMovement.Disposition, QueueObject> getQueueObjects() {
+        return queueObjects;
+    }
+
+    public TurnstileFloorField.FloorFieldState getTurnstileFloorFieldStateBoarding() {
         return turnstileFloorFieldStateBoarding;
     }
 
-    public QueueingFloorField.FloorFieldState getTurnstileFloorFieldStateAlighting() {
+    public TurnstileFloorField.FloorFieldState getTurnstileFloorFieldStateAlighting() {
         return turnstileFloorFieldStateAlighting;
     }
 
@@ -318,8 +337,8 @@ public class Turnstile extends BlockableAmenity {
     }
 
     @Override
-    public List<QueueingFloorField.FloorFieldState> retrieveFloorFieldStates() {
-        List<QueueingFloorField.FloorFieldState> floorFieldStates = new ArrayList<>();
+    public List<TurnstileFloorField.FloorFieldState> retrieveFloorFieldStates() {
+        List<TurnstileFloorField.FloorFieldState> floorFieldStates = new ArrayList<>();
 
         floorFieldStates.add(this.turnstileFloorFieldStateBoarding);
         floorFieldStates.add(this.turnstileFloorFieldStateAlighting);
@@ -328,11 +347,11 @@ public class Turnstile extends BlockableAmenity {
     }
 
     @Override
-    public QueueingFloorField retrieveFloorField(
+    public TurnstileFloorField retrieveFloorField(
             QueueObject queueObject,
-            QueueingFloorField.FloorFieldState floorFieldState
+            TurnstileFloorField.FloorFieldState floorFieldState
     ) {
-        return queueObject.getFloorFields().get(
+        return (TurnstileFloorField) queueObject.getFloorFields().get(
                 floorFieldState
         );
     }
@@ -340,19 +359,19 @@ public class Turnstile extends BlockableAmenity {
     @Override
     // Denotes whether the floor field for this turnstile is complete
     public boolean isFloorFieldsComplete() {
-        QueueingFloorField boardingFloorField;
-        QueueingFloorField alightingFloorField;
+        TurnstileFloorField boardingFloorField;
+        TurnstileFloorField alightingFloorField;
 
         boolean boardingCheck;
         boolean alightingCheck;
 
         boardingFloorField = retrieveFloorField(
-                turnstileFloorFieldStateBoarding.getTarget().getQueueObject(),
+                this.getQueueObjects().get(PassengerMovement.Disposition.BOARDING),
                 turnstileFloorFieldStateBoarding
         );
 
         alightingFloorField = retrieveFloorField(
-                turnstileFloorFieldStateAlighting.getTarget().getQueueObject(),
+                this.getQueueObjects().get(PassengerMovement.Disposition.ALIGHTING),
                 turnstileFloorFieldStateAlighting
         );
 
@@ -375,10 +394,11 @@ public class Turnstile extends BlockableAmenity {
 
     // Clear all floor fields of the given floor field state in this turnstile
     @Override
-    public void deleteFloorField(QueueingFloorField.FloorFieldState floorFieldState) {
-        QueueingFloorField boardingFloorField = retrieveFloorField(this.getQueueObject(), floorFieldState);
+    public void deleteFloorField(TurnstileFloorField.FloorFieldState floorFieldState) {
+        TurnstileFloorField boardingFloorField
+                = retrieveFloorField(this.getQueueObjects().get(floorFieldState.getDisposition()), floorFieldState);
 
-        QueueingFloorField.clearFloorField(
+        TurnstileFloorField.clearFloorField(
                 boardingFloorField,
                 floorFieldState
         );
@@ -387,11 +407,16 @@ public class Turnstile extends BlockableAmenity {
     @Override
     public void deleteAllFloorFields() {
         // Sweep through each and every floor field and delete them
-        List<QueueingFloorField.FloorFieldState> floorFieldStates = retrieveFloorFieldStates();
+        List<TurnstileFloorField.FloorFieldState> floorFieldStates = retrieveFloorFieldStates();
 
-        for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
+        for (TurnstileFloorField.FloorFieldState floorFieldState : floorFieldStates) {
             deleteFloorField(floorFieldState);
         }
+    }
+
+    @Override
+    public QueueObject getQueueObject() {
+        return null;
     }
 
     @Override

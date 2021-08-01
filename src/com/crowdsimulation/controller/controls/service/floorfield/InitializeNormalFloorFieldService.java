@@ -4,7 +4,7 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.controls.feature.floorfield.NormalFloorFieldController;
 import com.crowdsimulation.controller.controls.feature.main.MainScreenController;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform.PlatformFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -81,7 +81,7 @@ public class InitializeNormalFloorFieldService {
 
             PlatformFloorField.PlatformFloorFieldState platformFloorFieldState
                     = new PlatformFloorField.PlatformFloorFieldState(
-                    directionChoiceBox.getSelectionModel().getSelectedItem().getDirection(),
+                    directionChoiceBox.getSelectionModel().getSelectedItem().getDisposition(),
                     directionChoiceBox.getSelectionModel().getSelectedItem().getState(),
                     directionChoiceBox.getSelectionModel().getSelectedItem().getTarget(),
                     updatedTrainDoorEntranceLocation

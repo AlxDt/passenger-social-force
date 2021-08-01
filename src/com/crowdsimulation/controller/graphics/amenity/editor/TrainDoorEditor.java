@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics.amenity.editor;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -14,7 +15,7 @@ public class TrainDoorEditor {
     public void draw(
             Patch currentPatch,
             boolean enabled,
-            TrainDoor.TravelDirection travelDirection,
+            PassengerMovement.TravelDirection travelDirection,
             List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
@@ -68,7 +69,7 @@ public class TrainDoorEditor {
     public void edit(
             TrainDoor trainDoorToEdit,
             boolean enabled,
-            TrainDoor.TravelDirection travelDirection,
+            PassengerMovement.TravelDirection travelDirection,
             List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
     ) {
         trainDoorToEdit.setEnabled(

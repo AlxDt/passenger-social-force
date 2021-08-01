@@ -1,9 +1,8 @@
-package com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.platform;
+package com.crowdsimulation.model.core.environment.station.patch.floorfield.headful;
 
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 
@@ -11,6 +10,10 @@ import java.util.List;
 import java.util.Objects;
 
 public class PlatformFloorField extends QueueingFloorField {
+    protected PlatformFloorField(Queueable target) {
+        super(target);
+    }
+
     // Factory for platform floor field creation
     public static PlatformFloorFieldFactory platformFloorFieldFactory;
 
@@ -99,10 +102,6 @@ public class PlatformFloorField extends QueueingFloorField {
         if (Math.abs(value - 1.0) < EPSILON) {
             platformFloorField.getApices().remove(patch);
         }
-    }
-
-    protected PlatformFloorField(Queueable target) {
-        super(target);
     }
 
     // A combination of a passenger's direction, state, and current target, this object is used for the differentiation
