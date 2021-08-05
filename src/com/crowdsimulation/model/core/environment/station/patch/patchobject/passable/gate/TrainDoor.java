@@ -10,10 +10,11 @@ import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
-import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.PlatformFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ import java.util.Map;
 
 public class TrainDoor extends Gate implements Queueable {
     // Denotes the platform side served by this train door
-    private PassengerMovement.TravelDirection platform;
+    private PassengerMovement.TravelDirection platformDirection;
 
     // Denotes whether this train door is open and allows entry and exit of passengers
     private boolean open;
@@ -121,12 +122,12 @@ public class TrainDoor extends Gate implements Queueable {
     protected TrainDoor(
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
-            PassengerMovement.TravelDirection platform,
+            PassengerMovement.TravelDirection platformDirection,
             List<TrainDoorCarriage> trainDoorCarriagesSupported
     ) {
         super(amenityBlocks, enabled);
 
-        this.platform = platform;
+        this.platformDirection = platformDirection;
         this.open = false;
         this.trainDoorCarriagesSupported = new ArrayList<>();
 
@@ -153,7 +154,7 @@ public class TrainDoor extends Gate implements Queueable {
         // Define the relationships between the queue objects and the attractors
         this.queueObjectAmenityBlockMap = new HashMap<>();
 
-        if (platform == PassengerMovement.TravelDirection.SOUTHBOUND || platform == PassengerMovement.TravelDirection.EASTBOUND) {
+        if (platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND || platformDirection == PassengerMovement.TravelDirection.EASTBOUND) {
             this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
             this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
 
@@ -197,12 +198,12 @@ public class TrainDoor extends Gate implements Queueable {
         this.trainDoorGraphic = new TrainDoorGraphic(this);
     }
 
-    public PassengerMovement.TravelDirection getPlatform() {
-        return platform;
+    public PassengerMovement.TravelDirection getPlatformDirection() {
+        return platformDirection;
     }
 
-    public void setPlatform(PassengerMovement.TravelDirection platform) {
-        this.platform = platform;
+    public void setPlatformDirection(PassengerMovement.TravelDirection platformDirection) {
+        this.platformDirection = platformDirection;
     }
 
     public boolean isOpen() {
@@ -258,7 +259,7 @@ public class TrainDoor extends Gate implements Queueable {
     }
 
     public TrainDoorEntranceLocation getTrainDoorEntranceLocationFromAttractor(AmenityBlock attractor) {
-        if (this.platform == PassengerMovement.TravelDirection.SOUTHBOUND || this.platform == PassengerMovement.TravelDirection.EASTBOUND) {
+        if (this.platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND || this.platformDirection == PassengerMovement.TravelDirection.EASTBOUND) {
             if (this.getAttractors().indexOf(attractor) == 0) {
                 return TrainDoorEntranceLocation.LEFT;
             } else {
@@ -370,31 +371,35 @@ public class TrainDoor extends Gate implements Queueable {
 
     @Override
     public Passenger spawnPassenger() {
-        return null;
-/*        // TODO: Spawn from spawners
-        // Check if all attractors in this amenity have no passengers
+        // Check if all attractors and spawners in this amenity have no passengers
         for (AmenityBlock attractor : this.getAttractors()) {
             if (!attractor.getPatch().getPassengers().isEmpty()) {
                 return null;
             }
         }
 
-        // TODO: Consider if entrance/exit only
-        AmenityBlock attractor = this.getAttractors().get(0);
+        for (GateBlock spawner : this.getSpawners()) {
+            if (!spawner.getPatch().getPassengers().isEmpty()) {
+                return null;
+            }
+        }
 
-        // Get the pool of possible travel directions of the passengers to be spawned, depending on the settings of this
-        // passenger gate
-        // From this pool of travel directions, pick a random one
-        int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.stationGatePassengerTravelDirections.size());
-        TrainDoor.TravelDirection travelDirectionChosen = this.stationGatePassengerTravelDirections.get(randomIndex);
+        // Randomly choose between the spawner locations in the train door
+        int spawnerCount = this.getSpawners().size();
+        int randomSpawnerIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(spawnerCount);
 
-        // If that random attractor is free from passengers, generate one
-        if (attractor.getPatch().getPassengers().isEmpty()) {
-            return Passenger.passengerFactory.create(attractor.getPatch(), travelDirectionChosen);
+        GateBlock spawner = this.getSpawners().get(randomSpawnerIndex);
+
+        // The direction of the departing passenger will be the direction of this train door
+        PassengerMovement.TravelDirection travelDirection = this.platformDirection;
+
+        // If that spawner is free from passengers, generate one
+        if (spawner.getPatch().getPassengers().isEmpty()) {
+            return Passenger.passengerFactory.create(spawner.getPatch(), travelDirection, false);
         } else {
             // Else, do nothing, so return null
             return null;
-        }*/
+        }
     }
 
     // Train door block

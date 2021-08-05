@@ -76,7 +76,7 @@ public class TrainDoorEditor {
                 enabled
         );
 
-        trainDoorToEdit.setPlatform(
+        trainDoorToEdit.setPlatformDirection(
                 travelDirection
         );
 

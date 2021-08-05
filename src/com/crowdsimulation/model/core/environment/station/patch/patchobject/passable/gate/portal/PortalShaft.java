@@ -6,7 +6,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 
 import java.util.List;
 
-public class PortalShaft extends NonObstacle {
+public abstract class PortalShaft extends NonObstacle {
     // Denotes the lower and upper portals of this shaft
     private Portal lowerPortal;
     private Portal upperPortal;
@@ -43,6 +43,9 @@ public class PortalShaft extends NonObstacle {
     public void setMoveTime(int moveTime) {
         this.moveTime = moveTime;
     }
+
+    // Update the passengers' time spent in this portal
+    public abstract void updateQueues();
 
     // Portal shaft factory
     public static abstract class PortalShaftFactory extends Gate.GateFactory {

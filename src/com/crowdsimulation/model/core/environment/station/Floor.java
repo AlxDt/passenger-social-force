@@ -5,8 +5,8 @@ import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
@@ -187,7 +187,13 @@ public class Floor extends BaseStationObject implements Environment {
         return this.patches;
     }
 
-    public static List<Patch> get7x7Field(Patch centerPatch, double heading, boolean includeCenterPatch, double fieldOfViewAngle) {
+    public static List<Patch> get7x7Field(
+            Floor floor,
+            Patch centerPatch,
+            double heading,
+            boolean includeCenterPatch,
+            double fieldOfViewAngle
+    ) {
         int truncatedX = (int) (centerPatch.getPatchCenterCoordinates().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS);
         int truncatedY = (int) (centerPatch.getPatchCenterCoordinates().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS);
 
@@ -212,7 +218,7 @@ public class Floor extends BaseStationObject implements Environment {
                 if (rowOffset < 0) {
                     yCondition = truncatedY + rowOffset > 0;
                 } else if (rowOffset > 0) {
-                    yCondition = truncatedY + rowOffset < Main.simulator.getCurrentFloor().getRows();
+                    yCondition = truncatedY + rowOffset < floor.getRows();
                 } else {
                     yCondition = true;
                 }
@@ -221,15 +227,15 @@ public class Floor extends BaseStationObject implements Environment {
                 if (columnOffset < 0) {
                     xCondition = truncatedX + columnOffset > 0;
                 } else if (columnOffset > 0) {
-                    xCondition = truncatedX + columnOffset < Main.simulator.getCurrentFloor().getColumns();
+                    xCondition = truncatedX + columnOffset < floor.getColumns();
                 } else {
                     xCondition = true;
                 }
 
                 // Insert the patch to the list of patches to be explored if the patches are within the bounds of the
-                // walkway
+                // floor
                 if (xCondition && yCondition) {
-                    chosenPatch = Main.simulator.getCurrentFloor().getPatch(
+                    chosenPatch = floor.getPatch(
                             truncatedY + rowOffset,
                             truncatedX + columnOffset
                     );

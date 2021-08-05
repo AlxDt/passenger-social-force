@@ -172,7 +172,6 @@ public class Station extends BaseStationObject implements Environment {
         for (Floor floor : station.getFloors()) {
             // Just sample the first station gate in the list, if any
             if (!floor.getStationGates().isEmpty()) {
-                // TODO: Only consider station gates with entrances
                 floorStationGatesMap.put(floor, floor.getStationGates().get(0));
             }
         }

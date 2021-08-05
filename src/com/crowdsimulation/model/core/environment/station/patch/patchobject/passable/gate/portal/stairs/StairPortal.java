@@ -7,10 +7,12 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGr
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.StairGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
+import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.List;
 
@@ -300,6 +302,51 @@ public class StairPortal extends Portal {
     @Override
     public Passenger spawnPassenger() {
         return null;
+    }
+
+    @Override
+    public Patch emit() {
+        // Check if all attractors and spawners in this amenity have no passengers
+        for (AmenityBlock attractor : this.getAttractors()) {
+            if (!attractor.getPatch().getPassengers().isEmpty()) {
+                return null;
+            }
+        }
+
+        for (GateBlock spawner : this.getSpawners()) {
+            if (!spawner.getPatch().getPassengers().isEmpty()) {
+                return null;
+            }
+        }
+
+        // Randomly choose between the spawner locations in the portal
+        int spawnerCount = this.getSpawners().size();
+        int randomSpawnerIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(spawnerCount);
+
+        GateBlock spawner = this.getSpawners().get(randomSpawnerIndex);
+
+        // Once this point is reached, return the patch where the passenger will be emitted
+        return spawner.getPatch();
+    }
+
+    @Override
+    public void absorb(Passenger passenger) {
+        PassengerMovement passengerMovement = passenger.getPassengerMovement();
+
+        passengerMovement.enterPortal();
+
+        // Set the appropriate passenger state (ascending or descending)
+        passengerMovement.setState(PassengerMovement.State.IN_NONQUEUEABLE);
+
+        if (passengerMovement.getAction() == PassengerMovement.Action.WILL_DESCEND) {
+            passengerMovement.setAction(PassengerMovement.Action.DESCENDING);
+
+            this.stairShaft.getDescendingQueue().put(passenger, 0);
+        } else {
+            passengerMovement.setAction(PassengerMovement.Action.ASCENDING);
+
+            this.stairShaft.getAscendingQueue().put(passenger, 0);
+        }
     }
 
     // Stair portal block

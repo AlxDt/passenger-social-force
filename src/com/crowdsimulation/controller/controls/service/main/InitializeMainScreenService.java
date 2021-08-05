@@ -5,8 +5,8 @@ import com.crowdsimulation.controller.controls.feature.main.MainScreenController
 import com.crowdsimulation.controller.controls.service.InitializeScreenService;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
@@ -458,7 +458,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 StationGate.StationGateMode.EXIT,
                 StationGate.StationGateMode.ENTRANCE_AND_EXIT
         ));
-        stationGateModeChoiceBox.getSelectionModel().select(0);
+        stationGateModeChoiceBox.getSelectionModel().select(StationGate.StationGateMode.ENTRANCE_AND_EXIT);
 
         stationGateDirectionLabel.setLabelFor(stationGateDirectionListView);
 
@@ -659,7 +659,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 TicketBooth.TicketType.STORED_VALUE,
                 TicketBooth.TicketType.ALL_TICKET_TYPES
         ));
-        ticketBoothModeChoiceBox.getSelectionModel().select(0);
+        ticketBoothModeChoiceBox.getSelectionModel().select(TicketBooth.TicketType.SINGLE_JOURNEY);
 
         ticketBoothIntervalLabel.setLabelFor(ticketBoothIntervalSpinner);
 
@@ -703,7 +703,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 Turnstile.TurnstileMode.ALIGHTING,
                 Turnstile.TurnstileMode.BIDIRECTIONAL
         ));
-        turnstileDirectionChoiceBox.getSelectionModel().select(0);
+        turnstileDirectionChoiceBox.getSelectionModel().select(Turnstile.TurnstileMode.BIDIRECTIONAL);
 
         turnstileIntervalLabel.setLabelFor(turnstileIntervalSpinner);
 
@@ -778,7 +778,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 PassengerMovement.TravelDirection.WESTBOUND,
                 PassengerMovement.TravelDirection.EASTBOUND
         ));
-        trainDoorDirectionChoiceBox.getSelectionModel().select(0);
+        trainDoorDirectionChoiceBox.getSelectionModel().select(PassengerMovement.TravelDirection.NORTHBOUND);
 
         trainDoorCarriageLabel.setLabelFor(trainDoorCarriagesListView);
 
@@ -817,7 +817,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 Track.TrackDirection.WESTBOUND,
                 Track.TrackDirection.EASTBOUND
         ));
-        trackDirectionChoiceBox.getSelectionModel().select(0);
+        trackDirectionChoiceBox.getSelectionModel().select(Track.TrackDirection.NORTHBOUND);
 
         saveTrackButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteTrackButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
@@ -856,7 +856,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 Wall.WallType.BELT_BARRIER,
                 Wall.WallType.METAL_BARRIER
         ));
-        wallTypeChoiceBox.getSelectionModel().select(0);
+        wallTypeChoiceBox.getSelectionModel().select(Wall.WallType.WALL);
 
         saveWallButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteWallButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
@@ -956,7 +956,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 PassengerMovement.TravelDirection.WESTBOUND,
                 PassengerMovement.TravelDirection.EASTBOUND
         ));
-        platformDirectionChoiceBox.getSelectionModel().select(0);
+        platformDirectionChoiceBox.getSelectionModel().select(PassengerMovement.TravelDirection.NORTHBOUND);
 
         platformCarriagesLabel.setLabelFor(platformDirectionChoiceBox);
 
@@ -968,7 +968,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 TrainDoor.TrainDoorCarriage.MRT_3_FIRST_GENERATION,
                 TrainDoor.TrainDoorCarriage.MRT_3_SECOND_GENERATION
         ));
-        platformCarriagesChoiceBox.getSelectionModel().select(0);
+        platformCarriagesChoiceBox.getSelectionModel().select(TrainDoor.TrainDoorCarriage.LRT_1_FIRST_GENERATION);
     }
 
     public static void initializeScrollPane(

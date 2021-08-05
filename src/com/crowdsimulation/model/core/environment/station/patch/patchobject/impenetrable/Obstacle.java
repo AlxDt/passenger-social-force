@@ -1,4 +1,4 @@
-package com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous;
+package com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable;
 
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;

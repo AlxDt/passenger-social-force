@@ -15,7 +15,6 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -432,6 +431,16 @@ public class ElevatorPortal extends Portal implements Queueable {
 
     @Override
     public Passenger spawnPassenger() {
+        return null;
+    }
+
+    @Override
+    public void absorb(Passenger passenger) {
+
+    }
+
+    @Override
+    public Patch emit() {
         return null;
     }
 

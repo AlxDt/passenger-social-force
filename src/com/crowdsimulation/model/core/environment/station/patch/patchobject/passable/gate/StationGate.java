@@ -345,7 +345,6 @@ public class StationGate extends Gate {
         }
 
         // TODO: Consider if entrance/exit only
-//        AmenityBlock attractor = this.getAttractors().get(0);
         GateBlock spawner = this.getSpawners().get(0);
 
         // Get the pool of possible travel directions of the passengers to be spawned, depending on the settings of this
@@ -356,7 +355,7 @@ public class StationGate extends Gate {
 
         // If that spawner is free from passengers, generate one
         if (spawner.getPatch().getPassengers().isEmpty()) {
-            return Passenger.passengerFactory.create(spawner.getPatch(), travelDirectionChosen);
+            return Passenger.passengerFactory.create(spawner.getPatch(), travelDirectionChosen, true);
         } else {
             // Else, do nothing, so return null
             return null;

@@ -16,8 +16,8 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
@@ -575,9 +575,9 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }*/
 
-/*                    foregroundGraphicsContext.setFill(Color.VIOLET);
+                    foregroundGraphicsContext.setFill(Color.VIOLET);
 
-                    Patch chosenQueueingPatch = passenger.getPassengerMovement().getChosenQueueingPatch();
+                    Patch chosenQueueingPatch = passenger.getPassengerMovement().getGoalPatch();
 
                     if (chosenQueueingPatch != null) {
                         foregroundGraphicsContext.fillRect(
@@ -596,7 +596,7 @@ public class GraphicsController extends Controller {
                                 chosenQueueingPatch.getPatchCenterCoordinates().getY()
                                         / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25
                         );
-                    }*/
+                    }
 
 /*                    // Draw passenger patches in field of view
                     if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
@@ -695,6 +695,14 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setFill(Color.BLUE);
                     } else {
                         switch (passenger.getPassengerMovement().getAction()) {
+                            case WILL_ASCEND:
+                                foregroundGraphicsContext.setFill(Color.LIGHTSKYBLUE);
+
+                                break;
+                            case WILL_DESCEND:
+                                foregroundGraphicsContext.setFill(Color.DEEPSKYBLUE);
+
+                                break;
                             case ASSEMBLING:
                                 foregroundGraphicsContext.setFill(Color.YELLOW);
 
@@ -719,6 +727,10 @@ public class GraphicsController extends Controller {
                                 break;
                             case HEADING_TO_TRAIN_DOOR:
                                 foregroundGraphicsContext.setFill(Color.YELLOWGREEN);
+
+                                break;
+                            case EXITING_STATION:
+                                foregroundGraphicsContext.setFill(Color.BROWN);
 
                                 break;
                             default:

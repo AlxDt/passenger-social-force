@@ -84,6 +84,11 @@ public class ElevatorShaft extends PortalShaft {
         this.elevatorDirection = elevatorDirection;
     }
 
+    @Override
+    public void updateQueues() {
+
+    }
+
     // Elevator shaft factory
     public static class ElevatorShaftFactory extends PortalShaftFactory {
         public ElevatorShaft create(

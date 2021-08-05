@@ -26,8 +26,8 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.TurnstileFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Wall;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
@@ -1568,6 +1568,15 @@ public class MainScreenController extends ScreenController {
 
     // Clear all passengers in the station
     public void clearPassengersInStation(Station station) {
+        // Clear all portals
+        for (StairShaft stairShaft : station.getStairShafts()) {
+            station.getPassengersInStation().removeAll(stairShaft.getDescendingQueue().keySet());
+            station.getPassengersInStation().removeAll(stairShaft.getAscendingQueue().keySet());
+
+            stairShaft.getDescendingQueue().clear();
+            stairShaft.getAscendingQueue().clear();
+        }
+
         // Clear passengers from each floor
         for (Floor floor : station.getFloors()) {
             clearPassengersInFloor(floor);
@@ -1646,7 +1655,7 @@ public class MainScreenController extends ScreenController {
         // Open each train door given the parameters in the interface
         for (TrainDoor trainDoor : trainDoors) {
             if (
-                    trainDoor.getPlatform() == travelDirection
+                    trainDoor.getPlatformDirection() == travelDirection
                             && trainDoor.getTrainDoorCarriagesSupported().contains(trainDoorCarriage)
             ) {
                 trainDoor.toggleTrainDoor();
@@ -2079,7 +2088,7 @@ public class MainScreenController extends ScreenController {
                 if (!trainDoorCarriageListView.getSelectionModel().isEmpty()) {
                     TrainDoor trainDoorToEdit = (TrainDoor) amenityToSave;
 
-                    PassengerMovement.TravelDirection priorPlatform = trainDoorToEdit.getPlatform();
+                    PassengerMovement.TravelDirection priorPlatform = trainDoorToEdit.getPlatformDirection();
 
                     TrainDoor.trainDoorEditor.edit(
                             trainDoorToEdit,
@@ -4147,7 +4156,7 @@ public class MainScreenController extends ScreenController {
                                     );
 
                                     trainDoorDirectionChoiceBox.setValue(
-                                            trainDoorToEdit.getPlatform()
+                                            trainDoorToEdit.getPlatformDirection()
                                     );
 
                                     trainDoorCarriageListView.getSelectionModel().clearSelection();
@@ -4543,7 +4552,8 @@ public class MainScreenController extends ScreenController {
         // Initially draw the station environment, showing the current floor
         drawStationViewFloorBackground(Main.simulator.getCurrentFloor());
 
-        // TODO: Then draw the passengers in the station
+        // Then draw the passengers in the station
+        drawStationViewFloorForeground(Main.simulator.getCurrentFloor(), false);
 
         // Then draw the mouse listeners over the station view
         if (drawListeners) {

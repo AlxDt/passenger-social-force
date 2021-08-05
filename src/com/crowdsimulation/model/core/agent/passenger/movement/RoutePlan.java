@@ -43,9 +43,14 @@ public class RoutePlan {
         DIRECTION_ROUTE_MAP.put(PassengerMovement.Disposition.ALIGHTING, alightingPlanList);
     }
 
-    public RoutePlan(boolean isStoredValueCardHolder) {
+    public RoutePlan(boolean isStoredValueCardHolder, boolean isBoarding) {
+        // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
+        //  passenger will be boarding
         // All newly-spawned passengers will have a boarding route plan
-        setNextRoutePlan(PassengerMovement.Disposition.BOARDING, isStoredValueCardHolder);
+        setNextRoutePlan(
+                isBoarding ? PassengerMovement.Disposition.BOARDING : PassengerMovement.Disposition.ALIGHTING,
+                isStoredValueCardHolder
+        );
 
         // Burn off the first amenity class in the route plan, as the passenger will have already spawned there
         setNextAmenityClass();

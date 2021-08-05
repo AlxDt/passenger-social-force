@@ -29,6 +29,11 @@ public class EscalatorShaft extends PortalShaft {
         this.hasChangedDirection = false;
     }
 
+    @Override
+    public void updateQueues() {
+
+    }
+
     // Escalator shaft factory
     public static class EscalatorShaftFactory extends PortalShaftFactory {
         public EscalatorShaft create(

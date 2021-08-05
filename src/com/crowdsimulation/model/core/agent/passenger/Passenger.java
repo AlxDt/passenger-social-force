@@ -38,10 +38,12 @@ public class Passenger extends PatchObject implements Agent {
         passengerFactory = new PassengerFactory();
     }
 
-    private Passenger(Patch spawnPatch, PassengerMovement.TravelDirection travelDirection) {
+    // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
+    //  passenger will be boarding
+    private Passenger(Patch spawnPatch, PassengerMovement.TravelDirection travelDirection, boolean isBoarding) {
         this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
 
-        final double singleJourneyPercentage = 0.5;
+        final double singleJourneyPercentage = 1.0;
 
         this.ticketType
                 = Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < singleJourneyPercentage
@@ -63,7 +65,8 @@ public class Passenger extends PatchObject implements Agent {
                 gate,
                 this,
                 spawnPatch.getPatchCenterCoordinates(),
-                travelDirection
+                travelDirection,
+                isBoarding
         );
     }
 
@@ -88,8 +91,12 @@ public class Passenger extends PatchObject implements Agent {
     }
 
     public static class PassengerFactory extends StationObjectFactory {
-        public Passenger create(Patch spawnPatch, PassengerMovement.TravelDirection travelDirection) {
-            return new Passenger(spawnPatch, travelDirection);
+        public Passenger create(
+                Patch spawnPatch,
+                PassengerMovement.TravelDirection travelDirection,
+                boolean isBoarding
+        ) {
+            return new Passenger(spawnPatch, travelDirection, isBoarding);
         }
     }
 

@@ -1,6 +1,9 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate;
 
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
+import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 import java.util.List;
 
@@ -39,6 +42,11 @@ public abstract class Portal extends Gate {
     public void setPair(Portal pair) {
         this.pair = pair;
     }
+
+    // Have a passenger use this portal
+    public abstract void absorb(Passenger passenger);
+
+    public abstract Patch emit();
 
     // Portal factory
     public static abstract class PortalFactory extends GateFactory {

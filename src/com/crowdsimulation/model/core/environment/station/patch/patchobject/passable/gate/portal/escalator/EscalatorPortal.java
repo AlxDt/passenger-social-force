@@ -303,6 +303,16 @@ public class EscalatorPortal extends Portal {
         return null;
     }
 
+    @Override
+    public void absorb(Passenger passenger) {
+
+    }
+
+    @Override
+    public Patch emit() {
+        return null;
+    }
+
     // Escalator portal block
     public static class EscalatorPortalBlock extends Gate.GateBlock {
         public static EscalatorPortal.EscalatorPortalBlock.EscalatorPortalBlockFactory escalatorPortalBlockFactory;

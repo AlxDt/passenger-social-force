@@ -1,6 +1,6 @@
 package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
 
 public class TrackGraphic extends AmenityGraphic implements Changeable {
     private static final int ROW_SPAN_VERTICAL = 2;

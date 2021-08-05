@@ -158,9 +158,7 @@ public class QueueingFloorField extends HeadfulFloorField {
 
             // Make sure that a floor field value exists with the given floor field state
             if (value != null) {
-                if (floorFieldState instanceof QueueingFloorField.FloorFieldState) {
-                    TurnstileFloorField.unregisterPatch(patch, (Turnstile) target, floorFieldState, value);
-                } else if (floorFieldState instanceof PlatformFloorField.PlatformFloorFieldState) {
+                if (floorFieldState instanceof PlatformFloorField.PlatformFloorFieldState) {
                     PlatformFloorField.unregisterPatch(
                             patch,
                             (TrainDoor) target,
@@ -168,7 +166,11 @@ public class QueueingFloorField extends HeadfulFloorField {
                             value
                     );
                 } else {
-                    QueueingFloorField.unregisterPatch(patch, target, floorFieldState, value);
+                    if (target instanceof Turnstile) {
+                        TurnstileFloorField.unregisterPatch(patch, (Turnstile) target, floorFieldState, value);
+                    } else {
+                        QueueingFloorField.unregisterPatch(patch, target, floorFieldState, value);
+                    }
                 }
 
                 // In the given patch, remove the entry with the reference to the queueable target

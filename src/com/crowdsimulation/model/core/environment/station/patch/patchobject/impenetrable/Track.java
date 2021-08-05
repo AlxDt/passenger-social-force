@@ -1,4 +1,4 @@
-package com.crowdsimulation.model.core.environment.station.patch.patchobject.miscellaneous;
+package com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.amenity.editor.TrackEditor;
