@@ -75,7 +75,7 @@ public class Security extends BlockableAmenity {
         );
 
         // Initialize this turnstile's queue objects
-        this.queueObject = new QueueObject();
+        this.queueObject = new QueueObject(this);
 
         // Initialize this security gate's floor field state
         this.securityFloorFieldState = new QueueingFloorField.FloorFieldState(
@@ -98,6 +98,12 @@ public class Security extends BlockableAmenity {
 
     public QueueingFloorField.FloorFieldState getSecurityFloorFieldState() {
         return securityFloorFieldState;
+    }
+
+    @Override
+    // Check whether this queueable is free to service a passenger
+    public boolean isFree(QueueObject queueObject) {
+        return this.queueObject.isFree();
     }
 
     @Override

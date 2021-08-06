@@ -183,7 +183,7 @@ public class TicketBooth extends Goal {
         );
 
         // Initialize this turnstile's queue objects
-        this.queueObject = new QueueObject();
+        this.queueObject = new QueueObject(this);
 
         this.ticketType = ticketType;
         this.passengerTransacting = null;
@@ -225,6 +225,12 @@ public class TicketBooth extends Goal {
 
     public QueueingFloorField.FloorFieldState getTicketBoothFloorFieldState() {
         return ticketBoothFloorFieldState;
+    }
+
+    @Override
+    // Check whether this queueable is free to service a passenger
+    public boolean isFree(QueueObject queueObject) {
+        return this.queueObject.isFree();
     }
 
     @Override

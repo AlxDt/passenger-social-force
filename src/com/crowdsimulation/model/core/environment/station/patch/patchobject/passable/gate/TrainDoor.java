@@ -155,8 +155,8 @@ public class TrainDoor extends Gate implements Queueable {
         this.queueObjectAmenityBlockMap = new HashMap<>();
 
         if (platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND || platformDirection == PassengerMovement.TravelDirection.EASTBOUND) {
-            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
-            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
+            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject(this));
+            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject(this));
 
             this.queueObjectAmenityBlockMap.put(
                     this.getQueueObjects().get(TrainDoorEntranceLocation.LEFT),
@@ -168,8 +168,8 @@ public class TrainDoor extends Gate implements Queueable {
                     this.getAttractors().get(1)
             );
         } else {
-            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject());
-            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject());
+            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject(this));
+            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject(this));
 
             this.queueObjectAmenityBlockMap.put(
                     this.getQueueObjects().get(TrainDoorEntranceLocation.RIGHT),
@@ -223,9 +223,16 @@ public class TrainDoor extends Gate implements Queueable {
         this.trainDoorCarriagesSupported.addAll(trainDoorCarriagesSupported);
     }
 
+    @Override
     // Get whichever queue object has the shorter queue
     public QueueObject getQueueObject() {
         return null;
+    }
+
+    @Override
+    // Check whether this queueable is free to service a passenger
+    public boolean isFree(QueueObject queueObject) {
+        return queueObject.isFree();
     }
 
     public Map<TrainDoorEntranceLocation, QueueObject> getQueueObjects() {

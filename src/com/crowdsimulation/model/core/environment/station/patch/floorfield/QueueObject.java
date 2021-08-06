@@ -2,12 +2,16 @@ package com.crowdsimulation.model.core.environment.station.patch.floorfield;
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
 public class QueueObject extends AbstractFloorFieldObject {
+    // Denotes the parent queueable of this queue object
+    private final Queueable parent;
+
     // Any amenity that is queueable must contain a hashmap of floor fields
     // Given a passenger state, a floor field may be retrieved from that goal
     private final Map<QueueingFloorField.FloorFieldState, QueueingFloorField> floorFields = new HashMap<>();
@@ -20,6 +24,14 @@ public class QueueObject extends AbstractFloorFieldObject {
 
     // Denotes the passenger currently being serviced by this queueable
     private Passenger passengerServiced;
+
+    public QueueObject(Queueable parent) {
+        this.parent = parent;
+    }
+
+    public Queueable getParent() {
+        return parent;
+    }
 
     public Map<QueueingFloorField.FloorFieldState, QueueingFloorField> getFloorFields() {
         return floorFields;
@@ -43,5 +55,9 @@ public class QueueObject extends AbstractFloorFieldObject {
 
     public void setPassengerServiced(Passenger passengerServiced) {
         this.passengerServiced = passengerServiced;
+    }
+
+    public boolean isFree() {
+        return this.getPassengerServiced() == null;
     }
 }

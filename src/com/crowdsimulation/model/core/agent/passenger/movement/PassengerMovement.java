@@ -492,6 +492,10 @@ public class PassengerMovement {
         return TrainDoor.asTrainDoor(this.goalAmenity);
     }
 
+    public Turnstile getGoalAmenityAsTurnstile() {
+        return Turnstile.asTurnstile(this.goalAmenity);
+    }
+
     // Use the A* algorithm (with Euclidian distance to compute the f-score) to find the shortest path to the given goal
     // patch
     public PassengerPath computePath(
@@ -2134,7 +2138,7 @@ public class PassengerMovement {
 
     // Check if the goal of this passenger is currently not servicing anyone
     public boolean isGoalFree() {
-        return this.goalQueueObject.getPassengerServiced() == null;
+        return this.getGoalAmenityAsGoal().isFree(this.goalQueueObject);
     }
 
     // Check if this passenger the one currently served by its goal

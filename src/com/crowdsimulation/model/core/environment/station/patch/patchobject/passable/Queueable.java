@@ -26,6 +26,9 @@ public interface Queueable {
     // Retrieve the queue object
     QueueObject getQueueObject();
 
+    // Check if this queueable is free, given the goal queue object
+    boolean isFree(QueueObject queueObject);
+
     static Queueable toQueueable(Amenity amenity) {
         if (isQueueable(amenity)) {
             return (Queueable) amenity;

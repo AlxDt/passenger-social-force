@@ -976,7 +976,6 @@ public class Simulator {
                                 passengerMovement.free();
                             }
 
-
                             if (passengerMovement.willEnterTrain()) {
                                 // Have the amenity mark this passenger as the one to be served next
                                 passengerMovement.beginServicingThisPassenger();
@@ -1107,7 +1106,14 @@ public class Simulator {
                             // Check if the passenger is allowed passage by the goal
                             // If it is, proceed to the next state
                             // If not, wait for an additional second
-                            if (passengerMovement.isAllowedPass() && passengerMovement.isFirstStepPositionFree()) {
+                            if (
+                                    passengerMovement.isAllowedPass()
+                                            && (
+                                            passengerMovement.isFirstStepPositionFree()
+                                                    || passengerMovement.getGoalAmenityAsTurnstile().getTurnstileMode()
+                                                    == Turnstile.TurnstileMode.BIDIRECTIONAL
+                                    )
+                            ) {
                                 // Have this passenger's goal wrap up serving this passenger
                                 passengerMovement.endServicingThisPassenger();
 
@@ -1120,7 +1126,7 @@ public class Simulator {
 
                                 // Reset the current goal of the passenger
                                 // The passenger is set to step forward initially if the passenger is coming from a
-                                // security entrance or a ticket booth
+                                // security entrance or a turnstile
                                 passengerMovement.resetGoal(
                                         action == PassengerMovement.Action.SECURITY_CHECKING
                                                 || action == PassengerMovement.Action.USING_TICKET

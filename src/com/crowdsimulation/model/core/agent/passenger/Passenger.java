@@ -43,7 +43,7 @@ public class Passenger extends PatchObject implements Agent {
     private Passenger(Patch spawnPatch, PassengerMovement.TravelDirection travelDirection, boolean isBoarding) {
         this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
 
-        final double singleJourneyPercentage = 1.0;
+        final double singleJourneyPercentage = 0.5;
 
         this.ticketType
                 = Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < singleJourneyPercentage

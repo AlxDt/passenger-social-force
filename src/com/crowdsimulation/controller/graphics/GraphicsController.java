@@ -575,7 +575,7 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }*/
 
-                    foregroundGraphicsContext.setFill(Color.VIOLET);
+/*                    foregroundGraphicsContext.setFill(Color.VIOLET);
 
                     Patch chosenQueueingPatch = passenger.getPassengerMovement().getGoalPatch();
 
@@ -596,7 +596,7 @@ public class GraphicsController extends Controller {
                                 chosenQueueingPatch.getPatchCenterCoordinates().getY()
                                         / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25
                         );
-                    }
+                    }*/
 
 /*                    // Draw passenger patches in field of view
                     if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {

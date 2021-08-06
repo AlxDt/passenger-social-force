@@ -289,7 +289,7 @@ public class ElevatorPortal extends Portal implements Queueable {
 
         this.isOpen = false;
 
-        this.queueObject = new QueueObject();
+        this.queueObject = new QueueObject(this);
 
         // Initialize this elevator portal's floor field state
         // A null in the floor field state means that it may accept any direction
@@ -405,6 +405,12 @@ public class ElevatorPortal extends Portal implements Queueable {
         for (QueueingFloorField.FloorFieldState floorFieldState : floorFieldStates) {
             deleteFloorField(floorFieldState);
         }
+    }
+
+    @Override
+    // Check whether this queueable is free to service a passenger
+    public boolean isFree(QueueObject queueObject) {
+        return this.queueObject.isFree();
     }
 
     @Override

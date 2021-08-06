@@ -273,8 +273,8 @@ public class Turnstile extends BlockableAmenity {
         // Initialize this turnstile's queue objects
         this.queueObjects = new HashMap<>();
 
-        this.queueObjects.put(PassengerMovement.Disposition.BOARDING, new QueueObject());
-        this.queueObjects.put(PassengerMovement.Disposition.ALIGHTING, new QueueObject());
+        this.queueObjects.put(PassengerMovement.Disposition.BOARDING, new QueueObject(this));
+        this.queueObjects.put(PassengerMovement.Disposition.ALIGHTING, new QueueObject(this));
 
         // Initialize this turnstile's floor field states
         this.turnstileFloorFieldStateBoarding = new TurnstileFloorField.FloorFieldState(
@@ -329,6 +329,26 @@ public class Turnstile extends BlockableAmenity {
 
     public TurnstileFloorField.FloorFieldState getTurnstileFloorFieldStateAlighting() {
         return turnstileFloorFieldStateAlighting;
+    }
+
+    public static boolean isTurnstile(Amenity amenity) {
+        return amenity instanceof Turnstile;
+    }
+
+    public static Turnstile asTurnstile(Amenity amenity) {
+        if (isTurnstile(amenity)) {
+            return (Turnstile) amenity;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    // Check whether this queueable is free to service a passenger
+    public boolean isFree(QueueObject queueObject) {
+        return
+                this.queueObjects.get(PassengerMovement.Disposition.BOARDING).isFree()
+                        && this.queueObjects.get(PassengerMovement.Disposition.ALIGHTING).isFree();
     }
 
     @Override
