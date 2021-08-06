@@ -75,7 +75,10 @@ public class Security extends BlockableAmenity {
         );
 
         // Initialize this turnstile's queue objects
-        this.queueObject = new QueueObject(this);
+        this.queueObject = new QueueObject(
+                this,
+                this.getAttractors().get(0).getPatch()
+        );
 
         // Initialize this security gate's floor field state
         this.securityFloorFieldState = new QueueingFloorField.FloorFieldState(

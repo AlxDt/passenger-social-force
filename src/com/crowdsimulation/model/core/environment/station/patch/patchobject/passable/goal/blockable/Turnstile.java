@@ -273,8 +273,21 @@ public class Turnstile extends BlockableAmenity {
         // Initialize this turnstile's queue objects
         this.queueObjects = new HashMap<>();
 
-        this.queueObjects.put(PassengerMovement.Disposition.BOARDING, new QueueObject(this));
-        this.queueObjects.put(PassengerMovement.Disposition.ALIGHTING, new QueueObject(this));
+        this.queueObjects.put(
+                PassengerMovement.Disposition.BOARDING,
+                new QueueObject(
+                        this,
+                        this.getAttractors().get(0).getPatch()
+                )
+        );
+
+        this.queueObjects.put(
+                PassengerMovement.Disposition.ALIGHTING,
+                new QueueObject(
+                        this,
+                        this.getAttractors().get(0).getPatch()
+                )
+        );
 
         // Initialize this turnstile's floor field states
         this.turnstileFloorFieldStateBoarding = new TurnstileFloorField.FloorFieldState(

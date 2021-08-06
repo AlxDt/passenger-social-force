@@ -183,7 +183,7 @@ public class TicketBooth extends Goal {
         );
 
         // Initialize this turnstile's queue objects
-        this.queueObject = new QueueObject(this);
+        this.queueObject = new QueueObject(this, this.getAttractors().get(0).getPatch());
 
         this.ticketType = ticketType;
         this.passengerTransacting = null;

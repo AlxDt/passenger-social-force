@@ -1412,15 +1412,7 @@ public class PassengerMovement {
                                     patchAmenityBlock.getPatch().getPatchCenterCoordinates()
                             );
 
-                            if (
-                            /*Coordinates.isWithinFieldOfView(
-                                    this.position,
-                                    patchAmenityBlock.getPatch().getPatchCenterCoordinates(),
-                                    this.proposedHeading,
-                                    Math.toRadians(fieldOfViewAngleDegrees))
-                                    && */distanceToObstacle <= slowdownStartDistance/*
-                                && !patchAmenityBlock.isAttractor()*/
-                            ) {
+                            if (distanceToObstacle <= slowdownStartDistance) {
                                 obstaclesEncountered.put(distanceToObstacle, patchAmenityBlock);
                             }
                         }
@@ -1535,7 +1527,9 @@ public class PassengerMovement {
 
             // Check if the patch representing the future position has someone on it
             // Only proceed when there is no one there
-            if (this.hasNoPassenger(this.currentFloor.getPatch(proposedNewPosition))) {
+            if (
+                    this.hasNoPassenger(this.currentFloor.getPatch(proposedNewPosition))
+            ) {
                 this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
 
                 // Get the attractive force of this passenger to the new position
@@ -1551,10 +1545,20 @@ public class PassengerMovement {
 
                 vectorsToAdd.add(attractiveForce);
 
-                // Do not automatically (without influence from social forces of surrounding passengers and obstacles step
-                // forward again for now
-                this.shouldStepForward = false;
+//                // Do not automatically (without influence from social forces of surrounding passengers and obstacles step
+//                // forward again for now
+//                this.shouldStepForward = false;
             }
+
+
+//            if (
+//                    this.getGoalAmenityAsTurnstile() != null
+//                            && this.getGoalAmenityAsTurnstile().getTurnstileMode()
+//                            == Turnstile.TurnstileMode.BIDIRECTIONAL
+//            ) {
+            // Make this passenger ineligible for the first step
+                this.shouldStepForward = false;
+//            }
         }
 
         // Here ends the few ticks of grace period for the passenger to leave its starting patch
@@ -1661,8 +1665,6 @@ public class PassengerMovement {
                         boolean freeSpaceFound;
 
                         do {
-//                            System.out.println(this.parent.getIdentifier() + " activated");
-
                             // Go back with the same magnitude as the original motivation force, but at a different
                             // heading
                             revisedHeading
@@ -1749,10 +1751,6 @@ public class PassengerMovement {
                     ) {
                         this.isReadyToFree = true;
                     }
-
-/*                    if (this.isStuck && !((this.goalAttractor.getPatch().getPassengers().isEmpty() && (this.isAtQueueFront() || this.isServicedByGoal())) && this.noMovementCounter > noMovementTicksThreshold)) {
-                        this.isReadyToFree = true;
-                    }*/
 
                     this.timeSinceLeftPreviousGoal++;
 
@@ -1951,7 +1949,7 @@ public class PassengerMovement {
 
         // If a passenger is stuck, do not exert much force from this passenger
         if (this.isStuck) {
-            final double factor = 0.01;
+            final double factor = 0.05;
 
             repulsionMagnitude -= this.stuckCounter * factor;
 
@@ -2016,7 +2014,7 @@ public class PassengerMovement {
 
         // If a passenger is stuck, do not exert much force from this obstacle
         if (this.isStuck) {
-            final double factor = 0.01;
+            final double factor = 0.05;
 
             repulsionMagnitude -= this.stuckCounter * factor;
 
@@ -2138,7 +2136,8 @@ public class PassengerMovement {
 
     // Check if the goal of this passenger is currently not servicing anyone
     public boolean isGoalFree() {
-        return this.getGoalAmenityAsGoal().isFree(this.goalQueueObject);
+        return this.getGoalAmenityAsGoal().isFree(this.goalQueueObject)
+                && this.goalQueueObject.getPatch().getPassengers().isEmpty();
     }
 
     // Check if this passenger the one currently served by its goal

@@ -37,9 +37,6 @@ public class TrainDoor extends Gate implements Queueable {
     // Denotes the queueing object associated with all goals like this
     private final Map<TrainDoorEntranceLocation, QueueObject> queueObjects;
 
-    // Maps queue objects into their corresponding attractors
-    private final Map<QueueObject, AmenityBlock> queueObjectAmenityBlockMap;
-
     // Denotes the floor field states needed to access the floor fields of this train door
     private final PlatformFloorField.PlatformFloorFieldState leftTrainDoorFloorFieldState;
     private final PlatformFloorField.PlatformFloorFieldState rightTrainDoorFloorFieldState;
@@ -151,34 +148,40 @@ public class TrainDoor extends Gate implements Queueable {
                 TrainDoorEntranceLocation.RIGHT
         );
 
-        // Define the relationships between the queue objects and the attractors
-        this.queueObjectAmenityBlockMap = new HashMap<>();
-
-        if (platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND || platformDirection == PassengerMovement.TravelDirection.EASTBOUND) {
-            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject(this));
-            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject(this));
-
-            this.queueObjectAmenityBlockMap.put(
-                    this.getQueueObjects().get(TrainDoorEntranceLocation.LEFT),
-                    this.getAttractors().get(0)
+        if (
+                platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND
+                        || platformDirection == PassengerMovement.TravelDirection.EASTBOUND
+        ) {
+            this.queueObjects.put(
+                    TrainDoorEntranceLocation.LEFT,
+                    new QueueObject(
+                            this,
+                            this.getAttractors().get(0).getPatch()
+                    )
             );
 
-            this.queueObjectAmenityBlockMap.put(
-                    this.getQueueObjects().get(TrainDoorEntranceLocation.RIGHT),
-                    this.getAttractors().get(1)
+            this.queueObjects.put(
+                    TrainDoorEntranceLocation.RIGHT,
+                    new QueueObject(
+                            this,
+                            this.getAttractors().get(1).getPatch()
+                    )
             );
         } else {
-            this.queueObjects.put(TrainDoorEntranceLocation.RIGHT, new QueueObject(this));
-            this.queueObjects.put(TrainDoorEntranceLocation.LEFT, new QueueObject(this));
-
-            this.queueObjectAmenityBlockMap.put(
-                    this.getQueueObjects().get(TrainDoorEntranceLocation.RIGHT),
-                    this.getAttractors().get(0)
+            this.queueObjects.put(
+                    TrainDoorEntranceLocation.RIGHT,
+                    new QueueObject(
+                            this,
+                            this.getAttractors().get(0).getPatch()
+                    )
             );
 
-            this.queueObjectAmenityBlockMap.put(
-                    this.getQueueObjects().get(TrainDoorEntranceLocation.LEFT),
-                    this.getAttractors().get(1)
+            this.queueObjects.put(
+                    TrainDoorEntranceLocation.LEFT,
+                    new QueueObject(
+                            this,
+                            this.getAttractors().get(1).getPatch()
+                    )
             );
         }
 

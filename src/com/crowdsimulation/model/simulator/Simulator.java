@@ -953,7 +953,7 @@ public class Simulator {
                                 // Check first if the goal of this passenger is not currently serving other passengers
                                 // If it is, the passenger will now transition into the "heading to queueable" action
                                 // Do nothing if there is another passenger still being serviced
-                                if (passengerMovement.isGoalFree()/* && passengerMovement.isAtQueueFront()*/) {
+                                if (passengerMovement.isGoalFree()) {
                                     // The amenity is vacant, so no need to wait anymore
                                     passengerMovement.endWaitingOnAmenity();
 
@@ -1110,8 +1110,10 @@ public class Simulator {
                                     passengerMovement.isAllowedPass()
                                             && (
                                             passengerMovement.isFirstStepPositionFree()
-                                                    || passengerMovement.getGoalAmenityAsTurnstile().getTurnstileMode()
-                                                    == Turnstile.TurnstileMode.BIDIRECTIONAL
+                                                    ||
+                                                    passengerMovement.getGoalAmenityAsTurnstile() != null
+                                                            && passengerMovement.getGoalAmenityAsTurnstile().getTurnstileMode()
+                                                            == Turnstile.TurnstileMode.BIDIRECTIONAL
                                     )
                             ) {
                                 // Have this passenger's goal wrap up serving this passenger
