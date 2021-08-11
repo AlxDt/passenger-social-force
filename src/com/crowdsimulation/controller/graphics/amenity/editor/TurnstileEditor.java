@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics.amenity.editor;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -15,7 +16,8 @@ public class TurnstileEditor extends AmenityEditor {
             boolean enabled,
             int waitingTIme,
             boolean blockEntry,
-            Turnstile.TurnstileMode turnstileMode
+            Turnstile.TurnstileMode turnstileMode,
+            List<PassengerMovement.TravelDirection> turnstileTravelDirections
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
@@ -52,7 +54,8 @@ public class TurnstileEditor extends AmenityEditor {
                     enabled,
                     waitingTIme,
                     blockEntry,
-                    turnstileMode
+                    turnstileMode,
+                    turnstileTravelDirections
             );
 
             // Add this station gate to the list of all turnstiles on this floor
@@ -71,7 +74,8 @@ public class TurnstileEditor extends AmenityEditor {
             boolean enabled,
             int waitingTime,
             boolean blockEntry,
-            Turnstile.TurnstileMode turnstileMode
+            Turnstile.TurnstileMode turnstileMode,
+            List<PassengerMovement.TravelDirection> turnstileTravelDirections
     ) {
         turnstileToEdit.setEnabled(
                 enabled
@@ -87,6 +91,10 @@ public class TurnstileEditor extends AmenityEditor {
 
         turnstileToEdit.setTurnstileMode(
                 turnstileMode
+        );
+
+        turnstileToEdit.setTurnstileTravelDirections(
+                turnstileTravelDirections
         );
     }
 

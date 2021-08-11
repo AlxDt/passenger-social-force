@@ -966,8 +966,12 @@ public class PassengerMovement {
                             continue;
                         }
                     } else if (candidateGoal instanceof Turnstile) {
-                        // Only consider turnstiles which match this passenger's travel direction
+                        // Only consider turnstiles which match this passenger's disposition and travel direction
                         Turnstile turnstile = ((Turnstile) candidateGoal);
+
+                        if (!turnstile.getTurnstileTravelDirections().contains(this.travelDirection)) {
+                            continue;
+                        }
 
                         if (turnstile.getTurnstileMode() != Turnstile.TurnstileMode.BIDIRECTIONAL) {
                             if (

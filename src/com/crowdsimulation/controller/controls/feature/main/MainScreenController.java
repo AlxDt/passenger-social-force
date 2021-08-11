@@ -236,10 +236,16 @@ public class MainScreenController extends ScreenController {
     private CheckBox turnstileBlockPassengerCheckBox;
 
     @FXML
+    private Label turnstileModeLabel;
+
+    @FXML
+    private ChoiceBox<Turnstile.TurnstileMode> turnstileModeChoiceBox;
+
+    @FXML
     private Label turnstileDirectionLabel;
 
     @FXML
-    private ChoiceBox<Turnstile.TurnstileMode> turnstileDirectionChoiceBox;
+    private ListView<PassengerMovement.TravelDirection> turnstileDirectionListView;
 
     @FXML
     private Label turnstileIntervalLabel;
@@ -618,8 +624,10 @@ public class MainScreenController extends ScreenController {
                 // Turnstile
                 turnstileEnableCheckBox,
                 turnstileBlockPassengerCheckBox,
+                turnstileModeLabel,
+                turnstileModeChoiceBox,
                 turnstileDirectionLabel,
-                turnstileDirectionChoiceBox,
+                turnstileDirectionListView,
                 turnstileIntervalLabel,
                 turnstileIntervalSpinner,
                 saveTurnstileButton,
@@ -2106,15 +2114,25 @@ public class MainScreenController extends ScreenController {
 
                 break;
             case TURNSTILE:
-                Turnstile turnstileToEdit = (Turnstile) amenityToSave;
+                if (!turnstileDirectionListView.getSelectionModel().isEmpty()) {
+                    Turnstile turnstileToEdit = (Turnstile) amenityToSave;
 
-                Turnstile.turnstileEditor.edit(
-                        turnstileToEdit,
-                        turnstileEnableCheckBox.isSelected(),
-                        turnstileIntervalSpinner.getValue(),
-                        turnstileBlockPassengerCheckBox.isSelected(),
-                        turnstileDirectionChoiceBox.getValue()
-                );
+                    Turnstile.turnstileEditor.edit(
+                            turnstileToEdit,
+                            turnstileEnableCheckBox.isSelected(),
+                            turnstileIntervalSpinner.getValue(),
+                            turnstileBlockPassengerCheckBox.isSelected(),
+                            turnstileModeChoiceBox.getValue(),
+                            turnstileDirectionListView.getSelectionModel().getSelectedItems()
+                    );
+                } else {
+                    AlertController.showSimpleAlert(
+                            "Turnstile addition failed",
+                            "No travel directions selected",
+                            "Please select the travel directions supported by this turnstile.",
+                            Alert.AlertType.ERROR
+                    );
+                }
 
                 break;
             case TRAIN_BOARDING_AREA:
@@ -2299,8 +2317,17 @@ public class MainScreenController extends ScreenController {
                 break;
             case TURNSTILE:
                 // Edit all turnstiles
-                for (Turnstile turnstileToEdit : Main.simulator.getCurrentFloor().getTurnstiles()) {
-                    saveSingleAmenityInFloor(turnstileToEdit);
+                if (!turnstileDirectionListView.getSelectionModel().isEmpty()) {
+                    for (Turnstile turnstileToEdit : Main.simulator.getCurrentFloor().getTurnstiles()) {
+                        saveSingleAmenityInFloor(turnstileToEdit);
+                    }
+                } else {
+                    AlertController.showSimpleAlert(
+                            "Turnstile addition failed",
+                            "No travel directions selected",
+                            "Please select the travel directions supported by this turnstile.",
+                            Alert.AlertType.ERROR
+                    );
                 }
 
                 break;
@@ -3995,13 +4022,24 @@ public class MainScreenController extends ScreenController {
                             if (Main.simulator.currentAmenityProperty().isNull().get()) {
                                 Main.simulator.setCurrentClass(Turnstile.class);
 
-                                Turnstile.turnstileEditor.draw(
-                                        currentPatch,
-                                        turnstileEnableCheckBox.isSelected(),
-                                        turnstileIntervalSpinner.getValue(),
-                                        turnstileBlockPassengerCheckBox.isSelected(),
-                                        turnstileDirectionChoiceBox.getValue()
-                                );
+                                if (!turnstileDirectionListView.getSelectionModel().isEmpty()) {
+                                    Turnstile.turnstileEditor.draw(
+                                            currentPatch,
+                                            turnstileEnableCheckBox.isSelected(),
+                                            turnstileIntervalSpinner.getValue(),
+                                            turnstileBlockPassengerCheckBox.isSelected(),
+                                            turnstileModeChoiceBox.getValue(),
+                                            turnstileDirectionListView.getSelectionModel().getSelectedItems()
+
+                                    );
+                                } else {
+                                    AlertController.showSimpleAlert(
+                                            "Turnstile addition failed",
+                                            "No travel directions selected",
+                                            "Please select the travel directions supported by this turnstile.",
+                                            Alert.AlertType.ERROR
+                                    );
+                                }
                             } else {
                                 // If clicked on an existing amenity, switch to editing mode, then open that
                                 // amenity's controls
@@ -4045,9 +4083,18 @@ public class MainScreenController extends ScreenController {
                                             turnstileToEdit.isBlockEntry()
                                     );
 
-                                    turnstileDirectionChoiceBox.setValue(
+                                    turnstileModeChoiceBox.setValue(
                                             turnstileToEdit.getTurnstileMode()
                                     );
+
+                                    turnstileDirectionListView.getSelectionModel().clearSelection();
+
+                                    for (
+                                            PassengerMovement.TravelDirection travelDirection
+                                            : turnstileToEdit.getTurnstileTravelDirections()
+                                    ) {
+                                        turnstileDirectionListView.getSelectionModel().select(travelDirection);
+                                    }
 
                                     turnstileIntervalSpinner.getValueFactory().setValue(
                                             turnstileToEdit.getWaitingTime()

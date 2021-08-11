@@ -19,6 +19,9 @@ public class Turnstile extends BlockableAmenity {
     // Denotes the current mode of this turnstile
     private TurnstileMode turnstileMode;
 
+    // Denotes the accepted directions of this turnstile
+    private final List<PassengerMovement.TravelDirection> turnstileTravelDirections;
+
     // Denotes the queueing object associated with this turnstile
     private final HashMap<PassengerMovement.Disposition, QueueObject> queueObjects;
 
@@ -261,7 +264,8 @@ public class Turnstile extends BlockableAmenity {
             boolean enabled,
             int waitingTime,
             boolean blockEntry,
-            TurnstileMode turnstileMode
+            TurnstileMode turnstileMode,
+            List<PassengerMovement.TravelDirection> turnstileTravelDirections
     ) {
         super(
                 amenityBlocks,
@@ -269,6 +273,11 @@ public class Turnstile extends BlockableAmenity {
                 waitingTime,
                 blockEntry
         );
+
+        this.turnstileMode = turnstileMode;
+
+        this.turnstileTravelDirections = new ArrayList<>();
+        setTurnstileTravelDirections(turnstileTravelDirections);
 
         // Initialize this turnstile's queue objects
         this.queueObjects = new HashMap<>();
@@ -302,8 +311,6 @@ public class Turnstile extends BlockableAmenity {
                 this
         );
 
-        this.turnstileMode = turnstileMode;
-
         // Add blank floor fields, one for each direction
         TurnstileFloorField floorFieldBoarding
                 = TurnstileFloorField.turnstileFloorFieldFactory.create(this);
@@ -330,6 +337,15 @@ public class Turnstile extends BlockableAmenity {
 
     public void setTurnstileMode(TurnstileMode turnstileMode) {
         this.turnstileMode = turnstileMode;
+    }
+
+    public List<PassengerMovement.TravelDirection> getTurnstileTravelDirections() {
+        return turnstileTravelDirections;
+    }
+
+    public void setTurnstileTravelDirections(List<PassengerMovement.TravelDirection> travelDirections) {
+        this.turnstileTravelDirections.clear();
+        this.turnstileTravelDirections.addAll(travelDirections);
     }
 
     public HashMap<PassengerMovement.Disposition, QueueObject> getQueueObjects() {
@@ -504,14 +520,17 @@ public class Turnstile extends BlockableAmenity {
                 boolean enabled,
                 int waitingTime,
                 boolean blockEntry,
-                TurnstileMode turnstileMode
+                TurnstileMode turnstileMode,
+                List<PassengerMovement.TravelDirection> turnstileTravelDirections
+
         ) {
             return new Turnstile(
                     amenityBlocks,
                     enabled,
                     waitingTime,
                     blockEntry,
-                    turnstileMode
+                    turnstileMode,
+                    turnstileTravelDirections
             );
         }
     }

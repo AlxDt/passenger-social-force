@@ -194,8 +194,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
             // Turnstile
             CheckBox turnstileEnableCheckBox,
             CheckBox turnstileBlockPassengerCheckBox,
+            Label turnstileModeLabel,
+            ChoiceBox<Turnstile.TurnstileMode> turnstileModeChoiceBox,
             Label turnstileDirectionLabel,
-            ChoiceBox<Turnstile.TurnstileMode> turnstileDirectionChoiceBox,
+            ListView<PassengerMovement.TravelDirection> turnstileDirectionListView,
             Label turnstileIntervalLabel,
             Spinner<Integer> turnstileIntervalSpinner,
             Button saveTurnstileButton,
@@ -279,8 +281,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 flipTicketBoothButton,
                 turnstileEnableCheckBox,
                 turnstileBlockPassengerCheckBox,
+                turnstileModeLabel,
+                turnstileModeChoiceBox,
                 turnstileDirectionLabel,
-                turnstileDirectionChoiceBox,
+                turnstileDirectionListView,
                 turnstileIntervalLabel,
                 turnstileIntervalSpinner,
                 saveTurnstileButton,
@@ -607,8 +611,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button flipTicketBoothButton,
             CheckBox turnstileEnableCheckBox,
             CheckBox turnstileBlockPassengerCheckBox,
+            Label turnstileModeLabel,
+            ChoiceBox<Turnstile.TurnstileMode> turnstileModeChoiceBox,
             Label turnstileDirectionLabel,
-            ChoiceBox<Turnstile.TurnstileMode> turnstileDirectionChoiceBox,
+            ListView<PassengerMovement.TravelDirection> turnstileDirectionListView,
             Label turnstileIntervalLabel,
             Spinner<Integer> turnstileIntervalSpinner,
             Button saveTurnstileButton,
@@ -630,8 +636,10 @@ public class InitializeMainScreenService extends InitializeScreenService {
         initializeTurnstile(
                 turnstileEnableCheckBox,
                 turnstileBlockPassengerCheckBox,
+                turnstileModeLabel,
+                turnstileModeChoiceBox,
                 turnstileDirectionLabel,
-                turnstileDirectionChoiceBox,
+                turnstileDirectionListView,
                 turnstileIntervalLabel,
                 turnstileIntervalSpinner,
                 saveTurnstileButton,
@@ -688,22 +696,34 @@ public class InitializeMainScreenService extends InitializeScreenService {
     private static void initializeTurnstile(
             CheckBox turnstileEnableCheckBox,
             CheckBox turnstileBlockPassengerCheckBox,
+            Label turnstileModeLabel,
+            ChoiceBox<Turnstile.TurnstileMode> turnstileModeChoiceBox,
             Label turnstileDirectionLabel,
-            ChoiceBox<Turnstile.TurnstileMode> turnstileDirectionChoiceBox,
+            ListView<PassengerMovement.TravelDirection> turnstileDirectionListView,
             Label turnstileIntervalLabel,
             Spinner<Integer> turnstileIntervalSpinner,
             Button saveTurnstileButton,
             Button deleteTurnstileButton,
             Button addFloorFieldsTurnstileButton
     ) {
-        turnstileDirectionLabel.setLabelFor(turnstileDirectionChoiceBox);
+        turnstileModeLabel.setLabelFor(turnstileModeChoiceBox);
 
-        turnstileDirectionChoiceBox.setItems(FXCollections.observableArrayList(
+        turnstileModeChoiceBox.setItems(FXCollections.observableArrayList(
                 Turnstile.TurnstileMode.BOARDING,
                 Turnstile.TurnstileMode.ALIGHTING,
                 Turnstile.TurnstileMode.BIDIRECTIONAL
         ));
-        turnstileDirectionChoiceBox.getSelectionModel().select(Turnstile.TurnstileMode.BIDIRECTIONAL);
+        turnstileModeChoiceBox.getSelectionModel().select(Turnstile.TurnstileMode.BIDIRECTIONAL);
+
+        turnstileModeLabel.setLabelFor(turnstileDirectionListView);
+
+        turnstileDirectionListView.setItems(FXCollections.observableArrayList(
+                PassengerMovement.TravelDirection.NORTHBOUND,
+                PassengerMovement.TravelDirection.SOUTHBOUND,
+                PassengerMovement.TravelDirection.EASTBOUND,
+                PassengerMovement.TravelDirection.WESTBOUND
+        ));
+        turnstileDirectionListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         turnstileIntervalLabel.setLabelFor(turnstileIntervalSpinner);
 
@@ -716,7 +736,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         turnstileEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
         turnstileBlockPassengerCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
-        turnstileDirectionChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        turnstileModeChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        turnstileDirectionListView.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
         turnstileIntervalSpinner.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
         saveTurnstileButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
