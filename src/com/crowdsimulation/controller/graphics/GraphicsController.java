@@ -972,14 +972,14 @@ public class GraphicsController extends Controller {
                     if (e.getCode() == KeyCode.X) {
                         // Rotate counterclockwise
                         if (Main.simulator.getBuildState() == Simulator.BuildState.DRAWING
-                                && !Main.simulator.isPortalDrawing()
+                                /*&& !Main.simulator.isPortalDrawing()*/
                                 && !Main.simulator.isFloorFieldDrawing()) {
                             GraphicsController.currentAmenityFootprint.rotateCounterclockwise();
                         }
                     } else {
                         // Rotate clockwise
                         if (Main.simulator.getBuildState() == Simulator.BuildState.DRAWING
-                                && !Main.simulator.isPortalDrawing()
+                                /*&& !Main.simulator.isPortalDrawing()*/
                                 && !Main.simulator.isFloorFieldDrawing()) {
                             GraphicsController.currentAmenityFootprint.rotateClockwise();
                         }
