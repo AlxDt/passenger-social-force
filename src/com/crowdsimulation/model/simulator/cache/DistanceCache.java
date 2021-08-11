@@ -6,15 +6,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DistanceCache extends Cache {
-    private static final int CAPACITY = 500;
-
     private final LinkedHashMap<Patch.PatchPair, Double> distanceMap;
 
-    public DistanceCache() {
+    public DistanceCache(int capacity) {
+        super(capacity);
+
         this.distanceMap = new LinkedHashMap<Patch.PatchPair, Double>() {
             @Override
             protected boolean removeEldestEntry(Map.Entry<Patch.PatchPair, Double> eldest) {
-                return size() > CAPACITY;
+                return size() > capacity;
             }
         };
     }

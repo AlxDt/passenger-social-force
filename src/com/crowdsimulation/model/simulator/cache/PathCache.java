@@ -1,22 +1,23 @@
 package com.crowdsimulation.model.simulator.cache;
 
-import com.crowdsimulation.model.core.agent.passenger.movement.PassengerPath;
+import com.crowdsimulation.model.core.agent.passenger.movement.pathfinding.PassengerPath;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class PathCache extends Cache {
-    private static final int CAPACITY = 100;
-
     private final LinkedHashMap<PathCacheKey, PassengerPath> pairPathMap;
 
-    public PathCache() {
+    public PathCache(int capacity) {
+        super(capacity);
+
         this.pairPathMap = new LinkedHashMap<PathCacheKey, PassengerPath>() {
             @Override
             protected boolean removeEldestEntry(Map.Entry<PathCacheKey, PassengerPath> eldest) {
-                return size() > CAPACITY;
+                return size() > capacity;
             }
         };
     }
@@ -54,6 +55,19 @@ public class PathCache extends Cache {
 
         public boolean isIncludeGoalPatch() {
             return includeGoalPatch;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PathCacheKey that = (PathCacheKey) o;
+            return includeStartingPatch == that.includeStartingPatch && includeGoalPatch == that.includeGoalPatch && patchPair.equals(that.patchPair);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(patchPair, includeStartingPatch, includeGoalPatch);
         }
     }
 }

@@ -16,6 +16,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.cache.DistanceCache;
+import com.crowdsimulation.model.simulator.cache.MultipleFloorPatchCache;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -41,10 +42,14 @@ public class Station extends BaseStationObject implements Environment {
     private final List<EscalatorShaft> escalatorShafts;
     private final List<ElevatorShaft> elevatorShafts;
 
+    // Take note of which floor each amenities are located
+    private final HashMap<Class<? extends Amenity>, HashSet<Floor>> amenityFloorIndex;
+
     // The list of passengers in this station
     private final CopyOnWriteArrayList<Passenger> passengersInStation;
 
     // Caches for optimized performance
+    private final MultipleFloorPatchCache multipleFloorPatchCache;
     private final DistanceCache distanceCache;
 
     public Station(int rows, int columns) {
@@ -58,9 +63,15 @@ public class Station extends BaseStationObject implements Environment {
         this.escalatorShafts = Collections.synchronizedList(new ArrayList<>());
         this.elevatorShafts = Collections.synchronizedList(new ArrayList<>());
 
+        this.amenityFloorIndex = new HashMap<>();
+
         this.passengersInStation = new CopyOnWriteArrayList<>();
 
-        this.distanceCache = new DistanceCache();
+        int multiFloorPathCacheCapacity = 100;
+        this.multipleFloorPatchCache = new MultipleFloorPatchCache(multiFloorPathCacheCapacity);
+
+        int distanceCacheCapacity = 500;
+        this.distanceCache = new DistanceCache(distanceCacheCapacity);
 
         // Initially, the station has one floor
         Floor.addFloor(this, this.floors, 0, rows, columns);
@@ -86,6 +97,10 @@ public class Station extends BaseStationObject implements Environment {
         return floors;
     }
 
+    public HashMap<Class<? extends Amenity>, HashSet<Floor>> getAmenityFloorIndex() {
+        return amenityFloorIndex;
+    }
+
     public List<StairShaft> getStairShafts() {
         return stairShafts;
     }
@@ -100,6 +115,10 @@ public class Station extends BaseStationObject implements Environment {
 
     public CopyOnWriteArrayList<Passenger> getPassengersInStation() {
         return passengersInStation;
+    }
+
+    public MultipleFloorPatchCache getMultiFloorPathCache() {
+        return multipleFloorPatchCache;
     }
 
     public DistanceCache getDistanceCache() {
@@ -192,13 +211,16 @@ public class Station extends BaseStationObject implements Environment {
         Class<? extends Amenity> currentAmenity;
         Class<? extends Amenity> nextAmenity;
 
-        List<AmenityFloorPair> boardingNotFoundList = new ArrayList<>();
-        List<AmenityFloorPair> boardingFoundList = new ArrayList<>();
+        List<AmenityClassFloorPair> boardingNotFoundList;
+        List<AmenityClassFloorPair> boardingFoundList;
 
-        List<AmenityFloorPair> alightingNotFoundList = new ArrayList<>();
-        List<AmenityFloorPair> alightingFoundList = new ArrayList<>();
+        List<AmenityClassFloorPair> alightingNotFoundList;
+        List<AmenityClassFloorPair> alightingFoundList;
 
         for (Floor floor : floorStationGatesMap.keySet()) {
+            boardingNotFoundList = new ArrayList<>();
+            boardingFoundList = new ArrayList<>();
+
             currentAmenity = boardingPlan.get(0);
             nextAmenity = boardingPlan.get(1);
 
@@ -215,6 +237,9 @@ public class Station extends BaseStationObject implements Environment {
             if (!boardingValid) {
                 return false;
             }
+
+            alightingNotFoundList = new ArrayList<>();
+            alightingFoundList = new ArrayList<>();
 
             currentAmenity = alightingPlan.get(0);
             nextAmenity = alightingPlan.get(1);
@@ -237,23 +262,76 @@ public class Station extends BaseStationObject implements Environment {
         return true;
     }
 
+    // Assemble this station's amenity-floor index
+    public void assembleAmenityFloorIndex() {
+        this.amenityFloorIndex.clear();
+
+        this.amenityFloorIndex.put(StationGate.class, new HashSet<>());
+        this.amenityFloorIndex.put(Security.class, new HashSet<>());
+        this.amenityFloorIndex.put(TicketBooth.class, new HashSet<>());
+        this.amenityFloorIndex.put(Turnstile.class, new HashSet<>());
+        this.amenityFloorIndex.put(TrainDoor.class, new HashSet<>());
+
+        for (Floor floor : this.floors) {
+            if (!floor.getStationGates().isEmpty()) {
+                for (StationGate stationGate : floor.getStationGates()) {
+                    this.amenityFloorIndex.get(StationGate.class).add(
+                            stationGate.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+
+            if (!floor.getSecurities().isEmpty()) {
+                for (Security security : floor.getSecurities()) {
+                    this.amenityFloorIndex.get(Security.class).add(
+                            security.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+
+            if (!floor.getTicketBooths().isEmpty()) {
+                for (TicketBooth ticketBooth : floor.getTicketBooths()) {
+                    this.amenityFloorIndex.get(TicketBooth.class).add(
+                            ticketBooth.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+
+            if (!floor.getTurnstiles().isEmpty()) {
+                for (Turnstile turnstile : floor.getTurnstiles()) {
+                    this.amenityFloorIndex.get(Turnstile.class).add(
+                            turnstile.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+
+            if (!floor.getTrainDoors().isEmpty()) {
+                for (TrainDoor trainDoor : floor.getTrainDoors()) {
+                    this.amenityFloorIndex.get(TrainDoor.class).add(
+                            trainDoor.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+        }
+    }
+
     private static boolean validatePath(
             List<Class<? extends Amenity>> routePlan,
             int index,
             Floor currentFloor,
-            List<AmenityFloorPair> notFoundList,
-            List<AmenityFloorPair> foundList,
+            List<AmenityClassFloorPair> notFoundList,
+            List<AmenityClassFloorPair> foundList,
             Class<? extends Amenity> currentAmenity,
             Class<? extends Amenity> nextAmenity
     ) {
-        AmenityFloorPair amenityFloorPair = new AmenityFloorPair(
+        AmenityClassFloorPair amenityClassFloorPair = new AmenityClassFloorPair(
                 nextAmenity,
                 currentFloor
         );
 
-        // If this pair has already been found in the not found list, no need to look for that amenity again - return
-        // false
-        if (notFoundList.contains(amenityFloorPair)) {
+        // If this amenity has already been proven to not be in this floor, no need to look for that amenity again in
+        // this floor - return false
+        if (notFoundList.contains(amenityClassFloorPair)) {
             return false;
         }
 
@@ -276,9 +354,9 @@ public class Station extends BaseStationObject implements Environment {
         assert amenityList != null;
 
         // Using the acquired amenity list, check if this floor contains such amenity
-        if (foundList.contains(amenityFloorPair) || !amenityList.isEmpty()) {
+        if (foundList.contains(amenityClassFloorPair) || !amenityList.isEmpty()) {
             // Add this amenity-floor pair to the found list
-            foundList.add(amenityFloorPair);
+            foundList.add(amenityClassFloorPair);
 
             // Get the next amenity
             Class<? extends Amenity> newCurrentAmenity;
@@ -306,7 +384,7 @@ public class Station extends BaseStationObject implements Environment {
             }
         } else {
             // Add this amenity-floor pair to the not found list
-            notFoundList.add(amenityFloorPair);
+            notFoundList.add(amenityClassFloorPair);
 
             boolean portalsValid = false;
 
@@ -370,11 +448,34 @@ public class Station extends BaseStationObject implements Environment {
         }
     }
 
-    private static class AmenityFloorPair {
-        private final Class<? extends Amenity> amenity;
+    private static class AmenityClassFloorPair {
+        private final Class<? extends Amenity> amenityClass;
         private final Floor floor;
 
-        public AmenityFloorPair(Class<? extends Amenity> amenity, Floor floor) {
+        public AmenityClassFloorPair(Class<? extends Amenity> amenityClass, Floor floor) {
+            this.amenityClass = amenityClass;
+            this.floor = floor;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AmenityClassFloorPair that = (AmenityClassFloorPair) o;
+            return amenityClass.equals(that.amenityClass) && floor.equals(that.floor);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(amenityClass, floor);
+        }
+    }
+
+    public static class AmenityFloorPair {
+        private final Amenity amenity;
+        private final Floor floor;
+
+        public AmenityFloorPair(Amenity amenity, Floor floor) {
             this.amenity = amenity;
             this.floor = floor;
         }

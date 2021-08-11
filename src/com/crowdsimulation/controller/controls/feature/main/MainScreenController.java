@@ -746,17 +746,28 @@ public class MainScreenController extends ScreenController {
     @FXML
     // Validate the station layout
     public void validateStationLayout() {
+        boolean isStationValid = false;
+
         boolean isStationLayoutValid = Station.validateStationLayout(Main.simulator.getStation());
         boolean isFloorFieldsValid = Station.validateFloorFieldsInStation(Main.simulator.getStation());
 
         if (isStationLayoutValid && isFloorFieldsValid) {
-            AlertController.showSimpleAlert(
-                    "Valid station",
-                    "Valid station",
-                    "This station contains all the necessary amenities for passenger traversal, and is ready" +
-                            " for testing.",
-                    Alert.AlertType.INFORMATION
-            );
+            // Only show the success dialog box when the validation was performed directly from the validate station
+            // button
+            if (!Main.simulator.getValidatingFromRunning()) {
+                AlertController.showSimpleAlert(
+                        "Valid station",
+                        "Valid station",
+                        "This station contains all the necessary amenities for passenger traversal, and is ready" +
+                                " for testing.",
+                        Alert.AlertType.INFORMATION
+                );
+            }
+
+            isStationValid = true;
+
+            // Assemble the station's amenity-floor index
+            Main.simulator.getStation().assembleAmenityFloorIndex();
         } else {
             if (!isStationLayoutValid) {
                 AlertController.showSimpleAlert(
@@ -774,6 +785,10 @@ public class MainScreenController extends ScreenController {
                 );
             }
         }
+
+        // Set the validity flag of the station of the simulator
+        // No runs will be performed if the station is not valid
+        Main.simulator.setStationValid(isStationValid);
     }
 
     @FXML
@@ -1464,15 +1479,26 @@ public class MainScreenController extends ScreenController {
     public void playAction() {
         // Not yet running to running (play simulation)
         if (!Main.simulator.isRunning()) {
-            // Update mode
-            Main.simulator.setOperationMode(Simulator.OperationMode.TESTING);
-            Main.mainScreenController.updatePromptText();
+            // Only run when the station is valid
+            Main.simulator.setValidatingFromRunning(true);
 
-            // The simulation will now be running
-            Main.simulator.setRunning(true);
-            Main.simulator.getPlaySemaphore().release();
+            validateStationLayout();
 
-            playButton.setText("Pause");
+            Main.simulator.setValidatingFromRunning(false);
+
+            if (Main.simulator.isStationValid()) {
+                // Update mode
+                Main.simulator.setOperationMode(Simulator.OperationMode.TESTING);
+                Main.mainScreenController.updatePromptText();
+
+                // The simulation will now be running
+                Main.simulator.setRunning(true);
+                Main.simulator.getPlaySemaphore().release();
+
+                playButton.setText("Pause");
+            } else {
+                playButton.setSelected(false);
+            }
         } else {
             // Update mode
             Main.simulator.setOperationMode(Simulator.OperationMode.BUILDING);
@@ -1568,6 +1594,10 @@ public class MainScreenController extends ScreenController {
 
     // Clear all passengers in the station
     public void clearPassengersInStation(Station station) {
+        // Clear caches
+        station.getMultiFloorPathCache().clear();
+        station.getDistanceCache().clear();
+
         // Clear all portals
         for (StairShaft stairShaft : station.getStairShafts()) {
             station.getPassengersInStation().removeAll(stairShaft.getDescendingQueue().keySet());
@@ -1601,6 +1631,9 @@ public class MainScreenController extends ScreenController {
 
     // Clear passengers in a single floor
     public void clearPassengersInFloor(Floor floor) {
+        // Clear caches
+        floor.getPathCache().clear();
+
         // Remove the relationship between the patch and the passenger
         for (Passenger passenger : floor.getPassengersInFloor()) {
             passenger.getPassengerMovement().getCurrentPatch().getPassengers().clear();

@@ -74,9 +74,11 @@ public class Simulator {
 
     private Queueable currentFloorFieldTarget;
     private QueueingFloorField.FloorFieldState currentFloorFieldState;
-    private boolean isDrawingPlatformFloorField;
+
+    private final SimpleBooleanProperty validatingFromRunning;
 
     // Simulator variables
+    private final AtomicBoolean stationValid;
     private final AtomicBoolean running;
 
     // Denotes the current time in the simulation
@@ -124,6 +126,9 @@ public class Simulator {
         this.floorFieldDrawing = new SimpleBooleanProperty(false);
         this.currentFloorFieldTarget = null;
 
+        this.validatingFromRunning = new SimpleBooleanProperty(false);
+
+        this.stationValid = new AtomicBoolean(false);
         this.running = new AtomicBoolean(false);
 
         this.time = new SimulationTime(0, 0, 0);
@@ -313,6 +318,22 @@ public class Simulator {
 
     public void setCurrentFloorFieldState(QueueingFloorField.FloorFieldState currentFloorFieldState) {
         this.currentFloorFieldState = currentFloorFieldState;
+    }
+
+    public boolean getValidatingFromRunning() {
+        return this.validatingFromRunning.get();
+    }
+
+    public void setValidatingFromRunning(boolean validatingFromRunning) {
+        this.validatingFromRunning.set(validatingFromRunning);
+    }
+
+    public void setStationValid(boolean stationValid) {
+        this.stationValid.set(stationValid);
+    }
+
+    public boolean isStationValid() {
+        return stationValid.get();
     }
 
     public AtomicBoolean getRunning() {
@@ -551,105 +572,25 @@ public class Simulator {
                                     passengerMovement.setAction(PassengerMovement.Action.WILL_ASCEND);
                                     action = PassengerMovement.Action.WILL_ASCEND;
                                 }
-                            }
 
-                            if (
-                                    passengerMovement.getParent().getTicketType() == TicketBooth.TicketType.SINGLE_JOURNEY
-                                            || passengerMovement.getParent().getTicketType() == TicketBooth.TicketType.STORED_VALUE
-                                            && !passengerMovement.willPathFind()
-                            ) {
-                                // Make this passenger face the set goal, its queueing area, or the passenger at the tail of
-                                // the queue
-                                passengerMovement.faceNextPosition();
-
-                                // Move towards that direction
-                                passengerMovement.moveSocialForce();
-
-                                if (passengerMovement.hasEncounteredPassengerToFollow()) {
-                                    // If the passenger did not move, and there is someone blocking it while queueing,
-                                    // transition into the "in queue" state and the "assembling" action
-                                    passengerMovement.joinQueue();
-
-                                    passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
-                                    state = PassengerMovement.State.IN_QUEUE;
-
-                                    passengerMovement.setAction(PassengerMovement.Action.ASSEMBLING);
-                                    action = PassengerMovement.Action.ASSEMBLING;
-
-                                    break;
-                                }
-//
-                                // Check whether the passenger's next amenity is queueable
-                                // If it is, check whether the passenger has reached its floor field
-                                if (passengerMovement.isNextAmenityQueueable()) {
-                                    // If the passenger has reached the patch with the nearest floor field value, transition
-                                    // into the "in queue" state and the "queueing" action
-                                    if (passengerMovement.hasReachedQueueingFloorField()) {
-                                        // Mark this passenger as the latest one to join its queue
-                                        passengerMovement.joinQueue();
-
-                                        passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
-                                        state = PassengerMovement.State.IN_QUEUE;
-
-                                        if (passengerMovement.isNextAmenityTrainDoor()) {
-                                            passengerMovement.setAction(PassengerMovement.Action.WAITING_FOR_TRAIN);
-                                            action = PassengerMovement.Action.WAITING_FOR_TRAIN;
-                                        } else {
-                                            passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
-                                            action = PassengerMovement.Action.QUEUEING;
-                                        }
-
-                                        // If this passenger is a stored value card holder, signal that there will be
-                                        // no more need to pathfind
-                                        if (
-                                                passengerMovement.getParent().getTicketType()
-                                                        == TicketBooth.TicketType.STORED_VALUE
-                                        ) {
-                                            passengerMovement.endStoredValuePathfinding();
-                                        }
-                                    }
-                                } else {
-                                    // If the passenger has reached its non-queueable goal, transition into the appropriate
-                                    // state and action
-                                    if (passengerMovement.hasReachedGoal()) {
-                                        passengerMovement.setState(PassengerMovement.State.IN_NONQUEUEABLE);
-                                        state = PassengerMovement.State.IN_NONQUEUEABLE;
-
-                                        if (passengerMovement.getGoalAmenity() instanceof StationGate) {
-                                            passengerMovement.setAction(PassengerMovement.Action.EXITING_STATION);
-                                            action = PassengerMovement.Action.EXITING_STATION;
-                                        } else if (passengerMovement.getGoalAmenity() instanceof Portal) {
-                                            // This only covers stairs and escalators, as elevators are queueable
-                                            // TODO: Set the appropriate passenger direction (ascending/descending)
-                                        }
-                                    }
-                                }
-
-                                // if the passenger is stuck, switch to the "rerouting" action except if the passenger
-                                // is a stored value ticket holder
-                                if (
-                                        passengerMovement.isStuck()
-                                                && passengerMovement.getState() != PassengerMovement.State.IN_QUEUE
-                                                && passengerMovement.getParent().getTicketType() != TicketBooth.TicketType.STORED_VALUE
-                                ) {
-                                    passengerMovement.setAction(PassengerMovement.Action.REROUTING);
-                                    action = PassengerMovement.Action.REROUTING;
-                                }
+                                break;
                             } else {
-                                // This passenger is a stored value ticket holder so generate a path, if one hasn't been
-                                // generated yet, then follow it until the passenger reaches its goal
-                                // Get the next path
-                                if (passengerMovement.chooseNextPatchInPath()) {
-                                    // Make this passenger face that patch
+                                // This passenger is set to stay on this floor, so simply move towards its goal
+                                if (
+                                        passengerMovement.getParent().getTicketType()
+                                                == TicketBooth.TicketType.SINGLE_JOURNEY
+                                                || passengerMovement.getParent().getTicketType()
+                                                == TicketBooth.TicketType.STORED_VALUE
+                                                && !passengerMovement.willPathFind()
+                                ) {
+                                    // Make this passenger face the set goal, its queueing area, or the passenger at the
+                                    // tail of the queue
                                     passengerMovement.faceNextPosition();
 
-                                    // Move towards that patch
+                                    // Move towards that direction
                                     passengerMovement.moveSocialForce();
 
-                                    if (
-                                            passengerMovement.hasEncounteredPassengerToFollow()/*
-                                                    || passengerMovement.hasEncounteredAnyQueueingPassenger()*/
-                                    ) {
+                                    if (passengerMovement.hasEncounteredPassengerToFollow()) {
                                         // If the passenger did not move, and there is someone blocking it while queueing,
                                         // transition into the "in queue" state and the "assembling" action
                                         passengerMovement.joinQueue();
@@ -660,52 +601,150 @@ public class Simulator {
                                         passengerMovement.setAction(PassengerMovement.Action.ASSEMBLING);
                                         action = PassengerMovement.Action.ASSEMBLING;
 
-                                        passengerMovement.endStoredValuePathfinding();
-
-                                        break;
-                                    }
-
-                                    if (passengerMovement.hasReachedNextPatchInPath()) {
-                                        // The passenger has reached the next patch in the path, so remove this from this
-                                        // passenger's current path
-                                        passengerMovement.reachPatchInPath();
-
-                                        // Check if there are still patches left in the path
-                                        // If there are no more patches left, revert back to the "will queue" action
-                                        if (passengerMovement.hasPassengerReachedFinalPatchInPath()) {
-                                            passengerMovement.setState(PassengerMovement.State.WALKING);
-                                            state = PassengerMovement.State.WALKING;
-
-                                            passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
-                                            action = PassengerMovement.Action.WILL_QUEUE;
-
+                                        // If this passenger is a stored value card holder, signal that there will
+                                        // be no more need to pathfind
+                                        if (
+                                                passengerMovement.getParent().getTicketType()
+                                                        == TicketBooth.TicketType.STORED_VALUE
+                                        ) {
                                             passengerMovement.endStoredValuePathfinding();
                                         }
 
                                         break;
                                     }
-                                } else {
-                                    passengerMovement.setState(PassengerMovement.State.WALKING);
-                                    state = PassengerMovement.State.WALKING;
 
-                                    passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
-                                    action = PassengerMovement.Action.WILL_QUEUE;
+                                    // Check whether the passenger's next amenity is a queueable
+                                    // If it is, check whether the passenger has reached its floor field
+                                    if (passengerMovement.isNextAmenityQueueable()) {
+                                        // If the passenger has reached the patch with the nearest floor field value,
+                                        // transition
+                                        // into the "in queue" state and the "queueing" action
+                                        if (passengerMovement.hasReachedQueueingFloorField()) {
+                                            // Mark this passenger as the latest one to join its queue
+                                            passengerMovement.joinQueue();
 
-                                    passengerMovement.endStoredValuePathfinding();
+                                            passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
+                                            state = PassengerMovement.State.IN_QUEUE;
+
+                                            if (passengerMovement.isNextAmenityTrainDoor()) {
+                                                passengerMovement.setAction(PassengerMovement.Action.WAITING_FOR_TRAIN);
+                                                action = PassengerMovement.Action.WAITING_FOR_TRAIN;
+                                            } else {
+                                                passengerMovement.setAction(PassengerMovement.Action.QUEUEING);
+                                                action = PassengerMovement.Action.QUEUEING;
+                                            }
+
+                                            // If this passenger is a stored value card holder, signal that there will
+                                            // be no more need to pathfind
+                                            if (
+                                                    passengerMovement.getParent().getTicketType()
+                                                            == TicketBooth.TicketType.STORED_VALUE
+                                            ) {
+                                                passengerMovement.endStoredValuePathfinding();
+                                            }
+                                        }
+
+                                        break;
+                                    } else {
+                                        // If the passenger has reached its non-queueable goal, transition into the
+                                        // appropriate state and action
+                                        // This non-queueable goal could only be a station gate, so transition into a
+                                        // station exiting action
+                                        if (passengerMovement.hasReachedGoal()) {
+                                            passengerMovement.setState(PassengerMovement.State.IN_NONQUEUEABLE);
+                                            state = PassengerMovement.State.IN_NONQUEUEABLE;
+
+                                            passengerMovement.setAction(PassengerMovement.Action.EXITING_STATION);
+                                            action = PassengerMovement.Action.EXITING_STATION;
+                                        }
+                                    }
+
+                                    // If the passenger is stuck, switch to the "rerouting" action except if the
+                                    // passenger is a stored value ticket holder
+                                    if (
+                                            passengerMovement.isStuck()
+                                                    && passengerMovement.getState() != PassengerMovement.State.IN_QUEUE
+                                                    && passengerMovement.getParent().getTicketType()
+                                                    != TicketBooth.TicketType.STORED_VALUE
+                                    ) {
+                                        passengerMovement.setAction(PassengerMovement.Action.REROUTING);
+                                        action = PassengerMovement.Action.REROUTING;
+                                    }
 
                                     break;
+                                } else {
+                                    // This passenger is a stored value ticket holder so generate a path, if one hasn't
+                                    // been generated yet, then follow it until the passenger reaches its goal
+                                    // Get the next path
+                                    if (passengerMovement.chooseNextPatchInPath()) {
+                                        // Make this passenger face that patch
+                                        passengerMovement.faceNextPosition();
+
+                                        // Move towards that patch
+                                        passengerMovement.moveSocialForce();
+
+                                        if (passengerMovement.hasEncounteredPassengerToFollow()) {
+                                            // If the passenger did not move, and there is someone blocking it while
+                                            // queueing, transition into the "in queue" state and the "assembling"
+                                            // action
+                                            passengerMovement.joinQueue();
+
+                                            passengerMovement.setState(PassengerMovement.State.IN_QUEUE);
+                                            state = PassengerMovement.State.IN_QUEUE;
+
+                                            passengerMovement.setAction(PassengerMovement.Action.ASSEMBLING);
+                                            action = PassengerMovement.Action.ASSEMBLING;
+
+                                            passengerMovement.endStoredValuePathfinding();
+
+                                            break;
+                                        }
+
+                                        if (passengerMovement.hasReachedNextPatchInPath()) {
+                                            // The passenger has reached the next patch in the path, so remove this from
+                                            // this passenger's current path
+                                            passengerMovement.reachPatchInPath();
+
+                                            // Check if there are still patches left in the path
+                                            // If there are no more patches left, revert back to the "will queue" action
+                                            if (passengerMovement.hasPassengerReachedFinalPatchInPath()) {
+                                                passengerMovement.setState(PassengerMovement.State.WALKING);
+                                                state = PassengerMovement.State.WALKING;
+
+                                                passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
+                                                action = PassengerMovement.Action.WILL_QUEUE;
+
+                                                passengerMovement.endStoredValuePathfinding();
+                                            }
+
+                                            break;
+                                        }
+                                    } else {
+                                        // No more next patches, so transition back into the walking state
+                                        passengerMovement.setState(PassengerMovement.State.WALKING);
+                                        state = PassengerMovement.State.WALKING;
+
+                                        passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
+                                        action = PassengerMovement.Action.WILL_QUEUE;
+
+                                        passengerMovement.endStoredValuePathfinding();
+
+                                        break;
+                                    }
                                 }
                             }
                         } else if (
                                 action == PassengerMovement.Action.WILL_DESCEND
                                         || action == PassengerMovement.Action.WILL_ASCEND
                         ) {
-                            // This passenger is now heading to its chosen portal
-                            passengerMovement.chooseGoal();
-
+                            // Check if the passenger is set to switch floors
+                            // If it is, this passenger will now head to its chosen portal
+//                            passengerMovement.chooseGoal();
                             if (
-                                    passengerMovement.getParent().getTicketType() == TicketBooth.TicketType.SINGLE_JOURNEY
-                                            || passengerMovement.getParent().getTicketType() == TicketBooth.TicketType.STORED_VALUE
+                                    passengerMovement.getParent().getTicketType()
+                                            == TicketBooth.TicketType.SINGLE_JOURNEY
+                                            || passengerMovement.getParent().getTicketType()
+                                            == TicketBooth.TicketType.STORED_VALUE
                                             && !passengerMovement.willPathFind()
                             ) {
                                 // Make this passenger face its portal
@@ -750,14 +789,50 @@ public class Simulator {
 
                                 // Then have this passenger marked for floor switching
                                 this.passengersToSwitchFloors.add(passenger);
+
+                                break;
+                            }
+
+                            // If the passenger is stuck, switch to the "rerouting" action except if the passenger
+                            // is a stored value ticket holder
+                            if (
+                                    passengerMovement.isStuck()
+                                            && passengerMovement.getParent().getTicketType()
+                                            != TicketBooth.TicketType.STORED_VALUE
+                            ) {
+                                passengerMovement.setAction(PassengerMovement.Action.REROUTING);
+                                action = PassengerMovement.Action.REROUTING;
                             }
                         } else if (action == PassengerMovement.Action.EXITING_STATION) {
+                            // This passenger is ready to exit
+                            passengerMovement.prepareForStationExit();
+
                             // This passenger is now heading to its chosen exit
                             passengerMovement.chooseGoal();
 
+                            // Check if this passenger is set to use a portal to go to another floor
+                            if (passengerMovement.willHeadToPortal()) {
+                                // Make this passenger face the goal portal
+                                passengerMovement.faceNextPosition();
+
+                                // Move towards that direction
+                                passengerMovement.moveSocialForce();
+
+                                // Set the appropriate action
+                                if (passengerMovement.isGoalFloorLower()) {
+                                    passengerMovement.setAction(PassengerMovement.Action.WILL_DESCEND);
+                                    action = PassengerMovement.Action.WILL_DESCEND;
+                                } else {
+                                    passengerMovement.setAction(PassengerMovement.Action.WILL_ASCEND);
+                                    action = PassengerMovement.Action.WILL_ASCEND;
+                                }
+                            }
+
                             if (
-                                    passengerMovement.getParent().getTicketType() == TicketBooth.TicketType.SINGLE_JOURNEY
-                                            || passengerMovement.getParent().getTicketType() == TicketBooth.TicketType.STORED_VALUE
+                                    passengerMovement.getParent().getTicketType()
+                                            == TicketBooth.TicketType.SINGLE_JOURNEY
+                                            || passengerMovement.getParent().getTicketType()
+                                            == TicketBooth.TicketType.STORED_VALUE
                                             && !passengerMovement.willPathFind()
                             ) {
                                 // Make this passenger face its exit
@@ -799,8 +874,21 @@ public class Simulator {
 
                                 // Then have this passenger marked for despawning
                                 this.passengersToDespawn.add(passenger);
+
+                                break;
                             }
-                        } else {
+
+                            // If the passenger is stuck, switch to the "rerouting" action except if the passenger
+                            // is a stored value ticket holder
+                            if (
+                                    passengerMovement.isStuck()
+                                            && passengerMovement.getParent().getTicketType()
+                                            != TicketBooth.TicketType.STORED_VALUE
+                            ) {
+                                passengerMovement.setAction(PassengerMovement.Action.REROUTING);
+                                action = PassengerMovement.Action.REROUTING;
+                            }
+                        } else if (action == PassengerMovement.Action.REROUTING) {
                             // This passenger is stuck, so generate a path, if one hasn't been generated yet, then
                             // follow it until the passenger is not stuck anymore
                             // Get the next path
@@ -826,9 +914,7 @@ public class Simulator {
                                     break;
                                 }
 
-                                if (
-                                        passengerMovement.hasEncounteredPassengerToFollow()
-                                ) {
+                                if (passengerMovement.hasEncounteredPassengerToFollow()) {
                                     // If the passenger did not move, and there is someone blocking it while queueing,
                                     // transition into the "in queue" state and the "assembling" action
                                     passengerMovement.joinQueue();
@@ -1002,7 +1088,7 @@ public class Simulator {
                                 if (passengerMovement.isNextAmenityGoal()) {
                                     // Transition into the "in queueable" state and the appropriate action
                                     passengerMovement.setState(PassengerMovement.State.IN_QUEUEABLE);
-                                    state = PassengerMovement.State.IN_NONQUEUEABLE;
+                                    state = PassengerMovement.State.IN_QUEUEABLE;
 
                                     if (passengerMovement.getGoalAmenity() instanceof Security) {
                                         passengerMovement.setAction(PassengerMovement.Action.SECURITY_CHECKING);

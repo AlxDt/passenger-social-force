@@ -41,7 +41,7 @@ public class InitializeNormalFloorFieldService {
                 NormalFloorFieldController.FloorFieldMode.DRAWING,
                 NormalFloorFieldController.FloorFieldMode.DELETING
         ));
-        modeChoiceBox.getSelectionModel().select(0);
+        modeChoiceBox.getSelectionModel().select(NormalFloorFieldController.FloorFieldMode.DRAWING);
 
         NormalFloorFieldController.FloorFieldMode initialFloorFieldMode
                 = modeChoiceBox.getSelectionModel().getSelectedItem();

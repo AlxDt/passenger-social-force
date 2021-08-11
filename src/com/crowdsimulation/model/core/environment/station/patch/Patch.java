@@ -140,7 +140,7 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Patch patch = (Patch) o;
-        return matrixPosition.equals(patch.matrixPosition);
+        return matrixPosition.equals(patch.matrixPosition) && floor.equals(patch.floor);
     }
 
     @Override
@@ -183,13 +183,18 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            PatchPair that = (PatchPair) o;
-            return patch1.equals(that.patch1) && patch2.equals(that.patch2);
+            PatchPair patchPair = (PatchPair) o;
+            return patch1.equals(patchPair.patch1) && patch2.equals(patchPair.patch2);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(patch1, patch2);
+        }
+
+        @Override
+        public String toString() {
+            return "(" + patch1 + ", " + patch2 + ")";
         }
     }
 }
