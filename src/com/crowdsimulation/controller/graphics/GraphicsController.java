@@ -69,6 +69,12 @@ public class GraphicsController extends Controller {
     private static boolean showTooltip;
     private static Tooltip tooltip;
 
+    private static boolean isDrawingStraightX;
+    private static boolean isDrawingStraightY;
+
+    private static Double lockedX;
+    private static Double lockedY;
+
     private static long millisecondsLastCanvasRefresh;
 
     // Denotes whether the listeners for the drawing interface has already been drawn, in order to prevent its
@@ -92,6 +98,12 @@ public class GraphicsController extends Controller {
 
         GraphicsController.floorNextPortal = null;
         GraphicsController.firstPortalAmenityBlocks = null;
+
+        GraphicsController.isDrawingStraightX = false;
+        GraphicsController.isDrawingStraightY = false;
+
+        GraphicsController.lockedX = null;
+        GraphicsController.lockedY = null;
 
         millisecondsLastCanvasRefresh = 0;
 
@@ -969,20 +981,27 @@ public class GraphicsController extends Controller {
                     }
 
                     break;
+                // Drawing shortcut keys
+                case SHIFT:
+                    GraphicsController.isDrawingStraightX = true;
+
+                    break;
+                case CONTROL:
+                    GraphicsController.isDrawingStraightY = true;
+
+                    break;
                 // Drawing rotation shortcut keys
                 case X:
                 case Z:
                     if (e.getCode() == KeyCode.X) {
                         // Rotate counterclockwise
                         if (Main.simulator.getBuildState() == Simulator.BuildState.DRAWING
-                                /*&& !Main.simulator.isPortalDrawing()*/
                                 && !Main.simulator.isFloorFieldDrawing()) {
                             GraphicsController.currentAmenityFootprint.rotateCounterclockwise();
                         }
                     } else {
                         // Rotate clockwise
                         if (Main.simulator.getBuildState() == Simulator.BuildState.DRAWING
-                                /*&& !Main.simulator.isPortalDrawing()*/
                                 && !Main.simulator.isFloorFieldDrawing()) {
                             GraphicsController.currentAmenityFootprint.rotateClockwise();
                         }
@@ -1061,6 +1080,16 @@ public class GraphicsController extends Controller {
             }
         });
 
+        backgroundCanvas.getScene().setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.SHIFT) {
+                GraphicsController.isDrawingStraightX = false;
+                GraphicsController.lockedX = null;
+            } else if (e.getCode() == KeyCode.CONTROL) {
+                GraphicsController.isDrawingStraightY = false;
+                GraphicsController.lockedY = null;
+            }
+        });
+
         backgroundCanvas.addEventHandler(MouseEvent.MOUSE_MOVED, event -> {
             // If there are no subcategories, erase all markings
             // Update the visual markings
@@ -1107,10 +1136,10 @@ public class GraphicsController extends Controller {
         backgroundCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, event -> {
             // If there are no subcategories, erase all markings
             if (Main.simulator.getBuildSubcategory() != Simulator.BuildSubcategory.NONE) {
-                // Only allow dragging when drawing obstacles or tracks
+                // Only allow dragging when drawing obstacles or floor fields
                 if (
                         Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.OBSTACLE
-                                || Main.simulator.getBuildSubcategory() == Simulator.BuildSubcategory.TRAIN_TRACK
+                                || Main.simulator.isFloorFieldDrawing()
                 ) {
                     // Get the patch coordinates from the mouse click coordinates
                     Patch currentPatch = retrievePatchFromMouseClick(event);
@@ -1258,10 +1287,24 @@ public class GraphicsController extends Controller {
 
     private static Patch retrievePatchFromMouseClick(MouseEvent event) {
         // Get the patch coordinates from the mouse click coordinates
+        double mouseX = event.getX();
+        double mouseY = event.getY();
+
+        // If a straight x-axis draw is requested, and there is no locked x coordinate yet, set the locked x coordinate
+        if (GraphicsController.isDrawingStraightX && GraphicsController.lockedX == null) {
+            GraphicsController.lockedX = mouseX;
+        }
+
+        // If a straight y-axis draw is requested, and there is no locked y coordinate yet, set the locked y coordinate
+        if (GraphicsController.isDrawingStraightY && GraphicsController.lockedY == null) {
+            GraphicsController.lockedY = mouseY;
+        }
+
+        // Take into account whether the mouse x or y coordinates are to be used
         MatrixPosition matrixPosition = Location.screenCoordinatesToMatrixPosition(
                 Main.simulator.getStation(),
-                event.getX(),
-                event.getY(),
+                GraphicsController.isDrawingStraightX ? GraphicsController.lockedX : mouseX,
+                GraphicsController.isDrawingStraightY ? GraphicsController.lockedY : mouseY,
                 tileSize
         );
 

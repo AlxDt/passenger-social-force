@@ -5,7 +5,6 @@ import com.crowdsimulation.controller.controls.feature.main.MainScreenController
 import com.crowdsimulation.controller.controls.service.InitializeScreenService;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
