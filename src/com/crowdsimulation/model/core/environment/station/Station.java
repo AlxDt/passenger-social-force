@@ -3,14 +3,21 @@ package com.crowdsimulation.model.core.environment.station;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
+import com.crowdsimulation.model.core.agent.passenger.movement.pathfinding.DirectoryResult;
+import com.crowdsimulation.model.core.agent.passenger.movement.pathfinding.MultipleFloorPassengerPath;
 import com.crowdsimulation.model.core.environment.Environment;
+import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
@@ -67,10 +74,10 @@ public class Station extends BaseStationObject implements Environment {
 
         this.passengersInStation = new CopyOnWriteArrayList<>();
 
-        int multiFloorPathCacheCapacity = 100;
+        int multiFloorPathCacheCapacity = 50;
         this.multipleFloorPatchCache = new MultipleFloorPatchCache(multiFloorPathCacheCapacity);
 
-        int distanceCacheCapacity = 500;
+        int distanceCacheCapacity = 50;
         this.distanceCache = new DistanceCache(distanceCacheCapacity);
 
         // Initially, the station has one floor
@@ -125,9 +132,62 @@ public class Station extends BaseStationObject implements Environment {
         return distanceCache;
     }
 
+    // Assemble this station's amenity-floor index
+    public static void assembleAmenityFloorIndex(Station station) {
+        station.amenityFloorIndex.clear();
+
+        station.amenityFloorIndex.put(StationGate.class, new HashSet<>());
+        station.amenityFloorIndex.put(Security.class, new HashSet<>());
+        station.amenityFloorIndex.put(TicketBooth.class, new HashSet<>());
+        station.amenityFloorIndex.put(Turnstile.class, new HashSet<>());
+        station.amenityFloorIndex.put(TrainDoor.class, new HashSet<>());
+
+        for (Floor floor : station.floors) {
+            if (!floor.getStationGates().isEmpty()) {
+                for (StationGate stationGate : floor.getStationGates()) {
+                    station.amenityFloorIndex.get(StationGate.class).add(
+                            stationGate.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+
+            if (!floor.getSecurities().isEmpty()) {
+                for (Security security : floor.getSecurities()) {
+                    station.amenityFloorIndex.get(Security.class).add(
+                            security.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+
+            if (!floor.getTicketBooths().isEmpty()) {
+                for (TicketBooth ticketBooth : floor.getTicketBooths()) {
+                    station.amenityFloorIndex.get(TicketBooth.class).add(
+                            ticketBooth.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+
+            if (!floor.getTurnstiles().isEmpty()) {
+                for (Turnstile turnstile : floor.getTurnstiles()) {
+                    station.amenityFloorIndex.get(Turnstile.class).add(
+                            turnstile.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+
+            if (!floor.getTrainDoors().isEmpty()) {
+                for (TrainDoor trainDoor : floor.getTrainDoors()) {
+                    station.amenityFloorIndex.get(TrainDoor.class).add(
+                            trainDoor.getAmenityBlocks().get(0).getPatch().getFloor()
+                    );
+                }
+            }
+        }
+    }
+
     // Validate both the station layout and its floor fields as one
     public static boolean validateStation(Station station) {
-        return validateStationLayout(station) && validateFloorFieldsInStation(station);
+        return validateStationShallowly(station) && validateFloorFieldsInStation(station);
     }
 
     // Validate the floor fields of each amenity in the station
@@ -180,8 +240,404 @@ public class Station extends BaseStationObject implements Environment {
         return true;
     }
 
+    // Clear all caches of this station
+    public void clearCaches() {
+        this.getMultiFloorPathCache().clear();
+        this.getDistanceCache().clear();
+
+        for (Floor floor : this.getFloors()) {
+            floor.getPathCache().clear();
+        }
+    }
+
+    // Thoroughly validate the layout of the station
+    public static StationValidationResult validateStationLayoutDeeply(Station station) {
+        // Clear caches
+        station.clearCaches();
+
+        // For each floor in the station, collect station gates
+        List<StationGate> stationGates = new ArrayList<>();
+
+        for (Floor floor : station.getFloors()) {
+            stationGates.addAll(floor.getStationGates());
+        }
+
+        // If there are no station gates at all, we now know that this station is instantly invalid
+        if (stationGates.isEmpty()) {
+            return new StationValidationResult(
+                    StationValidationResult.StationValidationResultType.NO_STATION_GATES,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        // For each floor in the station, collect train doors
+        List<TrainDoor> trainDoors = new ArrayList<>();
+
+        for (Floor floor : station.getFloors()) {
+            trainDoors.addAll(floor.getTrainDoors());
+        }
+
+        // If there are no train doors at all, we now know that this station is instantly invalid
+        if (trainDoors.isEmpty()) {
+            return new StationValidationResult(
+                    StationValidationResult.StationValidationResultType.NO_TRAIN_DOORS,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        // For each floor in the station, collect train tracks
+        List<Track> trainTracks = new ArrayList<>();
+
+        for (Floor floor : station.getFloors()) {
+            trainTracks.addAll(floor.getTracks());
+        }
+
+        // If there are no train tracks at all, we now know that this station is instantly invalid
+        if (trainTracks.isEmpty()) {
+            return new StationValidationResult(
+                    StationValidationResult.StationValidationResultType.NO_TRAIN_TRACKS,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        } else {
+            // Collect all the directions of the train tracks and the train doors
+            HashSet<PassengerMovement.TravelDirection> trainTrackDirections = new HashSet<>();
+            HashSet<PassengerMovement.TravelDirection> trainDoorDirections = new HashSet<>();
+
+            for (Track track : trainTracks) {
+                trainTrackDirections.add(track.getTrackDirection());
+            }
+
+            for (TrainDoor trainDoor : trainDoors) {
+                trainDoorDirections.add(trainDoor.getPlatformDirection());
+            }
+
+            // See if all directions of the train doors and train tracks match
+            if (!trainTrackDirections.equals(trainDoorDirections)) {
+                // All train door directions that are not in the train track directions
+                HashSet<PassengerMovement.TravelDirection> trainTrackDirectionsCopy;
+                HashSet<PassengerMovement.TravelDirection> trainDoorDirectionsCopy;
+
+                trainTrackDirectionsCopy = new HashSet<>(trainTrackDirections);
+                trainDoorDirectionsCopy = new HashSet<>(trainDoorDirections);
+
+                trainTrackDirectionsCopy.removeAll(trainDoorDirectionsCopy);
+
+                if (trainTrackDirectionsCopy.size() < trainDoorDirectionsCopy.size()) {
+                    return new StationValidationResult(
+                            StationValidationResult.StationValidationResultType.TRAIN_TRACKS_MISMATCH,
+                            (PassengerMovement.TravelDirection) trainDoorDirectionsCopy.toArray()[0],
+                            null,
+                            null,
+                            null,
+                            Track.class
+                    );
+                } else {
+                    return new StationValidationResult(
+                            StationValidationResult.StationValidationResultType.TRAIN_TRACKS_MISMATCH,
+                            (PassengerMovement.TravelDirection) trainTrackDirectionsCopy.toArray()[0],
+                            null,
+                            null,
+                            null,
+                            TrainDoor.class
+                    );
+                }
+            }
+        }
+
+        // Assemble this station's amenity-floor index
+        Station.assembleAmenityFloorIndex(station);
+
+        // For each station gate, for each direction that the station gate may spawn, check if a single journey and
+        // stored value card holder passenger may be able to navigate from this station gate to its corresponding
+        // train door
+        boolean isStoredValueCardHolder;
+
+        RoutePlan boardingRoutePlanSingleJourney;
+        RoutePlan boardingRoutePlanStoredValue;
+        RoutePlan alightingRoutePlan;
+
+        // Check the validity for each station gate in the station, for each boarding passenger
+        for (StationGate stationGate : stationGates) {
+            // Get the directions of the passengers that may be spawned by this station gate
+            List<PassengerMovement.TravelDirection> travelDirectionsSpawnable
+                    = stationGate.getStationGatePassengerTravelDirections();
+
+            // Check the validity for each travel direction spawnable by this station gate
+            for (PassengerMovement.TravelDirection travelDirectionSpawnable : travelDirectionsSpawnable) {
+                // Initialize a potential passenger's route plans
+                isStoredValueCardHolder = false;
+                boardingRoutePlanSingleJourney = new RoutePlan(isStoredValueCardHolder, true);
+
+                isStoredValueCardHolder = true;
+                boardingRoutePlanStoredValue = new RoutePlan(isStoredValueCardHolder, true);
+
+                Amenity currentAmenity;
+
+                // Check the validity for boarding single journey ticket holders
+                currentAmenity = stationGate;
+                DirectoryResult directoryResultBoardingSingleJourney;
+
+                while (true) {
+                    // Check if a path exists from the current goal to any amenity that comes after it
+                    directoryResultBoardingSingleJourney = getPortalsToGoal(
+                            station,
+                            boardingRoutePlanSingleJourney,
+                            PassengerMovement.Disposition.BOARDING,
+                            travelDirectionSpawnable,
+                            currentAmenity
+                    );
+
+                    // If there are no paths found to any next amenity, this station is instantly valid
+                    if (directoryResultBoardingSingleJourney.getPortals() == null) {
+                        return new StationValidationResult(
+                                StationValidationResult.StationValidationResultType.UNREACHABLE,
+                                travelDirectionSpawnable,
+                                TicketBooth.TicketType.SINGLE_JOURNEY,
+                                PassengerMovement.Disposition.BOARDING,
+                                currentAmenity,
+                                boardingRoutePlanSingleJourney.getCurrentAmenityClass()
+                        );
+                    }
+
+                    // TODO: For each portal in the goal portals list, attach the goal amenity to its directory,
+                    //  signifying that to get to that amenity, this goal portal is the way
+
+                    // Go one level deeper
+                    currentAmenity = directoryResultBoardingSingleJourney.getGoalAmenity();
+
+                    // If the next amenity is already a train door, this means a complete path was found from start to
+                    // end, so this path is valid
+                    if (currentAmenity instanceof TrainDoor) {
+                        break;
+                    } else {
+                        boardingRoutePlanSingleJourney.setNextAmenityClass();
+                    }
+                }
+
+                // Check the validity for boarding stored value ticket holders
+                currentAmenity = stationGate;
+                DirectoryResult directoryResultBoardingStoredValue;
+
+                while (true) {
+                    // Check if a path exists from the current goal to any amenity that comes after it
+                    directoryResultBoardingStoredValue = getPortalsToGoal(
+                            station,
+                            boardingRoutePlanStoredValue,
+                            PassengerMovement.Disposition.BOARDING,
+                            travelDirectionSpawnable,
+                            currentAmenity
+                    );
+
+                    // If there are no paths found to any next amenity, this station is instantly valid
+                    if (directoryResultBoardingStoredValue.getPortals() == null) {
+                        return new StationValidationResult(
+                                StationValidationResult.StationValidationResultType.UNREACHABLE,
+                                travelDirectionSpawnable,
+                                TicketBooth.TicketType.STORED_VALUE,
+                                PassengerMovement.Disposition.BOARDING,
+                                currentAmenity,
+                                boardingRoutePlanStoredValue.getCurrentAmenityClass()
+                        );
+                    }
+
+                    // TODO: For each portal in the goal portals list, attach the goal amenity to its directory,
+                    //  signifying that to get to that amenity, this goal portal is the way
+
+                    // Go one level deeper
+                    currentAmenity = directoryResultBoardingStoredValue.getGoalAmenity();
+
+                    // If the next amenity is already a train door, this means a complete path was found from start to
+                    // end, so this path is valid
+                    if (currentAmenity instanceof TrainDoor) {
+                        break;
+                    } else {
+                        boardingRoutePlanStoredValue.setNextAmenityClass();
+                    }
+                }
+            }
+        }
+
+        // Check the validity for each train door in the station, for each alighting passenger
+        for (TrainDoor trainDoor : trainDoors) {
+            // Initialize a potential passenger's route plans
+            alightingRoutePlan = new RoutePlan(false, false);
+
+            // Get the directions of the passengers that are spawned by this train door
+            PassengerMovement.TravelDirection travelDirectionSpawnable = trainDoor.getPlatformDirection();
+
+            Amenity currentAmenity;
+
+            // Check the validity for alighting passengers
+            currentAmenity = trainDoor;
+            DirectoryResult directoryResultAlighting;
+
+            while (true) {
+                // Check if a path exists from the current goal to any amenity that comes after it
+                directoryResultAlighting = getPortalsToGoal(
+                        station,
+                        alightingRoutePlan,
+                        PassengerMovement.Disposition.ALIGHTING,
+                        travelDirectionSpawnable,
+                        currentAmenity
+                );
+
+                // If there are no paths found to any next amenity, this station is instantly valid
+                if (directoryResultAlighting.getPortals() == null) {
+                    return new StationValidationResult(
+                            StationValidationResult.StationValidationResultType.UNREACHABLE,
+                            travelDirectionSpawnable,
+                            null,
+                            PassengerMovement.Disposition.ALIGHTING,
+                            currentAmenity,
+                            alightingRoutePlan.getCurrentAmenityClass()
+                    );
+                }
+
+                // TODO: For each portal in the goal portals list, attach the goal amenity to its directory,
+                //  signifying that to get to that amenity, this goal portal is the way
+
+                // Go one level deeper
+                currentAmenity = directoryResultAlighting.getGoalAmenity();
+
+                // If the next amenity is already a station gate, this means a complete path was found from start to
+                // end, so this path is valid
+                if (currentAmenity instanceof StationGate) {
+                    break;
+                } else {
+                    alightingRoutePlan.setNextAmenityClass();
+                }
+            }
+        }
+
+        return new StationValidationResult(
+                StationValidationResult.StationValidationResultType.NO_ERROR,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private static DirectoryResult getPortalsToGoal(
+            Station station,
+            RoutePlan routePlan,
+            PassengerMovement.Disposition disposition,
+            PassengerMovement.TravelDirection travelDirectionSpawnable,
+            Amenity currentAmenity
+    ) {
+        // Set the next amenity class
+        Class<? extends Amenity> nextAmenityClass = routePlan.getCurrentAmenityClass();
+
+        // Based on the passenger's current direction and route plan, get the next amenity class to be sought
+        // Given the next amenity class, collect the floors which have this amenity class
+        Set<Floor> floors = station.getAmenityFloorIndex().get(nextAmenityClass);
+
+        assert !floors.isEmpty();
+
+        // Compile all amenities in each floor
+        List<Amenity> amenityListInFloors = new ArrayList<>();
+
+        for (Floor floorToExplore : floors) {
+            amenityListInFloors.addAll(floorToExplore.getAmenityList(nextAmenityClass));
+        }
+
+        // Compute the distance from the current position to the possible goal, taking into account possible
+        // paths passing through other floors
+        MultipleFloorPassengerPath bestPath = null;
+        Amenity closestGoal = null;
+        double closestDistance = Double.MAX_VALUE;
+
+        for (Amenity candidateGoal : amenityListInFloors) {
+            // Only consider amenities that are enabled
+            NonObstacle nonObstacle = ((NonObstacle) candidateGoal);
+
+            if (!nonObstacle.isEnabled()) {
+                continue;
+            }
+
+            // Filter the amenity search space only to what is compatible with this passenger
+            if (candidateGoal instanceof StationGate) {
+                // If the goal of the passenger is a station gate, this means the passenger is leaving
+                // So only consider station gates which allow exits and accepts the passenger's direction
+                StationGate stationGateExit = ((StationGate) candidateGoal);
+
+                if (stationGateExit.getStationGateMode() == StationGate.StationGateMode.ENTRANCE) {
+                    continue;
+                } else {
+                    if (!stationGateExit.getStationGatePassengerTravelDirections().contains(travelDirectionSpawnable)) {
+                        continue;
+                    }
+                }
+            } else if (candidateGoal instanceof Turnstile) {
+                // Only consider turnstiles which match this passenger's disposition and travel direction
+                Turnstile turnstile = ((Turnstile) candidateGoal);
+
+                if (!turnstile.getTurnstileTravelDirections().contains(travelDirectionSpawnable)) {
+                    continue;
+                }
+
+                if (turnstile.getTurnstileMode() != Turnstile.TurnstileMode.BIDIRECTIONAL) {
+                    if (
+                            turnstile.getTurnstileMode() == Turnstile.TurnstileMode.BOARDING
+                                    && disposition.equals(PassengerMovement.Disposition.ALIGHTING)
+                                    || turnstile.getTurnstileMode() == Turnstile.TurnstileMode.ALIGHTING
+                                    && disposition.equals(PassengerMovement.Disposition.BOARDING)
+                    ) {
+                        continue;
+                    }
+                }
+            } else if (candidateGoal instanceof TrainDoor) {
+                // Only consider train doors which match this passenger's travel direction
+                TrainDoor trainDoor = ((TrainDoor) candidateGoal);
+
+                if (trainDoor.getPlatformDirection() != travelDirectionSpawnable) {
+                    continue;
+                }
+            }
+
+            Patch currentAmenityPatch = currentAmenity.getAmenityBlocks().get(0).getPatch();
+
+            MultipleFloorPassengerPath multipleFloorPassengerPath
+                    = PassengerMovement.computePathAcrossFloors(
+                    currentAmenityPatch.getFloor(),
+                    new ArrayList<>(),
+                    new ArrayList<>(),
+                    currentAmenityPatch,
+                    candidateGoal.getAmenityBlocks().get(0)
+            );
+
+            if (multipleFloorPassengerPath != null) {
+                if (multipleFloorPassengerPath.getDistance() < closestDistance) {
+                    bestPath = multipleFloorPassengerPath;
+                    closestDistance = multipleFloorPassengerPath.getDistance();
+                    closestGoal = candidateGoal;
+                }
+            }
+        }
+
+        // Then set the passenger's goal portals, given the path found to the goal and the portals required to
+        // get to it
+        return new DirectoryResult(
+                (bestPath != null) ? new ArrayList<>(bestPath.getPortals()) : null,
+                closestGoal
+        );
+    }
+
     // Validate the layout of the station
-    public static boolean validateStationLayout(Station station) {
+    public static boolean validateStationShallowly(Station station) {
         boolean boardingValid = true;
         boolean alightingValid = true;
 
@@ -260,59 +716,6 @@ public class Station extends BaseStationObject implements Environment {
         }
 
         return true;
-    }
-
-    // Assemble this station's amenity-floor index
-    public void assembleAmenityFloorIndex() {
-        this.amenityFloorIndex.clear();
-
-        this.amenityFloorIndex.put(StationGate.class, new HashSet<>());
-        this.amenityFloorIndex.put(Security.class, new HashSet<>());
-        this.amenityFloorIndex.put(TicketBooth.class, new HashSet<>());
-        this.amenityFloorIndex.put(Turnstile.class, new HashSet<>());
-        this.amenityFloorIndex.put(TrainDoor.class, new HashSet<>());
-
-        for (Floor floor : this.floors) {
-            if (!floor.getStationGates().isEmpty()) {
-                for (StationGate stationGate : floor.getStationGates()) {
-                    this.amenityFloorIndex.get(StationGate.class).add(
-                            stationGate.getAmenityBlocks().get(0).getPatch().getFloor()
-                    );
-                }
-            }
-
-            if (!floor.getSecurities().isEmpty()) {
-                for (Security security : floor.getSecurities()) {
-                    this.amenityFloorIndex.get(Security.class).add(
-                            security.getAmenityBlocks().get(0).getPatch().getFloor()
-                    );
-                }
-            }
-
-            if (!floor.getTicketBooths().isEmpty()) {
-                for (TicketBooth ticketBooth : floor.getTicketBooths()) {
-                    this.amenityFloorIndex.get(TicketBooth.class).add(
-                            ticketBooth.getAmenityBlocks().get(0).getPatch().getFloor()
-                    );
-                }
-            }
-
-            if (!floor.getTurnstiles().isEmpty()) {
-                for (Turnstile turnstile : floor.getTurnstiles()) {
-                    this.amenityFloorIndex.get(Turnstile.class).add(
-                            turnstile.getAmenityBlocks().get(0).getPatch().getFloor()
-                    );
-                }
-            }
-
-            if (!floor.getTrainDoors().isEmpty()) {
-                for (TrainDoor trainDoor : floor.getTrainDoors()) {
-                    this.amenityFloorIndex.get(TrainDoor.class).add(
-                            trainDoor.getAmenityBlocks().get(0).getPatch().getFloor()
-                    );
-                }
-            }
-        }
     }
 
     private static boolean validatePath(
@@ -445,6 +848,127 @@ public class Station extends BaseStationObject implements Environment {
 
             // No other portals, so just return false
             return portalsValid;
+        }
+    }
+
+    public static class StationValidationResult {
+        private final StationValidationResultType stationValidationResultType;
+        private final PassengerMovement.TravelDirection travelDirection;
+        private final TicketBooth.TicketType ticketType;
+        private final PassengerMovement.Disposition disposition;
+        private final Amenity lastValidAmenity;
+        private final Class<? extends Amenity> nextAmenityClass;
+
+        public enum StationValidationResultType {
+            NO_ERROR,
+            NO_STATION_GATES,
+            NO_TRAIN_DOORS,
+            NO_TRAIN_TRACKS,
+            TRAIN_TRACKS_MISMATCH,
+            UNREACHABLE
+        }
+
+        public StationValidationResult(
+                StationValidationResultType stationValidationResultType,
+                PassengerMovement.TravelDirection travelDirection,
+                TicketBooth.TicketType ticketType,
+                PassengerMovement.Disposition disposition,
+                Amenity lastValidAmenity,
+                Class<? extends Amenity> nextAmenityClass
+        ) {
+            this.stationValidationResultType = stationValidationResultType;
+            this.travelDirection = travelDirection;
+            this.ticketType = ticketType;
+            this.disposition = disposition;
+            this.lastValidAmenity = lastValidAmenity;
+            this.nextAmenityClass = nextAmenityClass;
+        }
+
+        public StationValidationResultType getStationValidationResultType() {
+            return stationValidationResultType;
+        }
+
+        @Override
+        public String toString() {
+            String amenityClassName;
+            String errorMessageTemplate;
+
+            switch (this.stationValidationResultType) {
+                case NO_STATION_GATES:
+                    return "This station does not have any station gates.";
+                case NO_TRAIN_DOORS:
+                    return "This station does not have any train boarding areas.";
+                case NO_TRAIN_TRACKS:
+                    return "This station does not have any train tracks.";
+                case TRAIN_TRACKS_MISMATCH:
+                    amenityClassName = getAmenityName(this.nextAmenityClass);
+
+                    errorMessageTemplate = "There are no {0}s for the {1}";
+
+                    if (this.nextAmenityClass == Track.class) {
+                        errorMessageTemplate += " train boarding areas.";
+                    } else {
+                        errorMessageTemplate += " train tracks.";
+                    }
+
+                    errorMessageTemplate = errorMessageTemplate.replace("{0}", amenityClassName);
+                    errorMessageTemplate
+                            = errorMessageTemplate.replace("{1}", this.travelDirection.toString().toLowerCase());
+
+                    return errorMessageTemplate;
+                case UNREACHABLE:
+                    String lastValidAmenityClassName = getAmenityName(this.lastValidAmenity.getClass());
+
+                    amenityClassName = getAmenityName(this.nextAmenityClass);
+
+                    errorMessageTemplate = "No {0}s are reachable from the {1} at patch {2} for {3} passengers" +
+                            " who are {4}.";
+
+                    errorMessageTemplate = errorMessageTemplate.replace("{0}", amenityClassName);
+                    errorMessageTemplate = errorMessageTemplate.replace("{1}", lastValidAmenityClassName);
+                    errorMessageTemplate = errorMessageTemplate.replace(
+                            "{2}",
+                            String.valueOf(this.lastValidAmenity.getAttractors().get(0).getPatch())
+                    );
+                    errorMessageTemplate = errorMessageTemplate.replace(
+                            "{3}",
+                            this.travelDirection.toString().toLowerCase()
+                    );
+                    errorMessageTemplate = errorMessageTemplate.replace(
+                            "{4}",
+                            this.disposition.toString().toLowerCase()
+                    );
+
+                    return errorMessageTemplate;
+                default:
+                    return "The station layout is valid.";
+            }
+        }
+
+        private String getAmenityName(Class<? extends Amenity> amenityClass) {
+            String amenityClassName = "";
+
+            if (amenityClass == StationGate.class) {
+                amenityClassName = "station entrance/exit";
+            } else if (amenityClass == StairPortal.class) {
+                amenityClassName = "staircase";
+            } else if (amenityClass == EscalatorPortal.class) {
+                amenityClassName = "escalator";
+            } else if (amenityClass == ElevatorPortal.class) {
+                amenityClassName = "elevator";
+            } else if (amenityClass == Security.class) {
+                amenityClassName = "security gate";
+            } else if (amenityClass == TicketBooth.class) {
+                amenityClassName = "ticket booth";
+            } else if (amenityClass == Turnstile.class) {
+                amenityClassName = "turnstile";
+            } else if (amenityClass == TrainDoor.class) {
+                amenityClassName = "train boarding area";
+            } else if (amenityClass == Track.class) {
+                amenityClassName = "train track";
+            }
+
+            return amenityClassName;
         }
     }
 

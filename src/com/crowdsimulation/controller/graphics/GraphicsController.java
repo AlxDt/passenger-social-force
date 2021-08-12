@@ -33,6 +33,8 @@ import com.crowdsimulation.model.core.environment.station.patch.position.Locatio
 import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.position.Vector;
 import com.crowdsimulation.model.simulator.Simulator;
+import javafx.application.Platform;
+import javafx.scene.Cursor;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
@@ -40,6 +42,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
@@ -1362,6 +1365,22 @@ public class GraphicsController extends Controller {
     private static void unmarkPatch(Canvas markingsCanvas) {
         GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
         graphicsContext.clearRect(0, 0, markingsCanvas.getWidth(), markingsCanvas.getHeight());
+    }
+
+    public static void beginWaitCursor(BorderPane borderPane) {
+        borderPane.setDisable(true);
+
+        Platform.runLater(() -> {
+            borderPane.getScene().setCursor(Cursor.WAIT);
+        });
+    }
+
+    public static void endWaitCursor(BorderPane borderPane) {
+        borderPane.setDisable(false);
+
+        Platform.runLater(() -> {
+            borderPane.getScene().setCursor(Cursor.DEFAULT);
+        });
     }
 
     public static void updateCurrentAmenityFootprint() {

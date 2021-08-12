@@ -6,16 +6,17 @@ import com.crowdsimulation.controller.graphics.amenity.footprint.AmenityFootprin
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphic;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.TrackGraphic;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
+import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Track extends Obstacle {
     // Denotes the direction of this track
-    private TrackDirection trackDirection;
+    private PassengerMovement.TravelDirection trackDirection;
 
     // Factory for track creation
     public static final TrackFactory trackFactory;
@@ -69,7 +70,7 @@ public class Track extends Obstacle {
         trackEditor = new TrackEditor();
     }
 
-    protected Track(List<AmenityBlock> amenityBlocks, TrackDirection trackDirection) {
+    protected Track(List<AmenityBlock> amenityBlocks, PassengerMovement.TravelDirection trackDirection) {
         super(amenityBlocks);
 
         this.trackDirection = trackDirection;
@@ -77,11 +78,11 @@ public class Track extends Obstacle {
         this.trackGraphic = new TrackGraphic(this);
     }
 
-    public TrackDirection getTrackDirection() {
+    public PassengerMovement.TravelDirection getTrackDirection() {
         return trackDirection;
     }
 
-    public void setTrackDirection(TrackDirection trackDirection) {
+    public void setTrackDirection(PassengerMovement.TravelDirection trackDirection) {
         this.trackDirection = trackDirection;
     }
 
@@ -98,25 +99,6 @@ public class Track extends Obstacle {
     @Override
     public AmenityGraphicLocation getGraphicLocation() {
         return this.trackGraphic.getGraphicLocation();
-    }
-
-    // Thr direction of this track
-    public enum TrackDirection {
-        NORTHBOUND("Northbound"),
-        SOUTHBOUND("Southbound"),
-        EASTBOUND("Eastbound"),
-        WESTBOUND("Westbound");
-
-        private final String name;
-
-        TrackDirection(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return this.name;
-        }
     }
 
     // Track block
@@ -207,7 +189,7 @@ public class Track extends Obstacle {
 
     // Track factory
     public static class TrackFactory extends ObstacleFactory {
-        public Track create(List<AmenityBlock> amenityBlocks, Track.TrackDirection trackDirection) {
+        public Track create(List<AmenityBlock> amenityBlocks, PassengerMovement.TravelDirection trackDirection) {
             return new Track(
                     amenityBlocks,
                     trackDirection

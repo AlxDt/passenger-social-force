@@ -97,7 +97,7 @@ public class Floor extends BaseStationObject implements Environment {
         this.passengersInFloor = new CopyOnWriteArrayList<>();
 
         // Initialize caches
-        int capacity = 100;
+        int capacity = 50;
 
         this.pathCache = new PathCache(capacity);
     }

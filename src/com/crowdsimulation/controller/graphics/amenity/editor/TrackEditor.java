@@ -2,6 +2,7 @@ package com.crowdsimulation.controller.graphics.amenity.editor;
 
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -12,7 +13,7 @@ import java.util.List;
 public class TrackEditor extends AmenityEditor {
     public void draw(
             Patch currentPatch,
-            Track.TrackDirection trackDirection
+            PassengerMovement.TravelDirection trackDirection
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Track.TrackBlock.convertToAmenityBlocks(
@@ -63,7 +64,7 @@ public class TrackEditor extends AmenityEditor {
 
     public void edit(
             Track trackToEdit,
-            Track.TrackDirection trackDirection
+            PassengerMovement.TravelDirection trackDirection
     ) {
         trackToEdit.setTrackDirection(trackDirection);
     }

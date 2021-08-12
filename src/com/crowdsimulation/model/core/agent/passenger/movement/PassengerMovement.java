@@ -517,14 +517,14 @@ public class PassengerMovement {
 
     // Use the A* algorithm (with Euclidian distance to compute the f-score) to find the shortest path to the given goal
     // patch
-    public PassengerPath computePathWithinFloor(
+    public static PassengerPath computePathWithinFloor(
             Patch startingPatch,
             Patch goalPatch,
             boolean includeStartingPatch,
             boolean includeGoalPatch
     ) {
         // Check the cache first if the path from one patch to another has already been computed beforehand
-        PathCache pathCache = this.currentFloor.getPathCache();
+        PathCache pathCache = startingPatch.getFloor().getPathCache();
 
         Patch.PatchPair patchPair = new Patch.PatchPair(startingPatch, goalPatch);
         PathCache.PathCacheKey pathCacheKey
@@ -561,7 +561,7 @@ public class PassengerMovement {
         fScores.put(
                 startingPatch,
                 Coordinates.distance(
-                        this.currentFloor.getStation(),
+                        startingPatch.getFloor().getStation(),
                         startingPatch,
                         goalPatch
                 )
@@ -633,7 +633,7 @@ public class PassengerMovement {
                     double tentativeGScore
                             = gScores.get(patchToExplore)
                             + Coordinates.distance(
-                            this.currentFloor.getStation(),
+                            startingPatch.getFloor().getStation(),
                             patchToExplore,
                             patchToExploreNeighbor
                     );
@@ -646,7 +646,7 @@ public class PassengerMovement {
                                 patchToExploreNeighbor,
                                 gScores.get(patchToExploreNeighbor)
                                         + Coordinates.distance(
-                                        this.currentFloor.getStation(),
+                                        startingPatch.getFloor().getStation(),
                                         patchToExploreNeighbor,
                                         goalPatch)
                         );
@@ -749,7 +749,7 @@ public class PassengerMovement {
 
     // Get the portals needed to be entered from the current position to the goal amenity
     // Ascend/descend floors if needed
-    public MultipleFloorPassengerPath computePathAcrossFloors(
+    public static MultipleFloorPassengerPath computePathAcrossFloors(
             Floor currentFloor,
             List<PortalShaft> visitedPortalShafts,
             List<Portal> visitedPortals,
@@ -854,7 +854,7 @@ public class PassengerMovement {
                 }
 
                 // Only visit the portal when it hasn't already been visited yet
-                if (!visitedPortalShafts.contains(portalShaft)/*!visitedPortals.contains(portalToEnter)*/) {
+                if (!visitedPortalShafts.contains(portalShaft)) {
                     // Then get the new floor served by that portal
                     Floor floorToEnter = portalToExit.getFloorServed();
 
@@ -1001,12 +1001,16 @@ public class PassengerMovement {
                             candidateGoal.getAmenityBlocks().get(0)
                     );
 
-                    if (multipleFloorPassengerPath.getDistance() < closestDistance) {
-                        bestPath = multipleFloorPassengerPath;
-                        closestDistance = multipleFloorPassengerPath.getDistance();
-                        closestGoal = candidateGoal;
+                    if (multipleFloorPassengerPath != null) {
+                        if (multipleFloorPassengerPath.getDistance() < closestDistance) {
+                            bestPath = multipleFloorPassengerPath;
+                            closestDistance = multipleFloorPassengerPath.getDistance();
+                            closestGoal = candidateGoal;
+                        }
                     }
                 }
+
+                assert bestPath != null;
 
                 // Then set the passenger's goal portals, given the path found to the goal and the portals required to
                 // get to it

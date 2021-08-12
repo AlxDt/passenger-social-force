@@ -45,6 +45,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
@@ -52,6 +53,7 @@ import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -62,6 +64,8 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainScreenController extends ScreenController {
     public static final String[] INPUT_KEYS = {"blank_station", "rows", "columns"};
@@ -70,6 +74,9 @@ public class MainScreenController extends ScreenController {
     public static NormalFloorFieldController normalFloorFieldController;
 
     // Operational variables
+    @FXML
+    private BorderPane borderPane;
+
     @FXML
     private MenuBar menuBar;
 
@@ -294,7 +301,7 @@ public class MainScreenController extends ScreenController {
     private Label trackDirectionLabel;
 
     @FXML
-    private ChoiceBox<Track.TrackDirection> trackDirectionChoiceBox;
+    private ChoiceBox<PassengerMovement.TravelDirection> trackDirectionChoiceBox;
 
     @FXML
     private Button saveTrackButton;
@@ -753,50 +760,92 @@ public class MainScreenController extends ScreenController {
 
     @FXML
     // Validate the station layout
-    public void validateStationLayout() {
-        boolean isStationValid = false;
+    public void validateStationAction() {
+        AtomicBoolean isStationValid = new AtomicBoolean(false);
 
-        boolean isStationLayoutValid = Station.validateStationLayout(Main.simulator.getStation());
-        boolean isFloorFieldsValid = Station.validateFloorFieldsInStation(Main.simulator.getStation());
+        GraphicsController.beginWaitCursor(this.borderPane);
 
-        if (isStationLayoutValid && isFloorFieldsValid) {
-            // Only show the success dialog box when the validation was performed directly from the validate station
-            // button
-            if (!Main.simulator.getValidatingFromRunning()) {
-                AlertController.showSimpleAlert(
-                        "Valid station",
-                        "Valid station",
-                        "This station contains all the necessary amenities for passenger traversal, and is ready" +
-                                " for testing.",
-                        Alert.AlertType.INFORMATION
-                );
+        // Run deep station validation on another thread
+        Task<Station.StationValidationResult> deepStationValidationTask = new Task<Station.StationValidationResult>() {
+            @Override
+            public Station.StationValidationResult call() {
+                return Station.validateStationLayoutDeeply(Main.simulator.getStation());
             }
+        };
 
-            isStationValid = true;
+        deepStationValidationTask.setOnSucceeded(e1 -> {
+            // Also run floor field validation on another thread
+            Task<Boolean> stationFloorFieldValidationTask = new Task<Boolean>() {
+                @Override
+                public Boolean call() {
+                    return Station.validateFloorFieldsInStation(Main.simulator.getStation());
+                }
+            };
 
-            // Assemble the station's amenity-floor index
-            Main.simulator.getStation().assembleAmenityFloorIndex();
-        } else {
-            if (!isStationLayoutValid) {
-                AlertController.showSimpleAlert(
-                        "Invalid station layout",
-                        "Invalid station layout",
-                        "The layout of this station is invalid and not ready for testing.",
-                        Alert.AlertType.ERROR
-                );
-            } else {
-                AlertController.showSimpleAlert(
-                        "Floor fields incomplete",
-                        "Floor fields incomplete",
-                        "Some amenities of this station do not have complete floor fields.",
-                        Alert.AlertType.ERROR
-                );
-            }
-        }
+            stationFloorFieldValidationTask.setOnSucceeded(
+                    e2 -> {
+                        Station.StationValidationResult stationValidationResult;
+                        boolean areFloorFieldsValid;
 
-        // Set the validity flag of the station of the simulator
-        // No runs will be performed if the station is not valid
-        Main.simulator.setStationValid(isStationValid);
+                        try {
+                            stationValidationResult = deepStationValidationTask.get();
+                            areFloorFieldsValid = stationFloorFieldValidationTask.get();
+
+                            GraphicsController.endWaitCursor(this.borderPane);
+
+                            if (
+                                    stationValidationResult.getStationValidationResultType()
+                                            == Station.StationValidationResult.StationValidationResultType.NO_ERROR
+                                            && areFloorFieldsValid
+                            ) {
+                                // Only show the success dialog box when the validation was performed directly from the
+                                // validate station button
+                                if (!Main.simulator.getValidatingFromRunning()) {
+                                    AlertController.showSimpleAlert(
+                                            "Valid station",
+                                            "Valid station",
+                                            "This station contains all the necessary amenities for passenger"
+                                                    + " traversal, and is ready for testing.",
+                                            Alert.AlertType.INFORMATION
+                                    );
+                                }
+
+                                isStationValid.set(true);
+                            } else {
+                                if (
+                                        stationValidationResult.getStationValidationResultType()
+                                                != Station.StationValidationResult.StationValidationResultType.NO_ERROR
+                                ) {
+                                    AlertController.showSimpleAlert(
+                                            "Invalid station layout",
+                                            "Invalid station layout",
+                                            "The layout of this station is invalid and not ready for testing.\n"
+                                                    + "\n" + stationValidationResult,
+                                            Alert.AlertType.ERROR
+                                    );
+                                } else {
+                                    AlertController.showSimpleAlert(
+                                            "Floor fields incomplete",
+                                            "Floor fields incomplete",
+                                            "Some amenities of this station do not have complete floor fields.",
+                                            Alert.AlertType.ERROR
+                                    );
+                                }
+                            }
+
+                            // Set the validity flag of the station of the simulator
+                            // No runs will be performed if the station is not valid
+                            Main.simulator.setStationValid(isStationValid.get());
+                        } catch (InterruptedException | ExecutionException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+            );
+
+            new Thread(stationFloorFieldValidationTask).start();
+        });
+
+        new Thread(deepStationValidationTask).start();
     }
 
     @FXML
@@ -1490,7 +1539,7 @@ public class MainScreenController extends ScreenController {
             // Only run when the station is valid
             Main.simulator.setValidatingFromRunning(true);
 
-            validateStationLayout();
+            validateStationAction();
 
             Main.simulator.setValidatingFromRunning(false);
 
@@ -1602,9 +1651,8 @@ public class MainScreenController extends ScreenController {
 
     // Clear all passengers in the station
     public void clearPassengersInStation(Station station) {
-        // Clear caches
-        station.getMultiFloorPathCache().clear();
-        station.getDistanceCache().clear();
+        // Clear the station cache
+        station.clearCaches();
 
         // Clear all portals
         for (StairShaft stairShaft : station.getStairShafts()) {
@@ -1639,9 +1687,6 @@ public class MainScreenController extends ScreenController {
 
     // Clear passengers in a single floor
     public void clearPassengersInFloor(Floor floor) {
-        // Clear caches
-        floor.getPathCache().clear();
-
         // Remove the relationship between the patch and the passenger
         for (Passenger passenger : floor.getPassengersInFloor()) {
             passenger.getPassengerMovement().getCurrentPatch().getPassengers().clear();
@@ -2164,7 +2209,7 @@ public class MainScreenController extends ScreenController {
                 break;
             case TRAIN_TRACK:
                 Track trackToEdit = (Track) amenityToSave;
-                Track.TrackDirection priorTrackDirection = trackToEdit.getTrackDirection();
+                PassengerMovement.TravelDirection priorTrackDirection = trackToEdit.getTrackDirection();
 
                 Track.trackEditor.edit(
                         trackToEdit,

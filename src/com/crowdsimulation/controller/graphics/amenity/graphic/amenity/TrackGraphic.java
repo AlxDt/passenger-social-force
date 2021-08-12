@@ -1,5 +1,6 @@
 package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
 
 public class TrackGraphic extends AmenityGraphic implements Changeable {
@@ -24,9 +25,12 @@ public class TrackGraphic extends AmenityGraphic implements Changeable {
     @Override
     public void change() {
         Track track = (Track) this.amenity;
-        Track.TrackDirection trackDirection = track.getTrackDirection();
+        PassengerMovement.TravelDirection trackDirection = track.getTrackDirection();
 
-        if (trackDirection == Track.TrackDirection.NORTHBOUND || trackDirection == Track.TrackDirection.WESTBOUND) {
+        if (
+                trackDirection == PassengerMovement.TravelDirection.NORTHBOUND
+                        || trackDirection == PassengerMovement.TravelDirection.WESTBOUND
+        ) {
             this.graphicIndex = 1;
         } else {
             this.graphicIndex = 0;

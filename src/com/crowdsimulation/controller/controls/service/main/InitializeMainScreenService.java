@@ -215,7 +215,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button addFloorFieldsTrainDoorButton,
             // Train tracks
             Label trackDirectionLabel,
-            ChoiceBox<Track.TrackDirection> trackDirectionChoiceBox,
+            ChoiceBox<PassengerMovement.TravelDirection> trackDirectionChoiceBox,
             Button saveTrackButton,
             Button deleteTrackButton,
             // Miscellaneous
@@ -757,7 +757,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button deleteTrainDoorButton,
             Button addFloorFieldsTrainDoorButton,
             Label trackDirectionLabel,
-            ChoiceBox<Track.TrackDirection> trackDirectionChoiceBox,
+            ChoiceBox<PassengerMovement.TravelDirection> trackDirectionChoiceBox,
             Button saveTrackButton,
             Button deleteTrackButton
     ) {
@@ -826,19 +826,19 @@ public class InitializeMainScreenService extends InitializeScreenService {
     // Initialize the train track controls
     private static void initializeTrack(
             Label trackDirectionLabel,
-            ChoiceBox<Track.TrackDirection> trackDirectionChoiceBox,
+            ChoiceBox<PassengerMovement.TravelDirection> trackDirectionChoiceBox,
             Button saveTrackButton,
             Button deleteTrackButton
     ) {
         trackDirectionLabel.setLabelFor(trackDirectionChoiceBox);
 
         trackDirectionChoiceBox.setItems(FXCollections.observableArrayList(
-                Track.TrackDirection.NORTHBOUND,
-                Track.TrackDirection.SOUTHBOUND,
-                Track.TrackDirection.WESTBOUND,
-                Track.TrackDirection.EASTBOUND
+                PassengerMovement.TravelDirection.NORTHBOUND,
+                PassengerMovement.TravelDirection.SOUTHBOUND,
+                PassengerMovement.TravelDirection.WESTBOUND,
+                PassengerMovement.TravelDirection.EASTBOUND
         ));
-        trackDirectionChoiceBox.getSelectionModel().select(Track.TrackDirection.NORTHBOUND);
+        trackDirectionChoiceBox.getSelectionModel().select(PassengerMovement.TravelDirection.NORTHBOUND);
 
         saveTrackButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteTrackButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
