@@ -699,29 +699,48 @@ public class MainScreenController extends ScreenController {
         File stationFile = fileChooser.showOpenDialog(this.getStage());
 
         if (stationFile != null) {
-            try {
-                Station station = loadStation(stationFile);
+            // Load the station from a file
+            GraphicsController.beginWaitCursor(borderPane);
 
-                // Load the station to the simulator
-                initializeStation(station, !GraphicsController.listenersDrawn);
+            Task<Void> loadStationTask = new Task<Void>() {
+                @Override
+                public Void call() {
+                    try {
+                        Station station = loadStation(stationFile);
 
-                // Regardless, the first choice has already been made
-                Main.hasMadeChoice = true;
+                        // Load the station to the simulator
+                        initializeStation(station, !GraphicsController.listenersDrawn);
 
-                // Listeners have already been drawn
-                if (!GraphicsController.listenersDrawn) {
-                    GraphicsController.listenersDrawn = true;
+                        // Regardless, the first choice has already been made
+                        Main.hasMadeChoice = true;
+
+                        // Listeners have already been drawn
+                        if (!GraphicsController.listenersDrawn) {
+                            GraphicsController.listenersDrawn = true;
+                        }
+                    } catch (IOException | ClassNotFoundException e) {
+                        AlertController.showSimpleAlert(
+                                "File opening failed",
+                                "Failed to load station",
+                                "Failed to load the station from the selected file.",
+                                Alert.AlertType.ERROR
+                        );
+
+                        e.printStackTrace();
+                    }
+
+                    return null;
                 }
-            } catch (IOException | ClassNotFoundException e) {
-                AlertController.showSimpleAlert(
-                        "File opening failed",
-                        "Failed to load station",
-                        "Failed to load the station from the selected file.",
-                        Alert.AlertType.ERROR
-                );
+            };
 
-                e.printStackTrace();
-            }
+            loadStationTask.setOnSucceeded(e -> {
+                GraphicsController.endWaitCursor(borderPane);
+
+                // Finally, update the top bar
+                updateTopBar();
+            });
+
+            new Thread(loadStationTask).start();
         }
     }
 
@@ -733,28 +752,43 @@ public class MainScreenController extends ScreenController {
         File stationFile = fileChooser.showSaveDialog(this.getStage());
 
         if (stationFile != null) {
-            try {
-                Station station = Main.simulator.getStation();
+            Station station = Main.simulator.getStation();
 
-                // Set the name of the station in the interface
-                String filenameWithoutExtension = stationFile.getName().replaceFirst("[.][^.]+$", "");
-                station.setName(filenameWithoutExtension);
+            // Set the name of the station in the interface
+            String filenameWithoutExtension = stationFile.getName().replaceFirst("[.][^.]+$", "");
+            station.setName(filenameWithoutExtension);
 
-                // Save the station to a file
-                saveStation(station, stationFile);
+            // Save the station to a file
+            GraphicsController.beginWaitCursor(borderPane);
+
+            Task<Void> saveStationTask = new Task<Void>() {
+                @Override
+                public Void call() {
+                    try {
+                        saveStation(station, stationFile);
+                    } catch (IOException e) {
+                        AlertController.showSimpleAlert(
+                                "File saving failed",
+                                "Failed to save this station to a file",
+                                "There was an error in saving the station into a file.",
+                                Alert.AlertType.ERROR
+                        );
+
+                        e.printStackTrace();
+                    }
+
+                    return null;
+                }
+            };
+
+            saveStationTask.setOnSucceeded(e -> {
+                GraphicsController.endWaitCursor(borderPane);
 
                 // Finally, update the top bar
                 updateTopBar();
-            } catch (IOException e) {
-                AlertController.showSimpleAlert(
-                        "File saving failed",
-                        "Failed to save this station to a file",
-                        "There was an error in saving the station into a file.",
-                        Alert.AlertType.ERROR
-                );
+            });
 
-                e.printStackTrace();
-            }
+            new Thread(saveStationTask).start();
         }
     }
 
