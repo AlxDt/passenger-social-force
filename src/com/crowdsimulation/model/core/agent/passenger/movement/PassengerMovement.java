@@ -1086,22 +1086,35 @@ public class PassengerMovement {
 
                     // Filter the amenity search space only to what is compatible with this passenger
                     if (amenity instanceof StationGate) {
-                        // Only consider station gates which allow exits
-                        StationGate stationGate = ((StationGate) amenity);
+                        // If the goal of the passenger is a station gate, this means the passenger is leaving
+                        // So only consider station gates which allow exits and accepts the passenger's direction
+                        StationGate stationGateExit = ((StationGate) amenity);
 
-                        if (stationGate.getStationGateMode() == StationGate.StationGateMode.ENTRANCE) {
+                        if (stationGateExit.getStationGateMode() == StationGate.StationGateMode.ENTRANCE) {
                             continue;
+                        } else {
+                            if (
+                                    !stationGateExit.getStationGatePassengerTravelDirections().contains(
+                                            this.travelDirection
+                                    )
+                            ) {
+                                continue;
+                            }
                         }
                     } else if (amenity instanceof Turnstile) {
-                        // Only consider turnstiles which match this passenger's travel direction
+                        // Only consider turnstiles which match this passenger's disposition and travel direction
                         Turnstile turnstile = ((Turnstile) amenity);
+
+                        if (!turnstile.getTurnstileTravelDirections().contains(this.travelDirection)) {
+                            continue;
+                        }
 
                         if (turnstile.getTurnstileMode() != Turnstile.TurnstileMode.BIDIRECTIONAL) {
                             if (
                                     turnstile.getTurnstileMode() == Turnstile.TurnstileMode.BOARDING
-                                            && this.disposition.equals(Disposition.ALIGHTING)
+                                            && disposition.equals(Disposition.ALIGHTING)
                                             || turnstile.getTurnstileMode() == Turnstile.TurnstileMode.ALIGHTING
-                                            && this.disposition.equals(Disposition.BOARDING)
+                                            && disposition.equals(Disposition.BOARDING)
                             ) {
                                 continue;
                             }
@@ -1262,6 +1275,10 @@ public class PassengerMovement {
                 }
 
                 // Get the closest portal
+                if (relevantPortals.isEmpty()) {
+                    this.chooseGoal();
+                }
+
                 Portal closestPortal = relevantPortals.firstEntry().getValue();
 
                 // Set the closest portal as this passenger's goal
