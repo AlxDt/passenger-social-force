@@ -642,20 +642,21 @@ public class Simulator {
                                             ) {
                                                 passengerMovement.endStoredValuePathfinding();
                                             }
-                                        }
 
-                                        break;
+                                            break;
+                                        }
                                     } else {
                                         // If the passenger has reached its non-queueable goal, transition into the
                                         // appropriate state and action
-                                        // This non-queueable goal could only be a station gate, so transition into a
-                                        // station exiting action
+                                        // This non-queueable goal could only be a station gate, so exit the station
                                         if (passengerMovement.hasReachedGoal()) {
-                                            passengerMovement.setState(PassengerMovement.State.IN_NONQUEUEABLE);
-                                            state = PassengerMovement.State.IN_NONQUEUEABLE;
+                                            // Have the passenger set its current goal
+                                            passengerMovement.reachGoal();
 
-                                            passengerMovement.setAction(PassengerMovement.Action.EXITING_STATION);
-                                            action = PassengerMovement.Action.EXITING_STATION;
+                                            // Then have this passenger marked for despawning
+                                            this.passengersToDespawn.add(passenger);
+
+                                            break;
                                         }
                                     }
 
@@ -1123,7 +1124,7 @@ public class Simulator {
                                 if (passengerMovement.willEnterTrain()) {
                                     // Transition into the "in queueable" state and the appropriate action
                                     passengerMovement.setState(PassengerMovement.State.IN_QUEUEABLE);
-                                    state = PassengerMovement.State.IN_NONQUEUEABLE;
+                                    state = PassengerMovement.State.IN_QUEUEABLE;
 
                                     passengerMovement.setAction(PassengerMovement.Action.BOARDING_TRAIN);
                                     action = PassengerMovement.Action.BOARDING_TRAIN;
@@ -1197,9 +1198,13 @@ public class Simulator {
                                             && (
                                             passengerMovement.isFirstStepPositionFree()
                                                     ||
-                                                    passengerMovement.getGoalAmenityAsTurnstile() != null
+                                                    /*passengerMovement.getGoalAmenityAsTurnstile() != null
                                                             && passengerMovement.getGoalAmenityAsTurnstile().getTurnstileMode()
+                                                            == Turnstile.TurnstileMode.BIDIRECTIONAL*/
+                                                    passengerMovement.getCurrentTurnstileGate() != null
+                                                            && passengerMovement.getCurrentTurnstileGate().getTurnstileMode()
                                                             == Turnstile.TurnstileMode.BIDIRECTIONAL
+                                                            && passengerMovement.isNearestPassengerOnFirstStepPositionQueueingForTurnstile()
                                     )
                             ) {
                                 // Have this passenger's goal wrap up serving this passenger

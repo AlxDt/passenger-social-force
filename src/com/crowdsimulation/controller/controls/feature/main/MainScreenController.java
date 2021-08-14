@@ -699,48 +699,64 @@ public class MainScreenController extends ScreenController {
         File stationFile = fileChooser.showOpenDialog(this.getStage());
 
         if (stationFile != null) {
-            // Load the station from a file
-            GraphicsController.beginWaitCursor(borderPane);
+            // When a station is already loaded, load the station concurrently to avoid choking the UI
+            if (Main.stationLoaded) {
+                // Load the station from a file
+                GraphicsController.beginWaitCursor(borderPane);
 
-            Task<Void> loadStationTask = new Task<Void>() {
-                @Override
-                public Void call() {
-                    try {
-                        Station station = loadStation(stationFile);
+                Task<Void> loadStationTask = new Task<Void>() {
+                    @Override
+                    public Void call() {
+                        loadAndInitializeStation(stationFile);
 
-                        // Load the station to the simulator
-                        initializeStation(station, !GraphicsController.listenersDrawn);
-
-                        // Regardless, the first choice has already been made
-                        Main.hasMadeChoice = true;
-
-                        // Listeners have already been drawn
-                        if (!GraphicsController.listenersDrawn) {
-                            GraphicsController.listenersDrawn = true;
-                        }
-                    } catch (IOException | ClassNotFoundException e) {
-                        AlertController.showSimpleAlert(
-                                "File opening failed",
-                                "Failed to load station",
-                                "Failed to load the station from the selected file.",
-                                Alert.AlertType.ERROR
-                        );
-
-                        e.printStackTrace();
+                        return null;
                     }
+                };
 
-                    return null;
-                }
-            };
+                loadStationTask.setOnSucceeded(e -> {
+                    GraphicsController.endWaitCursor(borderPane);
 
-            loadStationTask.setOnSucceeded(e -> {
-                GraphicsController.endWaitCursor(borderPane);
+                    // Finally, update the top bar
+                    updateTopBar();
+                });
+
+                Thread loadStationThread = new Thread(loadStationTask);
+
+                loadStationThread.start();
+            } else {
+                // The main window is closed, and hence no UIs to choke yet
+                loadAndInitializeStation(stationFile);
 
                 // Finally, update the top bar
                 updateTopBar();
-            });
+            }
+        }
+    }
 
-            new Thread(loadStationTask).start();
+    private void loadAndInitializeStation(File stationFile) {
+        try {
+            Station station = loadStation(stationFile);
+
+            // Load the station to the simulator
+            initializeStation(station, !GraphicsController.listenersDrawn);
+
+            // Regardless, the first choice has already been made
+            Main.hasMadeChoice = true;
+            Main.stationLoaded = true;
+
+            // Listeners have already been drawn
+            if (!GraphicsController.listenersDrawn) {
+                GraphicsController.listenersDrawn = true;
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            AlertController.showSimpleAlert(
+                    "File opening failed",
+                    "Failed to load station",
+                    "Failed to load the station from the selected file.",
+                    Alert.AlertType.ERROR
+            );
+
+            e.printStackTrace();
         }
     }
 
@@ -1573,7 +1589,7 @@ public class MainScreenController extends ScreenController {
             // Only run when the station is valid
             Main.simulator.setValidatingFromRunning(true);
 
-            validateStationAction();
+//            validateStationAction();
 
             Main.simulator.setValidatingFromRunning(false);
 
@@ -1665,8 +1681,6 @@ public class MainScreenController extends ScreenController {
         // Depending on the mode chosen by the user in the window before this, either start with a blank station, or
         // load an already existing one
         if ((boolean) this.getWindowInput().get(MainScreenController.INPUT_KEYS[0])) {
-            Main.hasMadeChoice = true;
-
             int rows = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[1]);
             int columns = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[2]);
 
@@ -1678,6 +1692,9 @@ public class MainScreenController extends ScreenController {
             if (!GraphicsController.listenersDrawn) {
                 GraphicsController.listenersDrawn = true;
             }
+
+            Main.hasMadeChoice = true;
+            Main.stationLoaded = true;
         } else {
             loadStationAction();
         }

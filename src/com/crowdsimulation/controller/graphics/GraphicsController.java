@@ -35,6 +35,7 @@ import com.crowdsimulation.model.core.environment.station.patch.position.Vector;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Tooltip;
@@ -1411,18 +1412,26 @@ public class GraphicsController extends Controller {
     }
 
     public static void beginWaitCursor(BorderPane borderPane) {
-        borderPane.setDisable(true);
-
         Platform.runLater(() -> {
-            borderPane.getScene().setCursor(Cursor.WAIT);
+            borderPane.setDisable(true);
+
+            Scene scene = borderPane.getScene();
+
+            if (scene != null) {
+                scene.setCursor(Cursor.WAIT);
+            }
         });
     }
 
     public static void endWaitCursor(BorderPane borderPane) {
-        borderPane.setDisable(false);
-
         Platform.runLater(() -> {
-            borderPane.getScene().setCursor(Cursor.DEFAULT);
+            borderPane.setDisable(false);
+
+            Scene scene = borderPane.getScene();
+
+            if (scene != null) {
+                scene.setCursor(Cursor.DEFAULT);
+            }
         });
     }
 

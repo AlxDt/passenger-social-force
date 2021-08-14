@@ -60,8 +60,8 @@ public class PassengerMovement {
     // Denotes the amenity the passenger is currently in, if any
     private Amenity currentAmenity;
 
-    // Denotes the portals this passenger plans on going to
-    private List<Portal> goalPortals;
+    // Denotes the portals this passenger has already visited between goal amenities
+    private final List<Portal> visitedPortals;
 
     // Denotes the floor this passenger plans to go to, if any
     private Floor goalFloor;
@@ -241,6 +241,9 @@ public class PassengerMovement {
         // Take note of the amenity where this passenger was spawned
         this.currentAmenity = gate;
 
+        // Prepare the list for the passenger's visited portals
+        this.visitedPortals = new ArrayList<>();
+
         // Assign the route plan of this passenger
         this.routePlan = new RoutePlan(
                 this.parent.getTicketType() == TicketBooth.TicketType.STORED_VALUE,
@@ -337,8 +340,8 @@ public class PassengerMovement {
         this.currentPatch = currentPatch;
     }
 
-    public List<Portal> getGoalPortals() {
-        return goalPortals;
+    public List<Portal> getVisitedPortals() {
+        return visitedPortals;
     }
 
     public Amenity getCurrentAmenity() {
@@ -773,7 +776,7 @@ public class PassengerMovement {
         PassengerPath pathToGoal = computePathWithinFloor(
                 currentPatch,
                 goalAmenityBlock.getPatch(),
-                false,
+                true,
                 false
         );
 
@@ -794,7 +797,7 @@ public class PassengerMovement {
 
             List<StairShaft> stairShafts = currentFloor.getStation().getStairShafts();
 
-            // TDDO: Consider other portals
+            // TODO: Consider other portals
 //                List<ElevatorShaft> elevatorShafts = currentFloor.getStation().getElevatorShafts();
 //                List<EscalatorShaft> escalatorShafts = currentFloor.getStation().getEscalatorShafts();
 
@@ -809,7 +812,7 @@ public class PassengerMovement {
                 pathToPortal = computePathWithinFloor(
                         currentPatch,
                         lowerStairPortal.getAttractors().get(0).getPatch(),
-                        false,
+                        true,
                         false
                 );
 
@@ -823,7 +826,7 @@ public class PassengerMovement {
                 pathToPortal = computePathWithinFloor(
                         currentPatch,
                         upperStairPortal.getAttractors().get(0).getPatch(),
-                        false,
+                        true,
                         false
                 );
 
@@ -848,7 +851,7 @@ public class PassengerMovement {
                 // Get the portal shaft entered
                 PortalShaft portalShaft = null;
 
-                // Consider other portals
+                // TODO: Consider other portals
                 if (portalToEnter instanceof StairPortal) {
                     portalShaft = ((StairPortal) portalToEnter).getStairShaft();
                 }
@@ -920,11 +923,11 @@ public class PassengerMovement {
     // the distance to this goal
     public void chooseGoal() {
         // Only set the goal if one hasn't been set yet
-        if (this.goalAmenity == null/*this.goalAmenity == null && this.goalAttractor == null*/) {
+        if (this.goalAmenity == null) {
             // Set the next amenity class
             Class<? extends Amenity> nextAmenityClass = this.routePlan.getCurrentAmenityClass();
 
-            // Set the passenger's goal portals, if it hasn't been set yet
+/*            // Set the passenger's goal portals, if it hasn't been set yet
             if (this.goalPortals == null) {
                 // Based on the passenger's current direction and route plan, get the next amenity class to be sought
                 Station currentStation = this.currentFloor.getStation();
@@ -1015,41 +1018,50 @@ public class PassengerMovement {
                 // Then set the passenger's goal portals, given the path found to the goal and the portals required to
                 // get to it
                 this.goalPortals = new ArrayList<>(bestPath.getPortals());
-            }
+            }*/
 
-            // If there are goal portals to be followed, follow the next one
-            if (!this.goalPortals.isEmpty()) {
-                Portal nextGoalPortal = this.goalPortals.get(0);
+            // Get the floors in this station which have the next amenity
+            Station currentStation = this.currentFloor.getStation();
+            Set<Floor> floorsWithNextAmenityClass = currentStation.getAmenityFloorIndex().get(nextAmenityClass);
 
-                Amenity.AmenityBlock nearestAttractor = null;
-                double nearestDistance = Double.MAX_VALUE;
+            // If this floor does not contain the next amenity class, consult the directory of each portal that serves
+            // this floor and see which portals should be entered to reach the floor with the desired amenity class
+            boolean willSeekPortal = false;
 
-                for (Amenity.AmenityBlock attractor : nextGoalPortal.getAttractors()) {
-                    double distanceToAttractor = Coordinates.distance(
-                            this.currentFloor.getStation(),
-                            this.currentPatch,
-                            attractor.getPatch()
-                    );
-
-                    if (
-                            distanceToAttractor < nearestDistance
-                    ) {
-                        nearestAttractor = attractor;
-                        nearestDistance = distanceToAttractor;
-                    }
-                }
-
-                assert nearestAttractor != null;
-
-                // Set the goal nearest to this passenger
-                this.goalAmenity = nextGoalPortal;
-                this.goalQueueObject = null;
-                this.goalAttractor = nearestAttractor;
-                this.goalPatch = nearestAttractor.getPatch();
-                this.goalTrainDoorEntranceLocation = null;
-
-                this.goalPortal = (Portal) this.goalAmenity;
-                this.goalFloor = this.goalPortal.getPair().getFloorServed();
+            if (!floorsWithNextAmenityClass.contains(this.currentFloor)) {
+                willSeekPortal = true;
+                ////
+//                Portal nextGoalPortal = this.goalPortals.get(0);
+//
+//                Amenity.AmenityBlock nearestAttractor = null;
+//                double nearestDistance = Double.MAX_VALUE;
+//
+//                for (Amenity.AmenityBlock attractor : nextGoalPortal.getAttractors()) {
+//                    double distanceToAttractor = Coordinates.distance(
+//                            this.currentFloor.getStation(),
+//                            this.currentPatch,
+//                            attractor.getPatch()
+//                    );
+//
+//                    if (
+//                            distanceToAttractor < nearestDistance
+//                    ) {
+//                        nearestAttractor = attractor;
+//                        nearestDistance = distanceToAttractor;
+//                    }
+//                }
+//
+//                assert nearestAttractor != null;
+//
+//                // Set the goal nearest to this passenger
+//                this.goalAmenity = nextGoalPortal;
+//                this.goalQueueObject = null;
+//                this.goalAttractor = nearestAttractor;
+//                this.goalPatch = nearestAttractor.getPatch();
+//                this.goalTrainDoorEntranceLocation = null;
+//
+//                this.goalPortal = (Portal) this.goalAmenity;
+//                this.goalFloor = this.goalPortal.getPair().getFloorServed();
             } else {
                 // Get the amenity list in this floor
                 List<? extends Amenity> amenityListInFloor = this.currentFloor.getAmenityList(nextAmenityClass);
@@ -1190,12 +1202,77 @@ public class PassengerMovement {
                     }
                 }
 
-                // Set the goal nearest to this passenger
-                this.goalAmenity = chosenAmenity;
-                this.goalQueueObject = chosenQueueObject;
-                this.goalAttractor = chosenAttractor;
-                this.goalPatch = chosenAttractor.getPatch();
-                this.goalTrainDoorEntranceLocation = chosenTrainDoorEntranceLocation;
+                // If no amenities in this floor were found to have a path from this passenger, seek the portals instead
+                if (chosenAmenity == null) {
+                    willSeekPortal = true;
+                } else {
+                    // Set the goal nearest to this passenger
+                    this.goalAmenity = chosenAmenity;
+                    this.goalQueueObject = chosenQueueObject;
+                    this.goalAttractor = chosenAttractor;
+                    this.goalPatch = chosenAttractor.getPatch();
+                    this.goalTrainDoorEntranceLocation = chosenTrainDoorEntranceLocation;
+                }
+            }
+
+            if (willSeekPortal) {
+                // Get the nearest relevant portal to this passenger
+                Portal.DirectoryItem directoryItem = new Portal.DirectoryItem(
+                        this.travelDirection,
+                        nextAmenityClass,
+                        this.currentAmenity instanceof Portal ? this.currentAmenity : null
+                );
+
+                TreeMap<Double, Portal> relevantPortals = new TreeMap<>();
+
+                // TODO: Consider other portals
+
+                // Compile the stair portals that serve this floor
+                List<StairShaft> stairShafts = currentStation.getStairShafts();
+
+                for (StairShaft stairShaft : stairShafts) {
+                    StairPortal lowerStairPortal = (StairPortal) stairShaft.getLowerPortal();
+                    StairPortal upperStairPortal = (StairPortal) stairShaft.getUpperPortal();
+
+                    if (lowerStairPortal.getFloorServed().equals(currentFloor)) {
+                        if (lowerStairPortal.getDirectory().contains(directoryItem)) {
+                            relevantPortals.put(
+                                    Coordinates.distance(
+                                            currentStation,
+                                            this.currentPatch,
+                                            lowerStairPortal.getAttractors().get(0).getPatch()
+                                    ),
+                                    lowerStairPortal
+                            );
+                        }
+                    }
+
+                    if (upperStairPortal.getFloorServed().equals(currentFloor)) {
+                        if (upperStairPortal.getDirectory().contains(directoryItem)) {
+                            relevantPortals.put(
+                                    Coordinates.distance(
+                                            currentStation,
+                                            this.currentPatch,
+                                            upperStairPortal.getAttractors().get(0).getPatch()
+                                    ),
+                                    upperStairPortal
+                            );
+                        }
+                    }
+                }
+
+                // Get the closest portal
+                Portal closestPortal = relevantPortals.firstEntry().getValue();
+
+                // Set the closest portal as this passenger's goal
+                this.goalAmenity = closestPortal;
+                this.goalQueueObject = null;
+                this.goalAttractor = closestPortal.getAttractors().get(0);
+                this.goalPatch = this.goalAttractor.getPatch();
+                this.goalTrainDoorEntranceLocation = null;
+
+                this.goalPortal = (Portal) this.goalAmenity;
+                this.goalFloor = this.goalPortal.getPair().getFloorServed();
             }
 
 /*            ////////////////////////////////////////////
@@ -1651,6 +1728,7 @@ public class PassengerMovement {
 
                                     if (
                                             this.action != Action.HEADING_TO_QUEUEABLE
+                                                    && !(this.state == State.IN_QUEUE && otherPassenger.getPassengerMovement().getState() != State.IN_QUEUE)
 //                                        otherPassenger.getPassengerMovement().getState() == State.WALKING
 //                                                || this.action != Action.HEADING_TO_QUEUEABLE
 //                                                && otherPassenger.getPassengerMovement().getGoalAmenity() != null && otherPassenger.getPassengerMovement().getGoalAmenity().equals(this.getGoalAmenity())
@@ -1993,24 +2071,25 @@ public class PassengerMovement {
 
             // Check if the patch representing the future position has someone on it
             // Only proceed when there is no one there
-            if (
-                    this.hasNoPassenger(this.currentFloor.getPatch(proposedNewPosition))
-            ) {
-                this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
+//            if (
+//                    this.hasNoPassenger(this.currentFloor.getPatch(proposedNewPosition))
+//                            || this.getCurrentTurnstileGate() != null
+//            ) {
+//                this.hasEncounteredPassengerToFollow = this.passengerFollowedWhenAssembling != null;
 
-                // Get the attractive force of this passenger to the new position
-                this.attractiveForce = this.computeAttractiveForce(
-                        new Coordinates(this.position),
-                        Coordinates.headingTowards(
-                                this.position,
-                                proposedNewPosition
-                        ),
-                        proposedNewPosition,
-                        this.preferredWalkingDistance
-                );
+            // Get the attractive force of this passenger to the new position
+            this.attractiveForce = this.computeAttractiveForce(
+                    new Coordinates(this.position),
+                    Coordinates.headingTowards(
+                            this.position,
+                            proposedNewPosition
+                    ),
+                    proposedNewPosition,
+                    this.preferredWalkingDistance
+            );
 
-                vectorsToAdd.add(attractiveForce);
-            }
+            vectorsToAdd.add(attractiveForce);
+//            }
 
             this.shouldStepForward = false;
         }
@@ -2295,12 +2374,69 @@ public class PassengerMovement {
 
     }
 
+    public boolean isNearestPassengerOnFirstStepPositionQueueingForTurnstile() {
+        Passenger nearestPassengerOnFirstStepPosition = this.getNearestPassengerOnFirstStepPosition();
+
+        if (this.getGoalAmenityAsTurnstile() != null) {
+            if (nearestPassengerOnFirstStepPosition != null) {
+                return nearestPassengerOnFirstStepPosition.getPassengerMovement().getGoalAmenityAsTurnstile() != null
+                        && nearestPassengerOnFirstStepPosition.getPassengerMovement().getGoalAmenityAsTurnstile()
+                        .equals(this.getGoalAmenityAsTurnstile());
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    public Passenger getNearestPassengerOnFirstStepPosition() {
+        Patch firstStepPosition = this.currentFloor.getPatch(this.computeFirstStepPosition());
+
+        Passenger nearestPassenger = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (Passenger passenger : firstStepPosition.getPassengers()) {
+            double distanceFromPassenger = Coordinates.distance(
+                    this.position,
+                    passenger.getPassengerMovement().getPosition()
+            );
+
+            if (distanceFromPassenger < nearestDistance) {
+                nearestPassenger = passenger;
+                nearestDistance = distanceFromPassenger;
+            }
+        }
+
+        return nearestPassenger;
+    }
+
     public boolean isFirstStepPositionFree() {
         return hasNoPassenger(this.currentFloor.getPatch(this.computeFirstStepPosition()));
     }
 
     private boolean hasNoPassenger(Patch patch) {
         return patch.getPassengers().isEmpty();
+    }
+
+    public Turnstile getCurrentTurnstileGate() {
+        Amenity.AmenityBlock currentAmenityBlock = this.currentPatch.getAmenityBlock();
+
+        if (currentAmenityBlock == null) {
+            return null;
+        } else {
+            if (currentAmenityBlock.getParent() instanceof Turnstile) {
+                Turnstile.TurnstileBlock turnstileBlock = ((Turnstile.TurnstileBlock) currentAmenityBlock);
+
+                if (turnstileBlock.isAttractor()) {
+                    return (Turnstile) turnstileBlock.getParent();
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
     }
 
     private Vector computeAttractiveForce(
@@ -2658,9 +2794,12 @@ public class PassengerMovement {
         // Set the current amenity
         this.currentAmenity = this.goalAmenity;
 
-        // If this goal is not a portal, reset the goal portals
-        if (!(this.currentAmenity instanceof Portal)) {
-            this.goalPortals = null;
+        // If this goal is a portal, add it to the list of visited portals
+        if (this.currentAmenity instanceof Portal) {
+            this.visitedPortals.add((Portal) this.currentAmenity);
+        } else if (this.currentAmenity instanceof Turnstile) {
+            // If this goal is a turnstile, set the heading
+            this.heading = this.computeFirstStepHeading();
         }
     }
 
@@ -2767,8 +2906,8 @@ public class PassengerMovement {
         // Set the passenger's patch to null
         this.currentPatch = null;
 
-        // Remove this portal from the goal portals list
-        this.goalPortals.remove((Portal) this.currentAmenity);
+//        // Remove this portal from the goal portals list
+//        this.goalPortals.remove((Portal) this.currentAmenity);
     }
 
     // Have this passenger try exiting its portal
@@ -3500,7 +3639,7 @@ public class PassengerMovement {
     }
 
     public enum Disposition {
-        BOARDING("Going to the train"),
+        BOARDING("Going to ride a train"),
         RIDING_TRAIN("Riding train"),
         ALIGHTING("Going out of the station");
 

@@ -2,10 +2,14 @@ package com.crowdsimulation.model.core.environment.station.patch.patchobject.pas
 
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class Portal extends Gate {
     // Denotes the floor that this portal serves
@@ -17,10 +21,15 @@ public abstract class Portal extends Gate {
     // Denotes the pair (other end) of this portal
     private Portal pair;
 
+    // Denotes ths amenity classes accessible from this portal
+    private final List<DirectoryItem> directory;
+
     protected Portal(List<AmenityBlock> amenityBlocks, boolean enabled, Floor floorServed) {
         super(amenityBlocks, enabled);
 
         this.floorServed = floorServed;
+
+        this.directory = new ArrayList<>();
     }
 
     public Floor getFloorServed() {
@@ -43,6 +52,10 @@ public abstract class Portal extends Gate {
         this.pair = pair;
     }
 
+    public List<DirectoryItem> getDirectory() {
+        return directory;
+    }
+
     // Have a passenger use this portal
     public abstract void absorb(Passenger passenger);
 
@@ -56,5 +69,59 @@ public abstract class Portal extends Gate {
     protected enum PortalLocation {
         LOWER,
         UPPER
+    }
+
+    public static class DirectoryItem implements Environment {
+        private final PassengerMovement.TravelDirection travelDirection;
+        private final Class<? extends Amenity> amenityClass;
+        private final Amenity previousAmenity;
+
+        public DirectoryItem(
+                PassengerMovement.TravelDirection travelDirection,
+                Class<? extends Amenity> amenityClass,
+                Amenity previousAmenity
+        ) {
+            this.travelDirection = travelDirection;
+            this.amenityClass = amenityClass;
+            this.previousAmenity = previousAmenity;
+        }
+
+        public PassengerMovement.TravelDirection getTravelDirection() {
+            return travelDirection;
+        }
+
+        public Class<? extends Amenity> getAmenityClass() {
+            return amenityClass;
+        }
+
+        public Amenity getPreviousAmenity() {
+            return previousAmenity;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DirectoryItem that = (DirectoryItem) o;
+
+            if (previousAmenity == null && that.previousAmenity == null) {
+                return
+                        travelDirection == that.travelDirection && amenityClass.equals(that.amenityClass);
+            } else {
+                if (previousAmenity != null && that.previousAmenity != null) {
+                    return
+                            travelDirection == that.travelDirection
+                                    && amenityClass.equals(that.amenityClass)
+                                    && previousAmenity.equals(that.previousAmenity);
+                } else {
+                    return false;
+                }
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(travelDirection, amenityClass, previousAmenity);
+        }
     }
 }

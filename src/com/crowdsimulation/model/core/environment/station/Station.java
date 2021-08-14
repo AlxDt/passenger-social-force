@@ -10,6 +10,7 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
@@ -250,10 +251,31 @@ public class Station extends BaseStationObject implements Environment {
         }
     }
 
+    // Clear the directories of each portal in the station
+    private void clearDirectories() {
+        for (StairShaft stairShaft : this.stairShafts) {
+            stairShaft.getLowerPortal().getDirectory().clear();
+            stairShaft.getUpperPortal().getDirectory().clear();
+        }
+
+        for (EscalatorShaft escalatorShaft : this.escalatorShafts) {
+            escalatorShaft.getLowerPortal().getDirectory().clear();
+            escalatorShaft.getUpperPortal().getDirectory().clear();
+        }
+
+        for (ElevatorShaft elevatorShaft : this.elevatorShafts) {
+            elevatorShaft.getLowerPortal().getDirectory().clear();
+            elevatorShaft.getUpperPortal().getDirectory().clear();
+        }
+    }
+
     // Thoroughly validate the layout of the station
     public static StationValidationResult validateStationLayoutDeeply(Station station) {
         // Clear caches
         station.clearCaches();
+
+        // Clear directories
+        station.clearDirectories();
 
         // For each floor in the station, collect station gates
         List<StationGate> stationGates = new ArrayList<>();
@@ -369,7 +391,16 @@ public class Station extends BaseStationObject implements Environment {
         RoutePlan alightingRoutePlan;
 
         // Check the validity for each station gate in the station, for each boarding passenger
+        boolean isEntranceStationGateFound = false;
+
         for (StationGate stationGate : stationGates) {
+            // For the validation of the boarding route, only deal with patches which allow entrances
+            if (stationGate.getStationGateMode().equals(StationGate.StationGateMode.EXIT)) {
+                continue;
+            } else {
+                isEntranceStationGateFound = true;
+            }
+
             // Get the directions of the passengers that may be spawned by this station gate
             List<PassengerMovement.TravelDirection> travelDirectionsSpawnable
                     = stationGate.getStationGatePassengerTravelDirections();
@@ -399,7 +430,7 @@ public class Station extends BaseStationObject implements Environment {
                             currentAmenity
                     );
 
-                    // If there are no paths found to any next amenity, this station is instantly valid
+                    // If there are no paths found to any next amenity, this station is instantly invalid
                     if (directoryResultBoardingSingleJourney.getPortals() == null) {
                         return new StationValidationResult(
                                 StationValidationResult.StationValidationResultType.UNREACHABLE,
@@ -409,10 +440,23 @@ public class Station extends BaseStationObject implements Environment {
                                 currentAmenity,
                                 boardingRoutePlanSingleJourney.getCurrentAmenityClass()
                         );
-                    }
+                    } else {
+                        // For each portal in the goal portals list, attach the goal amenity to its directory,
+                        // signifying that to get to that amenity, this goal portal is the way
+                        Amenity previousAmenity = null;
 
-                    // TODO: For each portal in the goal portals list, attach the goal amenity to its directory,
-                    //  signifying that to get to that amenity, this goal portal is the way
+                        for (Portal portal : directoryResultBoardingSingleJourney.getPortals()) {
+                            portal.getDirectory().add(
+                                    new Portal.DirectoryItem(
+                                            travelDirectionSpawnable,
+                                            boardingRoutePlanSingleJourney.getCurrentAmenityClass(),
+                                            previousAmenity
+                                    )
+                            );
+
+                            previousAmenity = portal;
+                        }
+                    }
 
                     // Go one level deeper
                     currentAmenity = directoryResultBoardingSingleJourney.getGoalAmenity();
@@ -440,7 +484,7 @@ public class Station extends BaseStationObject implements Environment {
                             currentAmenity
                     );
 
-                    // If there are no paths found to any next amenity, this station is instantly valid
+                    // If there are no paths found to any next amenity, this station is instantly invalid
                     if (directoryResultBoardingStoredValue.getPortals() == null) {
                         return new StationValidationResult(
                                 StationValidationResult.StationValidationResultType.UNREACHABLE,
@@ -450,10 +494,23 @@ public class Station extends BaseStationObject implements Environment {
                                 currentAmenity,
                                 boardingRoutePlanStoredValue.getCurrentAmenityClass()
                         );
-                    }
+                    } else {
+                        // For each portal in the goal portals list, attach the goal amenity to its directory,
+                        // signifying that to get to that amenity, this goal portal is the way
+                        Amenity previousAmenity = null;
 
-                    // TODO: For each portal in the goal portals list, attach the goal amenity to its directory,
-                    //  signifying that to get to that amenity, this goal portal is the way
+                        for (Portal portal : directoryResultBoardingStoredValue.getPortals()) {
+                            portal.getDirectory().add(
+                                    new Portal.DirectoryItem(
+                                            travelDirectionSpawnable,
+                                            boardingRoutePlanStoredValue.getCurrentAmenityClass(),
+                                            previousAmenity
+                                    )
+                            );
+
+                            previousAmenity = portal;
+                        }
+                    }
 
                     // Go one level deeper
                     currentAmenity = directoryResultBoardingStoredValue.getGoalAmenity();
@@ -467,6 +524,18 @@ public class Station extends BaseStationObject implements Environment {
                     }
                 }
             }
+        }
+
+        // If, until this point, no entrance station gates were found, this station is invalid
+        if (!isEntranceStationGateFound) {
+            return new StationValidationResult(
+                    StationValidationResult.StationValidationResultType.NO_STATION_GATES,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
         }
 
         // Check the validity for each train door in the station, for each alighting passenger
@@ -493,7 +562,7 @@ public class Station extends BaseStationObject implements Environment {
                         currentAmenity
                 );
 
-                // If there are no paths found to any next amenity, this station is instantly valid
+                // If there are no paths found to any next amenity, this station is instantly invalid
                 if (directoryResultAlighting.getPortals() == null) {
                     return new StationValidationResult(
                             StationValidationResult.StationValidationResultType.UNREACHABLE,
@@ -503,10 +572,23 @@ public class Station extends BaseStationObject implements Environment {
                             currentAmenity,
                             alightingRoutePlan.getCurrentAmenityClass()
                     );
-                }
+                } else {
+                    // For each portal in the goal portals list, attach the goal amenity to its directory,
+                    // signifying that to get to that amenity, this goal portal is the way
+                    Amenity previousAmenity = null;
 
-                // TODO: For each portal in the goal portals list, attach the goal amenity to its directory,
-                //  signifying that to get to that amenity, this goal portal is the way
+                    for (Portal portal : directoryResultAlighting.getPortals()) {
+                        portal.getDirectory().add(
+                                new Portal.DirectoryItem(
+                                        travelDirectionSpawnable,
+                                        alightingRoutePlan.getCurrentAmenityClass(),
+                                        previousAmenity
+                                )
+                        );
+
+                        previousAmenity = portal;
+                    }
+                }
 
                 // Go one level deeper
                 currentAmenity = directoryResultAlighting.getGoalAmenity();
@@ -538,6 +620,24 @@ public class Station extends BaseStationObject implements Environment {
             PassengerMovement.TravelDirection travelDirectionSpawnable,
             Amenity currentAmenity
     ) {
+//        PassengerPath passengerPath = PassengerMovement.computePathWithinFloor(
+//                Main.simulator.getCurrentFloor().getPatch(2, 32),
+//                Main.simulator.getCurrentFloor().getPatch(2, 26),
+//                true,
+//                false
+//        );
+//
+//        if (passengerPath != null) {
+//            GraphicsController.path = passengerPath.getPath();
+//        }
+//
+//        System.out.println(GraphicsController.path);
+//
+//        Main.mainScreenController.drawStationViewFloorForeground(
+//                Main.simulator.getCurrentFloor(),
+//                false
+//        );
+
         // Set the next amenity class
         Class<? extends Amenity> nextAmenityClass = routePlan.getCurrentAmenityClass();
 
@@ -921,21 +1021,28 @@ public class Station extends BaseStationObject implements Environment {
 
                     amenityClassName = getAmenityName(this.nextAmenityClass);
 
-                    errorMessageTemplate = "No {0}s are reachable from the {1} at patch {2} for {3} passengers" +
-                            " who are {4}.";
+                    errorMessageTemplate = "No {0}s are reachable from the {1} on floor #{2} at patch {3} for {4}" +
+                            " passengers who are {5}.";
 
                     errorMessageTemplate = errorMessageTemplate.replace("{0}", amenityClassName);
                     errorMessageTemplate = errorMessageTemplate.replace("{1}", lastValidAmenityClassName);
+
+                    Floor floor = this.lastValidAmenity.getAmenityBlocks().get(0).getPatch().getFloor();
+
                     errorMessageTemplate = errorMessageTemplate.replace(
                             "{2}",
-                            String.valueOf(this.lastValidAmenity.getAttractors().get(0).getPatch())
+                            String.valueOf(floor.getStation().getFloors().indexOf(floor) + 1)
                     );
                     errorMessageTemplate = errorMessageTemplate.replace(
                             "{3}",
-                            this.travelDirection.toString().toLowerCase()
+                            String.valueOf(this.lastValidAmenity.getAttractors().get(0).getPatch())
                     );
                     errorMessageTemplate = errorMessageTemplate.replace(
                             "{4}",
+                            this.travelDirection.toString().toLowerCase()
+                    );
+                    errorMessageTemplate = errorMessageTemplate.replace(
+                            "{5}",
                             this.disposition.toString().toLowerCase()
                     );
 

@@ -16,8 +16,11 @@ public class Main extends Application {
     // Keep a reference to the main controller
     public static MainScreenController mainScreenController;
 
-    // Denotes whether a choice was mad by the user
+    // Denotes whether a choice was made by the user
     public static boolean hasMadeChoice = false;
+
+    // Denotes whether a station has been loaded
+    public static boolean stationLoaded = false;
 
     public static void main(String[] args) {
         launch(args);
@@ -53,7 +56,9 @@ public class Main extends Application {
         while (true) {
             // Reset all necessary variables
             welcomeController.setClosedWithAction(false);
+
             Main.hasMadeChoice = false;
+            Main.stationLoaded = false;
 
             // Show the action-choosing window
             welcomeController.showWindow(
