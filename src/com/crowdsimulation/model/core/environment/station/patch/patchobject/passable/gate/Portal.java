@@ -7,7 +7,7 @@ import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,14 +22,14 @@ public abstract class Portal extends Gate {
     private Portal pair;
 
     // Denotes ths amenity classes accessible from this portal
-    private final List<DirectoryItem> directory;
+    private final HashSet<DirectoryItem> directory;
 
     protected Portal(List<AmenityBlock> amenityBlocks, boolean enabled, Floor floorServed) {
         super(amenityBlocks, enabled);
 
         this.floorServed = floorServed;
 
-        this.directory = new ArrayList<>();
+        this.directory = new HashSet<>();
     }
 
     public Floor getFloorServed() {
@@ -52,7 +52,7 @@ public abstract class Portal extends Gate {
         this.pair = pair;
     }
 
-    public List<DirectoryItem> getDirectory() {
+    public HashSet<DirectoryItem> getDirectory() {
         return directory;
     }
 

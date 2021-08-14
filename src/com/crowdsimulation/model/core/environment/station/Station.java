@@ -620,24 +620,6 @@ public class Station extends BaseStationObject implements Environment {
             PassengerMovement.TravelDirection travelDirectionSpawnable,
             Amenity currentAmenity
     ) {
-//        PassengerPath passengerPath = PassengerMovement.computePathWithinFloor(
-//                Main.simulator.getCurrentFloor().getPatch(2, 32),
-//                Main.simulator.getCurrentFloor().getPatch(2, 26),
-//                true,
-//                false
-//        );
-//
-//        if (passengerPath != null) {
-//            GraphicsController.path = passengerPath.getPath();
-//        }
-//
-//        System.out.println(GraphicsController.path);
-//
-//        Main.mainScreenController.drawStationViewFloorForeground(
-//                Main.simulator.getCurrentFloor(),
-//                false
-//        );
-
         // Set the next amenity class
         Class<? extends Amenity> nextAmenityClass = routePlan.getCurrentAmenityClass();
 
