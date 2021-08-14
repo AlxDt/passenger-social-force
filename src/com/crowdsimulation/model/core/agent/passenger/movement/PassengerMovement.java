@@ -595,11 +595,6 @@ public class PassengerMovement {
 
                 Patch currentPatch = goalPatch;
 
-//                // Exclude the final patch, if the goal is not to be included
-//                if (!includeGoalPatch) {
-//                    currentPatch = cameFrom.get(currentPatch);
-//                }
-
                 while (cameFrom.containsKey(currentPatch)) {
                     Patch previousPatch = cameFrom.get(currentPatch);
 
@@ -633,13 +628,16 @@ public class PassengerMovement {
                                         || !includeGoalPatch && patchToExploreNeighbor.equals(goalPatch)
                         )
                 ) {
+                    // Avoid patches that are close to amenity blocks, unless absolutely necessary
+                    double obstacleClosenessPenalty = patchToExploreNeighbor.getAmenityBlocksAround() * 2.0;
+
                     double tentativeGScore
                             = gScores.get(patchToExplore)
                             + Coordinates.distance(
                             startingPatch.getFloor().getStation(),
                             patchToExplore,
                             patchToExploreNeighbor
-                    );
+                    ) + obstacleClosenessPenalty;
 
                     if (tentativeGScore < gScores.get(patchToExploreNeighbor)) {
                         cameFrom.put(patchToExploreNeighbor, patchToExplore);
@@ -1354,7 +1352,7 @@ public class PassengerMovement {
 
         // If the distance the passenger moves per tick is less than this distance, this passenger is considered to not
         // have moved
-        final double noMovementThreshold = 0.01 * this.preferredWalkingDistance;
+        final double noMovementThreshold = 0.005 * this.preferredWalkingDistance;
 
         // If the size of the passenger's memory of recent patches is less than this number, the passenger is considered
         // to not have moved

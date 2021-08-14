@@ -2477,6 +2477,7 @@ public class MainScreenController extends ScreenController {
         if (!(amenityToDelete instanceof PortalShaft)) {
             for (Amenity.AmenityBlock amenityBlock : amenityToDelete.getAmenityBlocks()) {
                 amenityBlock.getPatch().setAmenityBlock(null);
+                amenityBlock.getPatch().signalRemoveAmenityBlock();
             }
         }
 

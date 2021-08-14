@@ -30,12 +30,15 @@ public abstract class Amenity extends PatchObject implements Environment {
         if (this.amenityBlocks != null) {
             // Set the parent of each amenity block to this amenity
             // In turn, set the contents of the patch in each amenity block to the amenity block
+            // Signal to this patch's neighbors that an amenity was placed in here
             // Also, set all this amenity's attractors to the pertinent list
             this.attractors = new ArrayList<>();
 
             for (AmenityBlock amenityBlock : this.amenityBlocks) {
                 amenityBlock.setParent(this);
+
                 amenityBlock.getPatch().setAmenityBlock(amenityBlock);
+                amenityBlock.getPatch().signalAddAmenityBlock();
 
                 if (amenityBlock.isAttractor()) {
                     this.attractors.add(amenityBlock);

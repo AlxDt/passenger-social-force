@@ -14,8 +14,6 @@ public class WallEditor extends AmenityEditor {
             Patch currentPatch,
             Wall.WallType wallType
     ) {
-        // Check if all the
-
         List<Amenity.AmenityBlock> amenityBlocks
                 = Amenity.AmenityBlock.convertToAmenityBlocks(
                 currentPatch,

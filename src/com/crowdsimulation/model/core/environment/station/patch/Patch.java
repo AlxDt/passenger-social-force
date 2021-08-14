@@ -32,9 +32,15 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
     // Denotes the floor which contains this patch
     private final Floor floor;
 
-    // Denotes the positions of the neighbors of this patch (because the serializer can't handle references to the
+    // Denotes the positions of the Moore neighbors of this patch (because the serializer can't handle references to the
     // patch itself)
     private final List<MatrixPosition> neighborIndices;
+
+    // Denotes the positions of the neighbors of this patch within a 7x7 range
+    private final List<MatrixPosition> neighbor7x7Indices;
+
+    // Denotes the number of amenity blocks around this patch
+    private int amenityBlocksAround;
 
     // Denotes the individual floor field value of this patch, given the queueable goal patch and the desired state
     private final Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues;
@@ -50,6 +56,9 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         this.floor = floor;
 
         this.neighborIndices = this.computeNeighboringPatches();
+        this.neighbor7x7Indices = null;
+
+        this.amenityBlocksAround = 0;
 
         this.floorFieldValues = new HashMap<>();
     }
@@ -76,6 +85,10 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
 
     public void setAmenityBlock(Amenity.AmenityBlock amenityBlock) {
         this.amenityBlock = amenityBlock;
+    }
+
+    public int getAmenityBlocksAround() {
+        return amenityBlocksAround;
     }
 
     public Floor getFloor() {
@@ -133,6 +146,40 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         }
 
         return neighboringPatches;
+    }
+
+    // Signal to this patch and to its neighbors that an amenity block was added here
+    public void signalAddAmenityBlock() {
+        // Increment the amenity blocks around counter on this patch
+        this.incrementAmenityBlocksAround();
+
+        // Then increment the amenity blocks around counters of its neighbors
+        for (Patch neighbor : this.getNeighbors()) {
+            neighbor.incrementAmenityBlocksAround();
+        }
+    }
+
+    // Signal to this patch and to its neighbors that an amenity block was removed from here
+    public void signalRemoveAmenityBlock() {
+        // Decrement the amenity blocks around counter on this patch
+        this.decrementAmenityBlocksAround();
+
+        // Then decrement the amenity blocks around counters of its neighbors
+        for (Patch neighbor : this.getNeighbors()) {
+            neighbor.decrementAmenityBlocksAround();
+        }
+    }
+
+    public boolean isNextToAmenityBlock() {
+        return this.amenityBlocksAround > 0;
+    }
+
+    private void incrementAmenityBlocksAround() {
+        this.amenityBlocksAround++;
+    }
+
+    private void decrementAmenityBlocksAround() {
+        this.amenityBlocksAround--;
     }
 
     @Override
