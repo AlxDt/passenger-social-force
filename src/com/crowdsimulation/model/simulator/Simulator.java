@@ -1225,8 +1225,8 @@ public class Simulator {
                                                             == Turnstile.TurnstileMode.BIDIRECTIONAL*/
                                                     passengerMovement.getCurrentTurnstileGate() != null
                                                             && passengerMovement.getCurrentTurnstileGate().getTurnstileMode()
-                                                            == Turnstile.TurnstileMode.BIDIRECTIONAL
-                                                            && passengerMovement.isNearestPassengerOnFirstStepPositionQueueingForTurnstile()
+                                                            == Turnstile.TurnstileMode.BIDIRECTIONAL/*
+                                                            && passengerMovement.isNearestPassengerOnFirstStepPositionQueueingForTurnstile()*/
                                     )
                             ) {
                                 // Have this passenger's goal wrap up serving this passenger
