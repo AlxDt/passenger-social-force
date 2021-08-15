@@ -91,13 +91,13 @@ public class Main extends Application {
             // Prepare the elements needed for showing the main window
             mainController.performChoice();
 
-            // Then set the adjust the canvas size accordingly
-            mainController.setElements();
-
-            // If, at this point, no choice has been made yet (the file dialog has been closed), end end the program
+            // If, at this point, no choice has been made yet (the file dialog has been closed), end the program
             if (!Main.hasMadeChoice) {
                 break;
             }
+
+            // Then adjust the canvas size accordingly
+            mainController.setElements();
 
             // Finally, show the window
             mainController.showWindow(
