@@ -491,7 +491,6 @@ public class Simulator {
 
         final double alightingChancePerSecond = 0.1;
 
-
         // Spawn boarding passengers from the station gate
         for (StationGate stationGate : floor.getStationGates()) {
             boardingRandomNumber = RANDOM_NUMBER_GENERATOR.nextDouble();
@@ -529,11 +528,17 @@ public class Simulator {
     // Make all agents tick (move once in a one-second time frame) in the given floor
     private void updateFloor(Floor floor) {
         // Make each passenger move
-        for (Passenger passenger : floor.getPassengersInFloor()) {
-            movePassenger(passenger);
+        synchronized (floor.getPassengersInFloor()) {
+            for (Passenger passenger : floor.getPassengersInFloor()) {
+                try {
+                    movePassenger(passenger);
 
-            // Also update the graphic of the passenger
-            passenger.getPassengerGraphic().change();
+                    // Also update the graphic of the passenger
+                    passenger.getPassengerGraphic().change();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 

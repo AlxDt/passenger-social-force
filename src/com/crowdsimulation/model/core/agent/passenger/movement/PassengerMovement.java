@@ -1300,7 +1300,7 @@ public class PassengerMovement {
                 Math.toRadians(360.0)
         );
 
-        this.toExplore = patchesToExplore;
+//        this.toExplore = patchesToExplore;
 
         // Clear vectors from the previous computations
         this.repulsiveForceFromPassengers.clear();
@@ -1368,13 +1368,10 @@ public class PassengerMovement {
                                                 this.isAtQueueFront() || this.isServicedByGoal()
                                         )
                                 ) && this.noMovementCounter > noMovementTicksThreshold
-                            /*&& this.parent.getTicketType() != TicketBooth.TicketType.STORED_VALUE*/
                         ) {
                             this.isStuck = true;
                             this.stuckCounter++;
-                        }/* else {
-                        this.isReadyToFree = true;
-                    }*/
+                        }
                     }
 
                     // Get the passengers within the current field of view in these patches
@@ -1402,10 +1399,7 @@ public class PassengerMovement {
                                         patchAmenityBlock.getPatch().getPatchCenterCoordinates()
                                 );
 
-                                if (
-                                        distanceToObstacle <= slowdownStartDistance/*
-                                            && !patchAmenityBlock.isAttractor()*/
-                                ) {
+                                if (distanceToObstacle <= slowdownStartDistance) {
                                     obstaclesEncountered.put(distanceToObstacle, patchAmenityBlock);
                                 }
                             }
@@ -1415,22 +1409,20 @@ public class PassengerMovement {
                             for (Passenger otherPassenger : patch.getPassengers()) {
                                 // Make sure that the passenger discovered isn't itself
                                 if (!otherPassenger.equals(this.getParent())) {
-                                    if (!this.hasEncounteredAnyQueueingPassenger && otherPassenger.getPassengerMovement().getState() == State.IN_QUEUE) {
+                                    if (
+                                            !this.hasEncounteredAnyQueueingPassenger
+                                                    && otherPassenger.getPassengerMovement().getState()
+                                                    == State.IN_QUEUE
+                                    ) {
                                         this.hasEncounteredAnyQueueingPassenger = true;
                                     }
 
-                                    if (
-                                            this.action != Action.HEADING_TO_QUEUEABLE
-                                                    && !(this.state == State.IN_QUEUE && otherPassenger.getPassengerMovement().getState() != State.IN_QUEUE)
-//                                        otherPassenger.getPassengerMovement().getState() == State.WALKING
-//                                                || this.action != Action.HEADING_TO_QUEUEABLE
-//                                                && otherPassenger.getPassengerMovement().getGoalAmenity() != null && otherPassenger.getPassengerMovement().getGoalAmenity().equals(this.getGoalAmenity())
-//                                                && (this.passengerFollowedWhenAssembling == null || this.passengerFollowedWhenAssembling.equals(otherPassenger))
-                                    ) {
+                                    if (allowRepulsionFrom(otherPassenger)) {
                                         // Take note of the passenger density in this area
                                         numberOfPassengers++;
 
-                                        // Check if this passenger is within the field of view and within the slowdown distance
+                                        // Check if this passenger is within the field of view and within the slowdown
+                                        // distance
                                         double distanceToPassenger = Coordinates.distance(
                                                 this.position,
                                                 otherPassenger.getPassengerMovement().getPosition()
@@ -2010,6 +2002,52 @@ public class PassengerMovement {
         this.ticksAcceleratedOrMaintainedSpeed = 0;
 
         return false;
+    }
+
+    // Checks if another passenger should apply a repulsive force on this passenger, taking into account parameters
+    // other than this passenger
+    private boolean allowRepulsionFrom(Passenger otherPassenger) {
+        boolean isNotHeadingToQueueable = this.action != Action.HEADING_TO_QUEUEABLE;
+        boolean isNotInOppositeStatesWithOtherPassenger
+                = !(this.state == State.IN_QUEUE && otherPassenger.getPassengerMovement().getState() != State.IN_QUEUE);
+
+        boolean otherPassengerComesBefore;
+
+        if (this.state == State.IN_QUEUE) {
+            Queueable queueable = this.getGoalAmenityAsQueueable();
+
+            if (!(queueable instanceof TrainDoor) && !(queueable instanceof Turnstile)) {
+                QueueObject queueObject = queueable.getQueueObject();
+                List<Passenger> queueingPassengers = queueObject.getPassengersQueueing();
+
+                if (queueingPassengers.contains(this.parent) && queueingPassengers.contains(otherPassenger)) {
+                    otherPassengerComesBefore = otherPassenger.getPassengerMovement().comesBefore(this.parent);
+                } else {
+                    otherPassengerComesBefore = true;
+                }
+            } else {
+                otherPassengerComesBefore = true;
+            }
+        } else {
+            otherPassengerComesBefore = true;
+        }
+
+        boolean otherPassengerInSameGoal;
+
+        Queueable thisPassengerQueueable = this.getGoalAmenityAsQueueable();
+        Queueable otherPassengerQueueable = otherPassenger.getPassengerMovement().getGoalAmenityAsQueueable();
+
+        if (thisPassengerQueueable != null && otherPassengerQueueable != null) {
+            otherPassengerInSameGoal = thisPassengerQueueable.equals(otherPassengerQueueable);
+        } else {
+            otherPassengerInSameGoal = true;
+        }
+
+        return
+                isNotHeadingToQueueable
+                        && isNotInOppositeStatesWithOtherPassenger
+                        && otherPassengerComesBefore
+                        && otherPassengerInSameGoal;
     }
 
     private double computeTurnstileFirstStepHeading() {
@@ -2796,8 +2834,16 @@ public class PassengerMovement {
                             // But only follow passengers who are nearer to this passenger than to the chosen queueing
                             // patch and are within this passenger's walking distance and have a clear line of sight to
                             // this passenger
+                            final double distanceToPassengerFollowedCandidate = Coordinates.distance(
+                                    this.position,
+                                    passengerFollowedCandidate.getPassengerMovement().getPosition()
+                            );
+
+                            final double passengerFollowedRange = this.preferredWalkingDistance * 3.0;
+
                             if (
                                     !hasClearLineOfSight(this.position, passengerFollowedCandidate.getPassengerMovement().getPosition(), true)
+                                            || distanceToPassengerFollowedCandidate > passengerFollowedRange
                             ) {
                                 this.passengerFollowedWhenAssembling = null;
                                 this.goalNearestQueueingPatch = this.getPatchWithNearestFloorFieldValue();
@@ -2906,21 +2952,45 @@ public class PassengerMovement {
                             true
                     );
                 } else {
-                    // If there are passengers in the queue, this passenger should only follow the last passenger in that
-                    // queue if that passenger is assembling
+                    // If there are passengers in the queue, this passenger should only follow the last passenger in
+                    // that queue if that passenger is assembling
                     // If the last passenger is not assembling, simply head for the goal patch instead
                     Passenger lastPassenger = passengersQueueing.getLast();
 
                     if (
-                            !this.isNextAmenityTrainDoor()
-                                    || lastPassenger.getPassengerMovement().getAction() == Action.ASSEMBLING
+                            !(this.getGoalAmenityAsQueueable() instanceof TrainDoor)
+                                    && !(this.getGoalAmenityAsQueueable() instanceof Turnstile)
+                                    && lastPassenger.getPassengerMovement().getAction() == Action.ASSEMBLING
                     ) {
-                        passengerPath = computePathWithinFloor(
+                        double distanceToGoalPatch = Coordinates.distance(
+                                this.currentFloor.getStation(),
                                 this.currentPatch,
-                                lastPassenger.getPassengerMovement().getCurrentPatch(),
-                                true,
-                                true
+                                this.goalPatch
                         );
+
+                        double distanceToLastPassenger = Coordinates.distance(
+                                this.currentFloor.getStation(),
+                                this.currentPatch,
+                                lastPassenger.getPassengerMovement().getCurrentPatch()
+                        );
+
+                        // Head to whichever is closer to this passenger, the last passenger, or the nearest queueing
+                        // path
+                        if (distanceToGoalPatch <= distanceToLastPassenger) {
+                            passengerPath = computePathWithinFloor(
+                                    this.currentPatch,
+                                    this.goalPatch,
+                                    true,
+                                    true
+                            );
+                        } else {
+                            passengerPath = computePathWithinFloor(
+                                    this.currentPatch,
+                                    lastPassenger.getPassengerMovement().getCurrentPatch(),
+                                    true,
+                                    true
+                            );
+                        }
                     } else {
                         passengerPath = computePathWithinFloor(
                                 this.currentPatch,
@@ -3101,7 +3171,7 @@ public class PassengerMovement {
 
         // If there are more than one highest valued-patches, choose the one where it would take the least heading
         // difference
-        Patch chosenPatch = highestPatches.get(0)/* = null*/;
+        Patch chosenPatch /*= highestPatches.get(0)*/ = null;
 
         List<Double> headingChanges = new ArrayList<>();
         List<Double> distances = new ArrayList<>();
@@ -3126,7 +3196,7 @@ public class PassengerMovement {
         double minimumHeadingChange = Double.MAX_VALUE;
 
         for (int index = 0; index < highestPatches.size(); index++) {
-            double individualScore = headingChanges.get(index) * 0.5 + (distances.get(index) * 10.0) * 0.5;
+            double individualScore = headingChanges.get(index) * 1.0/* + (distances.get(index) * 10.0) * 0.5*/;
 
             if (individualScore < minimumHeadingChange) {
                 minimumHeadingChange = individualScore;
@@ -3297,6 +3367,28 @@ public class PassengerMovement {
         // The target has been reached without finding an obstacle, so there is a clear line of sight between the two
         // given points
         return true;
+    }
+
+    // Check if this passenger comes before the given passenger
+    private boolean comesBefore(Passenger passenger) {
+        if (this.goalQueueObject != null) {
+            List<Passenger> goalQueue = this.goalQueueObject.getPassengersQueueing();
+
+            if (goalQueue.size() >= 2) {
+                int thisPassengerIndex = goalQueue.indexOf(this.parent);
+                int otherPassengerIndex = goalQueue.indexOf(passenger);
+
+                if (thisPassengerIndex != -1 && otherPassengerIndex != -1) {
+                    return thisPassengerIndex < otherPassengerIndex;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     // Update the passenger's recent patches
