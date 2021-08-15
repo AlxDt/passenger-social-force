@@ -767,58 +767,67 @@ public class Simulator {
                         ) {
                             // Check if the passenger is set to switch floors
                             // If it is, this passenger will now head to its chosen portal
-//                            passengerMovement.chooseGoal();
-                            if (
-                                    passengerMovement.getParent().getTicketType()
-                                            == TicketBooth.TicketType.SINGLE_JOURNEY
-                                            || passengerMovement.getParent().getTicketType()
-                                            == TicketBooth.TicketType.STORED_VALUE
-                                            && !passengerMovement.willPathFind()
-                            ) {
-                                // Make this passenger face its portal
-                                passengerMovement.faceNextPosition();
-
-                                // Then make the passenger move towards that exit
-                                passengerMovement.moveSocialForce();
-                            } else {
-                                // This passenger is a stored value ticket holder so generate a path, if one hasn't been
-                                // generated yet, then follow it until the passenger reaches its goal
-                                // Get the next path
-                                if (passengerMovement.chooseNextPatchInPath()) {
-                                    // Make this passenger face that patch
+                            if (!passengerMovement.isWaitingOnPortal()) {
+                                if (
+                                        passengerMovement.getParent().getTicketType()
+                                                == TicketBooth.TicketType.SINGLE_JOURNEY
+                                                || passengerMovement.getParent().getTicketType()
+                                                == TicketBooth.TicketType.STORED_VALUE
+                                                && !passengerMovement.willPathFind()
+                                ) {
+                                    // Make this passenger face its portal
                                     passengerMovement.faceNextPosition();
 
-                                    // Move towards that patch
+                                    // Then make the passenger move towards that exit
                                     passengerMovement.moveSocialForce();
-
-                                    if (passengerMovement.hasReachedNextPatchInPath()) {
-                                        // The passenger has reached the next patch in the path, so remove this from
-                                        // this passenger's current path
-                                        passengerMovement.reachPatchInPath();
-
-                                        // Check if there are still patches left in the path
-                                        // If there are no more patches left, stop using any pathfinding algorithm
-                                        if (passengerMovement.hasPassengerReachedFinalPatchInPath()) {
-                                            passengerMovement.endStoredValuePathfinding();
-                                        }
-                                    }
                                 } else {
-                                    passengerMovement.endStoredValuePathfinding();
+                                    // This passenger is a stored value ticket holder so generate a path, if one hasn't been
+                                    // generated yet, then follow it until the passenger reaches its goal
+                                    // Get the next path
+                                    if (passengerMovement.chooseNextPatchInPath()) {
+                                        // Make this passenger face that patch
+                                        passengerMovement.faceNextPosition();
+
+                                        // Move towards that patch
+                                        passengerMovement.moveSocialForce();
+
+                                        if (passengerMovement.hasReachedNextPatchInPath()) {
+                                            // The passenger has reached the next patch in the path, so remove this from
+                                            // this passenger's current path
+                                            passengerMovement.reachPatchInPath();
+
+                                            // Check if there are still patches left in the path
+                                            // If there are no more patches left, stop using any pathfinding algorithm
+                                            if (passengerMovement.hasPassengerReachedFinalPatchInPath()) {
+                                                passengerMovement.endStoredValuePathfinding();
+                                            }
+                                        }
+                                    } else {
+                                        passengerMovement.endStoredValuePathfinding();
+                                    }
                                 }
                             }
 
-                            // Check if the passenger is now in the exit
+                            // Check if the passenger is now at the portal
                             if (passengerMovement.hasReachedGoal()) {
-                                // Have the passenger set its current goal
-                                passengerMovement.reachGoal();
+                                passengerMovement.beginWaitingOnPortal();
 
-                                // Reset the current goal of the passenger
-                                passengerMovement.resetGoal(false);
+                                if (passengerMovement.willEnterPortal()) {
+                                    passengerMovement.endWaitingOnPortal();
 
-                                // Then have this passenger marked for floor switching
-                                this.passengersToSwitchFloors.add(passenger);
+                                    // Have the passenger set its current goal
+                                    passengerMovement.reachGoal();
 
-                                break;
+                                    // Reset the current goal of the passenger
+                                    passengerMovement.resetGoal(false);
+
+                                    // Then have this passenger marked for floor switching
+                                    this.passengersToSwitchFloors.add(passenger);
+
+                                    break;
+                                } else {
+                                    passengerMovement.stop();
+                                }
                             }
 
                             // If the passenger is stuck, switch to the "rerouting" action except if the passenger
@@ -895,7 +904,7 @@ public class Simulator {
                                 }
                             }
 
-                            // Check if the passenger is now in the exit
+                            // Check if the passenger is now at the exit
                             if (passengerMovement.hasReachedGoal()) {
                                 // Have the passenger set its current goal
                                 passengerMovement.reachGoal();

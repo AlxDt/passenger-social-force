@@ -1,8 +1,11 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator;
 
 import com.crowdsimulation.controller.graphics.amenity.editor.ElevatorEditor;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
+
+import java.util.List;
 
 public class ElevatorShaft extends PortalShaft {
     // Denotes the time it takes between the elevator reaching its destination and the elevator having its doors fully
@@ -88,6 +91,11 @@ public class ElevatorShaft extends PortalShaft {
     @Override
     public void updateQueues() {
 
+    }
+
+    @Override
+    public List<Passenger> clearQueues() {
+        return null;
     }
 
     // Elevator shaft factory

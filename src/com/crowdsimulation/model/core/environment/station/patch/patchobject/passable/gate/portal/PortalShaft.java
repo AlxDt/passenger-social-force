@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal;
 
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
@@ -58,6 +59,9 @@ public abstract class PortalShaft extends NonObstacle {
 
     // Update the passengers' time spent in this portal
     public abstract void updateQueues();
+
+    // Clear the portal shaft's queues
+    public abstract List<Passenger> clearQueues();
 
     // Portal shaft factory
     public static abstract class PortalShaftFactory extends Gate.GateFactory {

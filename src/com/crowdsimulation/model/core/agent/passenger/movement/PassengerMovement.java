@@ -17,6 +17,8 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Goal;
@@ -118,6 +120,9 @@ public class PassengerMovement {
 
     // Denotes whether the passenger is temporarily waiting on an amenity to be vacant
     private boolean isWaitingOnAmenity;
+
+    // Denotes whether the passenger is temporarily waiting for a portal to be vacant
+    private boolean isWaitingOnPortal;
 
     // Denotes whether this passenger has encountered the passenger to be followed in the queue
     private boolean hasEncounteredPassengerToFollow;
@@ -416,6 +421,10 @@ public class PassengerMovement {
         return isWaitingOnAmenity;
     }
 
+    public boolean isWaitingOnPortal() {
+        return isWaitingOnPortal;
+    }
+
     public Passenger getPassengerFollowedWhenAssembling() {
         return passengerFollowedWhenAssembling;
     }
@@ -516,6 +525,10 @@ public class PassengerMovement {
 
     public Turnstile getGoalAmenityAsTurnstile() {
         return Turnstile.asTurnstile(this.goalAmenity);
+    }
+
+    public Portal getGoalAmenityAsPortal() {
+        return Portal.asPortal(this.goalAmenity);
     }
 
     // Use the A* algorithm (with Euclidian distance to compute the f-score) to find the shortest path to the given goal
@@ -713,6 +726,7 @@ public class PassengerMovement {
 
         // This passenger is not yet waiting
         this.isWaitingOnAmenity = false;
+        this.isWaitingOnPortal = false;
 
         // Set whether this passenger is set to step forward
         this.shouldStepForward = shouldStepForwardFirst;
@@ -1932,7 +1946,7 @@ public class PassengerMovement {
                     // If this passenger's distance covered falls under the threshold, increment the counter denoting the ticks
                     // spent not moving
                     // Otherwise, reset the counter
-                    // Do not not count for movements/non-movements when the passenger is in the "in queue" state
+                    // Do not count for movements/non-movements when the passenger is in the "in queue" state
                     if (this.state != State.IN_QUEUE) {
                         if (this.recentPatches.size() <= noNewPatchesSeenThreshold) {
                             this.noNewPatchesSeenCounter++;
@@ -2455,6 +2469,11 @@ public class PassengerMovement {
         this.isWaitingOnAmenity = true;
     }
 
+    // Have this passenger start waiting for a portal to become vacant
+    public void beginWaitingOnPortal() {
+        this.isWaitingOnPortal = true;
+    }
+
     // Check if the goal of this passenger is currently not servicing anyone
     public boolean isGoalFree() {
         return this.getGoalAmenityAsGoal().isFree(this.goalQueueObject)
@@ -2483,6 +2502,11 @@ public class PassengerMovement {
     // Have this passenger stop waiting for an amenity to become vacant
     public void endWaitingOnAmenity() {
         this.isWaitingOnAmenity = false;
+    }
+
+    // Have this passenger stop waiting for a portal to become vacant
+    public void endWaitingOnPortal() {
+        this.isWaitingOnPortal = false;
     }
 
     // Enable pathfinding for stored value card passengers
@@ -2607,8 +2631,6 @@ public class PassengerMovement {
 
     // Check if this passenger's next floor is below the current floor
     public boolean isGoalFloorLower() {
-        boolean isNextFloorLower;
-
         if (!willHeadToPortal()) {
             return false;
         } else {
@@ -2621,6 +2643,38 @@ public class PassengerMovement {
             assert currentFloorIndex != goalFloorIndex;
 
             return goalFloorIndex < currentFloorIndex;
+        }
+    }
+
+    // Check if this passenger will enter the portal
+    public boolean willEnterPortal() {
+        Portal closestPortal = getGoalAmenityAsPortal();
+
+        if (closestPortal != null) {
+            if (closestPortal instanceof StairPortal) {
+                StairPortal stairPortal = ((StairPortal) closestPortal);
+
+                if (this.isGoalFloorLower()) {
+                    return !stairPortal.getStairShaft().isDescendingQueueAtCapacity();
+                } else {
+                    return !stairPortal.getStairShaft().isAscendingQueueAtCapacity();
+                }
+            } else if (closestPortal instanceof EscalatorPortal) {
+                EscalatorPortal escalatorPortal = ((EscalatorPortal) closestPortal);
+
+//                if (this.isGoalFloorLower()) {
+//                    return escalatorPortal.getStairShaft().isDescendingQueueAtCapacity();
+//                } else {
+//                    return escalatorPortal.getStairShaft().isAscendingQueueAtCapacity();
+//                }
+                return false;
+            } else if (closestPortal instanceof ElevatorPortal) {
+                return false;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
         }
     }
 
@@ -2641,9 +2695,6 @@ public class PassengerMovement {
 
         // Set the passenger's patch to null
         this.currentPatch = null;
-
-//        // Remove this portal from the goal portals list
-//        this.goalPortals.remove((Portal) this.currentAmenity);
     }
 
     // Have this passenger try exiting its portal

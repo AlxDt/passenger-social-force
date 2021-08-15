@@ -309,13 +309,27 @@ public class StairPortal extends Portal {
         // Check if all attractors and spawners in this amenity have no passengers
         for (AmenityBlock attractor : this.getAttractors()) {
             if (!attractor.getPatch().getPassengers().isEmpty()) {
-                return null;
+                Passenger passenger = attractor.getPatch().getPassengers().get(0);
+                Portal goalAmenityAsPortal = passenger.getPassengerMovement().getGoalAmenityAsPortal();
+
+                // If some passengers are spotted, check if they are about to use this portal
+                // Only refuse to exit if the blocking passengers are not using this portal
+                if (goalAmenityAsPortal == null || !goalAmenityAsPortal.equals(this)) {
+                    return null;
+                }
             }
         }
 
         for (GateBlock spawner : this.getSpawners()) {
             if (!spawner.getPatch().getPassengers().isEmpty()) {
-                return null;
+                Passenger passenger = spawner.getPatch().getPassengers().get(0);
+                Portal goalAmenityAsPortal = passenger.getPassengerMovement().getGoalAmenityAsPortal();
+
+                // If some passengers are spotted, check if they are about to use this portal
+                // Only refuse to exit if the blocking passengers are not using this portal
+                if (goalAmenityAsPortal == null || !goalAmenityAsPortal.equals(this)) {
+                    return null;
+                }
             }
         }
 
@@ -341,11 +355,13 @@ public class StairPortal extends Portal {
         if (passengerMovement.getAction() == PassengerMovement.Action.WILL_DESCEND) {
             passengerMovement.setAction(PassengerMovement.Action.DESCENDING);
 
-            this.stairShaft.getDescendingQueue().put(passenger, 0);
+            this.stairShaft.getDescendingQueue().get(this.stairShaft.getDescendingQueue().size() - 1).add(passenger);
+            this.stairShaft.incrementPassengersDescending();
         } else {
             passengerMovement.setAction(PassengerMovement.Action.ASCENDING);
 
-            this.stairShaft.getAscendingQueue().put(passenger, 0);
+            this.stairShaft.getAscendingQueue().get(0).add(passenger);
+            this.stairShaft.incrementPassengersAscending();
         }
     }
 

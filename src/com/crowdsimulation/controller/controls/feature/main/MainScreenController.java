@@ -1707,11 +1707,7 @@ public class MainScreenController extends ScreenController {
 
         // Clear all portals
         for (StairShaft stairShaft : station.getStairShafts()) {
-            station.getPassengersInStation().removeAll(stairShaft.getDescendingQueue().keySet());
-            station.getPassengersInStation().removeAll(stairShaft.getAscendingQueue().keySet());
-
-            stairShaft.getDescendingQueue().clear();
-            stairShaft.getAscendingQueue().clear();
+            station.getPassengersInStation().removeAll(stairShaft.clearQueues());
         }
 
         // Clear passengers from each floor

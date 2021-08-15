@@ -32,6 +32,18 @@ public abstract class Portal extends Gate {
         this.directory = new HashSet<>();
     }
 
+    public static boolean isPortal(Amenity amenity) {
+        return amenity instanceof Portal;
+    }
+
+    public static Portal asPortal(Amenity amenity) {
+        if (isPortal(amenity)) {
+            return (Portal) amenity;
+        } else {
+            return null;
+        }
+    }
+
     public Floor getFloorServed() {
         return floorServed;
     }

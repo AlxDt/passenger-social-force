@@ -1,7 +1,10 @@
 package com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator;
 
 import com.crowdsimulation.controller.graphics.amenity.editor.EscalatorEditor;
+import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
+
+import java.util.List;
 
 public class EscalatorShaft extends PortalShaft {
     // Denotes the direction of this escalator
@@ -33,6 +36,11 @@ public class EscalatorShaft extends PortalShaft {
     @Override
     public void updateQueues() {
 
+    }
+
+    @Override
+    public List<Passenger> clearQueues() {
+        return null;
     }
 
     // Escalator shaft factory
