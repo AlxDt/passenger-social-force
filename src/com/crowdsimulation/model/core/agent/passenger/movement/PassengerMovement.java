@@ -1352,7 +1352,7 @@ public class PassengerMovement {
 
         // If the distance the passenger moves per tick is less than this distance, this passenger is considered to not
         // have moved
-        final double noMovementThreshold = 0.005 * this.preferredWalkingDistance;
+        final double noMovementThreshold = 0.01 * this.preferredWalkingDistance;
 
         // If the size of the passenger's memory of recent patches is less than this number, the passenger is considered
         // to not have moved

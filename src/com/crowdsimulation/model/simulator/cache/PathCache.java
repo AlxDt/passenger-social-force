@@ -4,22 +4,23 @@ import com.crowdsimulation.model.core.agent.passenger.movement.pathfinding.Passe
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class PathCache extends Cache {
-    private final LinkedHashMap<PathCacheKey, PassengerPath> pairPathMap;
+    private final Map<PathCacheKey, PassengerPath> pairPathMap;
 
     public PathCache(int capacity) {
         super(capacity);
 
-        this.pairPathMap = new LinkedHashMap<PathCacheKey, PassengerPath>() {
+        this.pairPathMap = Collections.synchronizedMap(new LinkedHashMap<PathCacheKey, PassengerPath>() {
             @Override
             protected boolean removeEldestEntry(Map.Entry<PathCacheKey, PassengerPath> eldest) {
                 return size() > capacity;
             }
-        };
+        });
     }
 
     public void put(PathCacheKey pathCacheKey, PassengerPath passengerPath) {

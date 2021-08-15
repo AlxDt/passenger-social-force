@@ -231,7 +231,8 @@ public class NormalFloorFieldController extends ScreenController {
             QueueingFloorField.FloorFieldState revisedFloorFieldState
         }
         */
-        HashSet<QueueingFloorField.FloorFieldState> floorFieldStateSet = new HashSet<>(Main.simulator.getCurrentFloorFieldTarget().retrieveFloorFieldStates());
+        HashSet<QueueingFloorField.FloorFieldState> floorFieldStateSet
+                = new HashSet<>(Main.simulator.getCurrentFloorFieldTarget().retrieveFloorFieldStates());
 
         List<QueueingFloorField.FloorFieldState> floorFieldStates = new ArrayList<>(floorFieldStateSet);
 

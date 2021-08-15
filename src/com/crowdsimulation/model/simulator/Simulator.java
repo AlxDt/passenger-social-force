@@ -30,6 +30,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -425,6 +428,10 @@ public class Simulator {
             // For times shorter than this, speed awareness will be implemented
             final int speedAwarenessLimitMilliseconds = 10;
 
+            // Initialize a thread pool to run floors in parallel
+            final int NUM_CPUS = Runtime.getRuntime().availableProcessors();
+            ExecutorService executorService = Executors.newFixedThreadPool(NUM_CPUS);
+
             while (true) {
                 try {
                     // Wait until the play button has been pressed
@@ -441,9 +448,18 @@ public class Simulator {
                         }
 
                         // Draw all agents in each floor
+                        List<FloorUpdateTask> floorsToUpdate = new ArrayList<>();
+
                         for (Floor floor : Main.simulator.station.getFloors()) {
-                            updateFloor(floor);
+                            spawnPassengersInFloor(floor);
+
+                            floorsToUpdate.add(new FloorUpdateTask(floor));
                         }
+
+                        executorService.invokeAll(floorsToUpdate);
+
+                        // Manage all passenger floor transfers
+                        manageFloorTransfers();
 
                         // Redraw the visualization
                         // If the refreshes are frequent enough, update the visualization in a speed-aware manner
@@ -466,20 +482,15 @@ public class Simulator {
         }).start();
     }
 
-    // Reset the simulation
-    public void reset() {
-        // Reset the simulation time
-        this.time.reset();
-    }
-
-    // Make all agents tick (move once in a one-second time frame) in the given floor
-    private void updateFloor(Floor floor) {
+    // Manage the passengers which spawn in the floor
+    private void spawnPassengersInFloor(Floor floor) {
         // Make all station gates in this floor spawn passengers depending on their spawn frequency
         // Generate a number from 0.0 to 1.0
         double boardingRandomNumber;
         double alightingRandomNumber;
 
         final double alightingChancePerSecond = 0.1;
+
 
         // Spawn boarding passengers from the station gate
         for (StationGate stationGate : floor.getStationGates()) {
@@ -507,7 +518,16 @@ public class Simulator {
                 }
             }
         }
+    }
 
+    // Reset the simulation
+    public void reset() {
+        // Reset the simulation time
+        this.time.reset();
+    }
+
+    // Make all agents tick (move once in a one-second time frame) in the given floor
+    private void updateFloor(Floor floor) {
         // Make each passenger move
         for (Passenger passenger : floor.getPassengersInFloor()) {
             movePassenger(passenger);
@@ -515,8 +535,10 @@ public class Simulator {
             // Also update the graphic of the passenger
             passenger.getPassengerGraphic().change();
         }
+    }
 
-        // Entertain each passenger marked for switching floors
+    // Entertain each passenger marked for switching floors
+    private void manageFloorTransfers() {
         for (Passenger passengerToSwitchFloors : this.passengersToSwitchFloors) {
             // Get the passenger's portal
             Portal portal = (Portal) passengerToSwitchFloors.getPassengerMovement().getCurrentAmenity();
@@ -1276,6 +1298,22 @@ public class Simulator {
             floor.getPassengerPatchSet().add(
                     passenger.getPassengerMovement().getCurrentPatch()
             );
+        }
+    }
+
+    // Represent a floor update task
+    public class FloorUpdateTask implements Callable<Void> {
+        private final Floor floorToUpdate;
+
+        public FloorUpdateTask(Floor floorToUpdate) {
+            this.floorToUpdate = floorToUpdate;
+        }
+
+        @Override
+        public Void call() throws Exception {
+            updateFloor(floorToUpdate);
+
+            return null;
         }
     }
 
