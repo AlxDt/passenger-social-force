@@ -10,6 +10,8 @@ public class InitializeStairEditService extends InitializeScreenService {
             CheckBox stairEnableCheckBox,
             Label stairMoveLabel,
             Spinner<Integer> stairMoveSpinner,
+            Label stairCapacityLabel,
+            Spinner<Integer> stairCapacitySpinner,
             Button proceedButton
     ) {
         // Set elements
@@ -18,6 +20,14 @@ public class InitializeStairEditService extends InitializeScreenService {
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(
                         10,
                         60
+                )
+        );
+
+        stairCapacityLabel.setLabelFor(stairCapacitySpinner);
+        stairCapacitySpinner.setValueFactory(
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(
+                        10,
+                        200
                 )
         );
     }

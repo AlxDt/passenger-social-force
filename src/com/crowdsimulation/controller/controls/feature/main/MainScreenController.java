@@ -2350,7 +2350,8 @@ public class MainScreenController extends ScreenController {
                         StairShaft.stairEditor.edit(
                                 stairShaftToEdit,
                                 stairShaftReference.isEnabled(),
-                                stairShaftReference.getMoveTime()
+                                stairShaftReference.getMoveTime(),
+                                stairShaftReference.getCapacity()
                         );
 
                         // Apply the changes from the stair shaft to these portals
@@ -2378,7 +2379,8 @@ public class MainScreenController extends ScreenController {
                                 escalatorShaftToEdit,
                                 escalatorShaftReference.isEnabled(),
                                 escalatorShaftReference.getMoveTime(),
-                                escalatorShaftReference.getEscalatorDirection()
+                                escalatorShaftReference.getEscalatorDirection(),
+                                escalatorShaftReference.getCapacity()
                         );
 
                         // Apply the changes from the escalator shaft to these portals
@@ -2408,7 +2410,8 @@ public class MainScreenController extends ScreenController {
                                 elevatorShaftReference.getOpenDelayTime(),
                                 elevatorShaftReference.getDoorOpenTime(),
                                 elevatorShaftReference.getMoveTime(),
-                                elevatorShaftReference.getElevatorDirection()
+                                elevatorShaftReference.getElevatorDirection(),
+                                elevatorShaftReference.getCapacity()
                         );
 
                         // Apply the changes from the elevator shaft to these portals

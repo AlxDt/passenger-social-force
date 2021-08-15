@@ -14,7 +14,8 @@ import java.util.List;
 public class StairEditor extends AmenityEditor {
     public StairShaft createShaft(
             boolean enabled,
-            int moveTime
+            int moveTime,
+            int capacity
     ) {
         // Prepare the provisional stair shaft
         // If the user chooses not to go through with the stair, this shaft will
@@ -24,7 +25,8 @@ public class StairEditor extends AmenityEditor {
 
         return stairShaftFactory.create(
                 enabled,
-                moveTime
+                moveTime,
+                capacity
         );
     }
 
@@ -83,10 +85,12 @@ public class StairEditor extends AmenityEditor {
     public void edit(
             StairShaft stairShaftToEdit,
             boolean enabled,
-            int moveTime
+            int moveTime,
+            int capacity
     ) {
         stairShaftToEdit.setEnabled(enabled);
         stairShaftToEdit.setMoveTime(moveTime);
+        stairShaftToEdit.setCapacity(capacity);
     }
 
     public void delete(

@@ -17,7 +17,8 @@ public class ElevatorEditor extends AmenityEditor {
             int delayTime,
             int openTime,
             int moveTime,
-            ElevatorShaft.ElevatorDirection elevatorDirection
+            ElevatorShaft.ElevatorDirection elevatorDirection,
+            int capacity
     ) {
         // Prepare the provisional elevator shaft
         // If the user chooses not to go through with the elevator, this shaft will
@@ -30,7 +31,8 @@ public class ElevatorEditor extends AmenityEditor {
                 moveTime,
                 delayTime,
                 openTime,
-                elevatorDirection
+                elevatorDirection,
+                capacity
         );
     }
 
@@ -92,13 +94,15 @@ public class ElevatorEditor extends AmenityEditor {
             int delayTime,
             int openTime,
             int moveTime,
-            ElevatorShaft.ElevatorDirection elevatorDirection
+            ElevatorShaft.ElevatorDirection elevatorDirection,
+            int capacity
     ) {
         elevatorShaftToEdit.setEnabled(enabled);
         elevatorShaftToEdit.setOpenDelayTime(delayTime);
         elevatorShaftToEdit.setDoorOpenTime(openTime);
         elevatorShaftToEdit.setMoveTime(moveTime);
         elevatorShaftToEdit.setElevatorDirection(elevatorDirection);
+        elevatorShaftToEdit.setCapacity(capacity);
     }
 
     public void delete(

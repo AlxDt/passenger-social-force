@@ -32,6 +32,12 @@ public class EscalatorEditController extends PortalEditController {
     private ChoiceBox<EscalatorShaft.EscalatorDirection> escalatorDirectionChoiceBox;
 
     @FXML
+    private Label escalatorCapacityLabel;
+
+    @FXML
+    private Spinner<Integer> escalatorCapacitySpinner;
+
+    @FXML
     private Button proceedButton;
 
     private EscalatorShaft escalatorShaft;
@@ -44,13 +50,15 @@ public class EscalatorEditController extends PortalEditController {
         boolean enabled = escalatorEnableCheckbox.isSelected();
         int moveTime = escalatorMoveSpinner.getValue();
         EscalatorShaft.EscalatorDirection escalatorDirection = escalatorDirectionChoiceBox.getValue();
+        int capacity = escalatorCapacitySpinner.getValue();
 
         // Modify its values
         EscalatorShaft.escalatorEditor.edit(
                 escalatorShaft,
                 enabled,
                 moveTime,
-                escalatorDirection
+                escalatorDirection,
+                capacity
         );
 
         this.getWindowOutput().put(OUTPUT_KEY, escalatorShaft);
@@ -69,6 +77,8 @@ public class EscalatorEditController extends PortalEditController {
                 escalatorMoveSpinner,
                 escalatorDirectionLabel,
                 escalatorDirectionChoiceBox,
+                escalatorCapacityLabel,
+                escalatorCapacitySpinner,
                 proceedButton
         );
 
@@ -92,6 +102,7 @@ public class EscalatorEditController extends PortalEditController {
             escalatorEnableCheckbox.setSelected(this.escalatorShaft.isEnabled());
             escalatorMoveSpinner.getValueFactory().setValue(this.escalatorShaft.getMoveTime());
             escalatorDirectionChoiceBox.setValue(this.escalatorShaft.getEscalatorDirection());
+            escalatorCapacitySpinner.getValueFactory().setValue(this.escalatorShaft.getCapacity());
         } else {
             // Create a dummy escalator shaft
             EscalatorShaft.EscalatorShaftFactory escalatorShaftFactory = new EscalatorShaft.EscalatorShaftFactory();
@@ -99,7 +110,8 @@ public class EscalatorEditController extends PortalEditController {
             this.escalatorShaft = escalatorShaftFactory.create(
                     false,
                     -1,
-                    null
+                    null,
+                    -1
             );
         }
     }

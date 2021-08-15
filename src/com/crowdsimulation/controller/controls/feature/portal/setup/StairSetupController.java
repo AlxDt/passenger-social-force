@@ -26,6 +26,12 @@ public class StairSetupController extends PortalSetupController {
     private Spinner<Integer> stairMoveSpinner;
 
     @FXML
+    private Label stairCapacityLabel;
+
+    @FXML
+    private Spinner<Integer> stairCapacitySpinner;
+
+    @FXML
     private Button proceedButton;
 
     @FXML
@@ -35,10 +41,12 @@ public class StairSetupController extends PortalSetupController {
         // Take note of the values in the form
         boolean enabled = stairEnableCheckBox.isSelected();
         int moveTime = stairMoveSpinner.getValue();
+        int capacity = stairCapacitySpinner.getValue();
 
         StairShaft stairShaft = StairShaft.stairEditor.createShaft(
                 enabled,
-                moveTime
+                moveTime,
+                capacity
         );
 
         this.getWindowOutput().put(OUTPUT_KEY, stairShaft);
@@ -55,6 +63,8 @@ public class StairSetupController extends PortalSetupController {
                 stairEnableCheckBox,
                 stairMoveLabel,
                 stairMoveSpinner,
+                stairMoveLabel,
+                stairCapacitySpinner,
                 proceedButton
         );
     }

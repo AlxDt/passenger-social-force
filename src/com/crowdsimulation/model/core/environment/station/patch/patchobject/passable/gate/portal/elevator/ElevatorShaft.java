@@ -34,9 +34,10 @@ public class ElevatorShaft extends PortalShaft {
             int moveTime,
             int openDelayTime,
             int doorOpenTime,
-            ElevatorDirection initialElevatorDirection
+            ElevatorDirection initialElevatorDirection,
+            int capacity
     ) {
-        super(null, enabled, moveTime);
+        super(null, enabled, moveTime, capacity);
 
         this.openDelayTime = openDelayTime;
         this.doorOpenTime = doorOpenTime;
@@ -96,14 +97,16 @@ public class ElevatorShaft extends PortalShaft {
                 int moveTime,
                 int openDelayTime,
                 int doorOpenTime,
-                ElevatorDirection initialElevatorDirection
+                ElevatorDirection initialElevatorDirection,
+                int capacity
         ) {
             return new ElevatorShaft(
                     enabled,
                     moveTime,
                     openDelayTime,
                     doorOpenTime,
-                    initialElevatorDirection
+                    initialElevatorDirection,
+                    capacity
             );
         }
     }

@@ -13,7 +13,7 @@ public class StairShaft extends PortalShaft {
     // Denotes the editor of this amenity
     public static final StairEditor stairEditor;
 
-    // Denotes the internal queues this staircase maintain, containing a passenger in the stairs and the time it has
+    // Denotes the internal queues this staircase maintains, containing a passenger in the stairs and the time it has
     // spent in it
     private final HashMap<Passenger, Integer> descendingQueue;
     private final HashMap<Passenger, Integer> ascendingQueue;
@@ -23,8 +23,8 @@ public class StairShaft extends PortalShaft {
         stairEditor = new StairEditor();
     }
 
-    protected StairShaft(boolean enabled, int moveTime) {
-        super(null, enabled, moveTime);
+    protected StairShaft(boolean enabled, int moveTime, int capacity) {
+        super(null, enabled, moveTime, capacity);
 
         this.descendingQueue = new HashMap<>();
         this.ascendingQueue = new HashMap<>();
@@ -84,10 +84,11 @@ public class StairShaft extends PortalShaft {
 
     // Stair shaft factory
     public static class StairShaftFactory extends PortalShaftFactory {
-        public StairShaft create(boolean enabled, int moveTime) {
+        public StairShaft create(boolean enabled, int moveTime, int capacity) {
             return new StairShaft(
                     enabled,
-                    moveTime
+                    moveTime,
+                    capacity
             );
         }
     }

@@ -37,6 +37,12 @@ public class ElevatorSetupController extends PortalSetupController {
     private ChoiceBox<ElevatorShaft.ElevatorDirection> elevatorDirectionChoiceBox;
 
     @FXML
+    private Label elevatorCapacityLabel;
+
+    @FXML
+    private Spinner<Integer> elevatorCapacitySpinner;
+
+    @FXML
     private Button proceedButton;
 
     @FXML
@@ -49,13 +55,15 @@ public class ElevatorSetupController extends PortalSetupController {
         int openTime = elevatorOpenSpinner.getValue();
         int moveTime = elevatorMoveSpinner.getValue();
         ElevatorShaft.ElevatorDirection elevatorDirection = elevatorDirectionChoiceBox.getValue();
+        int capacity = elevatorCapacitySpinner.getValue();
 
         ElevatorShaft elevatorShaft = ElevatorShaft.elevatorEditor.createShaft(
                 enabled,
                 delayTime,
                 openTime,
                 moveTime,
-                elevatorDirection
+                elevatorDirection,
+                capacity
         );
 
         this.getWindowOutput().put(OUTPUT_KEY, elevatorShaft);
@@ -77,6 +85,8 @@ public class ElevatorSetupController extends PortalSetupController {
                 elevatorMoveSpinner,
                 elevatorDirectionLabel,
                 elevatorDirectionChoiceBox,
+                elevatorCapacityLabel,
+                elevatorCapacitySpinner,
                 proceedButton
         );
     }

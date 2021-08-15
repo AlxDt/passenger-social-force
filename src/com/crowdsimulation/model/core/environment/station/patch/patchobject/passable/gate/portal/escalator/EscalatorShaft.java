@@ -21,9 +21,10 @@ public class EscalatorShaft extends PortalShaft {
     protected EscalatorShaft(
             boolean enabled,
             int moveTime,
-            EscalatorDirection escalatorDirection
+            EscalatorDirection escalatorDirection,
+            int capacity
     ) {
-        super(null, enabled, moveTime);
+        super(null, enabled, moveTime, capacity);
 
         this.escalatorDirection = escalatorDirection;
         this.hasChangedDirection = false;
@@ -39,12 +40,14 @@ public class EscalatorShaft extends PortalShaft {
         public EscalatorShaft create(
                 boolean enabled,
                 int moveTime,
-                EscalatorDirection escalatorDirection
+                EscalatorDirection escalatorDirection,
+                int capacity
         ) {
             return new EscalatorShaft(
                     enabled,
                     moveTime,
-                    escalatorDirection
+                    escalatorDirection,
+                    capacity
             );
         }
     }

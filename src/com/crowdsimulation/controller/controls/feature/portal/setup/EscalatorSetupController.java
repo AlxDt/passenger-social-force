@@ -25,6 +25,12 @@ public class EscalatorSetupController extends PortalSetupController {
     private ChoiceBox<EscalatorShaft.EscalatorDirection> escalatorDirectionChoiceBox;
 
     @FXML
+    private Label escalatorCapacityLabel;
+
+    @FXML
+    private Spinner<Integer> escalatorCapacitySpinner;
+
+    @FXML
     private Button proceedButton;
 
     @FXML
@@ -35,15 +41,16 @@ public class EscalatorSetupController extends PortalSetupController {
         boolean enabled = escalatorEnableCheckBox.isSelected();
         int moveTime = escalatorMoveSpinner.getValue();
         EscalatorShaft.EscalatorDirection escalatorDirection = escalatorDirectionChoiceBox.getValue();
+        int capacity = escalatorCapacitySpinner.getValue();
 
         // Prepare the provisional escalator shaft
         // If the user chooses not to go through with the elevator, this shaft will
         // simply be discarded
-
         EscalatorShaft escalatorShaft = EscalatorShaft.escalatorEditor.createShaft(
                 enabled,
                 moveTime,
-                escalatorDirection
+                escalatorDirection,
+                capacity
         );
 
         this.getWindowOutput().put(OUTPUT_KEY, escalatorShaft);
@@ -61,6 +68,8 @@ public class EscalatorSetupController extends PortalSetupController {
                 escalatorMoveSpinner,
                 escalatorDirectionLabel,
                 escalatorDirectionChoiceBox,
+                escalatorCapacityLabel,
+                escalatorCapacitySpinner,
                 proceedButton
         );
     }

@@ -14,6 +14,8 @@ public class InitializeEscalatorEditService extends InitializeScreenService {
             Spinner<Integer> escalatorMoveSpinner,
             Label escalatorDirectionLabel,
             ChoiceBox<EscalatorShaft.EscalatorDirection> escalatorDirectionChoiceBox,
+            Label escalatorCapacityLabel,
+            Spinner<Integer> escalatorCapacitySpinner,
             Button proceedButton
     ) {
         // Set elements
@@ -32,5 +34,13 @@ public class InitializeEscalatorEditService extends InitializeScreenService {
                 EscalatorShaft.EscalatorDirection.DOWN
         ));
         escalatorDirectionChoiceBox.getSelectionModel().select(0);
+
+        escalatorCapacityLabel.setLabelFor(escalatorCapacitySpinner);
+        escalatorCapacitySpinner.setValueFactory(
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(
+                        10,
+                        200
+                )
+        );
     }
 }

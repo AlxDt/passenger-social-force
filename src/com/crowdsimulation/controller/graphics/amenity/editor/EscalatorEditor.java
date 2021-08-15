@@ -15,7 +15,8 @@ public class EscalatorEditor extends AmenityEditor {
     public EscalatorShaft createShaft(
             boolean enabled,
             int moveTime,
-            EscalatorShaft.EscalatorDirection escalatorDirection
+            EscalatorShaft.EscalatorDirection escalatorDirection,
+            int capacity
     ) {
         // Prepare the provisional escalator shaft
         // If the user chooses not to go through with the elevator, this shaft will
@@ -26,7 +27,8 @@ public class EscalatorEditor extends AmenityEditor {
         return escalatorShaftFactory.create(
                 enabled,
                 moveTime,
-                escalatorDirection
+                escalatorDirection,
+                capacity
         );
     }
 
@@ -86,13 +88,15 @@ public class EscalatorEditor extends AmenityEditor {
             EscalatorShaft escalatorShaft,
             boolean enabled,
             int moveTime,
-            EscalatorShaft.EscalatorDirection escalatorDirection
+            EscalatorShaft.EscalatorDirection escalatorDirection,
+            int capacity
     ) {
         EscalatorShaft.EscalatorDirection priorEscalatorDirection = escalatorShaft.getEscalatorDirection();
 
         escalatorShaft.setEnabled(enabled);
         escalatorShaft.setMoveTime(moveTime);
         escalatorShaft.setEscalatorDirection(escalatorDirection);
+        escalatorShaft.setCapacity(capacity);
 
         // If the direction was changed, take note of it
         escalatorShaft.setChangedDirection(!escalatorDirection.equals(priorEscalatorDirection));

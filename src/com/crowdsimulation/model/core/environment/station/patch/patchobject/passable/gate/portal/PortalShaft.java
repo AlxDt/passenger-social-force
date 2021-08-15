@@ -14,10 +14,14 @@ public abstract class PortalShaft extends NonObstacle {
     // Denotes the time (s) needed to move the passengers from one end of the shaft to another
     private int moveTime;
 
-    protected PortalShaft(List<AmenityBlock> amenityBlocks, boolean enabled, int moveTime) {
+    // Denotes the number of passengers this shaft can hold
+    private int capacity;
+
+    protected PortalShaft(List<AmenityBlock> amenityBlocks, boolean enabled, int moveTime, int capacity) {
         super(amenityBlocks, enabled);
 
         this.moveTime = moveTime;
+        this.capacity = capacity;
     }
 
     public Portal getLowerPortal() {
@@ -42,6 +46,14 @@ public abstract class PortalShaft extends NonObstacle {
 
     public void setMoveTime(int moveTime) {
         this.moveTime = moveTime;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
     }
 
     // Update the passengers' time spent in this portal

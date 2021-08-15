@@ -1,7 +1,7 @@
 package com.crowdsimulation.controller.controls.feature.portal.edit;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.controller.controls.service.portal.setup.InitializeStairSetupService;
+import com.crowdsimulation.controller.controls.service.portal.edit.InitializeStairEditService;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.simulator.Simulator;
@@ -29,6 +29,12 @@ public class StairEditController extends PortalEditController {
     private Spinner<Integer> stairMoveSpinner;
 
     @FXML
+    private Label stairCapacityLabel;
+
+    @FXML
+    private Spinner<Integer> stairCapacitySpinner;
+
+    @FXML
     private Button proceedButton;
 
     private StairShaft stairShaft;
@@ -40,12 +46,14 @@ public class StairEditController extends PortalEditController {
         // Take note of the values in the form
         boolean enabled = stairEnableCheckBox.isSelected();
         int moveTime = stairMoveSpinner.getValue();
+        int capacity = stairCapacitySpinner.getValue();
 
         // Modify its values
         StairShaft.stairEditor.edit(
                 stairShaft,
                 enabled,
-                moveTime
+                moveTime,
+                capacity
         );
 
         this.getWindowOutput().put(OUTPUT_KEY, stairShaft);
@@ -57,11 +65,13 @@ public class StairEditController extends PortalEditController {
 
     @Override
     public void setElements() {
-        InitializeStairSetupService.initializeStairSetup(
+        InitializeStairEditService.initializeStairEdit(
                 promptText,
                 stairEnableCheckBox,
                 stairMoveLabel,
                 stairMoveSpinner,
+                stairCapacityLabel,
+                stairCapacitySpinner,
                 proceedButton
         );
 
@@ -84,12 +94,14 @@ public class StairEditController extends PortalEditController {
 
             stairEnableCheckBox.setSelected(this.stairShaft.isEnabled());
             stairMoveSpinner.getValueFactory().setValue(this.stairShaft.getMoveTime());
+            stairCapacitySpinner.getValueFactory().setValue(this.stairShaft.getCapacity());
         } else {
             // Create a dummy stair shaft
             StairShaft.StairShaftFactory stairShaftFactory = new StairShaft.StairShaftFactory();
 
             this.stairShaft = stairShaftFactory.create(
                     false,
+                    -1,
                     -1
             );
         }

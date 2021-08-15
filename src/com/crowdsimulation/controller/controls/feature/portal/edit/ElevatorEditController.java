@@ -44,6 +44,12 @@ public class ElevatorEditController extends PortalEditController {
     private ChoiceBox<ElevatorShaft.ElevatorDirection> elevatorDirectionChoiceBox;
 
     @FXML
+    private Label elevatorCapacityLabel;
+
+    @FXML
+    private Spinner<Integer> elevatorCapacitySpinner;
+
+    @FXML
     private Button proceedButton;
 
     private ElevatorShaft elevatorShaft;
@@ -58,6 +64,7 @@ public class ElevatorEditController extends PortalEditController {
         int openTime = elevatorOpenSpinner.getValue();
         int moveTime = elevatorMoveSpinner.getValue();
         ElevatorShaft.ElevatorDirection elevatorDirection = elevatorDirectionChoiceBox.getValue();
+        int capacity = elevatorCapacitySpinner.getValue();
 
         // Modify its values
         ElevatorShaft.elevatorEditor.edit(
@@ -66,7 +73,8 @@ public class ElevatorEditController extends PortalEditController {
                 delayTime,
                 openTime,
                 moveTime,
-                elevatorDirection
+                elevatorDirection,
+                capacity
         );
 
         this.getWindowOutput().put(OUTPUT_KEY, elevatorShaft);
@@ -89,6 +97,8 @@ public class ElevatorEditController extends PortalEditController {
                 elevatorMoveSpinner,
                 elevatorDirectionLabel,
                 elevatorDirectionChoiceBox,
+                elevatorCapacityLabel,
+                elevatorCapacitySpinner,
                 proceedButton
         );
 
@@ -114,6 +124,7 @@ public class ElevatorEditController extends PortalEditController {
             elevatorOpenSpinner.getValueFactory().setValue(this.elevatorShaft.getDoorOpenTime());
             elevatorMoveSpinner.getValueFactory().setValue(this.elevatorShaft.getMoveTime());
             elevatorDirectionChoiceBox.setValue(this.elevatorShaft.getElevatorDirection());
+            elevatorCapacitySpinner.getValueFactory().setValue(this.elevatorShaft.getCapacity());
         } else {
             // Create a dummy elevator shaft
             ElevatorShaft.ElevatorShaftFactory elevatorShaftFactory = new ElevatorShaft.ElevatorShaftFactory();
@@ -123,7 +134,8 @@ public class ElevatorEditController extends PortalEditController {
                     -1,
                     -1,
                     -1,
-                    null
+                    null,
+                    -1
             );
         }
     }
