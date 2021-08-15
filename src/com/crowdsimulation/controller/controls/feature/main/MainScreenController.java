@@ -1625,7 +1625,7 @@ public class MainScreenController extends ScreenController {
         Main.simulator.reset();
 
         // Clear all passengers
-        clearPassengersInStation(Main.simulator.getStation());
+        clearStation(Main.simulator.getStation());
 
         // Redraw the canvas
         drawStationViewFloorForeground(Main.simulator.getCurrentFloor(), false);
@@ -1643,7 +1643,7 @@ public class MainScreenController extends ScreenController {
         Station station = Main.simulator.getStation();
 
         // Clear the passengers
-        clearPassengersInStation(station);
+        clearStation(station);
 
         // Redraw the canvas
         drawStationViewFloorForeground(Main.simulator.getCurrentFloor(), false);
@@ -1655,7 +1655,7 @@ public class MainScreenController extends ScreenController {
         Floor currentFloor = Main.simulator.getCurrentFloor();
 
         // Clear the passengers
-        clearPassengersInFloor(currentFloor);
+        clearStationFloor(currentFloor);
 
         // Redraw the canvas
         drawStationViewFloorForeground(currentFloor, false);
@@ -1701,7 +1701,7 @@ public class MainScreenController extends ScreenController {
     }
 
     // Clear all passengers in the station
-    public void clearPassengersInStation(Station station) {
+    public void clearStation(Station station) {
         // Clear the station cache
         station.clearCaches();
 
@@ -1716,7 +1716,7 @@ public class MainScreenController extends ScreenController {
 
         // Clear passengers from each floor
         for (Floor floor : station.getFloors()) {
-            clearPassengersInFloor(floor);
+            clearStationFloor(floor);
 
             // Clear queued passengers in the elevator shafts in this station
             for (ElevatorShaft elevatorShaft : station.getElevatorShafts()) {
@@ -1737,7 +1737,20 @@ public class MainScreenController extends ScreenController {
     }
 
     // Clear passengers in a single floor
-    public void clearPassengersInFloor(Floor floor) {
+    public void clearStationFloor(Floor floor) {
+        // Reset all goal waiting times
+        for (Security security : floor.getSecurities()) {
+            security.resetWaitingTime();
+        }
+
+        for (TicketBooth ticketBooth : floor.getTicketBooths()) {
+            ticketBooth.resetWaitingTime();
+        }
+
+        for (Turnstile turnstile : floor.getTurnstiles()) {
+            turnstile.resetWaitingTime();
+        }
+
         // Remove the relationship between the patch and the passenger
         for (Passenger passenger : floor.getPassengersInFloor()) {
             passenger.getPassengerMovement().getCurrentPatch().getPassengers().clear();
@@ -1838,7 +1851,7 @@ public class MainScreenController extends ScreenController {
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
         // Clear the passengers in the station first
-        clearPassengersInStation(station);
+        clearStation(station);
 
         objectOutputStream.writeObject(station);
         objectOutputStream.close();

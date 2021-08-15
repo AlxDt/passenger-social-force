@@ -24,9 +24,10 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
         super(amenityBlocks, enabled);
 
         this.waitingTime = waitingTime;
-        this.waitingTimeLeft = this.waitingTime;
 
         this.queueObjectAmenityBlockMap = new HashMap<>();
+
+        resetWaitingTime();
     }
 
     public int getWaitingTime() {
@@ -46,15 +47,12 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
         // Reduce the waiting time by one
         this.waitingTimeLeft--;
 
-        // Check if there is no more waiting time left, in which case the waiting time is reset, and a passenger be
-        // allowed to pass
-        if (this.waitingTimeLeft <= 0) {
-            this.waitingTimeLeft = this.waitingTime;
+        // Check if there is no more waiting time left, in which case a passenger will be allowed to pass
+        return this.waitingTimeLeft <= 0;
+    }
 
-            return true;
-        }
-
-        return false;
+    public void resetWaitingTime() {
+        this.waitingTimeLeft = this.waitingTime;
     }
 
     public static boolean isGoal(Amenity amenity) {

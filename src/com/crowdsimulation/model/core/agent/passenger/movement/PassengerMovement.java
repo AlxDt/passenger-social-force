@@ -2549,6 +2549,11 @@ public class PassengerMovement {
     public void endServicingThisPassenger() {
         // This passenger is done being serviced by this goal
         this.goalQueueObject.setPassengerServiced(null);
+
+        // Reset the goal's waiting time counter
+        if (this.getGoalAmenityAsGoal() != null) {
+            this.getGoalAmenityAsGoal().resetWaitingTime();
+        }
     }
 
     // Check if this passenger has reached its final goal
