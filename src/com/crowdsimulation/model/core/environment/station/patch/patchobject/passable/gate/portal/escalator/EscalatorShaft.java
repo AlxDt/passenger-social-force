@@ -4,6 +4,7 @@ import com.crowdsimulation.controller.graphics.amenity.editor.EscalatorEditor;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class EscalatorShaft extends PortalShaft {
@@ -12,6 +13,11 @@ public class EscalatorShaft extends PortalShaft {
 
     // Denotes whether the direction of the escalator shaft has been changed
     private boolean hasChangedDirection;
+
+    // Denotes the internal queues this escalator maintains
+    private final List<List<Passenger>> queue;
+
+    private int passengers;
 
     // Denotes the editor of this amenity
     public static final EscalatorEditor escalatorEditor;
@@ -31,16 +37,95 @@ public class EscalatorShaft extends PortalShaft {
 
         this.escalatorDirection = escalatorDirection;
         this.hasChangedDirection = false;
+
+        this.queue = new ArrayList<>(capacity);
+
+        for (int index = 0; index < capacity; index++) {
+            this.queue.add(new ArrayList<>());
+        }
+
+        this.passengers = 0;
+    }
+
+    public List<List<Passenger>> getQueue() {
+        return queue;
+    }
+
+    public boolean isQueueAtCapacity() {
+        return this.passengers >= this.getCapacity();
+    }
+
+    public void incrementPassengers() {
+        this.passengers++;
+    }
+
+    public void decrementPassengers() {
+        this.passengers--;
     }
 
     @Override
     public void updateQueues() {
+        if (this.escalatorDirection == EscalatorDirection.DOWN) {
+            // For each passenger in the queue, move the passenger down a bucket, if that bucket is not filled,
+            // Do this operation from bottom to top
+            for (int index = 0; index < this.queue.size(); index++) {
+                List<Passenger> passengersInBucket = this.queue.get(index);
 
+                if (!passengersInBucket.isEmpty()) {
+                    if (index == 0) {
+                        // Remove the passengers at the bottom of the queue to spawn them into the new floor, if the
+                        // pertinent spawn patch is empty
+                        if (passengersInBucket.get(0).getPassengerMovement().exitPortal()) {
+                            this.queue.get(index).clear();
+                            this.decrementPassengers();
+                        }
+                    } else {
+                        // Only move down if the succeeding bucket is empty
+                        if (this.queue.get(index - 1).isEmpty()) {
+                            this.queue.get(index - 1).addAll(passengersInBucket);
+                            this.queue.get(index).clear();
+                        }
+                    }
+                }
+            }
+        } else {
+            // For each passenger in the queue, move the passenger up a bucket, if that bucket is not filled,
+            // Do this operation from top to bottom
+            for (int index = this.queue.size() - 1; index >= 0; index--) {
+                List<Passenger> passengersInBucket = this.queue.get(index);
+
+                if (!passengersInBucket.isEmpty()) {
+                    if (index == this.queue.size() - 1) {
+                        // Remove the passengers at the top of the queue to spawn them into the new floor, if the pertinent spawn
+                        // patch is empty
+                        if (passengersInBucket.get(0).getPassengerMovement().exitPortal()) {
+                            this.queue.get(index).clear();
+                            this.decrementPassengers();
+                        }
+                    } else {
+                        // Only move up if the succeeding bucket is empty
+                        if (this.queue.get(index + 1).isEmpty()) {
+                            this.queue.get(index + 1).addAll(passengersInBucket);
+                            this.queue.get(index).clear();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Override
     public List<Passenger> clearQueues() {
-        return null;
+        List<Passenger> passengersToRemove = new ArrayList<>();
+
+        for (List<Passenger> passengersInBucket : this.queue) {
+            passengersToRemove.addAll(passengersInBucket);
+            passengersInBucket.clear();
+        }
+
+        this.passengers = 0;
+
+        return passengersToRemove;
     }
 
     // Escalator shaft factory

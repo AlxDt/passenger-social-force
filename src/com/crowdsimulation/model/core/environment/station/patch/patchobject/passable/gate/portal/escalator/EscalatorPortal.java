@@ -7,11 +7,14 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGr
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGraphicLocation;
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.EscalatorGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
+import com.crowdsimulation.model.simulator.Simulator;
 
+import java.util.HashSet;
 import java.util.List;
 
 public class EscalatorPortal extends Portal {
@@ -305,12 +308,62 @@ public class EscalatorPortal extends Portal {
 
     @Override
     public void absorb(Passenger passenger) {
+        PassengerMovement passengerMovement = passenger.getPassengerMovement();
 
+        passengerMovement.enterPortal();
+
+        // Set the appropriate passenger state (ascending or descending)
+        passengerMovement.setState(PassengerMovement.State.IN_NONQUEUEABLE);
+
+        if (passengerMovement.getAction() == PassengerMovement.Action.WILL_DESCEND) {
+            passengerMovement.setAction(PassengerMovement.Action.DESCENDING);
+
+            this.escalatorShaft.getQueue().get(this.escalatorShaft.getQueue().size() - 1).add(passenger);
+        } else {
+            passengerMovement.setAction(PassengerMovement.Action.ASCENDING);
+
+            this.escalatorShaft.getQueue().get(0).add(passenger);
+        }
+
+        this.escalatorShaft.incrementPassengers();
     }
 
     @Override
     public Patch emit() {
-        return null;
+        HashSet<Patch> patchesToCheck = new HashSet<>();
+
+        // Check if all attractors and spawners in this amenity have no passengers
+        for (AmenityBlock attractor : this.getAttractors()) {
+            patchesToCheck.add(attractor.getPatch());
+            patchesToCheck.addAll(attractor.getPatch().getNeighbors());
+        }
+
+        for (GateBlock spawner : this.getSpawners()) {
+            patchesToCheck.add(spawner.getPatch());
+            patchesToCheck.addAll(spawner.getPatch().getNeighbors());
+        }
+
+        for (Patch patchToCheck : patchesToCheck) {
+            if (!patchToCheck.getPassengers().isEmpty()) {
+                Passenger passenger = patchToCheck.getPassengers().get(0);
+                Portal goalAmenityAsPortal = passenger.getPassengerMovement().getGoalAmenityAsPortal();
+
+                // If some passengers are spotted, check if they are about to use this portal
+                // Only refuse to exit if the blocking passengers are not using this portal
+                if (goalAmenityAsPortal == null || !goalAmenityAsPortal.equals(this)) {
+                    return null;
+                }
+            }
+        }
+
+        // Randomly choose between the spawner locations in the portal
+        int spawnerCount = this.getSpawners().size();
+        int randomSpawnerIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(spawnerCount);
+
+        GateBlock spawner = this.getSpawners().get(randomSpawnerIndex);
+
+        // Once this point is reached, return the patch where the passenger will be emitted
+        return spawner.getPatch();
     }
 
     // Escalator portal block
@@ -353,7 +406,7 @@ public class EscalatorPortal extends Portal {
                 return new EscalatorPortal.EscalatorPortalBlock(
                         patch,
                         attractor,
-                        false,
+                        spawner,
                         hasGraphic
                 );
             }

@@ -17,6 +17,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
@@ -445,6 +446,10 @@ public class Simulator {
                         // TODO: portals other than stairs
                         for (StairShaft stairShaft : Main.simulator.station.getStairShafts()) {
                             stairShaft.updateQueues();
+                        }
+
+                        for (EscalatorShaft escalatorShaft : Main.simulator.station.getEscalatorShafts()) {
+                            escalatorShaft.updateQueues();
                         }
 
                         // Draw all agents in each floor

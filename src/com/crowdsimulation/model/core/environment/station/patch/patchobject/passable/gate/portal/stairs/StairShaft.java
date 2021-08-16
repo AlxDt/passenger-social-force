@@ -8,16 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StairShaft extends PortalShaft {
-    // Denotes the editor of this amenity
-    public static final StairEditor stairEditor;
-
-    // Denotes the internal queues this staircase maintains, containing a passenger in the stairs and the time it has
-    // spent in it
+    // Denotes the internal queues this staircase maintains
     private final List<List<Passenger>> descendingQueue;
     private final List<List<Passenger>> ascendingQueue;
 
     private int passengersDescending;
     private int passengersAscending;
+
+    // Denotes the editor of this amenity
+    public static final StairEditor stairEditor;
 
     static {
         // Initialize the editor

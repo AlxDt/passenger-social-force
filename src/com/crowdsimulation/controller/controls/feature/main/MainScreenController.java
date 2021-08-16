@@ -1710,6 +1710,10 @@ public class MainScreenController extends ScreenController {
             station.getPassengersInStation().removeAll(stairShaft.clearQueues());
         }
 
+        for (EscalatorShaft escalatorShaft : station.getEscalatorShafts()) {
+            station.getPassengersInStation().removeAll(escalatorShaft.clearQueues());
+        }
+
         // Clear passengers from each floor
         for (Floor floor : station.getFloors()) {
             clearStationFloor(floor);

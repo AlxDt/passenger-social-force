@@ -354,7 +354,8 @@ public class Station extends BaseStationObject implements Environment {
                 trainTrackDirectionsCopy = new HashSet<>(trainTrackDirections);
                 trainDoorDirectionsCopy = new HashSet<>(trainDoorDirections);
 
-                trainTrackDirectionsCopy.removeAll(trainDoorDirectionsCopy);
+                trainTrackDirectionsCopy.removeAll(trainDoorDirections);
+                trainDoorDirectionsCopy.removeAll(trainTrackDirections);
 
                 if (trainTrackDirectionsCopy.size() < trainDoorDirectionsCopy.size()) {
                     return new StationValidationResult(

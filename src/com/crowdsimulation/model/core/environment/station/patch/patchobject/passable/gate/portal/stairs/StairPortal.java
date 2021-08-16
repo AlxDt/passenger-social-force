@@ -14,6 +14,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.simulator.Simulator;
 
+import java.util.HashSet;
 import java.util.List;
 
 public class StairPortal extends Portal {
@@ -306,23 +307,22 @@ public class StairPortal extends Portal {
 
     @Override
     public Patch emit() {
+        HashSet<Patch> patchesToCheck = new HashSet<>();
+
         // Check if all attractors and spawners in this amenity have no passengers
         for (AmenityBlock attractor : this.getAttractors()) {
-            if (!attractor.getPatch().getPassengers().isEmpty()) {
-                Passenger passenger = attractor.getPatch().getPassengers().get(0);
-                Portal goalAmenityAsPortal = passenger.getPassengerMovement().getGoalAmenityAsPortal();
-
-                // If some passengers are spotted, check if they are about to use this portal
-                // Only refuse to exit if the blocking passengers are not using this portal
-                if (goalAmenityAsPortal == null || !goalAmenityAsPortal.equals(this)) {
-                    return null;
-                }
-            }
+            patchesToCheck.add(attractor.getPatch());
+            patchesToCheck.addAll(attractor.getPatch().getNeighbors());
         }
 
         for (GateBlock spawner : this.getSpawners()) {
-            if (!spawner.getPatch().getPassengers().isEmpty()) {
-                Passenger passenger = spawner.getPatch().getPassengers().get(0);
+            patchesToCheck.add(spawner.getPatch());
+            patchesToCheck.addAll(spawner.getPatch().getNeighbors());
+        }
+
+        for (Patch patchToCheck : patchesToCheck) {
+            if (!patchToCheck.getPassengers().isEmpty()) {
+                Passenger passenger = patchToCheck.getPassengers().get(0);
                 Portal goalAmenityAsPortal = passenger.getPassengerMovement().getGoalAmenityAsPortal();
 
                 // If some passengers are spotted, check if they are about to use this portal

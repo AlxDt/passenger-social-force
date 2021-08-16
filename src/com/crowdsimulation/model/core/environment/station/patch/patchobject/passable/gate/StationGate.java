@@ -12,6 +12,7 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class StationGate extends Gate {
@@ -331,15 +332,21 @@ public class StationGate extends Gate {
     @Override
     // Spawn a passenger in this position
     public Passenger spawnPassenger() {
+        HashSet<Patch> patchesToCheck = new HashSet<>();
+
         // Check if all attractors and spawners in this amenity have no passengers
         for (AmenityBlock attractor : this.getAttractors()) {
-            if (!attractor.getPatch().getPassengers().isEmpty()) {
-                return null;
-            }
+            patchesToCheck.add(attractor.getPatch());
+            patchesToCheck.addAll(attractor.getPatch().getNeighbors());
         }
 
         for (GateBlock spawner : this.getSpawners()) {
-            if (!spawner.getPatch().getPassengers().isEmpty()) {
+            patchesToCheck.add(spawner.getPatch());
+            patchesToCheck.addAll(spawner.getPatch().getNeighbors());
+        }
+
+        for (Patch patchToCheck : patchesToCheck) {
+            if (!patchToCheck.getPassengers().isEmpty()) {
                 return null;
             }
         }

@@ -19,6 +19,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Goal;
@@ -808,14 +809,14 @@ public class PassengerMovement {
             HashMap<Portal, Double> portalListInFloor = new HashMap<>();
 
             List<StairShaft> stairShafts = currentFloor.getStation().getStairShafts();
+            List<EscalatorShaft> escalatorShafts = currentFloor.getStation().getEscalatorShafts();
 
             // TODO: Consider other portals
 //                List<ElevatorShaft> elevatorShafts = currentFloor.getStation().getElevatorShafts();
-//                List<EscalatorShaft> escalatorShafts = currentFloor.getStation().getEscalatorShafts();
 
-            // Compile the stair portals that serve this floor
             PassengerPath pathToPortal;
 
+            // Compile the stair portals that serve this floor
             for (StairShaft stairShaft : stairShafts) {
                 StairPortal lowerStairPortal = (StairPortal) stairShaft.getLowerPortal();
                 StairPortal upperStairPortal = (StairPortal) stairShaft.getUpperPortal();
@@ -849,6 +850,49 @@ public class PassengerMovement {
                 }
             }
 
+            // Compile the escalator portals that serve this floor, and whose directions come from this floor (that is,
+            // do not take into account escalator portals which land on this floor)
+            for (EscalatorShaft escalatorShaft : escalatorShafts) {
+                EscalatorPortal lowerStairPortal = (EscalatorPortal) escalatorShaft.getLowerPortal();
+                EscalatorPortal upperStairPortal = (EscalatorPortal) escalatorShaft.getUpperPortal();
+
+                // Only consider portals reachable from the current position
+                pathToPortal = computePathWithinFloor(
+                        currentPatch,
+                        lowerStairPortal.getAttractors().get(0).getPatch(),
+                        true,
+                        false
+                );
+
+                if (pathToPortal != null) {
+                    if (
+                            lowerStairPortal.getFloorServed().equals(currentFloor)
+                                    && lowerStairPortal.getEscalatorShaft().getEscalatorDirection()
+                                    == EscalatorShaft.EscalatorDirection.UP
+                    ) {
+                        portalListInFloor.put(lowerStairPortal, pathToPortal.getDistance());
+                    }
+                }
+
+                // Only consider portals reachable from the current position
+                pathToPortal = computePathWithinFloor(
+                        currentPatch,
+                        upperStairPortal.getAttractors().get(0).getPatch(),
+                        true,
+                        false
+                );
+
+                if (pathToPortal != null) {
+                    if (
+                            upperStairPortal.getFloorServed().equals(currentFloor)
+                                    && upperStairPortal.getEscalatorShaft().getEscalatorDirection()
+                                    == EscalatorShaft.EscalatorDirection.DOWN
+                    ) {
+                        portalListInFloor.put(upperStairPortal, pathToPortal.getDistance());
+                    }
+                }
+            }
+
             // Compile all possible paths from this portal to the goal
             List<MultipleFloorPassengerPath> multipleFloorPassengerPaths = new ArrayList<>();
 
@@ -866,6 +910,8 @@ public class PassengerMovement {
                 // TODO: Consider other portals
                 if (portalToEnter instanceof StairPortal) {
                     portalShaft = ((StairPortal) portalToEnter).getStairShaft();
+                } else if (portalToEnter instanceof EscalatorPortal) {
+                    portalShaft = ((EscalatorPortal) portalToEnter).getEscalatorShaft();
                 }
 
                 // Only visit the portal when it hasn't already been visited yet
@@ -879,6 +925,8 @@ public class PassengerMovement {
                     // TODO: Consider portal spatial size and other portals
                     if (portalToExit instanceof StairPortal) {
                         newDistance += ((StairPortal) portalToExit).getStairShaft().getMoveTime();
+                    } else if (portalToExit instanceof EscalatorPortal) {
+                        newDistance += ((EscalatorPortal) portalToExit).getEscalatorShaft().getMoveTime();
                     }
 
                     List<PortalShaft> newVisitedPortalShafts = new ArrayList<>(visitedPortalShafts);
@@ -1156,6 +1204,40 @@ public class PassengerMovement {
                                             upperStairPortal.getAttractors().get(0).getPatch()
                                     ),
                                     upperStairPortal
+                            );
+                        }
+                    }
+                }
+
+                // Compile the escalator portals that serve this floor
+                List<EscalatorShaft> escalatorShafts = currentStation.getEscalatorShafts();
+
+                for (EscalatorShaft escalatorShaft : escalatorShafts) {
+                    EscalatorPortal lowerEscalatorPortal = (EscalatorPortal) escalatorShaft.getLowerPortal();
+                    EscalatorPortal upperEscalatorPortal = (EscalatorPortal) escalatorShaft.getUpperPortal();
+
+                    if (lowerEscalatorPortal.getFloorServed().equals(currentFloor)) {
+                        if (lowerEscalatorPortal.getDirectory().contains(directoryItem)) {
+                            relevantPortals.put(
+                                    Coordinates.distance(
+                                            currentStation,
+                                            this.currentPatch,
+                                            lowerEscalatorPortal.getAttractors().get(0).getPatch()
+                                    ),
+                                    lowerEscalatorPortal
+                            );
+                        }
+                    }
+
+                    if (upperEscalatorPortal.getFloorServed().equals(currentFloor)) {
+                        if (upperEscalatorPortal.getDirectory().contains(directoryItem)) {
+                            relevantPortals.put(
+                                    Coordinates.distance(
+                                            currentStation,
+                                            this.currentPatch,
+                                            upperEscalatorPortal.getAttractors().get(0).getPatch()
+                                    ),
+                                    upperEscalatorPortal
                             );
                         }
                     }
@@ -2662,12 +2744,7 @@ public class PassengerMovement {
             } else if (closestPortal instanceof EscalatorPortal) {
                 EscalatorPortal escalatorPortal = ((EscalatorPortal) closestPortal);
 
-//                if (this.isGoalFloorLower()) {
-//                    return escalatorPortal.getStairShaft().isDescendingQueueAtCapacity();
-//                } else {
-//                    return escalatorPortal.getStairShaft().isAscendingQueueAtCapacity();
-//                }
-                return false;
+                return !escalatorPortal.getEscalatorShaft().isQueueAtCapacity();
             } else if (closestPortal instanceof ElevatorPortal) {
                 return false;
             } else {
