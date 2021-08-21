@@ -819,7 +819,13 @@ public class MainScreenController extends ScreenController {
         Task<Station.StationValidationResult> deepStationValidationTask = new Task<Station.StationValidationResult>() {
             @Override
             public Station.StationValidationResult call() {
-                return Station.validateStationLayoutDeeply(Main.simulator.getStation());
+                try {
+                    return Station.validateStationLayoutDeeply(Main.simulator.getStation());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+
+                    return null;
+                }
             }
         };
 
@@ -894,6 +900,12 @@ public class MainScreenController extends ScreenController {
 
             new Thread(stationFloorFieldValidationTask).start();
         });
+
+        deepStationValidationTask.setOnFailed(
+                event -> {
+                    System.out.println("oops");
+                }
+        );
 
         new Thread(deepStationValidationTask).start();
     }
@@ -1415,12 +1427,10 @@ public class MainScreenController extends ScreenController {
     public void addFloorBelowAction() {
         // Retrieve the floors of the current station
         Floor currentFloor = Main.simulator.getCurrentFloor();
-        List<Floor> currentStationFloors = Main.simulator.getStation().getFloors();
 
         // Add the floor below
         Floor newFloor = Floor.addFloorAboveOrBelow(
                 Main.simulator.getStation(),
-                currentStationFloors,
                 currentFloor,
                 false,
                 currentFloor.getRows(),
@@ -1444,12 +1454,10 @@ public class MainScreenController extends ScreenController {
     public void addFloorAboveAction() {
         // Retrieve the floors of the current station
         Floor currentFloor = Main.simulator.getCurrentFloor();
-        List<Floor> currentStationFloors = Main.simulator.getStation().getFloors();
 
         // Add the floor below
         Floor newFloor = Floor.addFloorAboveOrBelow(
                 Main.simulator.getStation(),
-                currentStationFloors,
                 currentFloor,
                 true,
                 currentFloor.getRows(),
@@ -1486,12 +1494,13 @@ public class MainScreenController extends ScreenController {
             );
 
             if (confirm) {
+                Station station = Main.simulator.getStation();
                 Floor floorToBeRemoved = Main.simulator.getCurrentFloor();
                 Floor floorToSwitchTo;
 
                 // Delete the current floor
                 Floor.deleteFloor(
-                        floors,
+                        station,
                         floorToBeRemoved
                 );
 
@@ -1593,7 +1602,7 @@ public class MainScreenController extends ScreenController {
 
             Main.simulator.setValidatingFromRunning(false);
 
-            if (Main.simulator.isStationValid()) {
+            if (/*Main.simulator.isStationValid()*/true) {
                 // Update mode
                 Main.simulator.setOperationMode(Simulator.OperationMode.TESTING);
                 Main.mainScreenController.updatePromptText();
@@ -2632,10 +2641,10 @@ public class MainScreenController extends ScreenController {
                 List<EscalatorShaft> escalatorsCopy
                         = new ArrayList<>(Main.simulator.getStation().getEscalatorShafts());
 
-                for (EscalatorShaft esclalatorShaft : escalatorsCopy) {
+                for (EscalatorShaft escalatorShaft : escalatorsCopy) {
                     // Retrieve portal components
-                    Portal lowerPortal = esclalatorShaft.getLowerPortal();
-                    Portal upperPortal = esclalatorShaft.getUpperPortal();
+                    Portal lowerPortal = escalatorShaft.getLowerPortal();
+                    Portal upperPortal = escalatorShaft.getUpperPortal();
 
                     // Only delete escalators that are in this floor
                     if (
@@ -2643,7 +2652,7 @@ public class MainScreenController extends ScreenController {
                                     || upperPortal.getFloorServed() == Main.simulator.getCurrentFloor()
                     ) {
                         // Mirror each stair shaft to the reference shaft
-                        deleteSingleAmenityInFloor(esclalatorShaft, buildSubcategory);
+                        deleteSingleAmenityInFloor(escalatorShaft, buildSubcategory);
                     }
                 }
 
@@ -3278,6 +3287,14 @@ public class MainScreenController extends ScreenController {
                                                     stairShaft
                                             );
 
+                                            Main.simulator.getStation().getStairPortalsByFloor().get(
+                                                    stairShaft.getLowerPortal().getFloorServed()
+                                            ).add((StairPortal) stairShaft.getLowerPortal());
+
+                                            Main.simulator.getStation().getStairPortalsByFloor().get(
+                                                    stairShaft.getUpperPortal().getFloorServed()
+                                            ).add((StairPortal) stairShaft.getUpperPortal());
+
                                             // Update the graphics of the two added portals
                                             ((StairGraphic) stairShaft.getLowerPortal().getGraphicObject())
                                                     .decideLowerOrUpper();
@@ -3563,6 +3580,14 @@ public class MainScreenController extends ScreenController {
                                                     escalatorShaft
                                             );
 
+                                            Main.simulator.getStation().getEscalatorPortalsByFloor().get(
+                                                    escalatorShaft.getLowerPortal().getFloorServed()
+                                            ).add((EscalatorPortal) escalatorShaft.getLowerPortal());
+
+                                            Main.simulator.getStation().getEscalatorPortalsByFloor().get(
+                                                    escalatorShaft.getUpperPortal().getFloorServed()
+                                            ).add((EscalatorPortal) escalatorShaft.getUpperPortal());
+
                                             // Update the graphics of the two added portals
                                             ((EscalatorGraphic) escalatorShaft.getLowerPortal().getGraphicObject())
                                                     .decideLowerOrUpper();
@@ -3840,10 +3865,21 @@ public class MainScreenController extends ScreenController {
                                                 );
                                             }
 
+                                            ElevatorShaft elevatorShaft
+                                                    = (ElevatorShaft) Main.simulator.getProvisionalPortalShaft();
+
                                             // Register the provisional shaft to the station
                                             Main.simulator.getStation().getElevatorShafts().add(
-                                                    (ElevatorShaft) Main.simulator.getProvisionalPortalShaft()
+                                                    elevatorShaft
                                             );
+
+                                            Main.simulator.getStation().getElevatorPortalsByFloor().get(
+                                                    elevatorShaft.getLowerPortal().getFloorServed()
+                                            ).add((ElevatorPortal) elevatorShaft.getLowerPortal());
+
+                                            Main.simulator.getStation().getElevatorPortalsByFloor().get(
+                                                    elevatorShaft.getUpperPortal().getFloorServed()
+                                            ).add((ElevatorPortal) elevatorShaft.getUpperPortal());
 
                                             // Finish adding the portal
                                             endPortalDrawing(true);

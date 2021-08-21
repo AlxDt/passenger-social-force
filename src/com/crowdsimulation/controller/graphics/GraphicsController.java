@@ -84,6 +84,8 @@ public class GraphicsController extends Controller {
 
     public static final Semaphore DRAW_SEMAPHORE;
 
+//    public static PassengerPath passengerPath = null;
+
     static {
         FLOOR_FIELD_COLORS = new HashMap<>();
         FLOOR_FIELD_COLORS.put(PassengerMovement.Disposition.BOARDING, 125);
@@ -217,6 +219,42 @@ public class GraphicsController extends Controller {
         // If the background is supposed to be drawn, draw from all the patches
         // If not, draw only from the combined passenger and amenity set
         List<Patch> patches;
+
+/*        GraphicsController.passengerPath = computePathWithinFloor(
+                Main.simulator.getCurrentFloor().getPatch(30, 66),
+                Main.simulator.getCurrentFloor().getPatch(9, 83),
+                true,
+                false
+        );
+
+        // Draw passenger path
+        if (GraphicsController.passengerPath != null) {
+            foregroundGraphicsContext.setFill(Color.VIOLET);
+            foregroundGraphicsContext.setGlobalAlpha(0.25);
+
+            int index = 0;
+
+            for (Patch pathPatch : new ArrayList<>(GraphicsController.passengerPath.getPath())) {
+                if (index == 0 || index == GraphicsController.passengerPath.getPath().size() - 1) {
+                    foregroundGraphicsContext.setFill(Color.ORANGERED);
+                } else {
+                    foregroundGraphicsContext.setFill(Color.CORNFLOWERBLUE);
+                }
+
+                foregroundGraphicsContext.fillRect(
+                        pathPatch.getPatchCenterCoordinates().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                * tileSize - tileSize * 0.5,
+                        pathPatch.getPatchCenterCoordinates().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                * tileSize - tileSize * 0.5,
+                        tileSize,
+                        tileSize
+                );
+
+                index++;
+            }
+
+            foregroundGraphicsContext.setGlobalAlpha(1.0);
+        }*/
 
         if (background) {
             patches = Arrays.stream(floor.getPatches()).flatMap(Arrays::stream).collect(
@@ -437,6 +475,36 @@ public class GraphicsController extends Controller {
                                     .getRowSpan()
                     );
 
+//                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
+//
+//                    if (queueable != null) {
+//                        foregroundGraphicsContext.strokeText(
+//                                (queueable.getQueueObject().getPassengerServiced() != null ? queueable.getQueueObject().getPassengerServiced().getIdentifier() + "" + "" : "-") + ", " +
+//                                        ((!queueable.getQueueObject().getPassengersQueueing().isEmpty()) ? queueable.getQueueObject().getPassengersQueueing().getFirst() + ">" + queueable.getQueueObject().getPassengersQueueing().getLast() : "-"),
+//                                GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getX() * tileSize,
+//                                GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getY() * tileSize + tileSize * 2
+//                        );
+//                    }
+
+
+//                    if (patchAmenity instanceof StairPortal) {
+//                        StairPortal stairPortal = ((StairPortal) patchAmenity);
+//
+//                        foregroundGraphicsContext.strokeText(
+//                                stairPortal.getStairShaft().getPassengersAscending() + ", " + stairPortal.getStairShaft().getPassengersDescending(),
+//                                GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getX() * tileSize + tileSize * 5,
+//                                GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getY() * tileSize
+//                        );
+//                    } else if (patchAmenity instanceof EscalatorPortal) {
+//                        EscalatorPortal escalatorPortal = ((EscalatorPortal) patchAmenity);
+//
+//                        foregroundGraphicsContext.strokeText(
+//                                escalatorPortal.getEscalatorShaft().getPassengers() + "",
+//                                GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getX() * tileSize,
+//                                GraphicsController.getScaledCoordinates(patchAmenity.getAmenityBlocks().get(0).getPatch().getPatchCenterCoordinates()).getY() * tileSize + tileSize * 2.0
+//                        );
+//                    }
+
 /*                    Queueable queueable = (patchAmenity instanceof Queueable) ? (Queueable) patchAmenity : null;
 
                     if (queueable != null) {
@@ -572,24 +640,24 @@ public class GraphicsController extends Controller {
                         );
                     }*/
 
-/*                    // Draw passenger patches in field of view
-                    if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
-                        foregroundGraphicsContext.setGlobalAlpha(0.25);
-                        foregroundGraphicsContext.setFill(Color.LIGHTGREEN);
-
-                        for (Patch explorePatch : passenger.getPassengerMovement().getToExplore()) {
-                            foregroundGraphicsContext.fillRect(
-                                    explorePatch.getPatchCenterCoordinates().getX()
-                                            / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
-                                    explorePatch.getPatchCenterCoordinates().getY()
-                                            / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
-                                    tileSize,
-                                    tileSize
-                            );
-                        }
-
-                        foregroundGraphicsContext.setGlobalAlpha(1.0);
-                    }*/
+//                    // Draw passenger patches in field of view
+//                    if (!passenger.getPassengerMovement().getToExplore().isEmpty()) {
+//                        foregroundGraphicsContext.setGlobalAlpha(0.25);
+//                        foregroundGraphicsContext.setFill(Color.LIGHTGREEN);
+//
+//                        for (Patch explorePatch : passenger.getPassengerMovement().getToExplore()) {
+//                            foregroundGraphicsContext.fillRect(
+//                                    explorePatch.getPatchCenterCoordinates().getX()
+//                                            / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+//                                    explorePatch.getPatchCenterCoordinates().getY()
+//                                            / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
+//                                    tileSize,
+//                                    tileSize
+//                            );
+//                        }
+//
+//                        foregroundGraphicsContext.setGlobalAlpha(1.0);
+//                    }
 
 /*                    foregroundGraphicsContext.setFill(Color.VIOLET);
 

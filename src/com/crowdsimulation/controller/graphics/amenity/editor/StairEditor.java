@@ -111,6 +111,10 @@ public class StairEditor extends AmenityEditor {
                             amenityBlock.getPatch()
                     );
                 }
+
+                // Unregister the portal from its floor
+                Floor floor = upperStairPortal.getFloorServed();
+                Main.simulator.getStation().getStairPortalsByFloor().get(floor).remove(upperStairPortal);
             }
 
             if (lowerStairPortal != null) {
@@ -121,6 +125,10 @@ public class StairEditor extends AmenityEditor {
                             amenityBlock.getPatch()
                     );
                 }
+
+                // Unregister the portal from its floor
+                Floor floor = lowerStairPortal.getFloorServed();
+                Main.simulator.getStation().getStairPortalsByFloor().get(floor).remove(lowerStairPortal);
             }
 
             // Remove stair shaft

@@ -120,6 +120,10 @@ public class EscalatorEditor extends AmenityEditor {
                             amenityBlock.getPatch()
                     );
                 }
+
+                // Unregister the portal from its floor
+                Floor floor = upperEscalatorPortal.getFloorServed();
+                Main.simulator.getStation().getEscalatorPortalsByFloor().get(floor).remove(upperEscalatorPortal);
             }
 
             if (lowerEscalatorPortal != null) {
@@ -130,6 +134,10 @@ public class EscalatorEditor extends AmenityEditor {
                             amenityBlock.getPatch()
                     );
                 }
+
+                // Unregister the portal from its floor
+                Floor floor = lowerEscalatorPortal.getFloorServed();
+                Main.simulator.getStation().getEscalatorPortalsByFloor().get(floor).remove(lowerEscalatorPortal);
             }
 
             // Remove escalator shaft

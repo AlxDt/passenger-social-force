@@ -8,10 +8,12 @@ import java.util.List;
 public class DirectoryResult {
     private final List<Portal> portals;
     private final Amenity goalAmenity;
+    private final double distance;
 
-    public DirectoryResult(List<Portal> portals, Amenity goalAmenity) {
+    public DirectoryResult(List<Portal> portals, Amenity goalAmenity, double distance) {
         this.portals = portals;
         this.goalAmenity = goalAmenity;
+        this.distance = distance;
     }
 
     public List<Portal> getPortals() {
@@ -20,5 +22,9 @@ public class DirectoryResult {
 
     public Amenity getGoalAmenity() {
         return goalAmenity;
+    }
+
+    public double getDistance() {
+        return distance;
     }
 }

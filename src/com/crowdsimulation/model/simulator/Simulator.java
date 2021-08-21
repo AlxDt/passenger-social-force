@@ -845,6 +845,8 @@ public class Simulator {
                                 passengerMovement.setAction(PassengerMovement.Action.REROUTING);
                                 action = PassengerMovement.Action.REROUTING;
                             }
+
+                            break;
                         } else if (action == PassengerMovement.Action.EXITING_STATION) {
                             // This passenger is ready to exit
                             passengerMovement.prepareForStationExit();
@@ -929,7 +931,11 @@ public class Simulator {
                             ) {
                                 passengerMovement.setAction(PassengerMovement.Action.REROUTING);
                                 action = PassengerMovement.Action.REROUTING;
+
+                                break;
                             }
+
+                            break;
                         } else if (action == PassengerMovement.Action.REROUTING) {
                             // This passenger is stuck, so generate a path, if one hasn't been generated yet, then
                             // follow it until the passenger is not stuck anymore

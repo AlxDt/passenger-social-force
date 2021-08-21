@@ -56,7 +56,7 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         this.floor = floor;
 
         this.neighborIndices = this.computeNeighboringPatches();
-        this.neighbor7x7Indices = null;
+        this.neighbor7x7Indices = this.compute7x7Neighbors();
 
         this.amenityBlocksAround = 0;
 
@@ -136,6 +136,54 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         return neighboringPatchIndices;
     }
 
+    private List<MatrixPosition> compute7x7Neighbors() {
+        int patchRow = this.matrixPosition.getRow();
+        int patchColumn = this.matrixPosition.getColumn();
+
+        int truncatedX = (int) (this.getPatchCenterCoordinates().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS);
+        int truncatedY = (int) (this.getPatchCenterCoordinates().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS);
+
+        List<MatrixPosition> patchIndicesToExplore = new ArrayList<>();
+
+        for (int rowOffset = -3; rowOffset <= 3; rowOffset++) {
+            for (int columnOffset = -3; columnOffset <= 3; columnOffset++) {
+                boolean xCondition;
+                boolean yCondition;
+
+                // Separate upper and lower rows
+                if (rowOffset < 0) {
+                    yCondition = truncatedY + rowOffset > 0;
+                } else if (rowOffset > 0) {
+                    yCondition = truncatedY + rowOffset < floor.getRows();
+                } else {
+                    yCondition = true;
+                }
+
+                // Separate left and right columns
+                if (columnOffset < 0) {
+                    xCondition = truncatedX + columnOffset > 0;
+                } else if (columnOffset > 0) {
+                    xCondition = truncatedX + columnOffset < floor.getColumns();
+                } else {
+                    xCondition = true;
+                }
+
+                // Insert the patch to the list of patches to be explored if the patches are within the bounds of the
+                // floor
+                if (xCondition && yCondition) {
+                    patchIndicesToExplore.add(
+                            new MatrixPosition(
+                                    patchRow + rowOffset,
+                                    patchColumn + columnOffset
+                            )
+                    );
+                }
+            }
+        }
+
+        return patchIndicesToExplore;
+    }
+
     public List<Patch> getNeighbors() {
         List<Patch> neighboringPatches = new ArrayList<>();
 
@@ -143,6 +191,20 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
             neighboringPatches.add(
                     this.getFloor().getPatch(neighboringPatchIndex.getRow(), neighboringPatchIndex.getColumn())
             );
+        }
+
+        return neighboringPatches;
+    }
+
+    public List<Patch> get7x7Neighbors(boolean includeCenterPatch) {
+        List<Patch> neighboringPatches = new ArrayList<>();
+
+        for (MatrixPosition neighboringPatchIndex : this.neighbor7x7Indices) {
+            Patch patch = this.getFloor().getPatch(neighboringPatchIndex.getRow(), neighboringPatchIndex.getColumn());
+
+            if (!includeCenterPatch || !patch.equals(this)) {
+                neighboringPatches.add(patch);
+            }
         }
 
         return neighboringPatches;

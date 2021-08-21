@@ -12,6 +12,7 @@ public class StairShaft extends PortalShaft {
     private final List<List<Passenger>> descendingQueue;
     private final List<List<Passenger>> ascendingQueue;
 
+    // Denotes the number of passengers using this staircase in both directions
     private int passengersDescending;
     private int passengersAscending;
 
@@ -46,6 +47,14 @@ public class StairShaft extends PortalShaft {
         return ascendingQueue;
     }
 
+    public int getPassengersDescending() {
+        return passengersDescending;
+    }
+
+    public int getPassengersAscending() {
+        return passengersAscending;
+    }
+
     public boolean isDescendingQueueAtCapacity() {
         return this.passengersDescending >= this.getCapacity();
     }
@@ -72,6 +81,8 @@ public class StairShaft extends PortalShaft {
 
     @Override
     public void updateQueues() {
+        List<Passenger> passengersToRemove = new ArrayList<>();
+
         // For each passenger in the descending queue, move the passenger down a bucket, if that bucket is not filled,
         // Do this operation from bottom to top
         for (int index = 0; index < this.descendingQueue.size(); index++) {
@@ -81,9 +92,10 @@ public class StairShaft extends PortalShaft {
                 if (index == 0) {
                     // Remove the passengers at the bottom of the queue to spawn them into the new floor, if the
                     // pertinent spawn patch is empty
-                    if (passengersInBucket.get(0).getPassengerMovement().exitPortal()) {
-                        this.descendingQueue.get(index).clear();
-                        this.decrementPassengersDescending();
+                    for (Passenger passenger : passengersInBucket) {
+                        if (passenger.getPassengerMovement().exitPortal()) {
+                            passengersToRemove.add(passenger);
+                        }
                     }
                 } else {
                     // Only move down if the succeeding bucket is empty
@@ -92,6 +104,14 @@ public class StairShaft extends PortalShaft {
                         this.descendingQueue.get(index).clear();
                     }
                 }
+
+                // Remove all those who've successfully exited
+                for (Passenger passengerToRemove : passengersToRemove) {
+                    passengersInBucket.remove(passengerToRemove);
+                    this.decrementPassengersDescending();
+                }
+
+                passengersToRemove.clear();
             }
         }
 
@@ -104,9 +124,10 @@ public class StairShaft extends PortalShaft {
                 if (index == this.ascendingQueue.size() - 1) {
                     // Remove the passengers at the top of the queue to spawn them into the new floor, if the pertinent spawn
                     // patch is empty
-                    if (passengersInBucket.get(0).getPassengerMovement().exitPortal()) {
-                        this.ascendingQueue.get(index).clear();
-                        this.decrementPassengersAscending();
+                    for (Passenger passenger : passengersInBucket) {
+                        if (passenger.getPassengerMovement().exitPortal()) {
+                            passengersToRemove.add(passenger);
+                        }
                     }
                 } else {
                     // Only move up if the succeeding bucket is empty
@@ -115,28 +136,16 @@ public class StairShaft extends PortalShaft {
                         this.ascendingQueue.get(index).clear();
                     }
                 }
+
+                // Remove all those who've successfully exited
+                for (Passenger passengerToRemove : passengersToRemove) {
+                    passengersInBucket.remove(passengerToRemove);
+                    this.decrementPassengersAscending();
+                }
+
+                passengersToRemove.clear();
             }
         }
-
-        // Set the last bucket with null
-//        this.ascendingQueue.set(this.descendingQueue.size() - 1, null);
-//        for (Map.Entry<Passenger, Integer> passengerTimeEntry : this.descendingQueue.entrySet()) {
-//            Passenger passenger = passengerTimeEntry.getKey();
-//            Integer timeSpent = passengerTimeEntry.getValue();
-//
-//            this.descendingQueue.put(passenger, timeSpent + 1);
-//
-//            // If the time spent has exceeded the time set in this shaft, try to spawn the passenger to its new floor
-//            if (passengerTimeEntry.getValue() > this.getMoveTime()) {
-//                if (passenger.getPassengerMovement().exitPortal()) {
-//                    passengersToClear.add(passenger);
-//                }
-//            }
-//        }
-//
-//        for (Passenger passenger : passengersToClear) {
-//            this.descendingQueue.remove(passenger);
-//        }
     }
 
     @Override

@@ -43,7 +43,8 @@ public class PassengerMovement {
     private final Coordinates position;
 
     // Denotes the distance (m) the passenger walks in one second
-    private final double preferredWalkingDistance;
+    private final double baseWalkingDistance;
+    private double preferredWalkingDistance;
     private double currentWalkingDistance;
 
     // Denotes the proposed and actual heading of the passenger in degrees where
@@ -218,7 +219,8 @@ public class PassengerMovement {
         // TODO: Walking speed should depend on the passenger's age
         // TODO: Adjust to actual, realistic values
         // The walking speed values shall be in m/s
-        this.preferredWalkingDistance = 0.6;
+        this.baseWalkingDistance = 0.6;
+        this.preferredWalkingDistance = this.baseWalkingDistance;
         this.currentWalkingDistance = preferredWalkingDistance;
 
         // All newly generated passengers will face the north by default
@@ -532,7 +534,7 @@ public class PassengerMovement {
         return Portal.asPortal(this.goalAmenity);
     }
 
-    // Use the A* algorithm (with Euclidian distance to compute the f-score) to find the shortest path to the given goal
+    // Use the A* algorithm (with Euclidean distance to compute the f-score) to find the shortest path to the given goal
     // patch
     public static PassengerPath computePathWithinFloor(
             Patch startingPatch,
@@ -763,22 +765,25 @@ public class PassengerMovement {
         this.free();
     }
 
-    // Get the portals needed to be entered from the current position to the goal amenity
+    // Get the portals needed to be entered from the current patch to the goal amenity
     // Ascend/descend floors if needed
-    public static MultipleFloorPassengerPath computePathAcrossFloors(
+    public static List<MultipleFloorPassengerPath> computePathAcrossFloors(
             Floor currentFloor,
-            List<PortalShaft> visitedPortalShafts,
+//            List<PortalShaft> visitedPortalShafts,
+            List<Station.AmenityCluster> visitedClusters,
             List<Portal> visitedPortals,
             Patch currentPatch,
             Amenity.AmenityBlock goalAmenityBlock
     ) {
+        List<MultipleFloorPassengerPath> paths = new ArrayList<>();
+
         // Check the cache first if the path from one patch to another has already been computed beforehand
         MultipleFloorPatchCache multipleFloorPatchCache = currentFloor.getStation().getMultiFloorPathCache();
 
         Patch.PatchPair patchPair = new Patch.PatchPair(currentPatch, goalAmenityBlock.getPatch());
         PathCache.PathCacheKey pathCacheKey
                 = new PathCache.PathCacheKey(patchPair, false, false);
-        MultipleFloorPassengerPath cachedPath = multipleFloorPatchCache.get(pathCacheKey);
+        List<MultipleFloorPassengerPath> cachedPath = multipleFloorPatchCache.get(pathCacheKey);
 
         // If the path connecting these patches have already been computed, use that instead
         if (cachedPath != null) {
@@ -800,9 +805,12 @@ public class PassengerMovement {
                     new ArrayList<>()
             );
 
-            multipleFloorPatchCache.put(pathCacheKey, multipleFloorPassengerPath);
+            // This will be the only path to the goal
+            paths.add(multipleFloorPassengerPath);
 
-            return multipleFloorPassengerPath;
+            multipleFloorPatchCache.put(pathCacheKey, paths);
+
+            return paths;
         } else {
             // If a path to the goal does not exist in this floor, collect the portals that are accessible from the
             // current amenity, and see if there is a portal that eventually leads to the goal
@@ -894,8 +902,6 @@ public class PassengerMovement {
             }
 
             // Compile all possible paths from this portal to the goal
-            List<MultipleFloorPassengerPath> multipleFloorPassengerPaths = new ArrayList<>();
-
             // Visit the floor served by each portal
             for (Map.Entry<Portal, Double> portalDistanceInFloor : portalListInFloor.entrySet()) {
                 // Get the portal where this passenger will go
@@ -904,18 +910,29 @@ public class PassengerMovement {
                 // Get the portal where this passenger will come out
                 Portal portalToExit = portalToEnter.getPair();
 
-                // Get the portal shaft entered
                 PortalShaft portalShaft = null;
 
-                // TODO: Consider other portals
+                // TODO: Use polymorphism
                 if (portalToEnter instanceof StairPortal) {
                     portalShaft = ((StairPortal) portalToEnter).getStairShaft();
                 } else if (portalToEnter instanceof EscalatorPortal) {
                     portalShaft = ((EscalatorPortal) portalToEnter).getEscalatorShaft();
+                } else if (portalToEnter instanceof ElevatorPortal) {
+                    portalShaft = ((ElevatorPortal) portalToEnter).getElevatorShaft();
                 }
 
-                // Only visit the portal when it hasn't already been visited yet
-                if (!visitedPortalShafts.contains(portalShaft)) {
+                assert portalShaft != null;
+
+                // Check if a portal belonging to the same cluster as this portal has already been validated
+                // before
+                // If so, there is no need to validate another portal of the same cluster anymore
+                Station station = currentFloor.getStation();
+
+                Station.AmenityCluster portalEntryCluster = station.getAmenityClustersByAmenity().get(portalToEnter);
+                Station.AmenityCluster portalExitCluster = station.getAmenityClustersByAmenity().get(portalToExit);
+
+                if (!visitedClusters.contains(portalExitCluster)) {
+//                    if (!visitedClusters.contains(portalEntryCluster)) {
                     // Then get the new floor served by that portal
                     Floor floorToEnter = portalToExit.getFloorServed();
 
@@ -924,42 +941,76 @@ public class PassengerMovement {
 
                     // TODO: Consider portal spatial size and other portals
                     if (portalToExit instanceof StairPortal) {
-                        newDistance += ((StairPortal) portalToExit).getStairShaft().getMoveTime();
+                        final double stairWeight;
+
+                        if (portalShaft.getLowerPortal().equals(portalToExit)) {
+                            // Going down
+                            stairWeight = 1.5;
+                        } else {
+                            // Going up
+                            stairWeight = 20.0;
+                        }
+
+                        newDistance
+                                += ((StairPortal) portalToExit).getStairShaft().getMoveTime() * stairWeight;
                     } else if (portalToExit instanceof EscalatorPortal) {
-                        newDistance += ((EscalatorPortal) portalToExit).getEscalatorShaft().getMoveTime();
+                        final double escalatorWeight;
+
+                        if (portalShaft.getLowerPortal().equals(portalToExit)) {
+                            // Going down
+                            escalatorWeight = 1.0;
+                        } else {
+                            // Going up
+                            escalatorWeight = 10.0;
+                        }
+
+                        newDistance
+                                += ((EscalatorPortal) portalToExit).getEscalatorShaft().getMoveTime() * escalatorWeight;
                     }
 
-                    List<PortalShaft> newVisitedPortalShafts = new ArrayList<>(visitedPortalShafts);
-                    newVisitedPortalShafts.add(portalShaft);
+                    List<Station.AmenityCluster> newVisitedAmenityClusters = new ArrayList<>(visitedClusters);
+                    newVisitedAmenityClusters.add(portalEntryCluster);
 
                     List<Portal> newVisitedPortals = new ArrayList<>(visitedPortals);
 
-                    MultipleFloorPassengerPath multipleFloorPassengerPath = computePathAcrossFloors(
+                    List<MultipleFloorPassengerPath> multipleFloorPassengerPaths = computePathAcrossFloors(
                             floorToEnter,
-                            newVisitedPortalShafts,
+                            newVisitedAmenityClusters,
                             newVisitedPortals,
                             portalToExit.getAttractors().get(0).getPatch(),
                             goalAmenityBlock
                     );
 
                     // If a goal was reached through that path, take note of this path combined with that path
-                    if (multipleFloorPassengerPath != null) {
-                        double combinedDistance = newDistance + multipleFloorPassengerPath.getDistance();
+                    for (MultipleFloorPassengerPath multipleFloorPassengerPath : multipleFloorPassengerPaths) {
+                        if (multipleFloorPassengerPath != null) {
+                            double combinedDistance = newDistance + multipleFloorPassengerPath.getDistance();
 
-                        newVisitedPortals.add(portalToEnter);
-                        List<Portal> combinedVisitedPortals = new ArrayList<>(newVisitedPortals);
-                        combinedVisitedPortals.addAll(multipleFloorPassengerPath.getPortals());
+                            newVisitedPortals.add(portalToEnter);
+                            List<Portal> combinedVisitedPortals = new ArrayList<>(newVisitedPortals);
+                            combinedVisitedPortals.addAll(multipleFloorPassengerPath.getPortals());
 
-                        MultipleFloorPassengerPath combinedPath = new MultipleFloorPassengerPath(
-                                combinedDistance,
-                                combinedVisitedPortals
-                        );
+                            MultipleFloorPassengerPath combinedPath = new MultipleFloorPassengerPath(
+                                    combinedDistance,
+                                    combinedVisitedPortals
+                            );
 
-                        multipleFloorPassengerPaths.add(combinedPath);
+                            paths.add(combinedPath);
+
+                            // If a path is found, add the cluster containing this entry portal to the list of validated
+                            // clusters
+                            if (!visitedClusters.contains(portalEntryCluster)) {
+                                visitedClusters.add(portalEntryCluster);
+                            }
+                        }
                     }
+//                    } else {
+//                        paths.add();
+//                    }
                 }
             }
 
+/*
             // For each path found, find the one with the shortest distance
             double shortestDistance = Double.MAX_VALUE;
             MultipleFloorPassengerPath shortestPath = null;
@@ -970,10 +1021,11 @@ public class PassengerMovement {
                     shortestPath = multipleFloorPassengerPath;
                 }
             }
+*/
 
-            multipleFloorPatchCache.put(pathCacheKey, shortestPath);
+            multipleFloorPatchCache.put(pathCacheKey, paths);
 
-            return shortestPath;
+            return paths;
         }
     }
 
@@ -1165,10 +1217,12 @@ public class PassengerMovement {
 
             if (willSeekPortal) {
                 // Get the nearest relevant portal to this passenger
-                Portal.DirectoryItem directoryItem = new Portal.DirectoryItem(
+                Portal.Directory.DirectoryItem directoryItemOfPassenger = new Portal.Directory.DirectoryItem(
                         this.travelDirection,
                         nextAmenityClass,
-                        this.currentAmenity instanceof Portal ? this.currentAmenity : null
+                        currentStation.getAmenityClustersByAmenity().get(this.currentAmenity),
+                        null,
+                        0.0
                 );
 
                 TreeMap<Double, Portal> relevantPortals = new TreeMap<>();
@@ -1178,33 +1232,92 @@ public class PassengerMovement {
                 // Compile the stair portals that serve this floor
                 List<StairShaft> stairShafts = currentStation.getStairShafts();
 
+                double distanceToPortal;
+                double distanceToTraverse;
+                double peopleInPortalScore;
+
+                double portalScore;
+
                 for (StairShaft stairShaft : stairShafts) {
                     StairPortal lowerStairPortal = (StairPortal) stairShaft.getLowerPortal();
                     StairPortal upperStairPortal = (StairPortal) stairShaft.getUpperPortal();
 
                     if (lowerStairPortal.getFloorServed().equals(currentFloor)) {
-                        if (lowerStairPortal.getDirectory().contains(directoryItem)) {
-                            relevantPortals.put(
-                                    Coordinates.distance(
-                                            currentStation,
-                                            this.currentPatch,
-                                            lowerStairPortal.getAttractors().get(0).getPatch()
-                                    ),
-                                    lowerStairPortal
+                        Portal.Directory.DirectoryItem directoryItemInPortal
+                                = lowerStairPortal.getDirectory().get(directoryItemOfPassenger);
+
+                        if (directoryItemInPortal != null) {
+                            // Only consider attractors in amenities which are accessible from the current position
+                            PassengerPath path = computePathWithinFloor(
+                                    this.currentPatch,
+                                    lowerStairPortal.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
                             );
+
+                            if (path != null) {
+                                // Other than merely considering the distance to the portal, also take into account the
+                                // distance it would take to reach the goal through the portal, as well as the number of
+                                // people already in that portal
+                                distanceToPortal = Coordinates.distance(
+                                        currentStation,
+                                        this.currentPatch,
+                                        lowerStairPortal.getAttractors().get(0).getPatch()
+                                );
+
+                                distanceToTraverse = directoryItemInPortal.getDistance();
+
+                                final double peopleInPortalPenalty = 1.5;
+                                peopleInPortalScore
+                                        = lowerStairPortal.getStairShaft().getPassengersAscending()
+                                        * peopleInPortalPenalty;
+
+                                portalScore = distanceToPortal + distanceToTraverse + peopleInPortalScore;
+
+                                relevantPortals.put(
+                                        portalScore,
+                                        lowerStairPortal
+                                );
+                            }
                         }
                     }
 
                     if (upperStairPortal.getFloorServed().equals(currentFloor)) {
-                        if (upperStairPortal.getDirectory().contains(directoryItem)) {
-                            relevantPortals.put(
-                                    Coordinates.distance(
-                                            currentStation,
-                                            this.currentPatch,
-                                            upperStairPortal.getAttractors().get(0).getPatch()
-                                    ),
-                                    upperStairPortal
+                        Portal.Directory.DirectoryItem directoryItemInPortal
+                                = upperStairPortal.getDirectory().get(directoryItemOfPassenger);
+
+                        if (directoryItemInPortal != null) {
+                            // Only consider attractors in amenities which are accessible from the current position
+                            PassengerPath path = computePathWithinFloor(
+                                    this.currentPatch,
+                                    upperStairPortal.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
                             );
+
+                            if (path != null) {
+                                // Other than merely considering the distance to the portal, also take into account the
+                                // distance it would take to reach the goal through the portal
+                                distanceToPortal = Coordinates.distance(
+                                        currentStation,
+                                        this.currentPatch,
+                                        upperStairPortal.getAttractors().get(0).getPatch()
+                                );
+
+                                distanceToTraverse = directoryItemInPortal.getDistance();
+
+                                final double peopleInPortalPenalty = 1.5;
+                                peopleInPortalScore
+                                        = upperStairPortal.getStairShaft().getPassengersDescending()
+                                        * peopleInPortalPenalty;
+
+                                portalScore = distanceToPortal + distanceToTraverse + peopleInPortalScore;
+
+                                relevantPortals.put(
+                                        portalScore,
+                                        upperStairPortal
+                                );
+                            }
                         }
                     }
                 }
@@ -1217,28 +1330,80 @@ public class PassengerMovement {
                     EscalatorPortal upperEscalatorPortal = (EscalatorPortal) escalatorShaft.getUpperPortal();
 
                     if (lowerEscalatorPortal.getFloorServed().equals(currentFloor)) {
-                        if (lowerEscalatorPortal.getDirectory().contains(directoryItem)) {
-                            relevantPortals.put(
-                                    Coordinates.distance(
-                                            currentStation,
-                                            this.currentPatch,
-                                            lowerEscalatorPortal.getAttractors().get(0).getPatch()
-                                    ),
-                                    lowerEscalatorPortal
+                        Portal.Directory.DirectoryItem directoryItemInPortal
+                                = lowerEscalatorPortal.getDirectory().get(directoryItemOfPassenger);
+
+                        if (directoryItemInPortal != null) {
+                            // Only consider attractors in amenities which are accessible from the current position
+                            PassengerPath path = computePathWithinFloor(
+                                    this.currentPatch,
+                                    lowerEscalatorPortal.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
                             );
+
+                            if (path != null) {
+                                // Other than merely considering the distance to the portal, also take into account the
+                                // distance it would take to reach the goal through the portal
+                                distanceToPortal = Coordinates.distance(
+                                        currentStation,
+                                        this.currentPatch,
+                                        lowerEscalatorPortal.getAttractors().get(0).getPatch()
+                                );
+
+                                distanceToTraverse = directoryItemInPortal.getDistance();
+
+                                final double peopleInPortalPenalty = 1.5;
+                                peopleInPortalScore
+                                        = lowerEscalatorPortal.getEscalatorShaft().getPassengers()
+                                        * peopleInPortalPenalty;
+
+                                portalScore = distanceToPortal + distanceToTraverse + peopleInPortalScore;
+
+                                relevantPortals.put(
+                                        portalScore,
+                                        lowerEscalatorPortal
+                                );
+                            }
                         }
                     }
 
                     if (upperEscalatorPortal.getFloorServed().equals(currentFloor)) {
-                        if (upperEscalatorPortal.getDirectory().contains(directoryItem)) {
-                            relevantPortals.put(
-                                    Coordinates.distance(
-                                            currentStation,
-                                            this.currentPatch,
-                                            upperEscalatorPortal.getAttractors().get(0).getPatch()
-                                    ),
-                                    upperEscalatorPortal
+                        Portal.Directory.DirectoryItem directoryItemInPortal
+                                = upperEscalatorPortal.getDirectory().get(directoryItemOfPassenger);
+
+                        if (directoryItemInPortal != null) {
+                            // Only consider attractors in amenities which are accessible from the current position
+                            PassengerPath path = computePathWithinFloor(
+                                    this.currentPatch,
+                                    upperEscalatorPortal.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
                             );
+
+                            if (path != null) {
+                                // Other than merely considering the distance to the portal, also take into account the
+                                // distance it would take to reach the goal through the portal
+                                distanceToPortal = Coordinates.distance(
+                                        currentStation,
+                                        this.currentPatch,
+                                        upperEscalatorPortal.getAttractors().get(0).getPatch()
+                                );
+
+                                distanceToTraverse = directoryItemInPortal.getDistance();
+
+                                final double peopleInPortalPenalty = 1.5;
+                                peopleInPortalScore
+                                        = upperEscalatorPortal.getEscalatorShaft().getPassengers()
+                                        * peopleInPortalPenalty;
+
+                                portalScore = distanceToPortal + distanceToTraverse + peopleInPortalScore;
+
+                                relevantPortals.put(
+                                        portalScore,
+                                        upperEscalatorPortal
+                                );
+                            }
                         }
                     }
                 }
@@ -1387,10 +1552,16 @@ public class PassengerMovement {
         final double minimumObstacleStopDistance = 0.6;
 
         // Get the relevant patches
-        List<Patch> patchesToExplore
-                = Floor.get7x7Field(
-                this.currentFloor,
-                this.currentPatch,
+//        List<Patch> patchesToExplore
+//                = Floor.get7x7Field(
+//                this.currentFloor,
+//                this.currentPatch,
+//                this.proposedHeading,
+//                true,
+//                Math.toRadians(360.0)
+//        );
+
+        List<Patch> patchesToExplore = this.get7x7Field(
                 this.proposedHeading,
                 true,
                 Math.toRadians(360.0)
@@ -1445,6 +1616,16 @@ public class PassengerMovement {
             }
 
             if (!this.shouldStopAtPlatform) {
+                // If the goal is a train door, and it is open, walk faster
+                if (this.getGoalAmenityAsTrainDoor() != null && this.getGoalAmenityAsTrainDoor().isOpen()) {
+                    final double speedIncreaseFactor = 1.4;
+
+                    this.preferredWalkingDistance = this.baseWalkingDistance * speedIncreaseFactor;
+                } else {
+                    // If the goal is not a train door, or it is, but it's closed, walk normally
+                    this.preferredWalkingDistance = this.baseWalkingDistance;
+                }
+
                 // If this passenger is queueing, the only social forces that apply are attractive forces to passengers
                 // and obstacles (if not in queueing action)
                 if (
@@ -1718,7 +1899,7 @@ public class PassengerMovement {
 
                     // Only apply the social forces of a set number of passengers and obstacles
                     int passengersProcessed = 0;
-                    final int passengersProcessedLimit = 10;
+                    final int passengersProcessedLimit = 5;
 
                     // Look around the patches that fall on the passenger's field of view
                     for (Patch patch : patchesToExplore) {
@@ -1918,7 +2099,7 @@ public class PassengerMovement {
 
             // Only apply the social forces on a set number of obstacles
             int obstaclesProcessed = 0;
-            final int obstaclesProcessedLimit = 5;
+            final int obstaclesProcessedLimit = 4;
 
             for (Map.Entry<Double, Amenity.AmenityBlock> obstacleEntry : obstaclesEncountered.entrySet()) {
                 if (obstaclesProcessed == obstaclesProcessedLimit) {
@@ -2264,6 +2445,34 @@ public class PassengerMovement {
                 return null;
             }
         }
+    }
+
+    public List<Patch> get7x7Field(
+            double heading,
+            boolean includeCenterPatch,
+            double fieldOfViewAngle
+    ) {
+        Patch centerPatch = this.currentPatch;
+
+        List<Patch> patchesToExplore = new ArrayList<>();
+
+        boolean isCenterPatch;
+
+        for (Patch patch : centerPatch.get7x7Neighbors(includeCenterPatch)) {
+            // Make sure that the patch to be added is within the field of view of the passenger which invoked
+            // this method
+            isCenterPatch = patch.equals(centerPatch);
+
+            if ((includeCenterPatch && isCenterPatch) || Coordinates.isWithinFieldOfView(
+                    centerPatch.getPatchCenterCoordinates(),
+                    patch.getPatchCenterCoordinates(),
+                    heading,
+                    fieldOfViewAngle)) {
+                patchesToExplore.add(patch);
+            }
+        }
+
+        return patchesToExplore;
     }
 
     private Vector computeAttractiveForce(
@@ -3342,10 +3551,16 @@ public class PassengerMovement {
 
     private Patch getBestQueueingPatch() {
         // Get the patches to explore
-        List<Patch> patchesToExplore
-                = Floor.get7x7Field(
-                this.currentFloor,
-                this.currentPatch,
+//        List<Patch> patchesToExplore
+//                = Floor.get7x7Field(
+//                this.currentFloor,
+//                this.currentPatch,
+//                this.proposedHeading,
+//                false,
+//                this.fieldOfViewAngle
+//        );
+
+        List<Patch> patchesToExplore = this.get7x7Field(
                 this.proposedHeading,
                 false,
                 this.fieldOfViewAngle

@@ -17,6 +17,7 @@ public class EscalatorShaft extends PortalShaft {
     // Denotes the internal queues this escalator maintains
     private final List<List<Passenger>> queue;
 
+    // Denotes the number of passengers using this escalator
     private int passengers;
 
     // Denotes the editor of this amenity
@@ -51,6 +52,10 @@ public class EscalatorShaft extends PortalShaft {
         return queue;
     }
 
+    public int getPassengers() {
+        return passengers;
+    }
+
     public boolean isQueueAtCapacity() {
         return this.passengers >= this.getCapacity();
     }
@@ -65,19 +70,24 @@ public class EscalatorShaft extends PortalShaft {
 
     @Override
     public void updateQueues() {
+        List<Passenger> passengersToRemove = new ArrayList<>();
+
         if (this.escalatorDirection == EscalatorDirection.DOWN) {
             // For each passenger in the queue, move the passenger down a bucket, if that bucket is not filled,
             // Do this operation from bottom to top
+            List<Passenger> passengersInBucket;
+
             for (int index = 0; index < this.queue.size(); index++) {
-                List<Passenger> passengersInBucket = this.queue.get(index);
+                passengersInBucket = this.queue.get(index);
 
                 if (!passengersInBucket.isEmpty()) {
                     if (index == 0) {
                         // Remove the passengers at the bottom of the queue to spawn them into the new floor, if the
                         // pertinent spawn patch is empty
-                        if (passengersInBucket.get(0).getPassengerMovement().exitPortal()) {
-                            this.queue.get(index).clear();
-                            this.decrementPassengers();
+                        for (Passenger passenger : passengersInBucket) {
+                            if (passenger.getPassengerMovement().exitPortal()) {
+                                passengersToRemove.add(passenger);
+                            }
                         }
                     } else {
                         // Only move down if the succeeding bucket is empty
@@ -86,6 +96,14 @@ public class EscalatorShaft extends PortalShaft {
                             this.queue.get(index).clear();
                         }
                     }
+
+                    // Remove all those who've successfully exited
+                    for (Passenger passengerToRemove : passengersToRemove) {
+                        passengersInBucket.remove(passengerToRemove);
+                        this.decrementPassengers();
+                    }
+
+                    passengersToRemove.clear();
                 }
             }
         } else {
@@ -98,9 +116,10 @@ public class EscalatorShaft extends PortalShaft {
                     if (index == this.queue.size() - 1) {
                         // Remove the passengers at the top of the queue to spawn them into the new floor, if the pertinent spawn
                         // patch is empty
-                        if (passengersInBucket.get(0).getPassengerMovement().exitPortal()) {
-                            this.queue.get(index).clear();
-                            this.decrementPassengers();
+                        for (Passenger passenger : passengersInBucket) {
+                            if (passenger.getPassengerMovement().exitPortal()) {
+                                passengersToRemove.add(passenger);
+                            }
                         }
                     } else {
                         // Only move up if the succeeding bucket is empty
@@ -109,6 +128,14 @@ public class EscalatorShaft extends PortalShaft {
                             this.queue.get(index).clear();
                         }
                     }
+
+                    // Remove all those who've successfully exited
+                    for (Passenger passengerToRemove : passengersToRemove) {
+                        passengersInBucket.remove(passengerToRemove);
+                        this.decrementPassengers();
+                    }
+
+                    passengersToRemove.clear();
                 }
             }
         }

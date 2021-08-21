@@ -5,6 +5,7 @@ import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement
 import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
 import com.crowdsimulation.model.core.agent.passenger.movement.pathfinding.DirectoryResult;
 import com.crowdsimulation.model.core.agent.passenger.movement.pathfinding.MultipleFloorPassengerPath;
+import com.crowdsimulation.model.core.agent.passenger.movement.pathfinding.PassengerPath;
 import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -50,8 +51,17 @@ public class Station extends BaseStationObject implements Environment {
     private final List<EscalatorShaft> escalatorShafts;
     private final List<ElevatorShaft> elevatorShafts;
 
-    // Take note of which floor each amenities are located
+    // Also maintain listings of each type of portal in each floor
+    private final HashMap<Floor, List<StairPortal>> stairPortalsByFloor;
+    private final HashMap<Floor, List<EscalatorPortal>> escalatorPortalsByFloor;
+    private final HashMap<Floor, List<ElevatorPortal>> elevatorPortalsByFloor;
+
+    // Take note of which floor each amenity is located
     private final HashMap<Class<? extends Amenity>, HashSet<Floor>> amenityFloorIndex;
+
+    // Take note of clusters of certain amenities
+    private final HashMap<Floor, HashMap<Class<? extends Amenity>, List<AmenityCluster>>> amenityClustersByFloor;
+    private final HashMap<Amenity, AmenityCluster> amenityClustersByAmenity;
 
     // The list of passengers in this station
     private final CopyOnWriteArrayList<Passenger> passengersInStation;
@@ -73,6 +83,13 @@ public class Station extends BaseStationObject implements Environment {
 
         this.amenityFloorIndex = new HashMap<>();
 
+        this.amenityClustersByFloor = new HashMap<>();
+        this.amenityClustersByAmenity = new HashMap<>();
+
+        this.stairPortalsByFloor = new HashMap<>();
+        this.escalatorPortalsByFloor = new HashMap<>();
+        this.elevatorPortalsByFloor = new HashMap<>();
+
         this.passengersInStation = new CopyOnWriteArrayList<>();
 
         int multiFloorPathCacheCapacity = 50;
@@ -82,7 +99,7 @@ public class Station extends BaseStationObject implements Environment {
         this.distanceCache = new DistanceCache(distanceCacheCapacity);
 
         // Initially, the station has one floor
-        Floor.addFloor(this, this.floors, 0, rows, columns);
+        Floor.addFloor(this, 0, rows, columns);
     }
 
     public String getName() {
@@ -109,6 +126,14 @@ public class Station extends BaseStationObject implements Environment {
         return amenityFloorIndex;
     }
 
+    public HashMap<Floor, HashMap<Class<? extends Amenity>, List<AmenityCluster>>> getAmenityClustersByFloor() {
+        return amenityClustersByFloor;
+    }
+
+    public HashMap<Amenity, AmenityCluster> getAmenityClustersByAmenity() {
+        return amenityClustersByAmenity;
+    }
+
     public List<StairShaft> getStairShafts() {
         return stairShafts;
     }
@@ -119,6 +144,18 @@ public class Station extends BaseStationObject implements Environment {
 
     public List<ElevatorShaft> getElevatorShafts() {
         return elevatorShafts;
+    }
+
+    public HashMap<Floor, List<StairPortal>> getStairPortalsByFloor() {
+        return stairPortalsByFloor;
+    }
+
+    public HashMap<Floor, List<EscalatorPortal>> getEscalatorPortalsByFloor() {
+        return escalatorPortalsByFloor;
+    }
+
+    public HashMap<Floor, List<ElevatorPortal>> getElevatorPortalsByFloor() {
+        return elevatorPortalsByFloor;
     }
 
     public CopyOnWriteArrayList<Passenger> getPassengersInStation() {
@@ -134,19 +171,19 @@ public class Station extends BaseStationObject implements Environment {
     }
 
     // Assemble this station's amenity-floor index
-    public static void assembleAmenityFloorIndex(Station station) {
-        station.amenityFloorIndex.clear();
+    private void assembleAmenityFloorIndex() {
+        this.amenityFloorIndex.clear();
 
-        station.amenityFloorIndex.put(StationGate.class, new HashSet<>());
-        station.amenityFloorIndex.put(Security.class, new HashSet<>());
-        station.amenityFloorIndex.put(TicketBooth.class, new HashSet<>());
-        station.amenityFloorIndex.put(Turnstile.class, new HashSet<>());
-        station.amenityFloorIndex.put(TrainDoor.class, new HashSet<>());
+        this.amenityFloorIndex.put(StationGate.class, new HashSet<>());
+        this.amenityFloorIndex.put(Security.class, new HashSet<>());
+        this.amenityFloorIndex.put(TicketBooth.class, new HashSet<>());
+        this.amenityFloorIndex.put(Turnstile.class, new HashSet<>());
+        this.amenityFloorIndex.put(TrainDoor.class, new HashSet<>());
 
-        for (Floor floor : station.floors) {
+        for (Floor floor : this.floors) {
             if (!floor.getStationGates().isEmpty()) {
                 for (StationGate stationGate : floor.getStationGates()) {
-                    station.amenityFloorIndex.get(StationGate.class).add(
+                    this.amenityFloorIndex.get(StationGate.class).add(
                             stationGate.getAmenityBlocks().get(0).getPatch().getFloor()
                     );
                 }
@@ -154,7 +191,7 @@ public class Station extends BaseStationObject implements Environment {
 
             if (!floor.getSecurities().isEmpty()) {
                 for (Security security : floor.getSecurities()) {
-                    station.amenityFloorIndex.get(Security.class).add(
+                    this.amenityFloorIndex.get(Security.class).add(
                             security.getAmenityBlocks().get(0).getPatch().getFloor()
                     );
                 }
@@ -162,7 +199,7 @@ public class Station extends BaseStationObject implements Environment {
 
             if (!floor.getTicketBooths().isEmpty()) {
                 for (TicketBooth ticketBooth : floor.getTicketBooths()) {
-                    station.amenityFloorIndex.get(TicketBooth.class).add(
+                    this.amenityFloorIndex.get(TicketBooth.class).add(
                             ticketBooth.getAmenityBlocks().get(0).getPatch().getFloor()
                     );
                 }
@@ -170,7 +207,7 @@ public class Station extends BaseStationObject implements Environment {
 
             if (!floor.getTurnstiles().isEmpty()) {
                 for (Turnstile turnstile : floor.getTurnstiles()) {
-                    station.amenityFloorIndex.get(Turnstile.class).add(
+                    this.amenityFloorIndex.get(Turnstile.class).add(
                             turnstile.getAmenityBlocks().get(0).getPatch().getFloor()
                     );
                 }
@@ -178,9 +215,600 @@ public class Station extends BaseStationObject implements Environment {
 
             if (!floor.getTrainDoors().isEmpty()) {
                 for (TrainDoor trainDoor : floor.getTrainDoors()) {
-                    station.amenityFloorIndex.get(TrainDoor.class).add(
+                    this.amenityFloorIndex.get(TrainDoor.class).add(
                             trainDoor.getAmenityBlocks().get(0).getPatch().getFloor()
                     );
+                }
+            }
+        }
+    }
+
+    // Assemble this station's clusters
+    private void assembleClusters() {
+        // Each floor will contain its own clusters
+        for (Floor floor : this.getFloors()) {
+            // Prepare the list of clusters for this floor
+            HashMap<Class<? extends Amenity>, List<AmenityCluster>> amenityClassClusterMapInFloor = new HashMap<>();
+            this.getAmenityClustersByFloor().put(floor, amenityClassClusterMapInFloor);
+
+            // Prepare the station gate clusters
+            List<AmenityCluster> stationGateClusters = new ArrayList<>();
+            amenityClassClusterMapInFloor.put(StationGate.class, stationGateClusters);
+
+            for (StationGate stationGate : floor.getStationGates()) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (stationGateClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster stationGateCluster = new AmenityCluster(floor, StationGate.class);
+                    stationGateClusters.add(stationGateCluster);
+
+                    // Add the first amenity into the cluster
+                    stationGateCluster.getAmenities().add(stationGate);
+                    this.amenityClustersByAmenity.put(stationGate, stationGateCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : stationGateClusters) {
+                        for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                            PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                    stationGate.getAttractors().get(0).getPatch(),
+                                    amenityInCluster.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
+                            );
+
+                            // If a path to this amenity in the cluster has been found, check if the distance to this
+                            // amenity is the closest one found so far
+                            if (pathToAmenity != null) {
+                                if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                    minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                    // Furthermore, if this distance is already within the allowed maximum distance from the
+                                    // cluster, as cluster has immediately been found
+                                    // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                    final double maximumAllowableDistanceFromCluster = 5.0;
+
+                                    if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                        hasFoundCluster = true;
+
+                                        amenityCluster.getAmenities().add(stationGate);
+                                        this.amenityClustersByAmenity.put(stationGate, amenityCluster);
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (hasFoundCluster) {
+                            break;
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster stationGateCluster = new AmenityCluster(floor, StationGate.class);
+                        stationGateClusters.add(stationGateCluster);
+
+                        stationGateCluster.getAmenities().add(stationGate);
+                        this.amenityClustersByAmenity.put(stationGate, stationGateCluster);
+                    }
+                }
+            }
+
+            // Prepare the security clusters
+            List<AmenityCluster> securityClusters = new ArrayList<>();
+            amenityClassClusterMapInFloor.put(Security.class, securityClusters);
+
+            for (Security security : floor.getSecurities()) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (securityClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster securityCluster = new AmenityCluster(floor, Security.class);
+                    securityClusters.add(securityCluster);
+
+                    // Add the first amenity into the cluster
+                    securityCluster.getAmenities().add(security);
+                    this.amenityClustersByAmenity.put(security, securityCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : securityClusters) {
+                        for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                            PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                    security.getAttractors().get(0).getPatch(),
+                                    amenityInCluster.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
+                            );
+
+                            // If a path to this amenity in the cluster has been found, check if the distance to this
+                            // amenity is the closest one found so far
+                            if (pathToAmenity != null) {
+                                if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                    minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                    // Furthermore, if this distance is already within the allowed maximum distance from the
+                                    // cluster, as cluster has immediately been found
+                                    // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                    final double maximumAllowableDistanceFromCluster = 5.0;
+
+                                    if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                        hasFoundCluster = true;
+
+                                        amenityCluster.getAmenities().add(security);
+                                        this.amenityClustersByAmenity.put(security, amenityCluster);
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (hasFoundCluster) {
+                            break;
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster securityCluster = new AmenityCluster(floor, Security.class);
+                        securityClusters.add(securityCluster);
+
+                        securityCluster.getAmenities().add(security);
+                        this.amenityClustersByAmenity.put(security, securityCluster);
+                    }
+                }
+            }
+
+            // Prepare the ticket booth clusters
+            List<AmenityCluster> ticketBoothClusters = new ArrayList<>();
+            amenityClassClusterMapInFloor.put(TicketBooth.class, ticketBoothClusters);
+
+            for (TicketBooth ticketBooth : floor.getTicketBooths()) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (ticketBoothClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster ticketBoothCluster = new AmenityCluster(floor, TicketBooth.class);
+                    ticketBoothClusters.add(ticketBoothCluster);
+
+                    // Add the first amenity into the cluster
+                    ticketBoothCluster.getAmenities().add(ticketBooth);
+                    this.amenityClustersByAmenity.put(ticketBooth, ticketBoothCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : ticketBoothClusters) {
+                        for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                            PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                    ticketBooth.getAttractors().get(0).getPatch(),
+                                    amenityInCluster.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
+                            );
+
+                            // If a path to this amenity in the cluster has been found, check if the distance to this
+                            // amenity is the closest one found so far
+                            if (pathToAmenity != null) {
+                                if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                    minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                    // Furthermore, if this distance is already within the allowed maximum distance from
+                                    // the cluster, as cluster has immediately been found
+                                    // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                    final double maximumAllowableDistanceFromCluster = 10.0;
+
+                                    if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                        hasFoundCluster = true;
+
+                                        amenityCluster.getAmenities().add(ticketBooth);
+                                        this.amenityClustersByAmenity.put(ticketBooth, amenityCluster);
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (hasFoundCluster) {
+                            break;
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster ticketBoothCluster = new AmenityCluster(floor, TicketBooth.class);
+                        ticketBoothClusters.add(ticketBoothCluster);
+
+                        ticketBoothCluster.getAmenities().add(ticketBooth);
+                        this.amenityClustersByAmenity.put(ticketBooth, ticketBoothCluster);
+                    }
+                }
+            }
+
+            // Prepare the turnstile clusters
+            List<AmenityCluster> turnstileClusters = new ArrayList<>();
+            amenityClassClusterMapInFloor.put(Turnstile.class, turnstileClusters);
+
+            for (Turnstile turnstile : floor.getTurnstiles()) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (turnstileClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster turnstileCluster = new AmenityCluster(floor, Turnstile.class);
+                    turnstileClusters.add(turnstileCluster);
+
+                    // Add the first amenity into the cluster
+                    turnstileCluster.getAmenities().add(turnstile);
+                    this.amenityClustersByAmenity.put(turnstile, turnstileCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : turnstileClusters) {
+                        // Aside from checking whether this turnstile is connected to this cluster, also check if its
+                        // direction matches it
+                        Turnstile turnstileInCluster = ((Turnstile) amenityCluster.getAmenities().get(0));
+
+                        if (
+                                turnstile.getTurnstileTravelDirections().equals(
+                                        turnstileInCluster.getTurnstileTravelDirections()
+                                )
+                                        && turnstile.getTurnstileMode().equals(
+                                        turnstileInCluster.getTurnstileMode()
+                                )
+                        ) {
+                            for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                                PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                        turnstile.getAttractors().get(0).getPatch(),
+                                        amenityInCluster.getAttractors().get(0).getPatch(),
+                                        true,
+                                        false
+                                );
+
+                                // If a path to this amenity in the cluster has been found, check if the distance to this
+                                // amenity is the closest one found so far
+                                if (pathToAmenity != null) {
+                                    if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                        minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                        // Furthermore, if this distance is already within the allowed maximum distance from
+                                        // the cluster, as cluster has immediately been found
+                                        // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                        final double maximumAllowableDistanceFromCluster = 5.0;
+
+                                        if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                            hasFoundCluster = true;
+
+                                            amenityCluster.getAmenities().add(turnstile);
+                                            this.amenityClustersByAmenity.put(turnstile, amenityCluster);
+
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (hasFoundCluster) {
+                                break;
+                            }
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster turnstileCluster = new AmenityCluster(floor, Turnstile.class);
+                        turnstileClusters.add(turnstileCluster);
+
+                        turnstileCluster.getAmenities().add(turnstile);
+                        this.amenityClustersByAmenity.put(turnstile, turnstileCluster);
+                    }
+                }
+            }
+
+            // Prepare the train door clusters
+            List<AmenityCluster> trainDoorClusters = new ArrayList<>();
+            amenityClassClusterMapInFloor.put(TrainDoor.class, trainDoorClusters);
+
+            for (TrainDoor trainDoor : floor.getTrainDoors()) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (trainDoorClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster trainDoorCluster = new AmenityCluster(floor, TrainDoor.class);
+                    trainDoorClusters.add(trainDoorCluster);
+
+                    // Add the first amenity into the cluster
+                    trainDoorCluster.getAmenities().add(trainDoor);
+                    this.amenityClustersByAmenity.put(trainDoor, trainDoorCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : trainDoorClusters) {
+                        // Aside from checking whether this turnstile is connected to this cluster, also check if its
+                        // direction matches it
+                        TrainDoor trainDoorInCluster = ((TrainDoor) amenityCluster.getAmenities().get(0));
+
+                        if (
+                                trainDoor.getPlatformDirection().equals(
+                                        trainDoorInCluster.getPlatformDirection()
+                                )
+                        ) {
+                            for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                                PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                        trainDoor.getAttractors().get(0).getPatch(),
+                                        amenityInCluster.getAttractors().get(0).getPatch(),
+                                        true,
+                                        false
+                                );
+
+                                // If a path to this amenity in the cluster has been found, check if the distance to this
+                                // amenity is the closest one found so far
+                                if (pathToAmenity != null) {
+                                    if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                        minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                        // Furthermore, if this distance is already within the allowed maximum distance from
+                                        // the cluster, as cluster has immediately been found
+                                        // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                        final double maximumAllowableDistanceFromCluster = 10.0;
+
+                                        if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                            hasFoundCluster = true;
+
+                                            amenityCluster.getAmenities().add(trainDoor);
+                                            this.amenityClustersByAmenity.put(trainDoor, amenityCluster);
+
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (hasFoundCluster) {
+                                break;
+                            }
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster trainDoorCluster = new AmenityCluster(floor, TrainDoor.class);
+                        trainDoorClusters.add(trainDoorCluster);
+
+                        trainDoorCluster.getAmenities().add(trainDoor);
+                        this.amenityClustersByAmenity.put(trainDoor, trainDoorCluster);
+                    }
+                }
+            }
+
+            // Generate the portal clusters
+            List<StairPortal> stairPortals = this.getStairPortalsByFloor().get(floor);
+            List<EscalatorPortal> escalatorPortals = this.getEscalatorPortalsByFloor().get(floor);
+            List<ElevatorPortal> elevatorPortals = this.getElevatorPortalsByFloor().get(floor);
+
+            // Prepare the stair portal clusters
+            List<AmenityCluster> stairPortalClusters = new ArrayList<>();
+            amenityClassClusterMapInFloor.put(StairPortal.class, stairPortalClusters);
+
+            for (StairPortal stairPortal : stairPortals) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (stairPortalClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster stairPortalCluster = new AmenityCluster(floor, StairPortal.class);
+                    stairPortalClusters.add(stairPortalCluster);
+
+                    // Add the first amenity into the cluster
+                    stairPortalCluster.getAmenities().add(stairPortal);
+                    this.amenityClustersByAmenity.put(stairPortal, stairPortalCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : stairPortalClusters) {
+                        for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                            PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                    stairPortal.getAttractors().get(0).getPatch(),
+                                    amenityInCluster.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
+                            );
+
+                            // If a path to this amenity in the cluster has been found, check if the distance to this
+                            // amenity is the closest one found so far
+                            if (pathToAmenity != null) {
+                                if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                    minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                    // Furthermore, if this distance is already within the allowed maximum distance from the
+                                    // cluster, as cluster has immediately been found
+                                    // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                    final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
+
+                                    if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                        hasFoundCluster = true;
+
+                                        amenityCluster.getAmenities().add(stairPortal);
+                                        this.amenityClustersByAmenity.put(stairPortal, amenityCluster);
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (hasFoundCluster) {
+                            break;
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster stairPortalCluster = new AmenityCluster(floor, StairPortal.class);
+                        stairPortalClusters.add(stairPortalCluster);
+
+                        stairPortalCluster.getAmenities().add(stairPortal);
+                        this.amenityClustersByAmenity.put(stairPortal, stairPortalCluster);
+                    }
+                }
+            }
+
+            // Prepare the escalator portal clusters
+            List<AmenityCluster> escalatorPortalClusters = new ArrayList<>();
+            amenityClassClusterMapInFloor.put(EscalatorPortal.class, escalatorPortalClusters);
+
+            for (EscalatorPortal escalatorPortal : escalatorPortals) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (escalatorPortalClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster escalatorPortalCluster = new AmenityCluster(floor, EscalatorPortal.class);
+                    escalatorPortalClusters.add(escalatorPortalCluster);
+
+                    // Add the first amenity into the cluster
+                    escalatorPortalCluster.getAmenities().add(escalatorPortal);
+                    this.amenityClustersByAmenity.put(escalatorPortal, escalatorPortalCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : escalatorPortalClusters) {
+                        for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                            PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                    escalatorPortal.getAttractors().get(0).getPatch(),
+                                    amenityInCluster.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
+                            );
+
+                            // If a path to this amenity in the cluster has been found, check if the distance to this
+                            // amenity is the closest one found so far
+                            if (pathToAmenity != null) {
+                                if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                    minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                    // Furthermore, if this distance is already within the allowed maximum distance from the
+                                    // cluster, as cluster has immediately been found
+                                    // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                    final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
+
+                                    if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                        hasFoundCluster = true;
+
+                                        amenityCluster.getAmenities().add(escalatorPortal);
+                                        this.amenityClustersByAmenity.put(escalatorPortal, amenityCluster);
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (hasFoundCluster) {
+                            break;
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster escalatorPortalCluster = new AmenityCluster(floor, EscalatorPortal.class);
+                        escalatorPortalClusters.add(escalatorPortalCluster);
+
+                        escalatorPortalCluster.getAmenities().add(escalatorPortal);
+                        this.amenityClustersByAmenity.put(escalatorPortal, escalatorPortalCluster);
+                    }
+                }
+            }
+
+            // Prepare the elevator portal clusters
+            List<AmenityCluster> elevatorPortalClusters = new ArrayList<>();
+            amenityClassClusterMapInFloor.put(ElevatorPortal.class, elevatorPortalClusters);
+
+            for (ElevatorPortal elevatorPortal : elevatorPortals) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (elevatorPortalClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster elevatorPortalCluster = new AmenityCluster(floor, ElevatorPortal.class);
+                    elevatorPortalClusters.add(elevatorPortalCluster);
+
+                    // Add the first amenity into the cluster
+                    elevatorPortalCluster.getAmenities().add(elevatorPortal);
+                    this.amenityClustersByAmenity.put(elevatorPortal, elevatorPortalCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : elevatorPortalClusters) {
+                        for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                            PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                    elevatorPortal.getAttractors().get(0).getPatch(),
+                                    amenityInCluster.getAttractors().get(0).getPatch(),
+                                    true,
+                                    false
+                            );
+
+                            // If a path to this amenity in the cluster has been found, check if the distance to this
+                            // amenity is the closest one found so far
+                            if (pathToAmenity != null) {
+                                if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                    minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                    // Furthermore, if this distance is already within the allowed maximum distance from the
+                                    // cluster, as cluster has immediately been found
+                                    // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                    final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
+
+                                    if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                        hasFoundCluster = true;
+
+                                        amenityCluster.getAmenities().add(elevatorPortal);
+                                        this.amenityClustersByAmenity.put(elevatorPortal, amenityCluster);
+
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (hasFoundCluster) {
+                            break;
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster elevatorPortalCluster = new AmenityCluster(floor, ElevatorPortal.class);
+                        elevatorPortalClusters.add(elevatorPortalCluster);
+
+                        // Add the first amenity into the cluster
+                        elevatorPortalCluster.getAmenities().add(elevatorPortal);
+                        this.amenityClustersByAmenity.put(elevatorPortal, elevatorPortalCluster);
+                    }
                 }
             }
         }
@@ -269,6 +897,12 @@ public class Station extends BaseStationObject implements Environment {
         }
     }
 
+    // Clear the clusters in the station
+    private void clearClusters() {
+        this.amenityClustersByFloor.clear();
+        this.amenityClustersByAmenity.clear();
+    }
+
     // Thoroughly validate the layout of the station
     public static StationValidationResult validateStationLayoutDeeply(Station station) {
         // Clear caches
@@ -276,6 +910,9 @@ public class Station extends BaseStationObject implements Environment {
 
         // Clear directories
         station.clearDirectories();
+
+        // Clear clusters
+        station.clearClusters();
 
         // For each floor in the station, collect station gates
         List<StationGate> stationGates = new ArrayList<>();
@@ -380,150 +1017,114 @@ public class Station extends BaseStationObject implements Environment {
         }
 
         // Assemble this station's amenity-floor index
-        Station.assembleAmenityFloorIndex(station);
+        station.assembleAmenityFloorIndex();
+
+        // Assemble this station's clusters
+        station.assembleClusters();
 
         // For each station gate, for each direction that the station gate may spawn, check if a single journey and
         // stored value card holder passenger may be able to navigate from this station gate to its corresponding
         // train door
         boolean isStoredValueCardHolder;
 
+        StationValidationResult stationValidationResult;
+
         RoutePlan boardingRoutePlanSingleJourney;
         RoutePlan boardingRoutePlanStoredValue;
         RoutePlan alightingRoutePlan;
+
+        // Take note of all the validated amenities' clusters
+        List<AmenityCluster> validatedSpawnClusters = new ArrayList<>();
 
         // Check the validity for each station gate in the station, for each boarding passenger
         boolean isEntranceStationGateFound = false;
 
         for (StationGate stationGate : stationGates) {
-            // For the validation of the boarding route, only deal with patches which allow entrances
-            if (stationGate.getStationGateMode().equals(StationGate.StationGateMode.EXIT)) {
-                continue;
-            } else {
-                isEntranceStationGateFound = true;
-            }
+            // Check if a station gate belonging to the same cluster as this station gate has already been validated
+            // before
+            // If so, there is no need to validate another station gate of the same cluster anymore
+            AmenityCluster stationGateCluster = station.getAmenityClustersByAmenity().get(stationGate);
 
-            // Get the directions of the passengers that may be spawned by this station gate
-            List<PassengerMovement.TravelDirection> travelDirectionsSpawnable
-                    = stationGate.getStationGatePassengerTravelDirections();
+            if (!validatedSpawnClusters.contains(stationGateCluster)) {
+                // For the validation of the boarding route, only deal with patches which allow entrances
+                if (stationGate.getStationGateMode().equals(StationGate.StationGateMode.EXIT)) {
+                    continue;
+                } else {
+                    isEntranceStationGateFound = true;
+                }
 
-            // Check the validity for each travel direction spawnable by this station gate
-            for (PassengerMovement.TravelDirection travelDirectionSpawnable : travelDirectionsSpawnable) {
-                // Initialize a potential passenger's route plans
-                isStoredValueCardHolder = false;
-                boardingRoutePlanSingleJourney = new RoutePlan(isStoredValueCardHolder, true);
+                // Get the directions of the passengers that may be spawned by this station gate
+                List<PassengerMovement.TravelDirection> travelDirectionsSpawnable
+                        = stationGate.getStationGatePassengerTravelDirections();
 
-                isStoredValueCardHolder = true;
-                boardingRoutePlanStoredValue = new RoutePlan(isStoredValueCardHolder, true);
+                // Check the validity for each travel direction spawnable by this station gate
+                for (PassengerMovement.TravelDirection travelDirectionSpawnable : travelDirectionsSpawnable) {
+                    // Initialize a potential passenger's route plans
+                    isStoredValueCardHolder = false;
+                    boardingRoutePlanSingleJourney = new RoutePlan(isStoredValueCardHolder, true);
 
-                Amenity currentAmenity;
+                    isStoredValueCardHolder = true;
+                    boardingRoutePlanStoredValue = new RoutePlan(isStoredValueCardHolder, true);
 
-                // Check the validity for boarding single journey ticket holders
-                currentAmenity = stationGate;
-                DirectoryResult directoryResultBoardingSingleJourney;
+                    // Check the validity for boarding single journey ticket holders
+                    List<Class<? extends Amenity>> boardingRoutePlanSingleJourneyAsList = new ArrayList<>();
 
-                while (true) {
-                    // Check if a path exists from the current goal to any amenity that comes after it
-                    directoryResultBoardingSingleJourney = getPortalsToGoal(
-                            station,
-                            boardingRoutePlanSingleJourney,
-                            PassengerMovement.Disposition.BOARDING,
-                            travelDirectionSpawnable,
-                            currentAmenity
+                    boardingRoutePlanSingleJourneyAsList.add(Security.class);
+                    boardingRoutePlanSingleJourney.getCurrentRoutePlan().forEachRemaining(
+                            boardingRoutePlanSingleJourneyAsList::add
                     );
 
-                    // If there are no paths found to any next amenity, this station is instantly invalid
-                    if (directoryResultBoardingSingleJourney.getPortals() == null) {
-                        return new StationValidationResult(
-                                StationValidationResult.StationValidationResultType.UNREACHABLE,
-                                travelDirectionSpawnable,
-                                TicketBooth.TicketType.SINGLE_JOURNEY,
-                                PassengerMovement.Disposition.BOARDING,
-                                currentAmenity,
-                                boardingRoutePlanSingleJourney.getCurrentAmenityClass()
-                        );
-                    } else {
-                        // For each portal in the goal portals list, attach the goal amenity to its directory,
-                        // signifying that to get to that amenity, this goal portal is the way
-                        Amenity previousAmenity = null;
+                    stationValidationResult = Station.validatePath(
+                            station,
+                            boardingRoutePlanSingleJourneyAsList,
+                            0,
+                            travelDirectionSpawnable,
+                            TicketBooth.TicketType.SINGLE_JOURNEY,
+                            PassengerMovement.Disposition.BOARDING,
+                            stationGate,
+                            boardingRoutePlanSingleJourney.getCurrentAmenityClass(),
+                            TrainDoor.class
+                    );
 
-                        for (Portal portal : directoryResultBoardingSingleJourney.getPortals()) {
-                            portal.getDirectory().add(
-                                    new Portal.DirectoryItem(
-                                            travelDirectionSpawnable,
-                                            boardingRoutePlanSingleJourney.getCurrentAmenityClass(),
-                                            previousAmenity
-                                    )
-                            );
-
-                            previousAmenity = portal;
-                        }
+                    // If an error is found, return it
+                    if (
+                            stationValidationResult.getStationValidationResultType()
+                                    != StationValidationResult.StationValidationResultType.NO_ERROR
+                    ) {
+                        return stationValidationResult;
                     }
 
-                    // Go one level deeper
-                    currentAmenity = directoryResultBoardingSingleJourney.getGoalAmenity();
+                    // Check the validity for boarding stored value ticket holders
+                    List<Class<? extends Amenity>> boardingRoutePlanStoredValueAsList = new ArrayList<>();
 
-                    // If the next amenity is already a train door, this means a complete path was found from start to
-                    // end, so this path is valid
-                    if (currentAmenity instanceof TrainDoor) {
-                        break;
-                    } else {
-                        boardingRoutePlanSingleJourney.setNextAmenityClass();
+                    boardingRoutePlanStoredValueAsList.add(Security.class);
+                    boardingRoutePlanStoredValue.getCurrentRoutePlan().forEachRemaining(
+                            boardingRoutePlanStoredValueAsList::add
+                    );
+
+                    stationValidationResult = Station.validatePath(
+                            station,
+                            boardingRoutePlanStoredValueAsList,
+                            0,
+                            travelDirectionSpawnable,
+                            TicketBooth.TicketType.STORED_VALUE,
+                            PassengerMovement.Disposition.BOARDING,
+                            stationGate,
+                            boardingRoutePlanStoredValue.getCurrentAmenityClass(),
+                            TrainDoor.class
+                    );
+
+                    // If an error is found, return it
+                    if (
+                            stationValidationResult.getStationValidationResultType()
+                                    != StationValidationResult.StationValidationResultType.NO_ERROR
+                    ) {
+                        return stationValidationResult;
                     }
                 }
 
-                // Check the validity for boarding stored value ticket holders
-                currentAmenity = stationGate;
-                DirectoryResult directoryResultBoardingStoredValue;
-
-                while (true) {
-                    // Check if a path exists from the current goal to any amenity that comes after it
-                    directoryResultBoardingStoredValue = getPortalsToGoal(
-                            station,
-                            boardingRoutePlanStoredValue,
-                            PassengerMovement.Disposition.BOARDING,
-                            travelDirectionSpawnable,
-                            currentAmenity
-                    );
-
-                    // If there are no paths found to any next amenity, this station is instantly invalid
-                    if (directoryResultBoardingStoredValue.getPortals() == null) {
-                        return new StationValidationResult(
-                                StationValidationResult.StationValidationResultType.UNREACHABLE,
-                                travelDirectionSpawnable,
-                                TicketBooth.TicketType.STORED_VALUE,
-                                PassengerMovement.Disposition.BOARDING,
-                                currentAmenity,
-                                boardingRoutePlanStoredValue.getCurrentAmenityClass()
-                        );
-                    } else {
-                        // For each portal in the goal portals list, attach the goal amenity to its directory,
-                        // signifying that to get to that amenity, this goal portal is the way
-                        Amenity previousAmenity = null;
-
-                        for (Portal portal : directoryResultBoardingStoredValue.getPortals()) {
-                            portal.getDirectory().add(
-                                    new Portal.DirectoryItem(
-                                            travelDirectionSpawnable,
-                                            boardingRoutePlanStoredValue.getCurrentAmenityClass(),
-                                            previousAmenity
-                                    )
-                            );
-
-                            previousAmenity = portal;
-                        }
-                    }
-
-                    // Go one level deeper
-                    currentAmenity = directoryResultBoardingStoredValue.getGoalAmenity();
-
-                    // If the next amenity is already a train door, this means a complete path was found from start to
-                    // end, so this path is valid
-                    if (currentAmenity instanceof TrainDoor) {
-                        break;
-                    } else {
-                        boardingRoutePlanStoredValue.setNextAmenityClass();
-                    }
-                }
+                // Get the cluster this station gate belongs to
+                validatedSpawnClusters.add(stationGateCluster);
             }
         }
 
@@ -539,71 +1140,55 @@ public class Station extends BaseStationObject implements Environment {
             );
         }
 
+        validatedSpawnClusters.clear();
+
         // Check the validity for each train door in the station, for each alighting passenger
         for (TrainDoor trainDoor : trainDoors) {
-            // Initialize a potential passenger's route plans
-            alightingRoutePlan = new RoutePlan(false, false);
+            // Check if a train door belonging to the same cluster as this train door has already been validated before
+            // If so, there is no need to validate another train door of the same cluster anymore
+            AmenityCluster trainDoorCluster = station.getAmenityClustersByAmenity().get(trainDoor);
 
-            // Get the directions of the passengers that are spawned by this train door
-            PassengerMovement.TravelDirection travelDirectionSpawnable = trainDoor.getPlatformDirection();
+            if (!validatedSpawnClusters.contains(trainDoorCluster)) {
+                // Initialize a potential passenger's route plans
+                alightingRoutePlan = new RoutePlan(false, false);
 
-            Amenity currentAmenity;
+                // Get the direction of the passengers that are spawned by this train door
+                PassengerMovement.TravelDirection travelDirectionSpawnable = trainDoor.getPlatformDirection();
 
-            // Check the validity for alighting passengers
-            currentAmenity = trainDoor;
-            DirectoryResult directoryResultAlighting;
+                // Check the validity for alighting passengers
+                List<Class<? extends Amenity>> aligthingRoutePlanAsList = new ArrayList<>();
 
-            while (true) {
-                // Check if a path exists from the current goal to any amenity that comes after it
-                directoryResultAlighting = getPortalsToGoal(
-                        station,
-                        alightingRoutePlan,
-                        PassengerMovement.Disposition.ALIGHTING,
-                        travelDirectionSpawnable,
-                        currentAmenity
+                aligthingRoutePlanAsList.add(Turnstile.class);
+                alightingRoutePlan.getCurrentRoutePlan().forEachRemaining(
+                        aligthingRoutePlanAsList::add
                 );
 
-                // If there are no paths found to any next amenity, this station is instantly invalid
-                if (directoryResultAlighting.getPortals() == null) {
-                    return new StationValidationResult(
-                            StationValidationResult.StationValidationResultType.UNREACHABLE,
-                            travelDirectionSpawnable,
-                            null,
-                            PassengerMovement.Disposition.ALIGHTING,
-                            currentAmenity,
-                            alightingRoutePlan.getCurrentAmenityClass()
-                    );
-                } else {
-                    // For each portal in the goal portals list, attach the goal amenity to its directory,
-                    // signifying that to get to that amenity, this goal portal is the way
-                    Amenity previousAmenity = null;
+                stationValidationResult = Station.validatePath(
+                        station,
+                        aligthingRoutePlanAsList,
+                        0,
+                        travelDirectionSpawnable,
+                        null,
+                        PassengerMovement.Disposition.ALIGHTING,
+                        trainDoor,
+                        alightingRoutePlan.getCurrentAmenityClass(),
+                        StationGate.class
+                );
 
-                    for (Portal portal : directoryResultAlighting.getPortals()) {
-                        portal.getDirectory().add(
-                                new Portal.DirectoryItem(
-                                        travelDirectionSpawnable,
-                                        alightingRoutePlan.getCurrentAmenityClass(),
-                                        previousAmenity
-                                )
-                        );
-
-                        previousAmenity = portal;
-                    }
+                // If an error is found, return it
+                if (
+                        stationValidationResult.getStationValidationResultType()
+                                != StationValidationResult.StationValidationResultType.NO_ERROR
+                ) {
+                    return stationValidationResult;
                 }
 
-                // Go one level deeper
-                currentAmenity = directoryResultAlighting.getGoalAmenity();
-
-                // If the next amenity is already a station gate, this means a complete path was found from start to
-                // end, so this path is valid
-                if (currentAmenity instanceof StationGate) {
-                    break;
-                } else {
-                    alightingRoutePlan.setNextAmenityClass();
-                }
+                // Get the cluster this station gate belongs to
+                validatedSpawnClusters.add(trainDoorCluster);
             }
         }
 
+        // If this point is reached, no errors are found at all, and so the station is valid
         return new StationValidationResult(
                 StationValidationResult.StationValidationResultType.NO_ERROR,
                 null,
@@ -614,15 +1199,123 @@ public class Station extends BaseStationObject implements Environment {
         );
     }
 
-    private static DirectoryResult getPortalsToGoal(
+    // Check if a path exists from the current amenity to an amenity of the given class
+    public static StationValidationResult validatePath(
             Station station,
-            RoutePlan routePlan,
-            PassengerMovement.Disposition disposition,
+            List<Class<? extends Amenity>> routePlan,
+            int routePlanIndex,
             PassengerMovement.TravelDirection travelDirectionSpawnable,
-            Amenity currentAmenity
+            TicketBooth.TicketType ticketType,
+            PassengerMovement.Disposition disposition,
+            Amenity currentAmenity,
+            Class<? extends Amenity> nextAmenityClass,
+            Class<? extends Amenity> terminalAmenityClass
     ) {
-        // Set the next amenity class
-        Class<? extends Amenity> nextAmenityClass = routePlan.getCurrentAmenityClass();
+        List<DirectoryResult> directoryResults;
+
+        // Check if a path exists from the current goal to any amenity that comes after it
+        directoryResults = getPortalsToGoal(
+                station,
+                travelDirectionSpawnable,
+                PassengerMovement.Disposition.BOARDING,
+                currentAmenity,
+                nextAmenityClass
+        );
+
+        // If there are no paths found to any next amenity, this station is instantly invalid
+        if (directoryResults.isEmpty()) {
+            return new StationValidationResult(
+                    StationValidationResult.StationValidationResultType.UNREACHABLE,
+                    travelDirectionSpawnable,
+                    ticketType,
+                    disposition,
+                    currentAmenity,
+                    nextAmenityClass
+            );
+        } else {
+            // For each portal in the goal portals list, attach the goal amenity to its directory,
+            // signifying that to get to that amenity, this goal portal is the way
+            for (DirectoryResult directoryResult : directoryResults) {
+                AmenityCluster originAmenityCluster = station.getAmenityClustersByAmenity().get(currentAmenity);
+                AmenityCluster destinationAmenityCluster = station.getAmenityClustersByAmenity().get(
+                        directoryResult.getGoalAmenity()
+                );
+
+                for (Portal portal : directoryResult.getPortals()) {
+                    portal.getDirectory().put(
+                            travelDirectionSpawnable,
+                            nextAmenityClass,
+                            originAmenityCluster,
+                            destinationAmenityCluster,
+                            directoryResult.getDistance()
+                    );
+
+//                    previousAmenity = portal;
+                    originAmenityCluster = station.getAmenityClustersByAmenity().get(portal);
+                }
+
+                // If possible, go one level deeper and go look for the succeeding amenity class
+                Amenity goalAmenity = directoryResult.getGoalAmenity();
+
+                StationValidationResult stationValidationResult;
+
+                // If this class of this amenity is already the last one expected, do not go down one level anymore
+                if (goalAmenity.getClass().equals(terminalAmenityClass)) {
+                    stationValidationResult = new StationValidationResult(
+                            StationValidationResult.StationValidationResultType.NO_ERROR,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                    );
+                } else {
+                    Class<? extends Amenity> nextNextAmenityClass = routePlan.get(routePlanIndex + 1);
+
+                    stationValidationResult = validatePath(
+                            station,
+                            routePlan,
+                            routePlanIndex + 1,
+                            travelDirectionSpawnable,
+                            ticketType,
+                            disposition,
+                            directoryResult.getGoalAmenity(),
+                            nextNextAmenityClass,
+                            terminalAmenityClass
+                    );
+                }
+
+                // If an unreachable amenity was found in this branch, immediately return an error
+                if (
+                        stationValidationResult.getStationValidationResultType()
+                                != StationValidationResult.StationValidationResultType.NO_ERROR
+                ) {
+                    return stationValidationResult;
+                }
+            }
+
+            // No errors found at all
+            return new StationValidationResult(
+                    StationValidationResult.StationValidationResultType.NO_ERROR,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+    }
+
+    // Get all possible paths to all reachable amenities of the given class
+    // Pass through portals if necessary
+    private static List<DirectoryResult> getPortalsToGoal(
+            Station station,
+            PassengerMovement.TravelDirection travelDirection,
+            PassengerMovement.Disposition disposition,
+            Amenity currentAmenity,
+            Class<? extends Amenity> nextAmenityClass
+    ) {
+        List<DirectoryResult> directoryResults = new ArrayList<>();
 
         // Based on the passenger's current direction and route plan, get the next amenity class to be sought
         // Given the next amenity class, collect the floors which have this amenity class
@@ -639,84 +1332,97 @@ public class Station extends BaseStationObject implements Environment {
 
         // Compute the distance from the current position to the possible goal, taking into account possible
         // paths passing through other floors
-        MultipleFloorPassengerPath bestPath = null;
-        Amenity closestGoal = null;
-        double closestDistance = Double.MAX_VALUE;
+        // Take note of all the validated amenities' clusters
+        List<AmenityCluster> validatedGoalClusters = new ArrayList<>();
 
         for (Amenity candidateGoal : amenityListInFloors) {
-            // Only consider amenities that are enabled
-            NonObstacle nonObstacle = ((NonObstacle) candidateGoal);
+            // Check if an amenity belonging to the same cluster as this amenity has already been validated
+            // before
+            // If so, there is no need to validate another amenity of the same cluster anymore
+            AmenityCluster amenityCluster = station.getAmenityClustersByAmenity().get(candidateGoal);
 
-            if (!nonObstacle.isEnabled()) {
-                continue;
-            }
+            if (!validatedGoalClusters.contains(amenityCluster)) {
+                // Only consider amenities that are enabled
+                NonObstacle nonObstacle = ((NonObstacle) candidateGoal);
 
-            // Filter the amenity search space only to what is compatible with this passenger
-            if (candidateGoal instanceof StationGate) {
-                // If the goal of the passenger is a station gate, this means the passenger is leaving
-                // So only consider station gates which allow exits and accepts the passenger's direction
-                StationGate stationGateExit = ((StationGate) candidateGoal);
-
-                if (stationGateExit.getStationGateMode() == StationGate.StationGateMode.ENTRANCE) {
+                if (!nonObstacle.isEnabled()) {
                     continue;
-                } else {
-                    if (!stationGateExit.getStationGatePassengerTravelDirections().contains(travelDirectionSpawnable)) {
+                }
+
+                // Filter the amenity search space only to what is compatible with this passenger
+                if (candidateGoal instanceof StationGate) {
+                    // If the goal of the passenger is a station gate, this means the passenger is leaving
+                    // So only consider station gates which allow exits and accepts the passenger's direction
+                    StationGate stationGateExit = ((StationGate) candidateGoal);
+
+                    if (stationGateExit.getStationGateMode() == StationGate.StationGateMode.ENTRANCE) {
+                        continue;
+                    } else {
+                        if (!stationGateExit.getStationGatePassengerTravelDirections().contains(travelDirection)) {
+                            continue;
+                        }
+                    }
+                } else if (candidateGoal instanceof Turnstile) {
+                    // Only consider turnstiles which match this passenger's disposition and travel direction
+                    Turnstile turnstile = ((Turnstile) candidateGoal);
+
+                    if (!turnstile.getTurnstileTravelDirections().contains(travelDirection)) {
+                        continue;
+                    }
+
+                    if (turnstile.getTurnstileMode() != Turnstile.TurnstileMode.BIDIRECTIONAL) {
+                        if (
+                                turnstile.getTurnstileMode() == Turnstile.TurnstileMode.BOARDING
+                                        && disposition.equals(PassengerMovement.Disposition.ALIGHTING)
+                                        || turnstile.getTurnstileMode() == Turnstile.TurnstileMode.ALIGHTING
+                                        && disposition.equals(PassengerMovement.Disposition.BOARDING)
+                        ) {
+                            continue;
+                        }
+                    }
+                } else if (candidateGoal instanceof TrainDoor) {
+                    // Only consider train doors which match this passenger's travel direction
+                    TrainDoor trainDoor = ((TrainDoor) candidateGoal);
+
+                    if (trainDoor.getPlatformDirection() != travelDirection) {
                         continue;
                     }
                 }
-            } else if (candidateGoal instanceof Turnstile) {
-                // Only consider turnstiles which match this passenger's disposition and travel direction
-                Turnstile turnstile = ((Turnstile) candidateGoal);
 
-                if (!turnstile.getTurnstileTravelDirections().contains(travelDirectionSpawnable)) {
-                    continue;
-                }
+                Patch currentAmenityPatch = currentAmenity.getAmenityBlocks().get(0).getPatch();
 
-                if (turnstile.getTurnstileMode() != Turnstile.TurnstileMode.BIDIRECTIONAL) {
-                    if (
-                            turnstile.getTurnstileMode() == Turnstile.TurnstileMode.BOARDING
-                                    && disposition.equals(PassengerMovement.Disposition.ALIGHTING)
-                                    || turnstile.getTurnstileMode() == Turnstile.TurnstileMode.ALIGHTING
-                                    && disposition.equals(PassengerMovement.Disposition.BOARDING)
-                    ) {
-                        continue;
+                List<MultipleFloorPassengerPath> multipleFloorPassengerPaths
+                        = PassengerMovement.computePathAcrossFloors(
+                        currentAmenityPatch.getFloor(),
+                        new ArrayList<>(),
+                        new ArrayList<>(),
+                        currentAmenityPatch,
+                        candidateGoal.getAmenityBlocks().get(0)
+                );
+
+                boolean pathsFound = false;
+
+                for (MultipleFloorPassengerPath multipleFloorPassengerPath : multipleFloorPassengerPaths) {
+                    if (multipleFloorPassengerPath != null) {
+                        pathsFound = true;
+
+                        directoryResults.add(
+                                new DirectoryResult(
+                                        multipleFloorPassengerPath.getPortals(),
+                                        candidateGoal,
+                                        multipleFloorPassengerPath.getDistance()
+                                )
+                        );
                     }
                 }
-            } else if (candidateGoal instanceof TrainDoor) {
-                // Only consider train doors which match this passenger's travel direction
-                TrainDoor trainDoor = ((TrainDoor) candidateGoal);
 
-                if (trainDoor.getPlatformDirection() != travelDirectionSpawnable) {
-                    continue;
-                }
-            }
-
-            Patch currentAmenityPatch = currentAmenity.getAmenityBlocks().get(0).getPatch();
-
-            MultipleFloorPassengerPath multipleFloorPassengerPath
-                    = PassengerMovement.computePathAcrossFloors(
-                    currentAmenityPatch.getFloor(),
-                    new ArrayList<>(),
-                    new ArrayList<>(),
-                    currentAmenityPatch,
-                    candidateGoal.getAmenityBlocks().get(0)
-            );
-
-            if (multipleFloorPassengerPath != null) {
-                if (multipleFloorPassengerPath.getDistance() < closestDistance) {
-                    bestPath = multipleFloorPassengerPath;
-                    closestDistance = multipleFloorPassengerPath.getDistance();
-                    closestGoal = candidateGoal;
+                if (pathsFound) {
+                    validatedGoalClusters.add(amenityCluster);
                 }
             }
         }
 
-        // Then set the passenger's goal portals, given the path found to the goal and the portals required to
-        // get to it
-        return new DirectoryResult(
-                (bestPath != null) ? new ArrayList<>(bestPath.getPortals()) : null,
-                closestGoal
-        );
+        return directoryResults;
     }
 
     // Validate the layout of the station
@@ -1105,6 +1811,35 @@ public class Station extends BaseStationObject implements Environment {
         @Override
         public int hashCode() {
             return Objects.hash(amenity, floor);
+        }
+    }
+
+    public static class AmenityCluster implements Environment {
+        // Denotes the floor where this cluster is
+        private final Floor floor;
+
+        // Denotes the amenity class of the amenities in this cluster
+        private final Class<? extends Amenity> amenityClass;
+
+        // Denotes the amenities belonging to this cluster
+        private final List<Amenity> amenities;
+
+        public AmenityCluster(Floor floor, Class<? extends Amenity> amenityClass) {
+            this.floor = floor;
+            this.amenityClass = amenityClass;
+            this.amenities = new ArrayList<>();
+        }
+
+        public Floor getFloor() {
+            return floor;
+        }
+
+        public Class<? extends Amenity> getAmenityClass() {
+            return amenityClass;
+        }
+
+        public List<Amenity> getAmenities() {
+            return amenities;
         }
     }
 }

@@ -97,7 +97,7 @@ public class Floor extends BaseStationObject implements Environment {
         this.passengersInFloor = new CopyOnWriteArrayList<>();
 
         // Initialize caches
-        int capacity = 50;
+        int capacity = 100;
 
         this.pathCache = new PathCache(capacity);
     }
@@ -189,97 +189,26 @@ public class Floor extends BaseStationObject implements Environment {
         return this.patches;
     }
 
-    public static List<Patch> get7x7Field(
-            Floor floor,
-            Patch centerPatch,
-            double heading,
-            boolean includeCenterPatch,
-            double fieldOfViewAngle
-    ) {
-        int truncatedX = (int) (centerPatch.getPatchCenterCoordinates().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS);
-        int truncatedY = (int) (centerPatch.getPatchCenterCoordinates().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS);
-
-        Patch chosenPatch;
-        List<Patch> patchesToExplore = new ArrayList<>();
-
-        for (int rowOffset = -3; rowOffset <= 3; rowOffset++) {
-            for (int columnOffset = -3; columnOffset <= 3; columnOffset++) {
-                boolean xCondition;
-                boolean yCondition;
-
-                // Exclude the center patch, unless explicitly specified
-                boolean isCenterPatch = rowOffset == 0 && columnOffset == 0;
-
-                if (!includeCenterPatch) {
-                    if (isCenterPatch) {
-                        continue;
-                    }
-                }
-
-                // Separate upper and lower rows
-                if (rowOffset < 0) {
-                    yCondition = truncatedY + rowOffset > 0;
-                } else if (rowOffset > 0) {
-                    yCondition = truncatedY + rowOffset < floor.getRows();
-                } else {
-                    yCondition = true;
-                }
-
-                // Separate left and right columns
-                if (columnOffset < 0) {
-                    xCondition = truncatedX + columnOffset > 0;
-                } else if (columnOffset > 0) {
-                    xCondition = truncatedX + columnOffset < floor.getColumns();
-                } else {
-                    xCondition = true;
-                }
-
-                // Insert the patch to the list of patches to be explored if the patches are within the bounds of the
-                // floor
-                if (xCondition && yCondition) {
-                    chosenPatch = floor.getPatch(
-                            truncatedY + rowOffset,
-                            truncatedX + columnOffset
-                    );
-
-                    // Make sure that the patch to be added is within the field of view of the passenger which invoked
-                    // this method
-                    if ((includeCenterPatch && isCenterPatch) || Coordinates.isWithinFieldOfView(
-                            centerPatch.getPatchCenterCoordinates(),
-                            chosenPatch.getPatchCenterCoordinates(),
-                            heading,
-                            fieldOfViewAngle)) {
-                        patchesToExplore.add(chosenPatch);
-                    }
-                }
-            }
-        }
-
-        return patchesToExplore;
-    }
-
     // Add a floor above or below the given current floor in a list of floors
     public static Floor addFloorAboveOrBelow(
             Station station,
-            List<Floor> floors,
             Floor currentFloor,
             boolean aboveCurrentFloor,
             int newFloorRows,
             int newFloorColumns) {
         // Get the index of the current floor within the given floor list
-        int currentFloorIndex = floors.indexOf(currentFloor);
+        int currentFloorIndex = station.getFloors().indexOf(currentFloor);
 
         if (!aboveCurrentFloor) {
-            return addFloorBelowCurrentFloor(station, floors, currentFloorIndex, newFloorRows, newFloorColumns);
+            return addFloorBelowCurrentFloor(station, currentFloorIndex, newFloorRows, newFloorColumns);
         } else {
-            return addFloorAboveCurrentFloor(station, floors, currentFloorIndex, newFloorRows, newFloorColumns);
+            return addFloorAboveCurrentFloor(station, currentFloorIndex, newFloorRows, newFloorColumns);
         }
     }
 
     // Add a floor below the given current floor in a list of floors
     private static Floor addFloorBelowCurrentFloor(
             Station station,
-            List<Floor> floors,
             int currentFloorIndex,
             int newFloorRows,
             int newFloorColumns) {
@@ -288,13 +217,12 @@ public class Floor extends BaseStationObject implements Environment {
         int newFloorIndex = currentFloorIndex;
 
         // Add the floor given the new index
-        return addFloor(station, floors, newFloorIndex, newFloorRows, newFloorColumns);
+        return addFloor(station, newFloorIndex, newFloorRows, newFloorColumns);
     }
 
     // Add a floor above the given current floor in a list of floors
     private static Floor addFloorAboveCurrentFloor(
             Station station,
-            List<Floor> floors,
             int currentFloorIndex,
             int newFloorRows,
             int newFloorsColumns) {
@@ -303,13 +231,12 @@ public class Floor extends BaseStationObject implements Environment {
         int newFloorIndex = 1 + currentFloorIndex;
 
         // Add the floor given the new index
-        return addFloor(station, floors, newFloorIndex, newFloorRows, newFloorsColumns);
+        return addFloor(station, newFloorIndex, newFloorRows, newFloorsColumns);
     }
 
     // Add a floor to the list of floors given an index
     public static Floor addFloor(
             Station station,
-            List<Floor> floors,
             int newFloorIndex,
             int newFloorsRows,
             int newFloorColumns) {
@@ -319,21 +246,30 @@ public class Floor extends BaseStationObject implements Environment {
                 newFloorColumns
         );
 
-        floors.add(
+        // Add the floor
+        station.getFloors().add(
                 newFloorIndex,
                 newFloor
         );
+
+        station.getStairPortalsByFloor().put(newFloor, new ArrayList<>());
+        station.getEscalatorPortalsByFloor().put(newFloor, new ArrayList<>());
+        station.getElevatorPortalsByFloor().put(newFloor, new ArrayList<>());
 
         return newFloor;
     }
 
     // Remove the given floor from a list of floors
-    public static void deleteFloor(List<Floor> floors, Floor floorToBeRemoved) {
+    public static void deleteFloor(Station station, Floor floorToBeRemoved) {
         // Delete all amenities in the floor to be removed
         Main.mainScreenController.clearAmenities();
 
         // Remove the floor specified
-        floors.remove(floorToBeRemoved);
+        station.getFloors().remove(floorToBeRemoved);
+
+        station.getStairPortalsByFloor().remove(floorToBeRemoved);
+        station.getEscalatorPortalsByFloor().remove(floorToBeRemoved);
+        station.getElevatorPortalsByFloor().remove(floorToBeRemoved);
     }
 
     // Depending on the given amenity class, grab the appropriate amenity list
