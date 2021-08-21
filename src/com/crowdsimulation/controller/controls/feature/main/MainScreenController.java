@@ -1690,8 +1690,13 @@ public class MainScreenController extends ScreenController {
         // Depending on the mode chosen by the user in the window before this, either start with a blank station, or
         // load an already existing one
         if ((boolean) this.getWindowInput().get(MainScreenController.INPUT_KEYS[0])) {
-            int rows = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[1]);
-            int columns = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[2]);
+            int width = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[1]);
+            int length = (int) this.getWindowInput().get(MainScreenController.INPUT_KEYS[2]);
+
+            // Discretize the given width and length measurements to 0.6 x 0.6 sized patches
+            // Always round up
+            int rows = (int) Math.ceil(width / Patch.PATCH_SIZE_IN_SQUARE_METERS);
+            int columns = (int) Math.ceil(length / Patch.PATCH_SIZE_IN_SQUARE_METERS);
 
             // Initialize the blank station
             Station blankStation = new Station(rows, columns);

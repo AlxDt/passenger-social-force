@@ -61,7 +61,10 @@ public class Station extends BaseStationObject implements Environment {
 
     // Take note of clusters of certain amenities
     private final HashMap<Floor, HashMap<Class<? extends Amenity>, List<AmenityCluster>>> amenityClustersByFloor;
-    private final HashMap<Amenity, AmenityCluster> amenityClustersByAmenity;
+    private final HashMap<Amenity, AmenityCluster> amenityClusterByAmenity;
+
+    private final HashMap<Floor, List<AmenityCluster>> amenityClustersByFloorAssorted;
+    private final HashMap<Amenity, AmenityCluster> amenityClusterByAmenityAssorted;
 
     // The list of passengers in this station
     private final CopyOnWriteArrayList<Passenger> passengersInStation;
@@ -81,14 +84,17 @@ public class Station extends BaseStationObject implements Environment {
         this.escalatorShafts = Collections.synchronizedList(new ArrayList<>());
         this.elevatorShafts = Collections.synchronizedList(new ArrayList<>());
 
-        this.amenityFloorIndex = new HashMap<>();
-
-        this.amenityClustersByFloor = new HashMap<>();
-        this.amenityClustersByAmenity = new HashMap<>();
-
         this.stairPortalsByFloor = new HashMap<>();
         this.escalatorPortalsByFloor = new HashMap<>();
         this.elevatorPortalsByFloor = new HashMap<>();
+
+        this.amenityFloorIndex = new HashMap<>();
+
+        this.amenityClustersByFloor = new HashMap<>();
+        this.amenityClusterByAmenity = new HashMap<>();
+
+        this.amenityClustersByFloorAssorted = new HashMap<>();
+        this.amenityClusterByAmenityAssorted = new HashMap<>();
 
         this.passengersInStation = new CopyOnWriteArrayList<>();
 
@@ -130,8 +136,16 @@ public class Station extends BaseStationObject implements Environment {
         return amenityClustersByFloor;
     }
 
-    public HashMap<Amenity, AmenityCluster> getAmenityClustersByAmenity() {
-        return amenityClustersByAmenity;
+    public HashMap<Amenity, AmenityCluster> getAmenityClusterByAmenity() {
+        return amenityClusterByAmenity;
+    }
+
+    public HashMap<Floor, List<AmenityCluster>> getAmenityClustersByFloorAssorted() {
+        return amenityClustersByFloorAssorted;
+    }
+
+    public HashMap<Amenity, AmenityCluster> getAmenityClusterByAmenityAssorted() {
+        return amenityClusterByAmenityAssorted;
     }
 
     public List<StairShaft> getStairShafts() {
@@ -244,7 +258,7 @@ public class Station extends BaseStationObject implements Environment {
 
                     // Add the first amenity into the cluster
                     stationGateCluster.getAmenities().add(stationGate);
-                    this.amenityClustersByAmenity.put(stationGate, stationGateCluster);
+                    this.amenityClusterByAmenity.put(stationGate, stationGateCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -257,6 +271,7 @@ public class Station extends BaseStationObject implements Environment {
                                     stationGate.getAttractors().get(0).getPatch(),
                                     amenityInCluster.getAttractors().get(0).getPatch(),
                                     true,
+                                    false,
                                     false
                             );
 
@@ -275,7 +290,7 @@ public class Station extends BaseStationObject implements Environment {
                                         hasFoundCluster = true;
 
                                         amenityCluster.getAmenities().add(stationGate);
-                                        this.amenityClustersByAmenity.put(stationGate, amenityCluster);
+                                        this.amenityClusterByAmenity.put(stationGate, amenityCluster);
 
                                         break;
                                     }
@@ -295,7 +310,7 @@ public class Station extends BaseStationObject implements Environment {
                         stationGateClusters.add(stationGateCluster);
 
                         stationGateCluster.getAmenities().add(stationGate);
-                        this.amenityClustersByAmenity.put(stationGate, stationGateCluster);
+                        this.amenityClusterByAmenity.put(stationGate, stationGateCluster);
                     }
                 }
             }
@@ -313,7 +328,7 @@ public class Station extends BaseStationObject implements Environment {
 
                     // Add the first amenity into the cluster
                     securityCluster.getAmenities().add(security);
-                    this.amenityClustersByAmenity.put(security, securityCluster);
+                    this.amenityClusterByAmenity.put(security, securityCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -326,6 +341,7 @@ public class Station extends BaseStationObject implements Environment {
                                     security.getAttractors().get(0).getPatch(),
                                     amenityInCluster.getAttractors().get(0).getPatch(),
                                     true,
+                                    false,
                                     false
                             );
 
@@ -344,7 +360,7 @@ public class Station extends BaseStationObject implements Environment {
                                         hasFoundCluster = true;
 
                                         amenityCluster.getAmenities().add(security);
-                                        this.amenityClustersByAmenity.put(security, amenityCluster);
+                                        this.amenityClusterByAmenity.put(security, amenityCluster);
 
                                         break;
                                     }
@@ -364,7 +380,7 @@ public class Station extends BaseStationObject implements Environment {
                         securityClusters.add(securityCluster);
 
                         securityCluster.getAmenities().add(security);
-                        this.amenityClustersByAmenity.put(security, securityCluster);
+                        this.amenityClusterByAmenity.put(security, securityCluster);
                     }
                 }
             }
@@ -382,7 +398,7 @@ public class Station extends BaseStationObject implements Environment {
 
                     // Add the first amenity into the cluster
                     ticketBoothCluster.getAmenities().add(ticketBooth);
-                    this.amenityClustersByAmenity.put(ticketBooth, ticketBoothCluster);
+                    this.amenityClusterByAmenity.put(ticketBooth, ticketBoothCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -395,6 +411,7 @@ public class Station extends BaseStationObject implements Environment {
                                     ticketBooth.getAttractors().get(0).getPatch(),
                                     amenityInCluster.getAttractors().get(0).getPatch(),
                                     true,
+                                    false,
                                     false
                             );
 
@@ -413,7 +430,7 @@ public class Station extends BaseStationObject implements Environment {
                                         hasFoundCluster = true;
 
                                         amenityCluster.getAmenities().add(ticketBooth);
-                                        this.amenityClustersByAmenity.put(ticketBooth, amenityCluster);
+                                        this.amenityClusterByAmenity.put(ticketBooth, amenityCluster);
 
                                         break;
                                     }
@@ -433,7 +450,7 @@ public class Station extends BaseStationObject implements Environment {
                         ticketBoothClusters.add(ticketBoothCluster);
 
                         ticketBoothCluster.getAmenities().add(ticketBooth);
-                        this.amenityClustersByAmenity.put(ticketBooth, ticketBoothCluster);
+                        this.amenityClusterByAmenity.put(ticketBooth, ticketBoothCluster);
                     }
                 }
             }
@@ -451,7 +468,7 @@ public class Station extends BaseStationObject implements Environment {
 
                     // Add the first amenity into the cluster
                     turnstileCluster.getAmenities().add(turnstile);
-                    this.amenityClustersByAmenity.put(turnstile, turnstileCluster);
+                    this.amenityClusterByAmenity.put(turnstile, turnstileCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -476,6 +493,7 @@ public class Station extends BaseStationObject implements Environment {
                                         turnstile.getAttractors().get(0).getPatch(),
                                         amenityInCluster.getAttractors().get(0).getPatch(),
                                         true,
+                                        false,
                                         false
                                 );
 
@@ -494,7 +512,7 @@ public class Station extends BaseStationObject implements Environment {
                                             hasFoundCluster = true;
 
                                             amenityCluster.getAmenities().add(turnstile);
-                                            this.amenityClustersByAmenity.put(turnstile, amenityCluster);
+                                            this.amenityClusterByAmenity.put(turnstile, amenityCluster);
 
                                             break;
                                         }
@@ -515,7 +533,7 @@ public class Station extends BaseStationObject implements Environment {
                         turnstileClusters.add(turnstileCluster);
 
                         turnstileCluster.getAmenities().add(turnstile);
-                        this.amenityClustersByAmenity.put(turnstile, turnstileCluster);
+                        this.amenityClusterByAmenity.put(turnstile, turnstileCluster);
                     }
                 }
             }
@@ -533,7 +551,7 @@ public class Station extends BaseStationObject implements Environment {
 
                     // Add the first amenity into the cluster
                     trainDoorCluster.getAmenities().add(trainDoor);
-                    this.amenityClustersByAmenity.put(trainDoor, trainDoorCluster);
+                    this.amenityClusterByAmenity.put(trainDoor, trainDoorCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -555,6 +573,7 @@ public class Station extends BaseStationObject implements Environment {
                                         trainDoor.getAttractors().get(0).getPatch(),
                                         amenityInCluster.getAttractors().get(0).getPatch(),
                                         true,
+                                        false,
                                         false
                                 );
 
@@ -573,7 +592,7 @@ public class Station extends BaseStationObject implements Environment {
                                             hasFoundCluster = true;
 
                                             amenityCluster.getAmenities().add(trainDoor);
-                                            this.amenityClustersByAmenity.put(trainDoor, amenityCluster);
+                                            this.amenityClusterByAmenity.put(trainDoor, amenityCluster);
 
                                             break;
                                         }
@@ -594,7 +613,7 @@ public class Station extends BaseStationObject implements Environment {
                         trainDoorClusters.add(trainDoorCluster);
 
                         trainDoorCluster.getAmenities().add(trainDoor);
-                        this.amenityClustersByAmenity.put(trainDoor, trainDoorCluster);
+                        this.amenityClusterByAmenity.put(trainDoor, trainDoorCluster);
                     }
                 }
             }
@@ -617,7 +636,7 @@ public class Station extends BaseStationObject implements Environment {
 
                     // Add the first amenity into the cluster
                     stairPortalCluster.getAmenities().add(stairPortal);
-                    this.amenityClustersByAmenity.put(stairPortal, stairPortalCluster);
+                    this.amenityClusterByAmenity.put(stairPortal, stairPortalCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -630,6 +649,7 @@ public class Station extends BaseStationObject implements Environment {
                                     stairPortal.getAttractors().get(0).getPatch(),
                                     amenityInCluster.getAttractors().get(0).getPatch(),
                                     true,
+                                    false,
                                     false
                             );
 
@@ -648,7 +668,7 @@ public class Station extends BaseStationObject implements Environment {
                                         hasFoundCluster = true;
 
                                         amenityCluster.getAmenities().add(stairPortal);
-                                        this.amenityClustersByAmenity.put(stairPortal, amenityCluster);
+                                        this.amenityClusterByAmenity.put(stairPortal, amenityCluster);
 
                                         break;
                                     }
@@ -668,7 +688,7 @@ public class Station extends BaseStationObject implements Environment {
                         stairPortalClusters.add(stairPortalCluster);
 
                         stairPortalCluster.getAmenities().add(stairPortal);
-                        this.amenityClustersByAmenity.put(stairPortal, stairPortalCluster);
+                        this.amenityClusterByAmenity.put(stairPortal, stairPortalCluster);
                     }
                 }
             }
@@ -686,7 +706,7 @@ public class Station extends BaseStationObject implements Environment {
 
                     // Add the first amenity into the cluster
                     escalatorPortalCluster.getAmenities().add(escalatorPortal);
-                    this.amenityClustersByAmenity.put(escalatorPortal, escalatorPortalCluster);
+                    this.amenityClusterByAmenity.put(escalatorPortal, escalatorPortalCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -699,6 +719,7 @@ public class Station extends BaseStationObject implements Environment {
                                     escalatorPortal.getAttractors().get(0).getPatch(),
                                     amenityInCluster.getAttractors().get(0).getPatch(),
                                     true,
+                                    false,
                                     false
                             );
 
@@ -717,7 +738,7 @@ public class Station extends BaseStationObject implements Environment {
                                         hasFoundCluster = true;
 
                                         amenityCluster.getAmenities().add(escalatorPortal);
-                                        this.amenityClustersByAmenity.put(escalatorPortal, amenityCluster);
+                                        this.amenityClusterByAmenity.put(escalatorPortal, amenityCluster);
 
                                         break;
                                     }
@@ -737,7 +758,7 @@ public class Station extends BaseStationObject implements Environment {
                         escalatorPortalClusters.add(escalatorPortalCluster);
 
                         escalatorPortalCluster.getAmenities().add(escalatorPortal);
-                        this.amenityClustersByAmenity.put(escalatorPortal, escalatorPortalCluster);
+                        this.amenityClusterByAmenity.put(escalatorPortal, escalatorPortalCluster);
                     }
                 }
             }
@@ -755,7 +776,7 @@ public class Station extends BaseStationObject implements Environment {
 
                     // Add the first amenity into the cluster
                     elevatorPortalCluster.getAmenities().add(elevatorPortal);
-                    this.amenityClustersByAmenity.put(elevatorPortal, elevatorPortalCluster);
+                    this.amenityClusterByAmenity.put(elevatorPortal, elevatorPortalCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -768,6 +789,7 @@ public class Station extends BaseStationObject implements Environment {
                                     elevatorPortal.getAttractors().get(0).getPatch(),
                                     amenityInCluster.getAttractors().get(0).getPatch(),
                                     true,
+                                    false,
                                     false
                             );
 
@@ -786,7 +808,7 @@ public class Station extends BaseStationObject implements Environment {
                                         hasFoundCluster = true;
 
                                         amenityCluster.getAmenities().add(elevatorPortal);
-                                        this.amenityClustersByAmenity.put(elevatorPortal, amenityCluster);
+                                        this.amenityClusterByAmenity.put(elevatorPortal, amenityCluster);
 
                                         break;
                                     }
@@ -807,7 +829,73 @@ public class Station extends BaseStationObject implements Environment {
 
                         // Add the first amenity into the cluster
                         elevatorPortalCluster.getAmenities().add(elevatorPortal);
-                        this.amenityClustersByAmenity.put(elevatorPortal, elevatorPortalCluster);
+                        this.amenityClusterByAmenity.put(elevatorPortal, elevatorPortalCluster);
+                    }
+                }
+            }
+
+            // Assemble the assorted clusters for this floor
+            // Compile all amenities in this floor
+            List<Amenity> amenitiesInFloor = new ArrayList<>();
+
+            amenitiesInFloor.addAll(floor.getStationGates());
+            amenitiesInFloor.addAll(floor.getSecurities());
+            amenitiesInFloor.addAll(floor.getTicketBooths());
+            amenitiesInFloor.addAll(floor.getTurnstiles());
+            amenitiesInFloor.addAll(floor.getTrainDoors());
+
+            amenitiesInFloor.addAll(stairPortals);
+            amenitiesInFloor.addAll(escalatorPortals);
+            amenitiesInFloor.addAll(elevatorPortals);
+
+            // Create the clusters
+            List<AmenityCluster> amenityClusters = new ArrayList<>();
+            this.amenityClustersByFloorAssorted.put(floor, amenityClusters);
+
+            for (Amenity amenityInFloor : amenitiesInFloor) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (amenityClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster amenityCluster = new AmenityCluster(floor, null);
+                    amenityClusters.add(amenityCluster);
+
+                    // Add the first amenity into the cluster
+                    amenityCluster.getAmenities().add(amenityInFloor);
+                    this.amenityClusterByAmenityAssorted.put(amenityInFloor, amenityCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters
+                    boolean hasFoundCluster = false;
+
+                    for (AmenityCluster amenityCluster : amenityClusters) {
+                        PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                amenityInFloor.getAttractors().get(0).getPatch(),
+                                amenityCluster.getAmenities().get(0).getAttractors().get(0).getPatch(),
+                                true,
+                                false,
+                                true
+                        );
+
+                        // If a path to this amenity in the cluster has been found, check if the distance to this
+                        // amenity is the closest one found so far
+                        if (pathToAmenity != null) {
+                            hasFoundCluster = true;
+
+                            amenityCluster.getAmenities().add(amenityInFloor);
+                            this.amenityClusterByAmenityAssorted.put(amenityInFloor, amenityCluster);
+
+                            break;
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster, create a cluster with
+                    // only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster amenityCluster = new AmenityCluster(floor, null);
+                        amenityClusters.add(amenityCluster);
+
+                        // Add the first amenity into the cluster
+                        amenityCluster.getAmenities().add(amenityInFloor);
+                        this.amenityClusterByAmenityAssorted.put(amenityInFloor, amenityCluster);
                     }
                 }
             }
@@ -900,7 +988,10 @@ public class Station extends BaseStationObject implements Environment {
     // Clear the clusters in the station
     private void clearClusters() {
         this.amenityClustersByFloor.clear();
-        this.amenityClustersByAmenity.clear();
+        this.amenityClusterByAmenity.clear();
+
+        this.amenityClustersByFloorAssorted.clear();
+        this.amenityClusterByAmenityAssorted.clear();
     }
 
     // Thoroughly validate the layout of the station
@@ -1043,7 +1134,7 @@ public class Station extends BaseStationObject implements Environment {
             // Check if a station gate belonging to the same cluster as this station gate has already been validated
             // before
             // If so, there is no need to validate another station gate of the same cluster anymore
-            AmenityCluster stationGateCluster = station.getAmenityClustersByAmenity().get(stationGate);
+            AmenityCluster stationGateCluster = station.getAmenityClusterByAmenity().get(stationGate);
 
             if (!validatedSpawnClusters.contains(stationGateCluster)) {
                 // For the validation of the boarding route, only deal with patches which allow entrances
@@ -1146,7 +1237,7 @@ public class Station extends BaseStationObject implements Environment {
         for (TrainDoor trainDoor : trainDoors) {
             // Check if a train door belonging to the same cluster as this train door has already been validated before
             // If so, there is no need to validate another train door of the same cluster anymore
-            AmenityCluster trainDoorCluster = station.getAmenityClustersByAmenity().get(trainDoor);
+            AmenityCluster trainDoorCluster = station.getAmenityClusterByAmenity().get(trainDoor);
 
             if (!validatedSpawnClusters.contains(trainDoorCluster)) {
                 // Initialize a potential passenger's route plans
@@ -1236,8 +1327,8 @@ public class Station extends BaseStationObject implements Environment {
             // For each portal in the goal portals list, attach the goal amenity to its directory,
             // signifying that to get to that amenity, this goal portal is the way
             for (DirectoryResult directoryResult : directoryResults) {
-                AmenityCluster originAmenityCluster = station.getAmenityClustersByAmenity().get(currentAmenity);
-                AmenityCluster destinationAmenityCluster = station.getAmenityClustersByAmenity().get(
+                AmenityCluster originAmenityCluster = station.getAmenityClusterByAmenity().get(currentAmenity);
+                AmenityCluster destinationAmenityCluster = station.getAmenityClusterByAmenity().get(
                         directoryResult.getGoalAmenity()
                 );
 
@@ -1251,7 +1342,7 @@ public class Station extends BaseStationObject implements Environment {
                     );
 
 //                    previousAmenity = portal;
-                    originAmenityCluster = station.getAmenityClustersByAmenity().get(portal);
+                    originAmenityCluster = station.getAmenityClusterByAmenity().get(portal.getPair());
                 }
 
                 // If possible, go one level deeper and go look for the succeeding amenity class
@@ -1339,7 +1430,7 @@ public class Station extends BaseStationObject implements Environment {
             // Check if an amenity belonging to the same cluster as this amenity has already been validated
             // before
             // If so, there is no need to validate another amenity of the same cluster anymore
-            AmenityCluster amenityCluster = station.getAmenityClustersByAmenity().get(candidateGoal);
+            AmenityCluster amenityCluster = station.getAmenityClusterByAmenity().get(candidateGoal);
 
             if (!validatedGoalClusters.contains(amenityCluster)) {
                 // Only consider amenities that are enabled
