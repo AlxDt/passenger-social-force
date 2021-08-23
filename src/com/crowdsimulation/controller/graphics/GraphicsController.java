@@ -730,7 +730,7 @@ public class GraphicsController extends Controller {
                             GraphicsController.getScaledPassengerCoordinates(passenger).getX() * tileSize,
                             GraphicsController.getScaledPassengerCoordinates(passenger).getY() * tileSize + tileSize
                     );
-*//*
+*/
 
                     // Draw passenger path
                     if (passenger.getPassengerMovement().getCurrentPath() != null) {
@@ -760,7 +760,6 @@ public class GraphicsController extends Controller {
 
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }
-*//*
                     // Draw the passenger's current patch
                     foregroundGraphicsContext.setFill(Color.GRAY);
                     foregroundGraphicsContext.setGlobalAlpha(0.25);
@@ -772,7 +771,7 @@ public class GraphicsController extends Controller {
                                     / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize - tileSize * 0.5,
                             tileSize,
                             tileSize
-                    );*//*
+                    );
 
                     foregroundGraphicsContext.setGlobalAlpha(1.0);
 
@@ -853,15 +852,15 @@ public class GraphicsController extends Controller {
                         );
                     }
 
-                    foregroundGraphicsContext.setGlobalAlpha(1.0);*/
+                    foregroundGraphicsContext.setGlobalAlpha(1.0);
 
-//                    foregroundGraphicsContext.strokeText(
-//                            passenger.getIdentifier() + "",
-//                            patch.getPatchCenterCoordinates().getX()
-//                                    / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25,
-//                            patch.getPatchCenterCoordinates().getY()
-//                                    / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25
-//                    );
+                    foregroundGraphicsContext.strokeText(
+                            passenger.getIdentifier() + "",
+                            patch.getPatchCenterCoordinates().getX()
+                                    / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25,
+                            patch.getPatchCenterCoordinates().getY()
+                                    / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25
+                    );
 
                     // Draw the passenger sprite
                     foregroundGraphicsContext.drawImage(
@@ -878,110 +877,110 @@ public class GraphicsController extends Controller {
                             tileSize * 2 + tileSize * 0.25
                     );
 
-//                    // Draw vectors
-//                    foregroundGraphicsContext.setStroke(Color.RED);
-//
-//                    final double vectorHeadDiameter = 0.1 * tileSize;
-//
-//                    for (
-//                            Vector vector
-//                            : new ArrayList<>(passenger.getPassengerMovement().getRepulsiveForceFromPassengers())
-//                    ) {
-//                        foregroundGraphicsContext.strokeLine(
-//                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
-//                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
-//                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
-//                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
-//                        );
-//
-//                        foregroundGraphicsContext.strokeOval(
-//                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
-//                                        - vectorHeadDiameter * 0.5,
-//                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
-//                                        - vectorHeadDiameter * 0.5,
-//                                vectorHeadDiameter,
-//                                vectorHeadDiameter
-//                        );
-//                    }
-//
-//                    foregroundGraphicsContext.setStroke(Color.ORANGE);
-//
-//                    for (
-//                            Vector vector
-//                            : new ArrayList<>(passenger.getPassengerMovement().getRepulsiveForcesFromObstacles())
-//                    ) {
-//                        foregroundGraphicsContext.strokeLine(
-//                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
-//                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
-//                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
-//                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
-//                        );
-//
-//                        foregroundGraphicsContext.strokeOval(
-//                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
-//                                        - vectorHeadDiameter * 0.5,
-//                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
-//                                        - vectorHeadDiameter * 0.5,
-//                                vectorHeadDiameter,
-//                                vectorHeadDiameter
-//                        );
-//                    }
-//
-//                    foregroundGraphicsContext.setStroke(Color.BLUE);
-//
-//                    Vector attractionVector = passenger.getPassengerMovement().getAttractiveForce();
-//
-//                    if (attractionVector != null) {
-//                        foregroundGraphicsContext.strokeLine(
-//                                attractionVector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize,
-//                                attractionVector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize,
-//                                attractionVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize,
-//                                attractionVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize
-//                        );
-//
-//                        foregroundGraphicsContext.strokeOval(
-//                                attractionVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize
-//                                        - vectorHeadDiameter * 0.5,
-//                                attractionVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize
-//                                        - vectorHeadDiameter * 0.5,
-//                                vectorHeadDiameter,
-//                                vectorHeadDiameter
-//                        );
-//                    }
-//
-//                    foregroundGraphicsContext.setStroke(Color.GREEN);
-//
-//                    Vector motivationVector = passenger.getPassengerMovement().getMotivationForce();
-//
-//                    if (motivationVector != null) {
-//                        foregroundGraphicsContext.strokeLine(
-//                                motivationVector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize,
-//                                motivationVector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize,
-//                                motivationVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize,
-//                                motivationVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize
-//                        );
-//
-//                        foregroundGraphicsContext.strokeOval(
-//                                motivationVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize
-//                                        - vectorHeadDiameter * 0.5,
-//                                motivationVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-//                                        * tileSize
-//                                        - vectorHeadDiameter * 0.5,
-//                                vectorHeadDiameter,
-//                                vectorHeadDiameter
-//                        );
-//                    }
+                    // Draw vectors
+                    foregroundGraphicsContext.setStroke(Color.RED);
+
+                    final double vectorHeadDiameter = 0.1 * tileSize;
+
+                    for (
+                            Vector vector
+                            : new ArrayList<>(passenger.getPassengerMovement().getRepulsiveForceFromPassengers())
+                    ) {
+                        foregroundGraphicsContext.strokeLine(
+                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeOval(
+                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vectorHeadDiameter,
+                                vectorHeadDiameter
+                        );
+                    }
+
+                    foregroundGraphicsContext.setStroke(Color.ORANGE);
+
+                    for (
+                            Vector vector
+                            : new ArrayList<>(passenger.getPassengerMovement().getRepulsiveForcesFromObstacles())
+                    ) {
+                        foregroundGraphicsContext.strokeLine(
+                                vector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize,
+                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeOval(
+                                vector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vectorHeadDiameter,
+                                vectorHeadDiameter
+                        );
+                    }
+
+                    foregroundGraphicsContext.setStroke(Color.BLUE);
+
+                    Vector attractionVector = passenger.getPassengerMovement().getAttractiveForce();
+
+                    if (attractionVector != null) {
+                        foregroundGraphicsContext.strokeLine(
+                                attractionVector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                attractionVector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                attractionVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                attractionVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeOval(
+                                attractionVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                attractionVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vectorHeadDiameter,
+                                vectorHeadDiameter
+                        );
+                    }
+
+                    foregroundGraphicsContext.setStroke(Color.GREEN);
+
+                    Vector motivationVector = passenger.getPassengerMovement().getMotivationForce();
+
+                    if (motivationVector != null) {
+                        foregroundGraphicsContext.strokeLine(
+                                motivationVector.getStartingPosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                motivationVector.getStartingPosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                motivationVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize,
+                                motivationVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                        );
+
+                        foregroundGraphicsContext.strokeOval(
+                                motivationVector.getFuturePosition().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                motivationVector.getFuturePosition().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+                                        * tileSize
+                                        - vectorHeadDiameter * 0.5,
+                                vectorHeadDiameter,
+                                vectorHeadDiameter
+                        );
+                    }
                 }
             }
         }

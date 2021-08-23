@@ -204,6 +204,7 @@ public class PassengerMovement {
     public PassengerMovement(
             Gate gate,
             Passenger parent,
+            double baseWalkingDistance,
             Coordinates coordinates,
             TravelDirection travelDirection,
             // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
@@ -217,10 +218,11 @@ public class PassengerMovement {
                 coordinates.getY()
         );
 
-        // TODO: Walking speed should depend on the passenger's age
-        // TODO: Adjust to actual, realistic values
         // The walking speed values shall be in m/s
-        this.baseWalkingDistance = 0.6;
+        final double walkingSpeedVariation;
+
+        this.baseWalkingDistance = baseWalkingDistance + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * 0.2;
+
         this.preferredWalkingDistance = this.baseWalkingDistance;
         this.currentWalkingDistance = preferredWalkingDistance;
 
@@ -2526,13 +2528,10 @@ public class PassengerMovement {
     }
 
     private double computeTurnstileFirstStepHeading() {
-        double newHeading;
-
         // First, get the apex of the floor field with the state of the passenger
         Turnstile turnstile = (Turnstile) this.currentPatch.getAmenityBlock().getParent();
 
         QueueingFloorField.FloorFieldState floorFieldState;
-        Patch apexLocation;
 
         if (this.disposition == Disposition.BOARDING) {
             floorFieldState = turnstile.getTurnstileFloorFieldStateBoarding();
@@ -2540,14 +2539,40 @@ public class PassengerMovement {
             floorFieldState = turnstile.getTurnstileFloorFieldStateAlighting();
         }
 
+        return computeHeadingFromApexToAttractor(
+                floorFieldState,
+                turnstile.getQueueObjects().get(this.disposition),
+                turnstile.getAttractors()
+        );
+    }
+
+    private double computeSecurityFirstStepHeading() {
+        // First, get the apex of the floor field with the state of the passenger
+        Security security = (Security) this.currentPatch.getAmenityBlock().getParent();
+
+        return computeHeadingFromApexToAttractor(
+                security.getSecurityFloorFieldState(),
+                security.getQueueObject(),
+                security.getAttractors()
+        );
+    }
+
+    private double computeHeadingFromApexToAttractor(
+            QueueingFloorField.FloorFieldState floorFieldState,
+            QueueObject queueObject,
+            List<Amenity.AmenityBlock> attractors
+    ) {
+        Patch apexLocation;
+        double newHeading;
+
         apexLocation
-                = turnstile.getQueueObjects().get(this.disposition).getFloorFields().get(floorFieldState).getApices()
+                = queueObject.getFloorFields().get(floorFieldState).getApices()
                 .get(0);
 
         // Then compute the heading from the apex to the turnstile attractor
         newHeading = Coordinates.headingTowards(
                 apexLocation.getPatchCenterCoordinates(),
-                turnstile.getAttractors().get(0).getPatch().getPatchCenterCoordinates()
+                attractors.get(0).getPatch().getPatchCenterCoordinates()
         );
 
         return newHeading;
@@ -2561,6 +2586,11 @@ public class PassengerMovement {
                         && this.currentPatch.getAmenityBlock().getParent() instanceof Turnstile
         ) {
             newHeading = computeTurnstileFirstStepHeading();
+        } else if (
+                this.currentPatch.getAmenityBlock() != null
+                        && this.currentPatch.getAmenityBlock().getParent() instanceof Security
+        ) {
+            newHeading = computeSecurityFirstStepHeading();
         } else {
             newHeading = this.previousHeading;
         }
@@ -2622,7 +2652,14 @@ public class PassengerMovement {
     }
 
     private boolean hasNoPassenger(Patch patch) {
-        return patch.getPassengers().isEmpty();
+        if (patch == null) {
+            return true;
+        }
+
+        List<Passenger> passengersOnPatchWithoutThisPassenger = patch.getPassengers();
+        passengersOnPatchWithoutThisPassenger.remove(this.parent);
+
+        return passengersOnPatchWithoutThisPassenger.isEmpty();
     }
 
     public Turnstile getCurrentTurnstileGate() {
@@ -3049,7 +3086,29 @@ public class PassengerMovement {
 
     // Set the passenger's next patch in its current path as it reaches it
     public void reachPatchInPath() {
-        this.currentPath.getPath().pop();
+        // Keep popping while there are still patches from the path to pop and these patches are still close enough to
+        // the passenger
+        Patch nextPatch;
+
+        do {
+            this.currentPath.getPath().pop();
+
+            // If there are no more next patches, terminate the loop
+            if (!this.currentPath.getPath().isEmpty()) {
+                nextPatch = this.currentPath.getPath().peek();
+            } else {
+                break;
+            }
+        } while (
+                !this.currentPath.getPath().isEmpty()
+                        && nextPatch.getAmenityBlocksAround() == 0
+                        && this.isOnOrCloseToPatch(nextPatch)
+                        && this.hasClearLineOfSight(
+                        this.position,
+                        nextPatch.getPatchCenterCoordinates(),
+                        true
+                )
+        );
     }
 
     // Have this passenger's goal service this passenger
@@ -3476,6 +3535,8 @@ public class PassengerMovement {
     // If the passenger is following a path, have the passenger face the next one, if any
     public boolean chooseNextPatchInPath() {
         // Generate a path, if one hasn't been generated yet
+        boolean wasPathJustGenerated = false;
+
         if (this.currentPath == null) {
             PassengerPath passengerPath;
 
@@ -3558,6 +3619,8 @@ public class PassengerMovement {
             if (passengerPath != null) {
                 // Create a copy of the object, to avoid using up the path directly from the cache
                 this.currentPath = new PassengerPath(passengerPath);
+
+                wasPathJustGenerated = true;
             }
         }
 
@@ -3566,7 +3629,56 @@ public class PassengerMovement {
             return false;
         }
 
-        this.goalPatch = this.currentPath.getPath().peek();
+        // If a path was just generated, determine the first patch to visit
+        if (wasPathJustGenerated) {
+            Patch nextPatchInPath;
+
+            while (true) {
+                nextPatchInPath = this.currentPath.getPath().peek();
+
+                if (
+                        !(
+                                this.currentPath.getPath().size() > 1
+                                        && nextPatchInPath.getAmenityBlocksAround() == 0
+                                        && this.isOnOrCloseToPatch(nextPatchInPath)
+                                        && this.hasClearLineOfSight(
+                                        this.position,
+                                        nextPatchInPath.getPatchCenterCoordinates(),
+                                        true
+                                )
+                        )
+                ) {
+                    break;
+                }
+
+                this.currentPath.getPath().pop();
+            }
+
+            this.goalPatch = nextPatchInPath;
+
+//            ///
+//
+//            do {
+//                goalPatchInPath = this.currentPath.getPath().pop();
+//            } while (
+//                    !this.currentPath.getPath().isEmpty()
+//                            && goalPatchInPath.getAmenityBlocksAround() == 0
+//                            && this.isOnOrCloseToPatch(goalPatchInPath)
+//                            && this.hasClearLineOfSight(
+//                            this.position,
+//                            goalPatchInPath.getPatchCenterCoordinates(),
+//                            true
+//                    )
+//            );
+//
+////            if (goalPatchInPath == null) {
+////                return false;
+////            } else {
+//            this.goalPatch = goalPatchInPath;
+////            }
+        } else {
+            this.goalPatch = this.currentPath.getPath().peek();
+        }
 
         return true;
     }
@@ -3812,6 +3924,11 @@ public class PassengerMovement {
 
     // Check if the given patch has an obstacle
     private boolean hasObstacle(Patch patch) {
+        // If there is literally no patch there, then there is no obstacle
+        if (patch == null) {
+            return true;
+        }
+
         Amenity.AmenityBlock amenityBlock = patch.getAmenityBlock();
 
         if (amenityBlock == null) {

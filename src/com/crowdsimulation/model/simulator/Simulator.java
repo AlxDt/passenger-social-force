@@ -1,6 +1,7 @@
 package com.crowdsimulation.model.simulator;
 
 import com.crowdsimulation.controller.Main;
+import com.crowdsimulation.model.core.agent.passenger.Demographic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -714,8 +715,8 @@ public class Simulator {
                                     if (
                                             passengerMovement.isStuck()
                                                     && passengerMovement.getState() != PassengerMovement.State.IN_QUEUE
-                                                    && passengerMovement.getParent().getTicketType()
-                                                    != TicketBooth.TicketType.STORED_VALUE
+/*                                                    && passengerMovement.getParent().getTicketType()
+                                                    != TicketBooth.TicketType.STORED_VALUE*/
                                     ) {
                                         passengerMovement.setAction(PassengerMovement.Action.REROUTING);
                                         action = PassengerMovement.Action.REROUTING;
@@ -855,9 +856,9 @@ public class Simulator {
                             // If the passenger is stuck, switch to the "rerouting" action except if the passenger
                             // is a stored value ticket holder
                             if (
-                                    passengerMovement.isStuck()
+                                    passengerMovement.isStuck()/*
                                             && passengerMovement.getParent().getTicketType()
-                                            != TicketBooth.TicketType.STORED_VALUE
+                                            != TicketBooth.TicketType.STORED_VALUE*/
                             ) {
                                 passengerMovement.setAction(PassengerMovement.Action.REROUTING);
                                 action = PassengerMovement.Action.REROUTING;
@@ -942,9 +943,9 @@ public class Simulator {
                             // If the passenger is stuck, switch to the "rerouting" action except if the passenger
                             // is a stored value ticket holder
                             if (
-                                    passengerMovement.isStuck()
+                                    passengerMovement.isStuck()/*
                                             && passengerMovement.getParent().getTicketType()
-                                            != TicketBooth.TicketType.STORED_VALUE
+                                            != TicketBooth.TicketType.STORED_VALUE*/
                             ) {
                                 passengerMovement.setAction(PassengerMovement.Action.REROUTING);
                                 action = PassengerMovement.Action.REROUTING;
@@ -1261,11 +1262,14 @@ public class Simulator {
                                     passengerMovement.isAllowedPass()
                                             && (
                                             passengerMovement.isFirstStepPositionFree()
-                                                    ||
+//                                                    || action == PassengerMovement.Action.SECURITY_CHECKING
+                                                    || action == PassengerMovement.Action.TRANSACTING_TICKET
+                                                    || (
                                                     passengerMovement.getCurrentTurnstileGate() != null
                                                             && passengerMovement.getCurrentTurnstileGate()
                                                             .getTurnstileMode()
                                                             == Turnstile.TurnstileMode.BIDIRECTIONAL
+                                            )
                                     )
                             ) {
                                 // Have this passenger's goal wrap up serving this passenger

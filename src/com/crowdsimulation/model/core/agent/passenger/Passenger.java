@@ -22,6 +22,9 @@ public class Passenger extends PatchObject implements Agent {
     // TODO: Move to passenger information object?
     private final Gender gender;
 
+    // Denotes the demographic of thie passenger
+    private final Demographic demographic;
+
     // Denotes the ticket type of this passenger
     private final TicketBooth.TicketType ticketType;
 
@@ -42,6 +45,10 @@ public class Passenger extends PatchObject implements Agent {
     //  passenger will be boarding
     private Passenger(Patch spawnPatch, PassengerMovement.TravelDirection travelDirection, boolean isBoarding) {
         this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
+        this.demographic = Demographic.generateDemographic();
+
+        // Given the demographic, get this passenger's walking distance
+        double baseWalkingDistance = Demographic.walkingSpeedsByAgeRange.get(this.demographic.getAgeRange());
 
         final double singleJourneyPercentage = 0.5;
 
@@ -64,6 +71,7 @@ public class Passenger extends PatchObject implements Agent {
         this.passengerMovement = new PassengerMovement(
                 gate,
                 this,
+                baseWalkingDistance,
                 spawnPatch.getPatchCenterCoordinates(),
                 travelDirection,
                 isBoarding
@@ -72,6 +80,10 @@ public class Passenger extends PatchObject implements Agent {
 
     public Gender getGender() {
         return gender;
+    }
+
+    public Demographic getDemographic() {
+        return demographic;
     }
 
     public TicketBooth.TicketType getTicketType() {

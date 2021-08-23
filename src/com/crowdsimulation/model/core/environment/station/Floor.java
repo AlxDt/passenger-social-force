@@ -182,6 +182,15 @@ public class Floor extends BaseStationObject implements Environment {
     }
 
     public Patch getPatch(int row, int column) {
+        if (
+                row > this.rows
+                        || row < 0
+                        || column > this.columns
+                        || column < 0
+        ) {
+            return null;
+        }
+
         return patches[row][column];
     }
 
