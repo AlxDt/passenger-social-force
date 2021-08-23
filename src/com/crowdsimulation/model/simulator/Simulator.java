@@ -75,6 +75,7 @@ public class Simulator {
     private PortalShaft provisionalPortalShaft;
 
     private final SimpleBooleanProperty floorFieldDrawing;
+    private final SimpleBooleanProperty isStationRunOnly;
 
     private Queueable currentFloorFieldTarget;
     private QueueingFloorField.FloorFieldState currentFloorFieldState;
@@ -129,6 +130,8 @@ public class Simulator {
 
         this.floorFieldDrawing = new SimpleBooleanProperty(false);
         this.currentFloorFieldTarget = null;
+
+        this.isStationRunOnly = new SimpleBooleanProperty(false);
 
         this.validatingFromRunning = new SimpleBooleanProperty(false);
 
@@ -308,6 +311,18 @@ public class Simulator {
         this.floorFieldDrawing.set(floorFieldDrawing);
     }
 
+    public boolean isStationRunOnly() {
+        return isStationRunOnly.get();
+    }
+
+    public SimpleBooleanProperty isStationRunOnlyProperty() {
+        return isStationRunOnly;
+    }
+
+    public void setStationRunOnly(boolean isStationRunOnly) {
+        this.isStationRunOnly.set(isStationRunOnly);
+    }
+
     public Queueable getCurrentFloorFieldTarget() {
         return currentFloorFieldTarget;
     }
@@ -383,6 +398,8 @@ public class Simulator {
 
         this.portalDrawing.set(false);
         this.firstPortalDrawn.set(false);
+
+        this.isStationRunOnly.set(station.isRunOnly());
 
         this.firstPortal = null;
         this.provisionalPortalShaft = null;

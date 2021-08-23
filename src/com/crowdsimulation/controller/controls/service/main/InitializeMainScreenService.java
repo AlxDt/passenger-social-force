@@ -126,13 +126,18 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         InitializeMainScreenService.EDIT_FLOOR_BINDING =
                 Bindings.or(
-                        PORTAL_DRAW_IN_PROGRESS_BINDING,
-                        FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING
+                        Bindings.or(
+                                PORTAL_DRAW_IN_PROGRESS_BINDING,
+                                FLOOR_FIELD_DRAW_IN_PROGRESS_BINDING
+                        ),
+                        Main.simulator.isStationRunOnlyProperty()
                 );
     }
 
     // Initialize the build tab UI controls
     public static void initializeSidebar(TabPane sideBar) {
+        sideBar.getTabs().get(0).disableProperty().bind(Main.simulator.isStationRunOnlyProperty());
+
         sideBar.disableProperty().bind(
                 Bindings.or(
                         InitializeMainScreenService.PORTAL_DRAW_IN_PROGRESS_BINDING,
@@ -363,9 +368,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Slider simulationSpeedSlider,
             // Passenger controls
             Text passengerCountStationText,
-            Button clearPassengersStationButton,
             Text passengerCountFloorText,
-            Button clearPassengersFloorButton,
             // Platform controls
             Label platformDirectionLabel,
             ChoiceBox<PassengerMovement.TravelDirection> platformDirectionChoiceBox,
@@ -383,9 +386,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
         initializePassengerControls(
                 passengerCountStationText,
-                clearPassengersStationButton,
-                passengerCountFloorText,
-                clearPassengersFloorButton
+                passengerCountFloorText
         );
 
         initializePlatformControls(
@@ -954,9 +955,7 @@ public class InitializeMainScreenService extends InitializeScreenService {
 
     private static void initializePassengerControls(
             Text passengerCountStationText,
-            Button clearPassengersStationButton,
-            Text passengerCountFloorText,
-            Button clearPassengersFloorButton
+            Text passengerCountFloorText
     ) {
 
     }

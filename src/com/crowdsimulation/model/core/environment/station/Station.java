@@ -14,7 +14,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Portal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.PortalShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.escalator.EscalatorPortal;
@@ -22,6 +21,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairPortal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.BlockableAmenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.cache.DistanceCache;
@@ -29,6 +29,7 @@ import com.crowdsimulation.model.simulator.cache.MultipleFloorPatchCache;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class Station extends BaseStationObject implements Environment {
     // Default station name
@@ -73,6 +74,9 @@ public class Station extends BaseStationObject implements Environment {
     private final MultipleFloorPatchCache multipleFloorPatchCache;
     private final DistanceCache distanceCache;
 
+    // Denotes if this station is supposed to be interpreted as a run-only station
+    private boolean isRunOnly;
+
     public Station(int rows, int columns) {
         this.name = DEFAULT_STATION_NAME;
         this.floors = Collections.synchronizedList(new ArrayList<>());
@@ -103,6 +107,8 @@ public class Station extends BaseStationObject implements Environment {
 
         int distanceCacheCapacity = 50;
         this.distanceCache = new DistanceCache(distanceCacheCapacity);
+
+        this.isRunOnly = false;
 
         // Initially, the station has one floor
         Floor.addFloor(this, 0, rows, columns);
@@ -182,6 +188,14 @@ public class Station extends BaseStationObject implements Environment {
 
     public DistanceCache getDistanceCache() {
         return distanceCache;
+    }
+
+    public boolean isRunOnly() {
+        return isRunOnly;
+    }
+
+    public void setRunOnly(boolean runOnly) {
+        isRunOnly = runOnly;
     }
 
     // Assemble this station's amenity-floor index
@@ -836,21 +850,11 @@ public class Station extends BaseStationObject implements Environment {
 
             // Assemble the assorted clusters for this floor
             // Compile all amenities in this floor
-            List<Amenity> amenitiesInFloor = new ArrayList<>();
-
-            amenitiesInFloor.addAll(floor.getStationGates());
-            amenitiesInFloor.addAll(floor.getSecurities());
-            amenitiesInFloor.addAll(floor.getTicketBooths());
-            amenitiesInFloor.addAll(floor.getTurnstiles());
-            amenitiesInFloor.addAll(floor.getTrainDoors());
-
-            amenitiesInFloor.addAll(stairPortals);
-            amenitiesInFloor.addAll(escalatorPortals);
-            amenitiesInFloor.addAll(elevatorPortals);
-
             // Create the clusters
             List<AmenityCluster> amenityClusters = new ArrayList<>();
             this.amenityClustersByFloorAssorted.put(floor, amenityClusters);
+
+            List<Amenity> amenitiesInFloor = this.retrieveAmenitiesInFloor(floor);
 
             for (Amenity amenityInFloor : amenitiesInFloor) {
                 // If this is the first amenity in the cluster, create a new cluster containing the first element
@@ -872,11 +876,10 @@ public class Station extends BaseStationObject implements Environment {
                                 amenityCluster.getAmenities().get(0).getAttractors().get(0).getPatch(),
                                 true,
                                 false,
-                                true
+                                false
                         );
 
-                        // If a path to this amenity in the cluster has been found, check if the distance to this
-                        // amenity is the closest one found so far
+                        // If a path to this amenity in the cluster has been found, add it to the cluster
                         if (pathToAmenity != null) {
                             hasFoundCluster = true;
 
@@ -900,11 +903,6 @@ public class Station extends BaseStationObject implements Environment {
                 }
             }
         }
-    }
-
-    // Validate both the station layout and its floor fields as one
-    public static boolean validateStation(Station station) {
-        return validateStationShallowly(station) && validateFloorFieldsInStation(station);
     }
 
     // Validate the floor fields of each amenity in the station
@@ -992,6 +990,87 @@ public class Station extends BaseStationObject implements Environment {
 
         this.amenityClustersByFloorAssorted.clear();
         this.amenityClusterByAmenityAssorted.clear();
+    }
+
+    // Clear all patches which will never be reached by the passengers (areas outside the station)
+    public void removeIrrelevantPatches() {
+        // Clear all non-reachable patches in this floor
+        for (Floor floor : this.floors) {
+
+            // Collect all reachable patches
+            // Start by collecting all the patches of the amenities in the floor
+            Set<Patch> patchesReachable = new HashSet<>();
+            Set<Patch> patchesToAdd = new HashSet<>();
+
+            List<Amenity> amenities = this.retrieveAmenitiesInFloor(floor);
+
+            for (Amenity amenity : amenities) {
+                for (Amenity.AmenityBlock amenityBlock : amenity.getAttractors()) {
+                    patchesReachable.add(amenityBlock.getPatch());
+                }
+            }
+
+            int previousSize = 0;
+            int newSize = patchesReachable.size();
+
+            // Keep expanding the frontier until its size stops changing
+            while (newSize > previousSize) {
+                // Remember the previous size
+                previousSize = newSize;
+
+                // Expand the frontier
+                for (Patch patch : patchesReachable) {
+                    if (
+                            patch.getAmenityBlock() == null
+                                    || amenities.contains(patch.getAmenityBlock().getParent())
+                                    || patch.getAmenityBlock().getParent() instanceof Track
+                    ) {
+                        List<Patch> neighborsToAdd = new ArrayList<>(patch.getNeighbors());
+
+                        patchesToAdd.addAll(neighborsToAdd);
+                    }
+
+                    patchesToAdd.add(patch);
+                }
+
+                patchesReachable.addAll(patchesToAdd);
+                patchesToAdd.clear();
+
+                // Take note of the new size
+                newSize = patchesReachable.size();
+            }
+
+            // Find the non-reachable patches
+            List<Patch> nonReachablePatches = Arrays.stream(floor.getPatches())
+                    .flatMap(Arrays::stream)
+                    .collect(Collectors.toList());
+
+            nonReachablePatches.removeAll(patchesReachable);
+
+            // Set the patches that were in this position to null
+            Patch[][] patchesInFloor = floor.getPatches();
+
+            for (Patch patch : nonReachablePatches) {
+                patchesInFloor[patch.getMatrixPosition().getRow()][patch.getMatrixPosition().getColumn()] = null;
+                floor.getAmenityPatchSet().remove(patch);
+            }
+        }
+    }
+
+    private List<Amenity> retrieveAmenitiesInFloor(Floor floor) {
+        List<Amenity> amenitiesInFloor = new ArrayList<>();
+
+        amenitiesInFloor.addAll(floor.getStationGates());
+        amenitiesInFloor.addAll(floor.getSecurities());
+        amenitiesInFloor.addAll(floor.getTicketBooths());
+        amenitiesInFloor.addAll(floor.getTurnstiles());
+        amenitiesInFloor.addAll(floor.getTrainDoors());
+
+        amenitiesInFloor.addAll(this.getStairPortalsByFloor().get(floor));
+        amenitiesInFloor.addAll(this.getEscalatorPortalsByFloor().get(floor));
+        amenitiesInFloor.addAll(this.getElevatorPortalsByFloor().get(floor));
+
+        return amenitiesInFloor;
     }
 
     // Thoroughly validate the layout of the station
@@ -1514,221 +1593,6 @@ public class Station extends BaseStationObject implements Environment {
         }
 
         return directoryResults;
-    }
-
-    // Validate the layout of the station
-    public static boolean validateStationShallowly(Station station) {
-        boolean boardingValid = true;
-        boolean alightingValid = true;
-
-        // For each floor in the station, collect a single station gate
-        Map<Floor, StationGate> floorStationGatesMap = new HashMap<>();
-
-        for (Floor floor : station.getFloors()) {
-            // Just sample the first station gate in the list, if any
-            if (!floor.getStationGates().isEmpty()) {
-                floorStationGatesMap.put(floor, floor.getStationGates().get(0));
-            }
-        }
-
-        // If there are no station gates at all, this layout is instantly invalid
-        if (floorStationGatesMap.isEmpty()) {
-            return false;
-        }
-
-        // For each station gate, check if there exists a complete path from start to end (for both boarding and
-        // alighting passengers)
-        List<Class<? extends Amenity>> boardingPlan
-                = RoutePlan.DIRECTION_ROUTE_MAP.get(PassengerMovement.Disposition.BOARDING);
-
-        List<Class<? extends Amenity>> alightingPlan
-                = RoutePlan.DIRECTION_ROUTE_MAP.get(PassengerMovement.Disposition.ALIGHTING);
-
-        Class<? extends Amenity> currentAmenity;
-        Class<? extends Amenity> nextAmenity;
-
-        List<AmenityClassFloorPair> boardingNotFoundList;
-        List<AmenityClassFloorPair> boardingFoundList;
-
-        List<AmenityClassFloorPair> alightingNotFoundList;
-        List<AmenityClassFloorPair> alightingFoundList;
-
-        for (Floor floor : floorStationGatesMap.keySet()) {
-            boardingNotFoundList = new ArrayList<>();
-            boardingFoundList = new ArrayList<>();
-
-            currentAmenity = boardingPlan.get(0);
-            nextAmenity = boardingPlan.get(1);
-
-            boardingValid = boardingValid && validatePath(
-                    boardingPlan,
-                    1,
-                    floor,
-                    boardingNotFoundList,
-                    boardingFoundList,
-                    currentAmenity,
-                    nextAmenity
-            );
-
-            if (!boardingValid) {
-                return false;
-            }
-
-            alightingNotFoundList = new ArrayList<>();
-            alightingFoundList = new ArrayList<>();
-
-            currentAmenity = alightingPlan.get(0);
-            nextAmenity = alightingPlan.get(1);
-
-            alightingValid = alightingValid && validatePath(
-                    alightingPlan,
-                    1,
-                    floor,
-                    alightingNotFoundList,
-                    alightingFoundList,
-                    currentAmenity,
-                    nextAmenity
-            );
-
-            if (!alightingValid) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static boolean validatePath(
-            List<Class<? extends Amenity>> routePlan,
-            int index,
-            Floor currentFloor,
-            List<AmenityClassFloorPair> notFoundList,
-            List<AmenityClassFloorPair> foundList,
-            Class<? extends Amenity> currentAmenity,
-            Class<? extends Amenity> nextAmenity
-    ) {
-        AmenityClassFloorPair amenityClassFloorPair = new AmenityClassFloorPair(
-                nextAmenity,
-                currentFloor
-        );
-
-        // If this amenity has already been proven to not be in this floor, no need to look for that amenity again in
-        // this floor - return false
-        if (notFoundList.contains(amenityClassFloorPair)) {
-            return false;
-        }
-
-        // Get the necessary amenity list
-        List<Amenity> amenityList = new ArrayList<>();
-        if (nextAmenity == StationGate.class) {
-            amenityList.addAll(currentFloor.getStationGates());
-        } else if (nextAmenity == Security.class) {
-            amenityList.addAll(currentFloor.getSecurities());
-        } else if (nextAmenity == TicketBooth.class) {
-            amenityList.addAll(currentFloor.getTicketBooths());
-        } else if (nextAmenity == Turnstile.class) {
-            amenityList.addAll(currentFloor.getTurnstiles());
-        } else if (nextAmenity == TrainDoor.class) {
-            amenityList.addAll(currentFloor.getTrainDoors());
-        } else {
-            amenityList = null;
-        }
-
-        assert amenityList != null;
-
-        // Using the acquired amenity list, check if this floor contains such amenity
-        if (foundList.contains(amenityClassFloorPair) || !amenityList.isEmpty()) {
-            // Add this amenity-floor pair to the found list
-            foundList.add(amenityClassFloorPair);
-
-            // Get the next amenity
-            Class<? extends Amenity> newCurrentAmenity;
-            Class<? extends Amenity> newNextAmenity;
-
-            // If there is no more next amenity, return true
-            if (index + 1 == routePlan.size()) {
-                return true;
-            } else {
-                // Else, keep recursing
-                int newIndex = index + 1;
-
-                newCurrentAmenity = nextAmenity;
-                newNextAmenity = routePlan.get(newIndex);
-
-                return validatePath(
-                        routePlan,
-                        newIndex,
-                        currentFloor,
-                        notFoundList,
-                        foundList,
-                        newCurrentAmenity,
-                        newNextAmenity
-                );
-            }
-        } else {
-            // Add this amenity-floor pair to the not found list
-            notFoundList.add(amenityClassFloorPair);
-
-            boolean portalsValid = false;
-
-            // Gather all portals in this floor
-            List<PortalShaft> portalsInFloor = new ArrayList<>();
-
-            // TODO: Consider directions
-            for (StairShaft stairShaft : currentFloor.getStation().getStairShafts()) {
-                if (stairShaft.getLowerPortal().getFloorServed() == currentFloor
-                        || stairShaft.getUpperPortal().getFloorServed() == currentFloor) {
-                    if (!portalsInFloor.contains(stairShaft)) {
-                        portalsInFloor.add(stairShaft);
-                    }
-                }
-            }
-
-            for (EscalatorShaft escalatorShaft : currentFloor.getStation().getEscalatorShafts()) {
-                if (escalatorShaft.getLowerPortal().getFloorServed() == currentFloor
-                        || escalatorShaft.getUpperPortal().getFloorServed() == currentFloor) {
-                    if (!portalsInFloor.contains(escalatorShaft)) {
-                        portalsInFloor.add(escalatorShaft);
-                    }
-                }
-            }
-
-            for (ElevatorShaft elevatorShaft : currentFloor.getStation().getElevatorShafts()) {
-                if (elevatorShaft.getLowerPortal().getFloorServed() == currentFloor
-                        || elevatorShaft.getUpperPortal().getFloorServed() == currentFloor) {
-                    if (!portalsInFloor.contains(elevatorShaft)) {
-                        portalsInFloor.add(elevatorShaft);
-                    }
-                }
-            }
-
-            // For each portal, go to the floor it connects to
-            for (PortalShaft portalShaft : portalsInFloor) {
-                Floor connectedFloor;
-
-                if (portalShaft.getLowerPortal().getFloorServed() == currentFloor) {
-                    connectedFloor = portalShaft.getUpperPortal().getFloorServed();
-                } else {
-                    connectedFloor = portalShaft.getLowerPortal().getFloorServed();
-                }
-
-                // Go to that floor and validate it
-                // At least one portal should lead to the next amenity
-                // Else, return false
-                portalsValid = portalsValid || validatePath(
-                        routePlan,
-                        index,
-                        connectedFloor,
-                        notFoundList,
-                        foundList,
-                        currentAmenity,
-                        nextAmenity
-                );
-            }
-
-            // No other portals, so just return false
-            return portalsValid;
-        }
     }
 
     public static class StationValidationResult {

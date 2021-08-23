@@ -348,13 +348,7 @@ public class MainScreenController extends ScreenController {
     private Text passengerCountStationText;
 
     @FXML
-    private Button clearPassengersStationButton;
-
-    @FXML
     private Text passengerCountFloorText;
-
-    @FXML
-    private Button clearPassengersFloorButton;
 
     // Platform controls
     @FXML
@@ -675,9 +669,7 @@ public class MainScreenController extends ScreenController {
                 simulationSpeedSlider,
                 // Passenger controls
                 passengerCountStationText,
-                clearPassengersStationButton,
                 passengerCountFloorText,
-                clearPassengersFloorButton,
                 // Platform controls
                 platformDirectionLabel,
                 platformDirectionChoiceBox,
@@ -729,6 +721,7 @@ public class MainScreenController extends ScreenController {
 
                 // Finally, update the top bar
                 updateTopBar();
+
             }
         }
     }
@@ -781,7 +774,7 @@ public class MainScreenController extends ScreenController {
                 @Override
                 public Void call() {
                     try {
-                        saveStation(station, stationFile);
+                        saveStation(station, stationFile, false);
                     } catch (IOException e) {
                         AlertController.showSimpleAlert(
                                 "File saving failed",
@@ -802,6 +795,62 @@ public class MainScreenController extends ScreenController {
 
                 // Finally, update the top bar
                 updateTopBar();
+
+                // Enable build mode
+                disableBuilding(false);
+            });
+
+            new Thread(saveStationTask).start();
+        }
+    }
+
+    @FXML
+    // Save the station as run-only to a file
+    public void saveStationRunOnlyAction() {
+        fileChooser.setTitle("Save this station as a run-only to a file");
+
+        File stationFile = fileChooser.showSaveDialog(this.getStage());
+
+        if (stationFile != null) {
+            Station station = Main.simulator.getStation();
+
+            // Set the name of the station in the interface
+            String filenameWithoutExtension = stationFile.getName().replaceFirst("[.][^.]+$", "");
+            station.setName(filenameWithoutExtension);
+
+            // Save the station to a file
+            GraphicsController.beginWaitCursor(borderPane);
+
+            Task<Void> saveStationTask = new Task<Void>() {
+                @Override
+                public Void call() {
+                    try {
+                        saveStation(station, stationFile, true);
+                    } catch (IOException e) {
+                        AlertController.showSimpleAlert(
+                                "File saving failed",
+                                "Failed to save this station to a file",
+                                "There was an error in saving the station into a file.",
+                                Alert.AlertType.ERROR
+                        );
+
+                        e.printStackTrace();
+                    }
+
+                    return null;
+                }
+            };
+
+            saveStationTask.setOnSucceeded(e -> {
+                GraphicsController.endWaitCursor(borderPane);
+
+                Main.simulator.setStationRunOnly(true);
+
+                // Finally, update the top bar
+                updateTopBar();
+
+                // Disable build mode
+                disableBuilding(true);
             });
 
             new Thread(saveStationTask).start();
@@ -1647,30 +1696,6 @@ public class MainScreenController extends ScreenController {
     }
 
     @FXML
-    // Clear all passengers
-    public void clearPassengersStationAction() {
-        Station station = Main.simulator.getStation();
-
-        // Clear the passengers
-        clearStation(station);
-
-        // Redraw the canvas
-        drawStationViewFloorForeground(Main.simulator.getCurrentFloor(), false);
-    }
-
-    @FXML
-    // Clear passengers in this floor
-    public void clearPassengersFloorAction() {
-        Floor currentFloor = Main.simulator.getCurrentFloor();
-
-        // Clear the passengers
-        clearStationFloor(currentFloor);
-
-        // Redraw the canvas
-        drawStationViewFloorForeground(currentFloor, false);
-    }
-
-    @FXML
     // Open or close the train doors
     public void toggleTrainDoorsAction() {
         if (!toggleTrainDoors(platformDirectionChoiceBox.getValue(), platformCarriagesChoiceBox.getValue())) {
@@ -1841,6 +1866,10 @@ public class MainScreenController extends ScreenController {
         // Reset the top bar
         resetTopBar();
 
+        // Determine whether build mode should be turned on or off
+        // Disable build mode
+        disableBuilding(station.isRunOnly());
+
         // Draw the interface
         GraphicsController.tileSize = backgroundCanvas.getHeight() / Main.simulator.getCurrentFloor().getRows();
 
@@ -1860,12 +1889,18 @@ public class MainScreenController extends ScreenController {
     }
 
     // Save station
-    private void saveStation(Station station, File stationFile) throws IOException {
+    private void saveStation(Station station, File stationFile, boolean runOnly) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(stationFile.getAbsolutePath());
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
         // Clear the passengers in the station first
         clearStation(station);
+
+        // If the station is to be saved as a run-only, remove all patches which are outside the station
+        if (runOnly) {
+            station.removeIrrelevantPatches();
+            station.setRunOnly(true);
+        }
 
         objectOutputStream.writeObject(station);
         objectOutputStream.close();
@@ -1974,11 +2009,25 @@ public class MainScreenController extends ScreenController {
         );
     }
 
+    // TODO: Enclose all in Platform.runLater()
+    // Disable build mode
+    private void disableBuilding(boolean isDisabled) {
+        Platform.runLater(() -> {
+            if (isDisabled) {
+                sidebar.getSelectionModel().select(1);
+            } else {
+                sidebar.getSelectionModel().select(0);
+            }
+        });
+    }
+
     // Update the top bar as a while
     private void updateTopBar() {
-        updateStationNameText();
-        updateFloorNumberText();
-        updatePromptText();
+        Platform.runLater(() -> {
+            updateStationNameText();
+            updateFloorNumberText();
+            updatePromptText();
+        });
     }
 
     // Set the station name text
@@ -2112,8 +2161,18 @@ public class MainScreenController extends ScreenController {
                 Main.simulator.getStation().getPassengersInStation().size() + " passengers in this station"
         );
 
+        final double passengerCountInFloorPercentage;
+
+        if (Main.simulator.getStation().getPassengersInStation().isEmpty()) {
+            passengerCountInFloorPercentage = 0.0;
+        } else {
+            passengerCountInFloorPercentage = (double) Main.simulator.getCurrentFloor().getPassengersInFloor().size()
+                    / Main.simulator.getStation().getPassengersInStation().size() * 100.0;
+        }
+
         passengerCountFloorText.setText(
-                Main.simulator.getCurrentFloor().getPassengersInFloor().size() + " passengers in this floor"
+                Main.simulator.getCurrentFloor().getPassengersInFloor().size() + " passengers in this floor ("
+                        + String.format("%.3f", passengerCountInFloorPercentage) + " %)"
         );
     }
 

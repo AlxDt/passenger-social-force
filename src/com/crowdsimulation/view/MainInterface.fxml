@@ -510,13 +510,11 @@
                                                 <Text fx:id="passengerCountStationText" strokeType="OUTSIDE" strokeWidth="0.0" text="0 passengers in this station" textAlignment="CENTER" wrappingWidth="221.421875" />
                                              </children>
                                           </HBox>
-                                          <Button fx:id="clearPassengersStationButton" mnemonicParsing="false" onAction="#clearPassengersStationAction" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers in this station" />
                                           <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
                                              <children>
-                                                <Text fx:id="passengerCountFloorText" strokeType="OUTSIDE" strokeWidth="0.0" text="0 passengers in this floor" textAlignment="CENTER" wrappingWidth="204.421875" />
+                                                <Text fx:id="passengerCountFloorText" strokeType="OUTSIDE" strokeWidth="0.0" text="0 passengers in this floor (%)" textAlignment="CENTER" wrappingWidth="204.421875" />
                                              </children>
                                           </HBox>
-                                          <Button fx:id="clearPassengersFloorButton" layoutX="11.0" layoutY="63.0" mnemonicParsing="false" onAction="#clearPassengersFloorAction" prefHeight="25.0" prefWidth="230.0" text="Clear all passengers in this floor" />
                                           <HBox alignment="CENTER" layoutX="10.0" layoutY="37.0" prefHeight="100.0" prefWidth="200.0" />
                                        </children>
                                     </VBox>
@@ -524,7 +522,7 @@
                               </VBox>
                            </content>
                         </TitledPane>
-                        <TitledPane animated="false" collapsible="false" prefHeight="455.0" prefWidth="286.0" text="Platform">
+                        <TitledPane animated="false" collapsible="false" prefHeight="600.0" prefWidth="250.0" text="Platform">
                            <content>
                               <VBox prefHeight="200.0" prefWidth="230.0">
                                  <children>
@@ -566,6 +564,7 @@
                 <Menu mnemonicParsing="false" text="File">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#saveStationAction" text="Save this station" />
+                  <MenuItem mnemonicParsing="false" onAction="#saveStationRunOnlyAction" text="Save this station as run-only" />
                         <MenuItem mnemonicParsing="false" onAction="#loadStationAction" text="Load a station" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem mnemonicParsing="false" text="Close" />

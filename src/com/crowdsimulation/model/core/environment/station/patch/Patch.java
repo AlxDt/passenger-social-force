@@ -188,9 +188,11 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         List<Patch> neighboringPatches = new ArrayList<>();
 
         for (MatrixPosition neighboringPatchIndex : this.neighborIndices) {
-            neighboringPatches.add(
-                    this.getFloor().getPatch(neighboringPatchIndex.getRow(), neighboringPatchIndex.getColumn())
-            );
+            Patch patch = this.getFloor().getPatch(neighboringPatchIndex.getRow(), neighboringPatchIndex.getColumn());
+
+            if (patch != null) {
+                neighboringPatches.add(patch);
+            }
         }
 
         return neighboringPatches;
@@ -202,8 +204,10 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
         for (MatrixPosition neighboringPatchIndex : this.neighbor7x7Indices) {
             Patch patch = this.getFloor().getPatch(neighboringPatchIndex.getRow(), neighboringPatchIndex.getColumn());
 
-            if (!includeCenterPatch || !patch.equals(this)) {
-                neighboringPatches.add(patch);
+            if (patch != null) {
+                if (!includeCenterPatch || !patch.equals(this)) {
+                    neighboringPatches.add(patch);
+                }
             }
         }
 

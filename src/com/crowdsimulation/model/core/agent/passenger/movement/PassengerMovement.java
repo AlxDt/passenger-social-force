@@ -544,6 +544,8 @@ public class PassengerMovement {
             boolean includeGoalPatch,
             boolean passThroughBlockables
     ) {
+        boolean hasAlreadyPassedOneBlockable = false;
+
         // Check the cache first if the path from one patch to another has already been computed beforehand
         PathCache pathCache = startingPatch.getFloor().getPathCache();
 
@@ -638,7 +640,39 @@ public class PassengerMovement {
             List<Patch> patchToExploreNeighbors = patchToExplore.getNeighbors();
 
             for (Patch patchToExploreNeighbor : patchToExploreNeighbors) {
+/*
+                boolean willExpand;
+
+                if (patchToExploreNeighbor.getAmenityBlock() == null) {
+                    willExpand = true;
+                } else {
+                    if (patchToExploreNeighbor.getAmenityBlock() != null) {
+                        if (
+                                passThroughBlockables && patchToExploreNeighbor.getAmenityBlock().getParent()
+                                        instanceof BlockableAmenity
+                        ) {
+                            willExpand = true;
+
+                            // Already passed through one blockable
+                            hasAlreadyPassedOneBlockable = false;
+                        } else {
+                            if (
+                                    !includeStartingPatch && patchToExplore.equals(startingPatch)
+                                            || !includeGoalPatch && patchToExploreNeighbor.equals(goalPatch)
+                            ) {
+                                willExpand = true;
+                            } else {
+                                willExpand = false;
+                            }
+                        }
+                    } else {
+                        willExpand = false;
+                    }
+                }
+*/
+
                 if (
+//                        willExpand
                         patchToExploreNeighbor.getAmenityBlock() == null
                                 || patchToExploreNeighbor.getAmenityBlock() != null
                                 && (
@@ -1250,6 +1284,8 @@ public class PassengerMovement {
                     QueueObject currentQueueObject;
                     TrainDoor.TrainDoorEntranceLocation currentTrainDoorEntranceLocation = null;
 
+                    List<QueueObject> turnstileQueueObjects = new ArrayList<>();
+
                     currentAmenity = candidateAttractor.getParent();
 
                     // Only collect queue objects from queueables
@@ -1259,6 +1295,10 @@ public class PassengerMovement {
 
                             currentQueueObject
                                     = turnstile.getQueueObjects().get(this.disposition);
+
+                            turnstileQueueObjects.addAll(turnstile.getQueueObjects().values());
+
+//                            turnstileQueueObjects = (List<QueueObject>) turnstile.getQueueObjects().values();
                         } else if (currentAmenity instanceof TrainDoor) {
                             TrainDoor trainDoor = ((TrainDoor) currentAmenity);
 
@@ -1284,11 +1324,41 @@ public class PassengerMovement {
                     if (currentQueueObject != null) {
                         if (!(currentAmenity instanceof Security)) {
                             // Avoid queueing to long lines
-                            final double passengerPenalty = (currentAmenity instanceof TrainDoor) ? 10.0 : 5.0;
+                            double passengerPenalty = (currentAmenity instanceof TrainDoor) ? 10.0 : 5.0;
 
-                            attractorScore
-                                    = candidateDistance + currentQueueObject.getPassengersQueueing().size()
-                                    * passengerPenalty;
+                            if (currentAmenity instanceof Turnstile) {
+                                double passengersQueueingForTurnstile = 0.0;
+
+                                for (QueueObject queueObject : turnstileQueueObjects) {
+                                    passengersQueueingForTurnstile += queueObject.getPassengersQueueing().size();
+                                }
+
+                                double modifiedCandidateDistance = candidateDistance;
+
+                                final double candidateDistanceLimit = 50.0;
+                                final double distantCandidatePenalty = 2.0;
+
+                                if (modifiedCandidateDistance > candidateDistanceLimit) {
+                                    modifiedCandidateDistance = candidateDistance * distantCandidatePenalty;
+                                }
+
+                                attractorScore
+                                        = modifiedCandidateDistance
+                                        + passengersQueueingForTurnstile * passengerPenalty;
+                            } else {
+                                double modifiedCandidateDistance = candidateDistance;
+
+                                final double candidateDistanceLimit = 50.0;
+                                final double distantCandidatePenalty = 2.0;
+
+                                if (modifiedCandidateDistance > candidateDistanceLimit) {
+                                    modifiedCandidateDistance = candidateDistance * distantCandidatePenalty;
+                                }
+
+                                attractorScore
+                                        = modifiedCandidateDistance
+                                        + currentQueueObject.getPassengersQueueing().size() * passengerPenalty;
+                            }
                         } else {
                             attractorScore = candidateDistance;
                         }
