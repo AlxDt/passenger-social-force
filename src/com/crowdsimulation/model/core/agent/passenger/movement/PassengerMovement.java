@@ -1818,12 +1818,26 @@ public class PassengerMovement {
             if (!this.shouldStopAtPlatform) {
                 // If the goal is a train door, and it is open, walk faster
                 if (this.getGoalAmenityAsTrainDoor() != null && this.getGoalAmenityAsTrainDoor().isOpen()) {
-                    final double speedIncreaseFactor = 1.4;
+                    final double speedIncreaseFactor = 1.25;
 
                     this.preferredWalkingDistance = this.baseWalkingDistance * speedIncreaseFactor;
                 } else {
                     // If the goal is not a train door, or it is, but it's closed, walk normally
                     this.preferredWalkingDistance = this.baseWalkingDistance;
+                }
+
+                // If the passenger is near its goal, walk slower
+                final double distanceSlowdownStart = 5.0;
+                final double speedDecreaseFactor = 0.5;
+
+                double distanceToGoal = Coordinates.distance(
+                        this.currentFloor.getStation(),
+                        this.currentPatch,
+                        this.getGoalAmenity().getAttractors().get(0).getPatch()
+                );
+
+                if (this.getGoalAmenityAsTrainDoor() == null && distanceToGoal < distanceSlowdownStart) {
+                    this.preferredWalkingDistance *= speedDecreaseFactor;
                 }
 
                 // If this passenger is queueing, the only social forces that apply are attractive forces to passengers
