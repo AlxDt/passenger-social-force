@@ -780,6 +780,8 @@ public class GraphicsController extends Controller {
                         foregroundGraphicsContext.setFill(Color.VIOLET);
                     } else if (passenger.getPassengerMovement().willPathFind()) {
                         foregroundGraphicsContext.setFill(Color.BLUE);
+                    } else if (passenger.getPassengerMovement().isWaitingOnPortal()) {
+                        foregroundGraphicsContext.setFill(Color.CRIMSON);
                     } else {
                         switch (passenger.getPassengerMovement().getAction()) {
                             case WILL_ASCEND:

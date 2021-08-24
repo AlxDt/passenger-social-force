@@ -130,8 +130,8 @@ public class PassengerMovement {
     // Denotes whether this passenger has encountered the passenger to be followed in the queue
     private boolean hasEncounteredPassengerToFollow;
 
-    // Denotes whether this passenger has encountered any queueing passenger
-    private boolean hasEncounteredAnyQueueingPassenger;
+    // Denotes whether this passenger has encountered a passenger waiting on a portal
+    private boolean hasEncounteredPortalWaitingPassenger;
 
     // Denotes the passenger this passenger is currently following while assembling
     private Passenger passengerFollowedWhenAssembling;
@@ -439,8 +439,8 @@ public class PassengerMovement {
         return hasEncounteredPassengerToFollow;
     }
 
-    public boolean hasEncounteredAnyQueueingPassenger() {
-        return hasEncounteredAnyQueueingPassenger;
+    public boolean hasEncounteredPortalWaitingPassenger() {
+        return hasEncounteredPortalWaitingPassenger;
     }
 
     public Patch getChosenQueueingPatch() {
@@ -770,7 +770,7 @@ public class PassengerMovement {
 
         // No passengers have been encountered yet
         this.hasEncounteredPassengerToFollow = false;
-        this.hasEncounteredAnyQueueingPassenger = false;
+        this.hasEncounteredPortalWaitingPassenger = false;
 
         // This passenger is not yet waiting
         this.isWaitingOnAmenity = false;
@@ -1338,7 +1338,7 @@ public class PassengerMovement {
                                 double modifiedCandidateDistance = candidateDistance;
 
                                 final double candidateDistanceLimit = 50.0;
-                                final double distantCandidatePenalty = 2.0;
+                                final double distantCandidatePenalty = 5.0;
 
                                 if (modifiedCandidateDistance > candidateDistanceLimit) {
                                     modifiedCandidateDistance = candidateDistance * distantCandidatePenalty;
@@ -1351,7 +1351,7 @@ public class PassengerMovement {
                                 double modifiedCandidateDistance = candidateDistance;
 
                                 final double candidateDistanceLimit = 50.0;
-                                final double distantCandidatePenalty = 2.0;
+                                final double distantCandidatePenalty = 5.0;
 
                                 if (modifiedCandidateDistance > candidateDistanceLimit) {
                                     modifiedCandidateDistance = candidateDistance * distantCandidatePenalty;
@@ -1826,7 +1826,8 @@ public class PassengerMovement {
                     this.preferredWalkingDistance = this.baseWalkingDistance;
                 }
 
-                // If the passenger is near its goal, walk slower
+                // If the passenger is near its goal that is not a train door, and this passenger has a clear line of
+                // sight to that goal, walk slower
                 final double distanceSlowdownStart = 5.0;
                 final double speedDecreaseFactor = 0.5;
 
@@ -1836,17 +1837,25 @@ public class PassengerMovement {
                         this.getGoalAmenity().getAttractors().get(0).getPatch()
                 );
 
-                if (this.getGoalAmenityAsTrainDoor() == null && distanceToGoal < distanceSlowdownStart) {
+                if (
+                        this.getGoalAmenityAsTrainDoor() == null
+                                && distanceToGoal < distanceSlowdownStart
+                                && this.hasClearLineOfSight(
+                                this.position,
+                                this.goalAmenity.getAttractors().get(0).getPatch().getPatchCenterCoordinates(),
+                                true
+                        )
+                ) {
                     this.preferredWalkingDistance *= speedDecreaseFactor;
                 }
 
                 // If this passenger is queueing, the only social forces that apply are attractive forces to passengers
                 // and obstacles (if not in queueing action)
                 if (
-                        !willEnterTrain && this.state == State.IN_QUEUE
+                        !willEnterTrain && this.state == State.IN_QUEUE || this.isWaitingOnPortal
                 ) {
                     // Do not check for stuckness when already heading to the queueable
-                    if (this.action != Action.HEADING_TO_QUEUEABLE) {
+                    if (this.action != Action.HEADING_TO_QUEUEABLE && !this.isWaitingOnPortal) {
                         // If the passenger hasn't already been moving for a while, consider the passenger stuck, and implement some
                         // measures to free this passenger
                         if (
@@ -1900,14 +1909,6 @@ public class PassengerMovement {
                             for (Passenger otherPassenger : patch.getPassengers()) {
                                 // Make sure that the passenger discovered isn't itself
                                 if (!otherPassenger.equals(this.getParent())) {
-                                    if (
-                                            !this.hasEncounteredAnyQueueingPassenger
-                                                    && otherPassenger.getPassengerMovement().getState()
-                                                    == State.IN_QUEUE
-                                    ) {
-                                        this.hasEncounteredAnyQueueingPassenger = true;
-                                    }
-
                                     if (allowRepulsionFrom(otherPassenger)) {
                                         // Take note of the passenger density in this area
                                         numberOfPassengers++;
@@ -2110,6 +2111,7 @@ public class PassengerMovement {
                     }
 
                     boolean hasEncounteredQueueingPassengerInLoop = false;
+                    boolean hasEncounteredPortalWaitingPassengerInLoop = false;
 
                     // Only apply the social forces of a set number of passengers and obstacles
                     int passengersProcessed = 0;
@@ -2213,7 +2215,26 @@ public class PassengerMovement {
                                         }
                                     }
 
-                                    // If a queueing passenger has been encountered, do not pathfind anymore for for this
+                                    hasEncounteredQueueingPassengerInLoop
+                                            = this.hasEncounteredPassengerToFollow;
+
+                                    // Check if this passenger has encountered a passenger waiting for the same portal
+                                    if (!hasEncounteredPortalWaitingPassengerInLoop) {
+                                        // If the other passenger encountered is already assembling, decide whether this
+                                        // passenger will assemble too depending on whether the other passenger was selected
+                                        // to be followed by this one
+                                        this.hasEncounteredPortalWaitingPassenger
+                                                = otherPassenger.getPassengerMovement().isWaitingOnPortal()
+                                                && otherPassenger.getPassengerMovement().getGoalAmenity().equals(this.goalAmenity);
+                                    }
+
+                                    hasEncounteredPortalWaitingPassengerInLoop
+                                            = this.hasEncounteredPortalWaitingPassenger;
+
+//                                    this.isWaitingOnPortal
+//                                            = this.isWaitingOnPortal || hasEncounteredPortalWaitingPassengerInLoop;
+
+                                    // If a queueing passenger has been encountered, do not pathfind anymore for this
                                     // goal
                                     if (
                                             this.parent.getTicketType() == TicketBooth.TicketType.STORED_VALUE
@@ -2221,9 +2242,6 @@ public class PassengerMovement {
                                     ) {
                                         this.hasPathfound = true;
                                     }
-
-                                    hasEncounteredQueueingPassengerInLoop
-                                            = this.hasEncounteredPassengerToFollow;
 
                                     passengersProcessed++;
                                 }

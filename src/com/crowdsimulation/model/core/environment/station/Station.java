@@ -870,13 +870,15 @@ public class Station extends BaseStationObject implements Environment {
                     // Check if this amenity is connected to one of the already existing clusters
                     boolean hasFoundCluster = false;
 
+                    // TODO: Fix clustering issues
+                    // Blockables should be part of multiple clustesr
                     for (AmenityCluster amenityCluster : amenityClusters) {
                         PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
                                 amenityInFloor.getAttractors().get(0).getPatch(),
                                 amenityCluster.getAmenities().get(0).getAttractors().get(0).getPatch(),
                                 true,
                                 false,
-                                false
+                                true
                         );
 
                         // If a path to this amenity in the cluster has been found, add it to the cluster

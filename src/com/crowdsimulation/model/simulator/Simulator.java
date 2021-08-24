@@ -1,7 +1,6 @@
 package com.crowdsimulation.model.simulator;
 
 import com.crowdsimulation.controller.Main;
-import com.crowdsimulation.model.core.agent.passenger.Demographic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
@@ -790,49 +789,55 @@ public class Simulator {
                         ) {
                             // Check if the passenger is set to switch floors
                             // If it is, this passenger will now head to its chosen portal
-                            if (!passengerMovement.isWaitingOnPortal()) {
-                                if (
-                                        passengerMovement.getParent().getTicketType()
-                                                == TicketBooth.TicketType.SINGLE_JOURNEY
-                                                || passengerMovement.getParent().getTicketType()
-                                                == TicketBooth.TicketType.STORED_VALUE
-                                                && !passengerMovement.willPathFind()
-                                ) {
-                                    // Make this passenger face its portal
+                            if (
+                                    passengerMovement.getParent().getTicketType()
+                                            == TicketBooth.TicketType.SINGLE_JOURNEY
+                                            || passengerMovement.getParent().getTicketType()
+                                            == TicketBooth.TicketType.STORED_VALUE
+                                            && !passengerMovement.willPathFind()
+                            ) {
+                                // Make this passenger face its portal
+                                passengerMovement.faceNextPosition();
+
+                                // Then make the passenger move towards that exit
+                                passengerMovement.moveSocialForce();
+                            } else {
+                                // This passenger is a stored value ticket holder so generate a path, if one hasn't been
+                                // generated yet, then follow it until the passenger reaches its goal
+                                // Get the next path
+                                if (passengerMovement.chooseNextPatchInPath()) {
+                                    // Make this passenger face that patch
                                     passengerMovement.faceNextPosition();
 
-                                    // Then make the passenger move towards that exit
+                                    // Move towards that patch
                                     passengerMovement.moveSocialForce();
-                                } else {
-                                    // This passenger is a stored value ticket holder so generate a path, if one hasn't been
-                                    // generated yet, then follow it until the passenger reaches its goal
-                                    // Get the next path
-                                    if (passengerMovement.chooseNextPatchInPath()) {
-                                        // Make this passenger face that patch
-                                        passengerMovement.faceNextPosition();
 
-                                        // Move towards that patch
-                                        passengerMovement.moveSocialForce();
+                                    if (passengerMovement.hasReachedNextPatchInPath()) {
+                                        // The passenger has reached the next patch in the path, so remove this from
+                                        // this passenger's current path
+                                        passengerMovement.reachPatchInPath();
 
-                                        if (passengerMovement.hasReachedNextPatchInPath()) {
-                                            // The passenger has reached the next patch in the path, so remove this from
-                                            // this passenger's current path
-                                            passengerMovement.reachPatchInPath();
-
-                                            // Check if there are still patches left in the path
-                                            // If there are no more patches left, stop using any pathfinding algorithm
-                                            if (passengerMovement.hasPassengerReachedFinalPatchInPath()) {
-                                                passengerMovement.endStoredValuePathfinding();
-                                            }
+                                        // Check if there are still patches left in the path
+                                        // If there are no more patches left, stop using any pathfinding algorithm
+                                        if (passengerMovement.hasPassengerReachedFinalPatchInPath()) {
+                                            passengerMovement.endStoredValuePathfinding();
                                         }
-                                    } else {
-                                        passengerMovement.endStoredValuePathfinding();
                                     }
+                                } else {
+                                    passengerMovement.endStoredValuePathfinding();
                                 }
                             }
 
+                            if (passengerMovement.hasEncounteredPortalWaitingPassenger()) {
+                                passengerMovement.beginWaitingOnPortal();
+                            } else {
+                                passengerMovement.endWaitingOnPortal();
+                            }
+
                             // Check if the passenger is now at the portal
-                            if (passengerMovement.hasReachedGoal()) {
+                            if (
+                                    passengerMovement.hasReachedGoal()
+                            ) {
                                 passengerMovement.beginWaitingOnPortal();
 
                                 if (passengerMovement.willEnterPortal()) {
@@ -846,10 +851,14 @@ public class Simulator {
 
                                     // Then have this passenger marked for floor switching
                                     this.passengersToSwitchFloors.add(passenger);
-
-                                    break;
                                 } else {
                                     passengerMovement.stop();
+                                }
+
+                                break;
+                            } else {
+                                if (passengerMovement.willEnterPortal()) {
+                                    passengerMovement.endWaitingOnPortal();
                                 }
                             }
 
@@ -995,6 +1004,36 @@ public class Simulator {
                                     passengerMovement.free();
 
                                     break;
+                                }
+
+                                if (passengerMovement.getGoalAmenity() instanceof Portal) {
+                                    // Check if the passenger is now at the portal
+                                    if (
+                                            passengerMovement.hasReachedGoal()
+                                    ) {
+                                        passengerMovement.beginWaitingOnPortal();
+
+                                        if (passengerMovement.willEnterPortal()) {
+                                            passengerMovement.endWaitingOnPortal();
+
+                                            // Have the passenger set its current goal
+                                            passengerMovement.reachGoal();
+
+                                            // Reset the current goal of the passenger
+                                            passengerMovement.resetGoal(false);
+
+                                            // Then have this passenger marked for floor switching
+                                            this.passengersToSwitchFloors.add(passenger);
+                                        } else {
+                                            passengerMovement.stop();
+                                        }
+
+                                        break;
+                                    } else {
+                                        if (passengerMovement.willEnterPortal()) {
+                                            passengerMovement.endWaitingOnPortal();
+                                        }
+                                    }
                                 }
 
                                 if (passengerMovement.hasReachedNextPatchInPath()) {
