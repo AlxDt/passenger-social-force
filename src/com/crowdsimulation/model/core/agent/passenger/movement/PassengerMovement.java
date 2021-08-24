@@ -24,7 +24,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.stairs.StairShaft;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.Goal;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
-import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.BlockableAmenity;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Blockable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
@@ -533,6 +533,10 @@ public class PassengerMovement {
         return Turnstile.asTurnstile(this.goalAmenity);
     }
 
+    public Blockable getGoalAmenityAsBlockable() {
+        return Blockable.asBlockable(this.goalAmenity);
+    }
+
     public Portal getGoalAmenityAsPortal() {
         return Portal.asPortal(this.goalAmenity);
     }
@@ -681,7 +685,7 @@ public class PassengerMovement {
                                 (
                                         passThroughBlockables
                                                 && patchToExploreNeighbor.getAmenityBlock().getParent()
-                                                instanceof BlockableAmenity
+                                                instanceof Blockable
                                 )
                                         || (
                                         !includeStartingPatch && patchToExplore.equals(startingPatch)
@@ -3185,7 +3189,15 @@ public class PassengerMovement {
 
     // Check if this passenger is allowed by its goal to pass
     public boolean isAllowedPass() {
-        return this.getGoalAmenityAsGoal().allowPass();
+        boolean allowPassAsGoal = this.getGoalAmenityAsGoal().allowPass();
+
+        Blockable blockable = this.getGoalAmenityAsBlockable();
+
+        if (blockable != null) {
+            return allowPassAsGoal && !blockable.blockEntry();
+        } else {
+            return allowPassAsGoal;
+        }
     }
 
     // Check if this passenger will enter the train

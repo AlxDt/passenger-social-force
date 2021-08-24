@@ -14,7 +14,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amen
 import java.util.ArrayList;
 import java.util.List;
 
-public class Security extends BlockableAmenity {
+public class Security extends Blockable {
     // Denotes the queueing object associated with this security gate
     private final QueueObject queueObject;
 

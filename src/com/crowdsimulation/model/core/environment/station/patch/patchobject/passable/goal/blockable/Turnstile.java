@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class Turnstile extends BlockableAmenity {
+public class Turnstile extends Blockable {
     // Denotes the current mode of this turnstile
     private TurnstileMode turnstileMode;
 

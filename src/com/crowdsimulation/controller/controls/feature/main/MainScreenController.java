@@ -3078,7 +3078,7 @@ public class MainScreenController extends ScreenController {
                                     );
 
                                     securityBlockPassengerCheckBox.setSelected(
-                                            securityToEdit.isBlockEntry()
+                                            securityToEdit.blockEntry()
                                     );
 
                                     securityIntervalSpinner.getValueFactory().setValue(
@@ -4293,7 +4293,7 @@ public class MainScreenController extends ScreenController {
                                     );
 
                                     turnstileBlockPassengerCheckBox.setSelected(
-                                            turnstileToEdit.isBlockEntry()
+                                            turnstileToEdit.blockEntry()
                                     );
 
                                     turnstileModeChoiceBox.setValue(
