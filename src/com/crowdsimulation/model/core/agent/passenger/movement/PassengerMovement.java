@@ -1177,6 +1177,12 @@ public class PassengerMovement {
                             if (trainDoor.getPlatformDirection() != this.travelDirection) {
                                 continue;
                             }
+
+                            // Also, if the train door has a female-only restriction, make sure this passenger is also
+                            // female
+                            if (trainDoor.isFemaleOnly() && this.parent.getGender() != Passenger.Gender.FEMALE) {
+                                continue;
+                            }
                         }
 
                         // Compute the distance to each attractor

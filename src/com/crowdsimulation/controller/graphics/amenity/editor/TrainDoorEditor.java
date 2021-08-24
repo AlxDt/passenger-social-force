@@ -4,6 +4,7 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.environment.station.Floor;
+import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
@@ -16,7 +17,9 @@ public class TrainDoorEditor {
             Patch currentPatch,
             boolean enabled,
             PassengerMovement.TravelDirection travelDirection,
-            List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
+            List<TrainDoor.TrainDoorCarriage> trainDoorCarriages,
+            Station.StationOrientation stationOrientation,
+            boolean isFemaleOnly
     ) {
         List<Amenity.AmenityBlock> amenityBlocks
                 = Gate.GateBlock.convertToGateBlocks(
@@ -52,7 +55,9 @@ public class TrainDoorEditor {
                     amenityBlocks,
                     enabled,
                     travelDirection,
-                    trainDoorCarriages
+                    trainDoorCarriages,
+                    stationOrientation,
+                    isFemaleOnly
             );
 
             // Add this station gate to the list of all train doors on this floor
@@ -70,7 +75,9 @@ public class TrainDoorEditor {
             TrainDoor trainDoorToEdit,
             boolean enabled,
             PassengerMovement.TravelDirection travelDirection,
-            List<TrainDoor.TrainDoorCarriage> trainDoorCarriages
+            List<TrainDoor.TrainDoorCarriage> trainDoorCarriages,
+            Station.StationOrientation stationOrientation,
+            boolean isFemaleOnly
     ) {
         trainDoorToEdit.setEnabled(
                 enabled
@@ -82,6 +89,15 @@ public class TrainDoorEditor {
 
         trainDoorToEdit.setTrainDoorCarriagesSupported(
                 trainDoorCarriages
+        );
+
+        trainDoorToEdit.setTrainDoorOrientation(
+                stationOrientation
+
+        );
+
+        trainDoorToEdit.setFemaleOnly(
+                isFemaleOnly
         );
     }
 

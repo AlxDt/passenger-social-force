@@ -1,5 +1,6 @@
 package com.crowdsimulation.controller.graphics.amenity.graphic.amenity;
 
+import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 
 public class TrainDoorGraphic extends AmenityGraphic implements Changeable {
@@ -27,17 +28,32 @@ public class TrainDoorGraphic extends AmenityGraphic implements Changeable {
     public void change() {
         TrainDoor trainDoor = (TrainDoor) this.amenity;
 
-        switch (trainDoor.getPlatformDirection()) {
-            case NORTHBOUND:
-            case WESTBOUND:
-                this.graphicIndex = 0;
+        if (trainDoor.getTrainDoorOrientation() == Station.StationOrientation.SIDE_PLATFORM) {
+            switch (trainDoor.getPlatformDirection()) {
+                case NORTHBOUND:
+                case WESTBOUND:
+                    this.graphicIndex = 0;
 
-                break;
-            case SOUTHBOUND:
-            case EASTBOUND:
-                this.graphicIndex = 1;
+                    break;
+                case SOUTHBOUND:
+                case EASTBOUND:
+                    this.graphicIndex = 1;
 
-                break;
+                    break;
+            }
+        } else {
+            switch (trainDoor.getPlatformDirection()) {
+                case NORTHBOUND:
+                case WESTBOUND:
+                    this.graphicIndex = 1;
+
+                    break;
+                case SOUTHBOUND:
+                case EASTBOUND:
+                    this.graphicIndex = 0;
+
+                    break;
+            }
         }
     }
 }

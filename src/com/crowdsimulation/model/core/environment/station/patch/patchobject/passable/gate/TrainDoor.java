@@ -8,6 +8,7 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGr
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.TrainDoorGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.PlatformFloorField;
@@ -30,6 +31,12 @@ public class TrainDoor extends Gate implements Queueable {
 
     // Denotes the types of carriages supported by this train door
     private final List<TrainDoorCarriage> trainDoorCarriagesSupported;
+
+    // Denotes the orientation of this train door
+    private Station.StationOrientation stationOrientation;
+
+    // Denotes whether this train door only accepts females
+    private boolean isFemaleOnly;
 
     // Factory for train door creation
     public static final TrainDoorFactory trainDoorFactory;
@@ -120,7 +127,9 @@ public class TrainDoor extends Gate implements Queueable {
             List<AmenityBlock> amenityBlocks,
             boolean enabled,
             PassengerMovement.TravelDirection platformDirection,
-            List<TrainDoorCarriage> trainDoorCarriagesSupported
+            List<TrainDoorCarriage> trainDoorCarriagesSupported,
+            Station.StationOrientation stationOrientation,
+            boolean isFemaleOnly
     ) {
         super(amenityBlocks, enabled);
 
@@ -129,6 +138,10 @@ public class TrainDoor extends Gate implements Queueable {
         this.trainDoorCarriagesSupported = new ArrayList<>();
 
         setTrainDoorCarriagesSupported(trainDoorCarriagesSupported);
+
+        this.stationOrientation = stationOrientation;
+
+        this.isFemaleOnly = isFemaleOnly;
 
         this.queueObjects = new HashMap<>();
 
@@ -148,41 +161,80 @@ public class TrainDoor extends Gate implements Queueable {
                 TrainDoorEntranceLocation.RIGHT
         );
 
-        if (
-                platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND
-                        || platformDirection == PassengerMovement.TravelDirection.EASTBOUND
-        ) {
-            this.queueObjects.put(
-                    TrainDoorEntranceLocation.LEFT,
-                    new QueueObject(
-                            this,
-                            this.getAttractors().get(0).getPatch()
-                    )
-            );
+        if (stationOrientation == Station.StationOrientation.SIDE_PLATFORM) {
+            if (
+                    platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND
+                            || platformDirection == PassengerMovement.TravelDirection.EASTBOUND
+            ) {
+                this.queueObjects.put(
+                        TrainDoorEntranceLocation.LEFT,
+                        new QueueObject(
+                                this,
+                                this.getAttractors().get(0).getPatch()
+                        )
+                );
 
-            this.queueObjects.put(
-                    TrainDoorEntranceLocation.RIGHT,
-                    new QueueObject(
-                            this,
-                            this.getAttractors().get(1).getPatch()
-                    )
-            );
+                this.queueObjects.put(
+                        TrainDoorEntranceLocation.RIGHT,
+                        new QueueObject(
+                                this,
+                                this.getAttractors().get(1).getPatch()
+                        )
+                );
+            } else {
+                this.queueObjects.put(
+                        TrainDoorEntranceLocation.RIGHT,
+                        new QueueObject(
+                                this,
+                                this.getAttractors().get(0).getPatch()
+                        )
+                );
+
+                this.queueObjects.put(
+                        TrainDoorEntranceLocation.LEFT,
+                        new QueueObject(
+                                this,
+                                this.getAttractors().get(1).getPatch()
+                        )
+                );
+            }
         } else {
-            this.queueObjects.put(
-                    TrainDoorEntranceLocation.RIGHT,
-                    new QueueObject(
-                            this,
-                            this.getAttractors().get(0).getPatch()
-                    )
-            );
+            if (
+                    platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND
+                            || platformDirection == PassengerMovement.TravelDirection.EASTBOUND
+            ) {
+                this.queueObjects.put(
+                        TrainDoorEntranceLocation.RIGHT,
+                        new QueueObject(
+                                this,
+                                this.getAttractors().get(0).getPatch()
+                        )
+                );
 
-            this.queueObjects.put(
-                    TrainDoorEntranceLocation.LEFT,
-                    new QueueObject(
-                            this,
-                            this.getAttractors().get(1).getPatch()
-                    )
-            );
+                this.queueObjects.put(
+                        TrainDoorEntranceLocation.LEFT,
+                        new QueueObject(
+                                this,
+                                this.getAttractors().get(1).getPatch()
+                        )
+                );
+            } else {
+                this.queueObjects.put(
+                        TrainDoorEntranceLocation.LEFT,
+                        new QueueObject(
+                                this,
+                                this.getAttractors().get(0).getPatch()
+                        )
+                );
+
+                this.queueObjects.put(
+                        TrainDoorEntranceLocation.RIGHT,
+                        new QueueObject(
+                                this,
+                                this.getAttractors().get(1).getPatch()
+                        )
+                );
+            }
         }
 
         // Add a blank floor field
@@ -224,6 +276,22 @@ public class TrainDoor extends Gate implements Queueable {
     public void setTrainDoorCarriagesSupported(List<TrainDoorCarriage> trainDoorCarriagesSupported) {
         this.trainDoorCarriagesSupported.clear();
         this.trainDoorCarriagesSupported.addAll(trainDoorCarriagesSupported);
+    }
+
+    public Station.StationOrientation getTrainDoorOrientation() {
+        return stationOrientation;
+    }
+
+    public void setTrainDoorOrientation(Station.StationOrientation stationOrientation) {
+        this.stationOrientation = stationOrientation;
+    }
+
+    public boolean isFemaleOnly() {
+        return isFemaleOnly;
+    }
+
+    public void setFemaleOnly(boolean femaleOnly) {
+        isFemaleOnly = femaleOnly;
     }
 
     @Override
@@ -465,13 +533,17 @@ public class TrainDoor extends Gate implements Queueable {
                 List<AmenityBlock> amenityBlocks,
                 boolean enabled,
                 PassengerMovement.TravelDirection travelDirection,
-                List<TrainDoorCarriage> trainDoorCarriagesSupported
+                List<TrainDoorCarriage> trainDoorCarriagesSupported,
+                Station.StationOrientation stationOrientation,
+                boolean isFemaleOnly
         ) {
             return new TrainDoor(
                     amenityBlocks,
                     enabled,
                     travelDirection,
-                    trainDoorCarriagesSupported
+                    trainDoorCarriagesSupported,
+                    stationOrientation,
+                    isFemaleOnly
             );
         }
     }
@@ -513,4 +585,5 @@ public class TrainDoor extends Gate implements Queueable {
             return this.name;
         }
     }
+
 }

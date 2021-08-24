@@ -5,6 +5,7 @@ import com.crowdsimulation.controller.controls.feature.main.MainScreenController
 import com.crowdsimulation.controller.controls.service.InitializeScreenService;
 import com.crowdsimulation.controller.graphics.GraphicsController;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
@@ -214,6 +215,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
             ChoiceBox<PassengerMovement.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
+            Label trainDoorOrientationLabel,
+            ChoiceBox<Station.StationOrientation> trainDoorOrientationChoiceBox,
+            CheckBox trainDoorFemalesOnlyCheckBox,
             Button saveTrainDoorButton,
             Button deleteTrainDoorButton,
             Button addFloorFieldsTrainDoorButton,
@@ -302,6 +306,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 trainDoorDirectionChoiceBox,
                 trainDoorCarriageLabel,
                 trainDoorCarriageListView,
+                trainDoorOrientationLabel,
+                trainDoorOrientationChoiceBox,
+                trainDoorFemalesOnlyCheckBox,
                 saveTrainDoorButton,
                 deleteTrainDoorButton,
                 addFloorFieldsTrainDoorButton,
@@ -753,6 +760,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
             ChoiceBox<PassengerMovement.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView,
+            Label trainDoorOrientationLabel,
+            ChoiceBox<Station.StationOrientation> trainDoorOrientationChoiceBox,
+            CheckBox trainDoorFemalesOnlyCheckBox,
             Button saveTrainDoorButton,
             Button deleteTrainDoorButton,
             Button addFloorFieldsTrainDoorButton,
@@ -767,6 +777,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
                 trainDoorDirectionChoiceBox,
                 trainDoorCarriageLabel,
                 trainDoorCarriageListView,
+                trainDoorOrientationLabel,
+                trainDoorOrientationChoiceBox,
+                trainDoorFemalesOnlyCheckBox,
                 saveTrainDoorButton,
                 deleteTrainDoorButton,
                 addFloorFieldsTrainDoorButton
@@ -787,6 +800,9 @@ public class InitializeMainScreenService extends InitializeScreenService {
             ChoiceBox<PassengerMovement.TravelDirection> trainDoorDirectionChoiceBox,
             Label trainDoorCarriageLabel,
             ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriagesListView,
+            Label trainDoorOrientationLabel,
+            ChoiceBox<Station.StationOrientation> trainDoorOrientationChoiceBox,
+            CheckBox trainDoorFemalesOnlyCheckBox,
             Button saveTrainDoorButton,
             Button deleteTrainDoorButton,
             Button addFloorFieldsTrainDoorButton
@@ -813,9 +829,19 @@ public class InitializeMainScreenService extends InitializeScreenService {
         ));
         trainDoorCarriagesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
+        trainDoorOrientationLabel.setLabelFor(trainDoorOrientationChoiceBox);
+
+        trainDoorOrientationChoiceBox.setItems(FXCollections.observableArrayList(
+                Station.StationOrientation.SIDE_PLATFORM,
+                Station.StationOrientation.ISLAND_PLATFORM
+        ));
+        trainDoorOrientationChoiceBox.getSelectionModel().select(Station.StationOrientation.SIDE_PLATFORM);
+
         trainDoorEnableCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
         trainDoorDirectionChoiceBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
         trainDoorCarriagesListView.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
+        trainDoorOrientationChoiceBox.disableProperty().bind(SPECIFIC_CONTROLS_BINDING);
+        trainDoorFemalesOnlyCheckBox.disableProperty().bind(InitializeMainScreenService.SPECIFIC_CONTROLS_BINDING);
 
         saveTrainDoorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);
         deleteTrainDoorButton.disableProperty().bind(InitializeMainScreenService.SAVE_DELETE_BINDING);

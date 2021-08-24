@@ -1596,6 +1596,23 @@ public class Station extends BaseStationObject implements Environment {
         return directoryResults;
     }
 
+    // Denotes the orientation of this station
+    public enum StationOrientation {
+        SIDE_PLATFORM("Side platform"),
+        ISLAND_PLATFORM("Island platform");
+
+        private final String name;
+
+        StationOrientation(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
+    }
+
     public static class StationValidationResult {
         private final StationValidationResultType stationValidationResultType;
         private final PassengerMovement.TravelDirection travelDirection;

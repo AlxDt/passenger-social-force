@@ -288,6 +288,15 @@ public class MainScreenController extends ScreenController {
     private ListView<TrainDoor.TrainDoorCarriage> trainDoorCarriageListView;
 
     @FXML
+    private Label trainDoorOrientationLabel;
+
+    @FXML
+    private ChoiceBox<Station.StationOrientation> trainDoorOrientationChoiceBox;
+
+    @FXML
+    private CheckBox trainDoorFemalesOnlyCheckBox;
+
+    @FXML
     private Button saveTrainDoorButton;
 
     @FXML
@@ -641,6 +650,9 @@ public class MainScreenController extends ScreenController {
                 trainDoorDirectionChoiceBox,
                 trainDoorCarriageLabel,
                 trainDoorCarriageListView,
+                trainDoorOrientationLabel,
+                trainDoorOrientationChoiceBox,
+                trainDoorFemalesOnlyCheckBox,
                 saveTrainDoorButton,
                 deleteTrainDoorButton,
                 addFloorFieldsTrainDoorButton,
@@ -2322,16 +2334,22 @@ public class MainScreenController extends ScreenController {
                     TrainDoor trainDoorToEdit = (TrainDoor) amenityToSave;
 
                     PassengerMovement.TravelDirection priorPlatform = trainDoorToEdit.getPlatformDirection();
+                    Station.StationOrientation priorOrientation = trainDoorToEdit.getTrainDoorOrientation();
 
                     TrainDoor.trainDoorEditor.edit(
                             trainDoorToEdit,
                             trainDoorEnableCheckBox.isSelected(),
                             trainDoorDirectionChoiceBox.getValue(),
-                            trainDoorCarriageListView.getSelectionModel().getSelectedItems()
+                            trainDoorCarriageListView.getSelectionModel().getSelectedItems(),
+                            trainDoorOrientationChoiceBox.getValue(),
+                            trainDoorFemalesOnlyCheckBox.isSelected()
                     );
 
                     // Update the graphic if needed
-                    if (priorPlatform != trainDoorDirectionChoiceBox.getValue()) {
+                    if (
+                            priorPlatform != trainDoorDirectionChoiceBox.getValue()
+                                    || priorOrientation != trainDoorOrientationChoiceBox.getValue()
+                    ) {
                         ((TrainDoorGraphic) trainDoorToEdit.getGraphicObject()).change();
                     }
                 } else {
@@ -4398,7 +4416,9 @@ public class MainScreenController extends ScreenController {
                                             currentPatch,
                                             trainDoorEnableCheckBox.isSelected(),
                                             trainDoorDirectionChoiceBox.getSelectionModel().getSelectedItem(),
-                                            trainDoorCarriageListView.getSelectionModel().getSelectedItems()
+                                            trainDoorCarriageListView.getSelectionModel().getSelectedItems(),
+                                            trainDoorOrientationChoiceBox.getValue(),
+                                            trainDoorFemalesOnlyCheckBox.isSelected()
                                     );
                                 } else {
                                     AlertController.showSimpleAlert(
@@ -4451,6 +4471,12 @@ public class MainScreenController extends ScreenController {
                                     trainDoorDirectionChoiceBox.setValue(
                                             trainDoorToEdit.getPlatformDirection()
                                     );
+
+                                    trainDoorOrientationChoiceBox.setValue(
+                                            trainDoorToEdit.getTrainDoorOrientation()
+                                    );
+
+                                    trainDoorFemalesOnlyCheckBox.setSelected(trainDoorToEdit.isFemaleOnly());
 
                                     trainDoorCarriageListView.getSelectionModel().clearSelection();
 

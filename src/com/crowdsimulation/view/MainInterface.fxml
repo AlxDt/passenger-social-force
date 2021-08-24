@@ -29,7 +29,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1500.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.crowdsimulation.controller.controls.feature.main.MainScreenController">
+<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="1500.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.crowdsimulation.controller.controls.feature.main.MainScreenController">
     <center>
         <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
             <children>
@@ -364,7 +364,7 @@
                                                             <content>
                                                                 <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="230.0">
                                                                     <children>
-                                                                        <VBox alignment="TOP_CENTER" prefHeight="339.0" prefWidth="199.0" spacing="10.0">
+                                                                        <VBox alignment="TOP_CENTER" prefHeight="371.0" prefWidth="199.0" spacing="10.0">
                                                                             <children>
                                                                                 <HBox alignment="CENTER" layoutX="10.0" layoutY="30.0" prefHeight="10.0" prefWidth="199.0" spacing="10.0">
                                                                                     <children>
@@ -377,12 +377,23 @@
                                                                                         <ChoiceBox fx:id="trainDoorDirectionChoiceBox" prefHeight="25.0" prefWidth="138.0" />
                                                                                     </children>
                                                                                 </HBox>
+                                                            <HBox alignment="CENTER" prefHeight="30.0" prefWidth="230.0" spacing="10.0">
+                                                               <children>
+                                                                  <Label fx:id="trainDoorOrientationLabel" text="Orientation:" />
+                                                                  <ChoiceBox fx:id="trainDoorOrientationChoiceBox" prefHeight="25.0" prefWidth="127.0" />
+                                                               </children>
+                                                            </HBox>
                                                                                 <HBox alignment="CENTER" layoutX="10.0" layoutY="194.0" prefHeight="200.0" prefWidth="199.0" spacing="10.0">
                                                                                     <children>
                                                                                         <Label fx:id="trainDoorCarriageLabel" prefHeight="7.0" prefWidth="53.0" text="Carriages:" wrapText="true" />
                                                                                         <ListView fx:id="trainDoorCarriageListView" fixedCellSize="30.0" prefHeight="17.0" prefWidth="138.0" />
                                                                                     </children>
                                                                                 </HBox>
+                                                            <HBox alignment="CENTER" prefHeight="10.0" prefWidth="199.0" spacing="10.0">
+                                                               <children>
+                                                                  <CheckBox fx:id="trainDoorFemalesOnlyCheckBox" mnemonicParsing="false" prefHeight="17.0" prefWidth="200.0" text="Females only" wrapText="true" />
+                                                               </children>
+                                                            </HBox>
                                                                                 <HBox alignment="CENTER" prefHeight="37.0" prefWidth="199.0" spacing="10.0">
                                                                                     <children>
                                                                                         <Button fx:id="saveTrainDoorButton" cancelButton="true" mnemonicParsing="false" onAction="#saveAmenityAction" prefHeight="25.0" prefWidth="199.0" text="Save" />
