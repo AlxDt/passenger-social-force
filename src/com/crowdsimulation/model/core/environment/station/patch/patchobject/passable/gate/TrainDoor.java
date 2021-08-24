@@ -337,17 +337,39 @@ public class TrainDoor extends Gate implements Queueable {
     }
 
     public TrainDoorEntranceLocation getTrainDoorEntranceLocationFromAttractor(AmenityBlock attractor) {
-        if (this.platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND || this.platformDirection == PassengerMovement.TravelDirection.EASTBOUND) {
-            if (this.getAttractors().indexOf(attractor) == 0) {
-                return TrainDoorEntranceLocation.LEFT;
+        if (this.stationOrientation == Station.StationOrientation.SIDE_PLATFORM) {
+            if (
+                    this.platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND
+                            || this.platformDirection == PassengerMovement.TravelDirection.EASTBOUND
+            ) {
+                if (this.getAttractors().indexOf(attractor) == 0) {
+                    return TrainDoorEntranceLocation.LEFT;
+                } else {
+                    return TrainDoorEntranceLocation.RIGHT;
+                }
             } else {
-                return TrainDoorEntranceLocation.RIGHT;
+                if (this.getAttractors().indexOf(attractor) == 0) {
+                    return TrainDoorEntranceLocation.RIGHT;
+                } else {
+                    return TrainDoorEntranceLocation.LEFT;
+                }
             }
         } else {
-            if (this.getAttractors().indexOf(attractor) == 0) {
-                return TrainDoorEntranceLocation.RIGHT;
+            if (
+                    this.platformDirection == PassengerMovement.TravelDirection.SOUTHBOUND
+                            || this.platformDirection == PassengerMovement.TravelDirection.EASTBOUND
+            ) {
+                if (this.getAttractors().indexOf(attractor) == 0) {
+                    return TrainDoorEntranceLocation.RIGHT;
+                } else {
+                    return TrainDoorEntranceLocation.LEFT;
+                }
             } else {
-                return TrainDoorEntranceLocation.LEFT;
+                if (this.getAttractors().indexOf(attractor) == 0) {
+                    return TrainDoorEntranceLocation.LEFT;
+                } else {
+                    return TrainDoorEntranceLocation.RIGHT;
+                }
             }
         }
     }

@@ -25,6 +25,9 @@ public class StationGate extends Gate {
     // Denotes the direction of passengers this station gate produces
     private final List<PassengerMovement.TravelDirection> stationGatePassengerTravelDirections;
 
+    // Denotes the number of passengers who are supposed to enter the station gate, but cannot
+    private int passengerBacklogCount;
+
     // Factory for station gate creation
     public static final StationGateFactory stationGateFactory;
 
@@ -286,6 +289,8 @@ public class StationGate extends Gate {
 
         setPassengerTravelDirectionsSpawned(stationGatePassengerTravelDirections);
 
+        passengerBacklogCount = 0;
+
         this.stationGateGraphic = new StationGateGraphic(this);
     }
 
@@ -312,6 +317,14 @@ public class StationGate extends Gate {
     public void setPassengerTravelDirectionsSpawned(List<PassengerMovement.TravelDirection> travelDirections) {
         this.stationGatePassengerTravelDirections.clear();
         this.stationGatePassengerTravelDirections.addAll(travelDirections);
+    }
+
+    public int getPassengerBacklogCount() {
+        return passengerBacklogCount;
+    }
+
+    public void incrementBacklogs() {
+        this.passengerBacklogCount++;
     }
 
     @Override
@@ -364,9 +377,24 @@ public class StationGate extends Gate {
         if (spawner.getPatch().getPassengers().isEmpty()) {
             return Passenger.passengerFactory.create(spawner.getPatch(), travelDirectionChosen, true);
         } else {
-            // Else, do nothing, so return null
+            // No passengers were generated because the spawner was blocked
             return null;
         }
+    }
+
+    // Spawn a passenger from the backlogs
+    public Passenger spawnPassengerFromBacklogs() {
+        if (this.passengerBacklogCount > 0) {
+            Passenger passengerSpawned = this.spawnPassenger();
+
+            if (passengerSpawned != null) {
+                this.passengerBacklogCount--;
+            }
+
+            return passengerSpawned;
+        }
+
+        return null;
     }
 
     // Lists the mode of this station gate (whether it's entry/exit only, or both)

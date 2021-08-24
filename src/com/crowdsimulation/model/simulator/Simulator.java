@@ -525,6 +525,10 @@ public class Simulator {
                 // Spawn passengers depending on the spawn frequency of the station gate
                 if (stationGate.getChancePerSecond() > boardingRandomNumber) {
                     spawnPassenger(floor, stationGate);
+                } else {
+                    // If no passenger happens to spawn this tick, use this free time to spawn a passenger from the
+                    // backlog, if there are any
+                    spawnPassengerFromStationGateBacklog(floor, stationGate);
                 }
             }
         }
@@ -1370,6 +1374,29 @@ public class Simulator {
     private void spawnPassenger(Floor floor, Gate gate) {
         // Generate the passenger
         Passenger passenger = gate.spawnPassenger();
+
+        if (passenger != null) {
+            // Add the newly created passenger to the list of passengers in the floor, station, and simulation
+            floor.getStation().getPassengersInStation().add(passenger);
+            floor.getPassengersInFloor().add(passenger);
+
+            // Add the passenger's patch position to its current floor's patch set as well
+            floor.getPassengerPatchSet().add(
+                    passenger.getPassengerMovement().getCurrentPatch()
+            );
+        } else {
+            // No passenger was spawned, so increment the backlog
+            if (gate instanceof StationGate) {
+                StationGate stationGate = ((StationGate) gate);
+
+                stationGate.incrementBacklogs();
+            }
+        }
+    }
+
+    // Spawn a passenger from the backlogs of the station gate
+    public void spawnPassengerFromStationGateBacklog(Floor floor, StationGate stationGate) {
+        Passenger passenger = stationGate.spawnPassengerFromBacklogs();
 
         if (passenger != null) {
             // Add the newly created passenger to the list of passengers in the floor, station, and simulation
