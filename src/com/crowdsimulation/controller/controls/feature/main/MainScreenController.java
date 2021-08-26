@@ -399,6 +399,9 @@ public class MainScreenController extends ScreenController {
     private Button addFloorAboveButton;
 
     @FXML
+    private ToggleButton peekFloorsButton;
+
+    @FXML
     private Text promptText;
 
     // The file chooser for saving and loading
@@ -575,7 +578,8 @@ public class MainScreenController extends ScreenController {
                 floorBelowButton,
                 deleteFloorButton,
                 floorAboveButton,
-                addFloorAboveButton
+                addFloorAboveButton,
+                peekFloorsButton
         );
 
         InitializeMainScreenService.initializeSidebar(
@@ -1632,6 +1636,15 @@ public class MainScreenController extends ScreenController {
     }
 
     @FXML
+    public void togglePeekAction() {
+        // Set the will peek variable
+        GraphicsController.willPeek = peekFloorsButton.isSelected();
+
+        // Redraw the interface
+        drawInterface(false);
+    }
+
+    @FXML
     // Add floor fields
     public void addFloorFieldsAction() {
         // Turn on the floor fields drawing mode
@@ -1995,8 +2008,6 @@ public class MainScreenController extends ScreenController {
 
         // Reset the top bar
         resetTopBar();
-
-        // Update the passenger counts
     }
 
     // Reset the top bar

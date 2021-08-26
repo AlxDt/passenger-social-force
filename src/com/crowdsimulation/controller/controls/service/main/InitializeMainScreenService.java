@@ -355,7 +355,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
             Button floorBelowButton,
             Button deleteFloorButton,
             Button floorAboveButton,
-            Button addFloorAboveButton
+            Button addFloorAboveButton,
+            ToggleButton peekFloorsButton
     ) {
         floorBelowButton.setDisable(true);
         floorAboveButton.setDisable(true);
@@ -364,6 +365,8 @@ public class InitializeMainScreenService extends InitializeScreenService {
         addFloorAboveButton.disableProperty().bind(EDIT_FLOOR_BINDING);
 
         deleteFloorButton.disableProperty().bind(EDIT_FLOOR_BINDING);
+
+        peekFloorsButton.disableProperty().bind(EDIT_FLOOR_BINDING);
     }
 
     public static void initializeTestTab(

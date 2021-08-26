@@ -82,6 +82,8 @@ public class GraphicsController extends Controller {
     private static Coordinates previousMidpoint;
     private static Double measurementDistance;
 
+    public static boolean willPeek;
+
     private static long millisecondsLastCanvasRefresh;
 
     // Denotes whether the listeners for the drawing interface has already been drawn, in order to prevent its
@@ -117,6 +119,8 @@ public class GraphicsController extends Controller {
         GraphicsController.drawMeasurement = false;
         GraphicsController.measurementStartPatch = null;
         GraphicsController.previousMidpoint = null;
+
+        GraphicsController.willPeek = false;
 
         millisecondsLastCanvasRefresh = 0;
 
@@ -193,6 +197,49 @@ public class GraphicsController extends Controller {
         final double canvasWidth = backgroundCanvas.getWidth();
         final double canvasHeight = backgroundCanvas.getHeight();
 
+        // Clear the canvases
+        clearCanvases(
+                floor,
+                background,
+                backgroundGraphicsContext,
+                foregroundGraphicsContext,
+                markingsGraphicsContext,
+                canvasWidth,
+                canvasHeight
+        );
+
+        // Draw the station objects
+        drawStationObjects(floor, background, backgroundGraphicsContext, foregroundGraphicsContext, false);
+
+        // If set to peek, draw the other floors, but translucently
+        if (GraphicsController.willPeek && !Main.simulator.isRunning()) {
+            List<Floor> allFloorsExceptThis = new ArrayList<>(floor.getStation().getFloors());
+            allFloorsExceptThis.remove(floor);
+
+            for (Floor floorToPeek : allFloorsExceptThis) {
+                drawStationObjects(
+                        floorToPeek,
+                        background,
+                        backgroundGraphicsContext,
+                        foregroundGraphicsContext,
+                        true
+                );
+            }
+        }
+
+        // Draw the current amenity marking
+        drawCurrentAmenityMarking(backgroundGraphicsContext);
+    }
+
+    private static void clearCanvases(
+            Floor floor,
+            boolean background,
+            GraphicsContext backgroundGraphicsContext,
+            GraphicsContext foregroundGraphicsContext,
+            GraphicsContext markingsGraphicsContext,
+            double canvasWidth,
+            double canvasHeight
+    ) {
         // Clear everything in the respective canvas
         if (!background) {
             foregroundGraphicsContext.clearRect(
@@ -224,7 +271,15 @@ public class GraphicsController extends Controller {
                 floor.getColumns() * tileSize,
                 floor.getRows() * tileSize
         );
+    }
 
+    private static void drawStationObjects(
+            Floor floor,
+            boolean background,
+            GraphicsContext backgroundGraphicsContext,
+            GraphicsContext foregroundGraphicsContext,
+            boolean drawFloorThroughPeek
+    ) {
         // Draw all the patches of this floor
         // If the background is supposed to be drawn, draw from all the patches
         // If not, draw only from the combined passenger and amenity set
@@ -279,6 +334,11 @@ public class GraphicsController extends Controller {
             amenityPassengerSet.addAll(new ArrayList<>(floor.getPassengerPatchSet()));
 
             patches = new ArrayList<>(amenityPassengerSet);
+        }
+
+        // If set to peek, draw this floor transparently
+        if (drawFloorThroughPeek) {
+            foregroundGraphicsContext.setGlobalAlpha(0.1);
         }
 
         for (Patch patch : patches) {
@@ -999,8 +1059,14 @@ public class GraphicsController extends Controller {
             }
         }
 
-        // If this amenity is also the currently selected amenity in the simulator, draw a circle around
-        // said amenity
+        // Reset opacity
+        if (drawFloorThroughPeek) {
+            foregroundGraphicsContext.setGlobalAlpha(1.0);
+        }
+    }
+
+    private static void drawCurrentAmenityMarking(GraphicsContext backgroundGraphicsContext) {
+        // If this amenity is also the currently selected amenity in the simulator, draw a circle around said amenity
         final double CIRCLE_DIAMETER = 250.0;
 
         backgroundGraphicsContext.setStroke(Color.BLACK);
@@ -1021,8 +1087,6 @@ public class GraphicsController extends Controller {
                     CIRCLE_DIAMETER
             );
         }
-//
-//        System.out.println(Main.simulator.getCurrentFloor().getAmenityPatchSet().size() + ", " +Main.simulator.getCurrentFloor().getPassengerPatchSet().size());
     }
 
     // Draw the mouse listeners over the canvases
@@ -1558,7 +1622,7 @@ public class GraphicsController extends Controller {
         if (GraphicsController.previousMidpoint == null || !GraphicsController.previousMidpoint.equals(midpoint)) {
             GraphicsController.previousMidpoint = midpoint;
 
-            graphicsContext.setFont(new Font(20.0));
+            graphicsContext.setFont(new Font(60.0));
             graphicsContext.setFill(Color.BLACK);
 
             graphicsContext.fillText(
