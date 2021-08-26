@@ -53,7 +53,7 @@ public class Coordinates extends Location {
         this.y = y;
     }
 
-    // Compute the distance between this coordinates and some other coordinates
+    // Compute the distance between these coordinates and some other coordinates
     public static double distance(Coordinates sourceCoordinates, Coordinates targetCoordinates) {
         double x = targetCoordinates.getX();
         double y = targetCoordinates.getY();

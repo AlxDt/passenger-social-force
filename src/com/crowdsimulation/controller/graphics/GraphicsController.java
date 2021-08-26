@@ -46,6 +46,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 
 import java.io.IOException;
 import java.util.*;
@@ -75,6 +76,11 @@ public class GraphicsController extends Controller {
 
     private static Double lockedX;
     private static Double lockedY;
+
+    private static boolean drawMeasurement;
+    private static Patch measurementStartPatch;
+    private static Coordinates previousMidpoint;
+    private static Double measurementDistance;
 
     private static long millisecondsLastCanvasRefresh;
 
@@ -107,6 +113,10 @@ public class GraphicsController extends Controller {
 
         GraphicsController.lockedX = null;
         GraphicsController.lockedY = null;
+
+        GraphicsController.drawMeasurement = false;
+        GraphicsController.measurementStartPatch = null;
+        GraphicsController.previousMidpoint = null;
 
         millisecondsLastCanvasRefresh = 0;
 
@@ -1074,6 +1084,11 @@ public class GraphicsController extends Controller {
                     GraphicsController.isDrawingStraightY = true;
 
                     break;
+                // Toggle measurement keys
+                case M:
+                    GraphicsController.drawMeasurement = true;
+
+                    break;
                 // Drawing rotation shortcut keys
                 case X:
                 case Z:
@@ -1171,6 +1186,11 @@ public class GraphicsController extends Controller {
             } else if (e.getCode() == KeyCode.CONTROL) {
                 GraphicsController.isDrawingStraightY = false;
                 GraphicsController.lockedY = null;
+            } else if (e.getCode() == KeyCode.M) {
+                GraphicsController.drawMeasurement = false;
+                GraphicsController.measurementStartPatch = null;
+                GraphicsController.previousMidpoint = null;
+                GraphicsController.measurementDistance = null;
             }
         });
 
@@ -1230,9 +1250,6 @@ public class GraphicsController extends Controller {
 
                     // Only proceed when the mouse is dragged within bounds
                     if (currentPatch != null) {
-                        // Update the visual markings
-                        updateMarkings(backgroundCanvas, markingsCanvas, currentPatch, false);
-
                         // Set the amenity on the patch as the current amenity of the simulation
                         Amenity.AmenityBlock currentAmenityBlock = currentPatch.getAmenityBlock();
 
@@ -1257,6 +1274,9 @@ public class GraphicsController extends Controller {
                             }
                         }
                     }
+
+                    // Update the visual markings
+                    updateMarkings(backgroundCanvas, markingsCanvas, currentPatch, false);
                 }
             }
         });
@@ -1322,6 +1342,11 @@ public class GraphicsController extends Controller {
 
                     markPatch(markingsCanvas, currentPatch);
                 }
+            }
+
+            // Show the measurement value, if requested
+            if (GraphicsController.drawMeasurement) {
+                showMeasurement(markingsCanvas, currentPatch);
             }
         } else {
             // Erase marking
@@ -1394,8 +1419,28 @@ public class GraphicsController extends Controller {
 
         // When the position given is a null, this means the mouse has been dragged out of bounds
         if (matrixPosition != null) {
+            // Retrieve that patch at that location
+            Patch patchAtMousePosition = Main.simulator.getCurrentFloor().getPatch(matrixPosition);
+
+            // If a measurement is requested, compute it
+            // Compute for the start coordinates, if one hasn't been computed yet
+            if (GraphicsController.drawMeasurement) {
+                if (GraphicsController.measurementStartPatch == null) {
+                    GraphicsController.measurementStartPatch = Main.simulator.getCurrentFloor().getPatch(
+                            matrixPosition
+                    );
+                }
+
+                // Distances are measured from the centers of two patches
+                GraphicsController.measurementDistance = Coordinates.distance(
+                        Main.simulator.getStation(),
+                        measurementStartPatch,
+                        patchAtMousePosition
+                );
+            }
+
             // Retrieve the patch at that location
-            return Main.simulator.getCurrentFloor().getPatch(matrixPosition);
+            return patchAtMousePosition;
         } else {
             return null;
         }
@@ -1492,6 +1537,36 @@ public class GraphicsController extends Controller {
     private static void unmarkPatch(Canvas markingsCanvas) {
         GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
         graphicsContext.clearRect(0, 0, markingsCanvas.getWidth(), markingsCanvas.getHeight());
+    }
+
+    private static void showMeasurement(Canvas markingsCanvas, Patch currentPatch) {
+        GraphicsContext graphicsContext = markingsCanvas.getGraphicsContext2D();
+
+        // Get the midpoint between the patch where the measurements were started, and the current one
+        double startingPatchX = GraphicsController.measurementStartPatch.getPatchCenterCoordinates().getX();
+        double startingPatchY = GraphicsController.measurementStartPatch.getPatchCenterCoordinates().getY();
+
+        double currentPatchX = currentPatch.getPatchCenterCoordinates().getX();
+        double currentPatchY = currentPatch.getPatchCenterCoordinates().getY();
+
+        double midpointX = (startingPatchX + currentPatchX) / 2.0;
+        double midpointY = (startingPatchY + currentPatchY) / 2.0;
+
+        Coordinates midpoint = new Coordinates(midpointX, midpointY);
+        Patch midpointPatch = Main.simulator.getCurrentFloor().getPatch(midpoint);
+
+        if (GraphicsController.previousMidpoint == null || !GraphicsController.previousMidpoint.equals(midpoint)) {
+            GraphicsController.previousMidpoint = midpoint;
+
+            graphicsContext.setFont(new Font(20.0));
+            graphicsContext.setFill(Color.BLACK);
+
+            graphicsContext.fillText(
+                    String.format("%.2f m", GraphicsController.measurementDistance),
+                    midpointPatch.getMatrixPosition().getColumn() * tileSize + tileSize * 2.0,
+                    midpointPatch.getMatrixPosition().getRow() * tileSize - tileSize * 2.0
+            );
+        }
     }
 
     public static void beginWaitCursor(BorderPane borderPane) {
