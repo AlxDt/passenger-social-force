@@ -985,10 +985,12 @@ public class PassengerMovement {
                 Station.AmenityCluster portalEntryCluster = station.getAmenityClusterByAmenity().get(portalToEnter);
                 Station.AmenityCluster portalExitCluster = station.getAmenityClusterByAmenity().get(portalToExit);
 
-                if (!visitedClusters.contains(portalExitCluster)) {
+                if (!visitedClusters.contains(portalExitCluster) && !visitedClusters.contains(portalEntryCluster)) {
 //                    if (!visitedClusters.contains(portalEntryCluster)) {
                     // Then get the new floor served by that portal
                     Floor floorToEnter = portalToExit.getFloorServed();
+
+//                    System.out.println("Entering " + portalToEnter.getAttractors().get(0).getPatch() + ", exiting" + portalToExit.getAttractors().get(0).getPatch() + "(" + (currentFloor.getStation().getFloors().indexOf(floorToEnter) + 1) + ")");
 
                     // See if a path to the goal can be formed when passing through that portal
                     double newDistance = portalDistanceInFloor.getValue();
@@ -1023,6 +1025,8 @@ public class PassengerMovement {
                     }
 
                     List<Station.AmenityCluster> newVisitedAmenityClusters = new ArrayList<>(visitedClusters);
+
+                    newVisitedAmenityClusters.add(portalExitCluster);
                     newVisitedAmenityClusters.add(portalEntryCluster);
 
                     List<Portal> newVisitedPortals = new ArrayList<>(visitedPortals);
@@ -1743,8 +1747,12 @@ public class PassengerMovement {
             }
 
             if (!this.shouldStopAtPlatform) {
-                // If the goal is a train door, and it is open, walk faster
-                if (this.getGoalAmenityAsTrainDoor() != null && this.getGoalAmenityAsTrainDoor().isOpen()) {
+                // If the goal is a train door, and it is open, and the passenger is not waiting yet, walk faster
+                if (
+                        this.getGoalAmenityAsTrainDoor() != null
+                                && this.getGoalAmenityAsTrainDoor().isOpen()
+                                && this.action != Action.WAITING_FOR_TRAIN
+                ) {
                     final double speedIncreaseFactor = 1.25;
 
                     this.preferredWalkingDistance = this.baseWalkingDistance * speedIncreaseFactor;

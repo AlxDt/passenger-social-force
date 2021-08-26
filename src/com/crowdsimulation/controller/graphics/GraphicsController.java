@@ -11,6 +11,7 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.Passeng
 import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphicLocation;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.agent.passenger.movement.pathfinding.PassengerPath;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
@@ -31,7 +32,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.position.Coordinates;
 import com.crowdsimulation.model.core.environment.station.patch.position.Location;
 import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
-import com.crowdsimulation.model.core.environment.station.patch.position.Vector;
 import com.crowdsimulation.model.simulator.Simulator;
 import javafx.application.Platform;
 import javafx.scene.Cursor;
@@ -84,7 +84,7 @@ public class GraphicsController extends Controller {
 
     public static final Semaphore DRAW_SEMAPHORE;
 
-//    public static PassengerPath passengerPath = null;
+    public static PassengerPath passengerPath = null;
 
     static {
         FLOOR_FIELD_COLORS = new HashMap<>();
@@ -220,41 +220,42 @@ public class GraphicsController extends Controller {
         // If not, draw only from the combined passenger and amenity set
         List<Patch> patches;
 
-/*        GraphicsController.passengerPath = computePathWithinFloor(
-                Main.simulator.getCurrentFloor().getPatch(30, 66),
-                Main.simulator.getCurrentFloor().getPatch(9, 83),
-                true,
-                false
-        );
+//        GraphicsController.passengerPath = PassengerMovement.computePathWithinFloor(
+//                Main.simulator.getCurrentFloor().getPatch(12, 44),
+//                Main.simulator.getCurrentFloor().getPatch(19, 96),
+//                true,
+//                false,
+//                false
+//        );
 
-        // Draw passenger path
-        if (GraphicsController.passengerPath != null) {
-            foregroundGraphicsContext.setFill(Color.VIOLET);
-            foregroundGraphicsContext.setGlobalAlpha(0.25);
-
-            int index = 0;
-
-            for (Patch pathPatch : new ArrayList<>(GraphicsController.passengerPath.getPath())) {
-                if (index == 0 || index == GraphicsController.passengerPath.getPath().size() - 1) {
-                    foregroundGraphicsContext.setFill(Color.ORANGERED);
-                } else {
-                    foregroundGraphicsContext.setFill(Color.CORNFLOWERBLUE);
-                }
-
-                foregroundGraphicsContext.fillRect(
-                        pathPatch.getPatchCenterCoordinates().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-                                * tileSize - tileSize * 0.5,
-                        pathPatch.getPatchCenterCoordinates().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
-                                * tileSize - tileSize * 0.5,
-                        tileSize,
-                        tileSize
-                );
-
-                index++;
-            }
-
-            foregroundGraphicsContext.setGlobalAlpha(1.0);
-        }*/
+//        // Draw passenger path
+//        if (GraphicsController.passengerPath != null) {
+//            foregroundGraphicsContext.setFill(Color.VIOLET);
+//            foregroundGraphicsContext.setGlobalAlpha(0.25);
+//
+//            int index = 0;
+//
+//            for (Patch pathPatch : new ArrayList<>(GraphicsController.passengerPath.getPath())) {
+//                if (index == 0 || index == GraphicsController.passengerPath.getPath().size() - 1) {
+//                    foregroundGraphicsContext.setFill(Color.ORANGERED);
+//                } else {
+//                    foregroundGraphicsContext.setFill(Color.CORNFLOWERBLUE);
+//                }
+//
+//                foregroundGraphicsContext.fillRect(
+//                        pathPatch.getPatchCenterCoordinates().getX() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+//                                * tileSize - tileSize * 0.5,
+//                        pathPatch.getPatchCenterCoordinates().getY() / Patch.PATCH_SIZE_IN_SQUARE_METERS
+//                                * tileSize - tileSize * 0.5,
+//                        tileSize,
+//                        tileSize
+//                );
+//
+//                index++;
+//            }
+//
+//            foregroundGraphicsContext.setGlobalAlpha(1.0);
+//        }
 
         if (background) {
             patches = Arrays.stream(floor.getPatches()).flatMap(Arrays::stream).collect(
@@ -732,7 +733,7 @@ public class GraphicsController extends Controller {
                     );
 */
 
-                    // Draw passenger path
+/*                    // Draw passenger path
                     if (passenger.getPassengerMovement().getCurrentPath() != null) {
                         foregroundGraphicsContext.setFill(Color.VIOLET);
                         foregroundGraphicsContext.setGlobalAlpha(0.25);
@@ -852,10 +853,11 @@ public class GraphicsController extends Controller {
                                 passengerDiameter,
                                 passengerDiameter
                         );
-                    }
+                    }*/
 
                     foregroundGraphicsContext.setGlobalAlpha(1.0);
 
+                    foregroundGraphicsContext.setFill(Color.BLACK);
                     foregroundGraphicsContext.strokeText(
                             passenger.getIdentifier() + "",
                             patch.getPatchCenterCoordinates().getX()
@@ -880,7 +882,7 @@ public class GraphicsController extends Controller {
                     );
 
                     // Draw vectors
-                    foregroundGraphicsContext.setStroke(Color.RED);
+                    /*foregroundGraphicsContext.setStroke(Color.RED);
 
                     final double vectorHeadDiameter = 0.1 * tileSize;
 
@@ -982,7 +984,7 @@ public class GraphicsController extends Controller {
                                 vectorHeadDiameter,
                                 vectorHeadDiameter
                         );
-                    }
+                    }*/
                 }
             }
         }

@@ -1304,9 +1304,8 @@ public class Simulator {
                             if (
                                     passengerMovement.isAllowedPass()
                                             && (
-                                            passengerMovement.isFirstStepPositionFree()
-//                                                    || action == PassengerMovement.Action.SECURITY_CHECKING
-                                                    || action == PassengerMovement.Action.TRANSACTING_TICKET
+                                            action == PassengerMovement.Action.TRANSACTING_TICKET
+                                                    || passengerMovement.isFirstStepPositionFree()
                                                     || (
                                                     passengerMovement.getCurrentTurnstileGate() != null
                                                             && passengerMovement.getCurrentTurnstileGate()

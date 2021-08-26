@@ -555,7 +555,16 @@ public class Station extends BaseStationObject implements Environment {
             List<AmenityCluster> trainDoorClusters = new ArrayList<>();
             amenityClassClusterMapInFloor.put(TrainDoor.class, trainDoorClusters);
 
-            for (TrainDoor trainDoor : floor.getTrainDoors()) {
+//            List<AmenityCluster> leftTrainDoorClusters = new ArrayList<>();
+//            List<AmenityCluster> rightTrainDoorClusters = new ArrayList<>();
+
+//            List<TrainDoor> leftTrainDoors = new ArrayList<>();
+//            List<TrainDoor> rightTrainDoors = new ArrayList<>();
+
+            // Get the half-length of the station
+//            final double stationMidsection = this.columns / 2.0 * Patch.PATCH_SIZE_IN_SQUARE_METERS;
+
+            for (TrainDoor rightTrainDoor : floor.getTrainDoors()) {
                 // If this is the first amenity in the cluster, create a new cluster containing the first element
                 if (trainDoorClusters.isEmpty()) {
                     // Create the new first-time cluster
@@ -563,8 +572,8 @@ public class Station extends BaseStationObject implements Environment {
                     trainDoorClusters.add(trainDoorCluster);
 
                     // Add the first amenity into the cluster
-                    trainDoorCluster.getAmenities().add(trainDoor);
-                    this.amenityClusterByAmenity.put(trainDoor, trainDoorCluster);
+                    trainDoorCluster.getAmenities().add(rightTrainDoor);
+                    this.amenityClusterByAmenity.put(rightTrainDoor, trainDoorCluster);
                 } else {
                     // Check if this amenity is connected to one of the already existing clusters within the allowable
                     // distance
@@ -577,13 +586,13 @@ public class Station extends BaseStationObject implements Environment {
                         TrainDoor trainDoorInCluster = ((TrainDoor) amenityCluster.getAmenities().get(0));
 
                         if (
-                                trainDoor.getPlatformDirection().equals(
+                                rightTrainDoor.getPlatformDirection().equals(
                                         trainDoorInCluster.getPlatformDirection()
                                 )
                         ) {
                             for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
                                 PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
-                                        trainDoor.getAttractors().get(0).getPatch(),
+                                        rightTrainDoor.getAttractors().get(0).getPatch(),
                                         amenityInCluster.getAttractors().get(0).getPatch(),
                                         true,
                                         false,
@@ -599,13 +608,13 @@ public class Station extends BaseStationObject implements Environment {
                                         // Furthermore, if this distance is already within the allowed maximum distance from
                                         // the cluster, as cluster has immediately been found
                                         // The maximum distance allowable of an amenity from the other amenities in its cluster
-                                        final double maximumAllowableDistanceFromCluster = 10.0;
+                                        final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
 
                                         if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
                                             hasFoundCluster = true;
 
-                                            amenityCluster.getAmenities().add(trainDoor);
-                                            this.amenityClusterByAmenity.put(trainDoor, amenityCluster);
+                                            amenityCluster.getAmenities().add(rightTrainDoor);
+                                            this.amenityClusterByAmenity.put(rightTrainDoor, amenityCluster);
 
                                             break;
                                         }
@@ -625,11 +634,177 @@ public class Station extends BaseStationObject implements Environment {
                         AmenityCluster trainDoorCluster = new AmenityCluster(floor, TrainDoor.class);
                         trainDoorClusters.add(trainDoorCluster);
 
-                        trainDoorCluster.getAmenities().add(trainDoor);
-                        this.amenityClusterByAmenity.put(trainDoor, trainDoorCluster);
+                        trainDoorCluster.getAmenities().add(rightTrainDoor);
+                        this.amenityClusterByAmenity.put(rightTrainDoor, trainDoorCluster);
                     }
                 }
             }
+
+/*            for (TrainDoor trainDoor : floor.getTrainDoors()) {
+                if (
+                        trainDoor.getAttractors().get(0).getPatch().getPatchCenterCoordinates().getX()
+                                < stationMidsection
+                ) {
+                    leftTrainDoors.add(trainDoor);
+                } else {
+                    rightTrainDoors.add(trainDoor);
+                }
+            }
+
+            for (TrainDoor leftTrainDoor : leftTrainDoors) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (leftTrainDoorClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster trainDoorCluster = new AmenityCluster(floor, TrainDoor.class);
+                    leftTrainDoorClusters.add(trainDoorCluster);
+
+                    // Add the first amenity into the cluster
+                    trainDoorCluster.getAmenities().add(leftTrainDoor);
+                    this.amenityClusterByAmenity.put(leftTrainDoor, trainDoorCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : leftTrainDoorClusters) {
+                        // Aside from checking whether this turnstile is connected to this cluster, also check if its
+                        // direction matches it
+                        TrainDoor trainDoorInCluster = ((TrainDoor) amenityCluster.getAmenities().get(0));
+
+                        if (
+                                leftTrainDoor.getPlatformDirection().equals(
+                                        trainDoorInCluster.getPlatformDirection()
+                                )
+                        ) {
+                            for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                                PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                        leftTrainDoor.getAttractors().get(0).getPatch(),
+                                        amenityInCluster.getAttractors().get(0).getPatch(),
+                                        true,
+                                        false,
+                                        false
+                                );
+
+                                // If a path to this amenity in the cluster has been found, check if the distance to this
+                                // amenity is the closest one found so far
+                                if (pathToAmenity != null) {
+                                    if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                        minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                        // Furthermore, if this distance is already within the allowed maximum distance from
+                                        // the cluster, as cluster has immediately been found
+                                        // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                        final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
+
+                                        if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                            hasFoundCluster = true;
+
+                                            amenityCluster.getAmenities().add(leftTrainDoor);
+                                            this.amenityClusterByAmenity.put(leftTrainDoor, amenityCluster);
+
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (hasFoundCluster) {
+                                break;
+                            }
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster trainDoorCluster = new AmenityCluster(floor, TrainDoor.class);
+                        leftTrainDoorClusters.add(trainDoorCluster);
+
+                        trainDoorCluster.getAmenities().add(leftTrainDoor);
+                        this.amenityClusterByAmenity.put(leftTrainDoor, trainDoorCluster);
+                    }
+                }
+            }
+
+            for (TrainDoor rightTrainDoor : rightTrainDoors) {
+                // If this is the first amenity in the cluster, create a new cluster containing the first element
+                if (rightTrainDoorClusters.isEmpty()) {
+                    // Create the new first-time cluster
+                    AmenityCluster trainDoorCluster = new AmenityCluster(floor, TrainDoor.class);
+                    rightTrainDoorClusters.add(trainDoorCluster);
+
+                    // Add the first amenity into the cluster
+                    trainDoorCluster.getAmenities().add(rightTrainDoor);
+                    this.amenityClusterByAmenity.put(rightTrainDoor, trainDoorCluster);
+                } else {
+                    // Check if this amenity is connected to one of the already existing clusters within the allowable
+                    // distance
+                    boolean hasFoundCluster = false;
+                    double minimumDistanceFromClusterFound = Double.MAX_VALUE;
+
+                    for (AmenityCluster amenityCluster : rightTrainDoorClusters) {
+                        // Aside from checking whether this turnstile is connected to this cluster, also check if its
+                        // direction matches it
+                        TrainDoor trainDoorInCluster = ((TrainDoor) amenityCluster.getAmenities().get(0));
+
+                        if (
+                                rightTrainDoor.getPlatformDirection().equals(
+                                        trainDoorInCluster.getPlatformDirection()
+                                )
+                        ) {
+                            for (Amenity amenityInCluster : amenityCluster.getAmenities()) {
+                                PassengerPath pathToAmenity = PassengerMovement.computePathWithinFloor(
+                                        rightTrainDoor.getAttractors().get(0).getPatch(),
+                                        amenityInCluster.getAttractors().get(0).getPatch(),
+                                        true,
+                                        false,
+                                        false
+                                );
+
+                                // If a path to this amenity in the cluster has been found, check if the distance to this
+                                // amenity is the closest one found so far
+                                if (pathToAmenity != null) {
+                                    if (pathToAmenity.getDistance() < minimumDistanceFromClusterFound) {
+                                        minimumDistanceFromClusterFound = pathToAmenity.getDistance();
+
+                                        // Furthermore, if this distance is already within the allowed maximum distance from
+                                        // the cluster, as cluster has immediately been found
+                                        // The maximum distance allowable of an amenity from the other amenities in its cluster
+                                        final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
+
+                                        if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
+                                            hasFoundCluster = true;
+
+                                            amenityCluster.getAmenities().add(rightTrainDoor);
+                                            this.amenityClusterByAmenity.put(rightTrainDoor, amenityCluster);
+
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (hasFoundCluster) {
+                                break;
+                            }
+                        }
+                    }
+
+                    // If this amenity is not found to be connectable in any pre-existing cluster within the allowable
+                    // distance, create a cluster with only this amenity in it
+                    if (!hasFoundCluster) {
+                        AmenityCluster trainDoorCluster = new AmenityCluster(floor, TrainDoor.class);
+                        rightTrainDoorClusters.add(trainDoorCluster);
+
+                        trainDoorCluster.getAmenities().add(rightTrainDoor);
+                        this.amenityClusterByAmenity.put(rightTrainDoor, trainDoorCluster);
+                    }
+                }
+            }
+
+            trainDoorClusters.addAll(leftTrainDoorClusters);
+            trainDoorClusters.addAll(rightTrainDoorClusters);*/
 
             // Generate the portal clusters
             List<StairPortal> stairPortals = this.getStairPortalsByFloor().get(floor);
