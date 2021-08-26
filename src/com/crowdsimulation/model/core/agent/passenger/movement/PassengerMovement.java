@@ -1257,7 +1257,7 @@ public class PassengerMovement {
                     if (currentQueueObject != null) {
                         if (!(currentAmenity instanceof Security)) {
                             // Avoid queueing to long lines
-                            double passengerPenalty = (currentAmenity instanceof TrainDoor) ? 10.0 : 5.0;
+                            double passengerPenalty = (currentAmenity instanceof TrainDoor) ? 50.0 : 25.0;
 
                             if (currentAmenity instanceof Turnstile) {
                                 double passengersQueueingForTurnstile = 0.0;
@@ -1268,8 +1268,8 @@ public class PassengerMovement {
 
                                 double modifiedCandidateDistance = candidateDistance;
 
-                                final double candidateDistanceLimit = 50.0;
-                                final double distantCandidatePenalty = 5.0;
+                                final double candidateDistanceLimit = 20.0;
+                                final double distantCandidatePenalty = 25.0;
 
                                 if (modifiedCandidateDistance > candidateDistanceLimit) {
                                     modifiedCandidateDistance = candidateDistance * distantCandidatePenalty;
@@ -1279,17 +1279,8 @@ public class PassengerMovement {
                                         = modifiedCandidateDistance
                                         + passengersQueueingForTurnstile * passengerPenalty;
                             } else {
-                                double modifiedCandidateDistance = candidateDistance;
-
-                                final double candidateDistanceLimit = 50.0;
-                                final double distantCandidatePenalty = 5.0;
-
-                                if (modifiedCandidateDistance > candidateDistanceLimit) {
-                                    modifiedCandidateDistance = candidateDistance * distantCandidatePenalty;
-                                }
-
                                 attractorScore
-                                        = modifiedCandidateDistance
+                                        = candidateDistance
                                         + currentQueueObject.getPassengersQueueing().size() * passengerPenalty;
                             }
                         } else {
