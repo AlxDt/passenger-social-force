@@ -17,6 +17,7 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Obstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Track;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Wall;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
@@ -1296,6 +1297,17 @@ public class GraphicsController extends Controller {
                         } catch (IOException | InterruptedException e) {
                             e.printStackTrace();
                         }
+                    } else if (event.getButton() == MouseButton.SECONDARY) {
+                        // Only allow deletion of obstacles
+                        if (
+                                Main.simulator.getCurrentAmenity() != null
+                                        && Main.simulator.getCurrentAmenity() instanceof Obstacle
+                        ) {
+                            // Delete the current obstacle
+                            Main.mainScreenController.deleteAmenityAction();
+
+                            drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
+                        }
                     }
                 }
             }
@@ -1336,11 +1348,24 @@ public class GraphicsController extends Controller {
                                     e.printStackTrace();
                                 }
                             }
+                        } else if (event.getButton() == MouseButton.SECONDARY) {
+                            // Only allow deletion of obstacles
+                            if (
+                                    Main.simulator.getCurrentAmenity() != null
+                                            && Main.simulator.getCurrentAmenity() instanceof Obstacle
+                            ) {
+                                // Delete the current obstacle
+                                Main.mainScreenController.deleteAmenityAction();
+
+                                drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
+                            }
                         }
                     }
 
                     // Update the visual markings
-                    updateMarkings(backgroundCanvas, markingsCanvas, currentPatch, false);
+                    if (currentPatch != null) {
+                        updateMarkings(backgroundCanvas, markingsCanvas, currentPatch, true);
+                    }
                 }
             }
         });
