@@ -4,9 +4,19 @@ import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.controller.controls.ScreenController;
 import com.crowdsimulation.controller.controls.alert.AlertController;
 import com.crowdsimulation.controller.controls.service.floorfield.InitializeNormalFloorFieldService;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.QueueObject;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.template.QueueableFloorFieldTemplate;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.template.SimpleFloorFieldTemplate;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.template.TrainDoorFloorFieldTemplate;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.template.TurnstileFloorFieldTemplate;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.portal.elevator.ElevatorPortal;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -18,6 +28,7 @@ import javafx.util.StringConverter;
 import javafx.util.converter.NumberStringConverter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -59,6 +70,12 @@ public class NormalFloorFieldController extends ScreenController {
     @FXML
     private Button deleteAllButton;
 
+    @FXML
+    private Button copyFloorFieldsButton;
+
+    @FXML
+    private Button pasteFloorFieldsButton;
+
     private Parent root;
 
     private final SimpleDoubleProperty intensity;
@@ -67,6 +84,9 @@ public class NormalFloorFieldController extends ScreenController {
     private QueueingFloorField.FloorFieldState floorFieldState;
 
     private TrainDoor.TrainDoorEntranceLocation trainDoorEntranceLocation;
+
+    private SimpleObjectProperty<QueueableFloorFieldTemplate> queueObjectTemplateCopied;
+    private SimpleObjectProperty<Class<? extends Queueable>> queueObjectCopiedClass;
 
     public NormalFloorFieldController() {
         this.root = null;
@@ -77,6 +97,9 @@ public class NormalFloorFieldController extends ScreenController {
         this.floorFieldState = null;
 
         this.trainDoorEntranceLocation = TrainDoor.TrainDoorEntranceLocation.LEFT;
+
+        this.queueObjectTemplateCopied = new SimpleObjectProperty<>(null);
+        this.queueObjectCopiedClass = new SimpleObjectProperty<>(null);
     }
 
     @FXML
@@ -107,6 +130,55 @@ public class NormalFloorFieldController extends ScreenController {
         Main.mainScreenController.deleteFloorFieldAction();
     }
 
+    @FXML
+    public void copyFloorFieldsAction() {
+        // Get the selected queueable
+        Queueable queueable = Main.simulator.getCurrentFloorFieldTarget();
+
+        // Get the queue objects of that queueable
+        if (
+                queueable instanceof Security
+                        || queueable instanceof TicketBooth
+                        || queueable instanceof ElevatorPortal
+        ) {
+            QueueObject queueObject = queueable.getQueueObject();
+
+            // Derive the template from the queue object
+            SimpleFloorFieldTemplate singleQueueObjectTemplate = new SimpleFloorFieldTemplate(queueObject);
+
+            // Commit the copied queueable onto the memory
+            this.queueObjectTemplateCopied.set(singleQueueObjectTemplate);
+            this.queueObjectCopiedClass.set(queueable.getClass());
+        } else if (queueable instanceof Turnstile) {
+            Turnstile turnstile = ((Turnstile) queueable);
+
+            HashMap<PassengerMovement.Disposition, QueueObject> queueObjects = turnstile.getQueueObjects();
+
+            // Derive the template from the queue object
+            TurnstileFloorFieldTemplate turnstileFloorFieldTemplate = new TurnstileFloorFieldTemplate(queueObjects);
+
+            // Commit the copied queueable onto the memory
+            this.queueObjectTemplateCopied.set(turnstileFloorFieldTemplate);
+            this.queueObjectCopiedClass.set(queueable.getClass());
+        } else if (queueable instanceof TrainDoor) {
+            TrainDoor trainDoor = ((TrainDoor) queueable);
+
+            HashMap<TrainDoor.TrainDoorEntranceLocation, QueueObject> queueObjects = trainDoor.getQueueObjects();
+
+            // Derive the template from the queue object
+            TrainDoorFloorFieldTemplate trainDoorFloorFieldTemplate = new TrainDoorFloorFieldTemplate(queueObjects);
+
+            // Commit the copied queueable onto the memory
+            this.queueObjectTemplateCopied.set(trainDoorFloorFieldTemplate);
+            this.queueObjectCopiedClass.set(queueable.getClass());
+        }
+    }
+
+    @FXML
+    public void pasteFloorFieldsAction() {
+        Main.mainScreenController.pasteFloorFieldAction();
+    }
+
     @Override
     public void setElements() {
         InitializeNormalFloorFieldService.initializeNormalFloorField(
@@ -121,7 +193,9 @@ public class NormalFloorFieldController extends ScreenController {
                 intensitySlider,
                 intensityTextField,
                 validateButton,
-                deleteAllButton
+                deleteAllButton,
+                copyFloorFieldsButton,
+                pasteFloorFieldsButton
         );
 
         intensitySlider.valueProperty().bindBidirectional(intensity);
@@ -147,6 +221,8 @@ public class NormalFloorFieldController extends ScreenController {
                 }
             }
         }));
+
+        pasteFloorFieldsButton.disableProperty().bind(queueObjectTemplateCopied.isNull());
     }
 
     public Parent getRoot() {
@@ -191,6 +267,30 @@ public class NormalFloorFieldController extends ScreenController {
 
     public TrainDoor.TrainDoorEntranceLocation getTrainDoorEntranceLocation() {
         return trainDoorEntranceLocation;
+    }
+
+    public QueueableFloorFieldTemplate getQueueObjectTemplateCopied() {
+        return queueObjectTemplateCopied.get();
+    }
+
+    public SimpleObjectProperty<QueueableFloorFieldTemplate> queueObjectTemplateCopiedProperty() {
+        return queueObjectTemplateCopied;
+    }
+
+    public void setQueueObjectTemplateCopied(QueueableFloorFieldTemplate queueObjectTemplateCopied) {
+        this.queueObjectTemplateCopied.set(queueObjectTemplateCopied);
+    }
+
+    public Class<? extends Queueable> getQueueObjectCopiedClass() {
+        return queueObjectCopiedClass.get();
+    }
+
+    public SimpleObjectProperty<Class<? extends Queueable>> queueObjectCopiedClassProperty() {
+        return queueObjectCopiedClass;
+    }
+
+    public void setQueueObjectCopiedClass(Class<? extends Queueable> queueObjectCopiedClass) {
+        this.queueObjectCopiedClass.set(queueObjectCopiedClass);
     }
 
     public void setTrainDoorEntranceLocation(TrainDoor.TrainDoorEntranceLocation trainDoorEntranceLocation) {

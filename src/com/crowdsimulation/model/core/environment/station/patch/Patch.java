@@ -310,4 +310,46 @@ public class Patch extends BaseStationObject implements Environment, Comparable<
             return "(" + patch1 + ", " + patch2 + ")";
         }
     }
+
+    // Denotes the offset of a specific offset of an object in terms of its matrix position
+    public static class Offset {
+        private final MatrixPosition offset;
+
+        public Offset(int rowOffset, int columnOffset) {
+            this.offset = new MatrixPosition(rowOffset, columnOffset);
+        }
+
+        public int getRowOffset() {
+            return this.offset.getRow();
+        }
+
+        public int getColumnOffset() {
+            return this.offset.getColumn();
+        }
+
+        public static Offset getOffsetFromPatch(Patch patch, Patch reference) {
+            int rowOffset = patch.getMatrixPosition().getRow() - reference.getMatrixPosition().getRow();
+            int columnOffset = patch.getMatrixPosition().getColumn() - reference.getMatrixPosition().getColumn();
+
+            return new Offset(rowOffset, columnOffset);
+        }
+
+        public static Patch getPatchFromOffset(Floor floor, Patch reference, Offset offset) {
+            int newRow = reference.getMatrixPosition().getRow() + offset.getRowOffset();
+            int newColumn = reference.getMatrixPosition().getColumn() + offset.getColumnOffset();
+
+            // Get the new patch from the offset, if that patch is within the bounds of the given floor
+            if (newRow >= 0 && newRow < floor.getRows() && newColumn >= 0 && newColumn < floor.getColumns()) {
+                Patch patch = floor.getPatch(newRow, newColumn);
+
+                if (patch.getAmenityBlock() == null) {
+                    return patch;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
+    }
 }

@@ -1151,7 +1151,12 @@ public class GraphicsController extends Controller {
                     break;
                 // Toggle measurement keys
                 case M:
-                    GraphicsController.drawMeasurement = true;
+                    if (!Main.simulator.isRunning()
+                            && !Main.simulator.isFloorFieldDrawing()
+                            && !Main.simulator.isPortalDrawing()
+                            && !Main.simulator.isStationRunOnly()) {
+                        GraphicsController.drawMeasurement = true;
+                    }
 
                     break;
                 // Drawing rotation shortcut keys

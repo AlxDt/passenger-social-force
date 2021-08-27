@@ -2,7 +2,6 @@ package com.crowdsimulation.controller.graphics.amenity.footprint;
 
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
-import com.crowdsimulation.model.core.environment.station.patch.position.MatrixPosition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,30 +71,9 @@ public class AmenityFootprint {
             return this.orientation == Orientation.RIGHT || this.orientation == Orientation.LEFT;
         }
 
-        // Denotes the offset of a specific amenity block being drawn from the cursor
-        public static class Offset {
-            private final MatrixPosition offset;
-
-            public Offset(int rowOffset, int columnOffset) {
-                this.offset = new MatrixPosition(rowOffset, columnOffset);
-            }
-
-            public MatrixPosition getMatrixPosition() {
-                return this.offset;
-            }
-
-            public int getRowOffset() {
-                return this.offset.getRow();
-            }
-
-            public int getColumnOffset() {
-                return this.offset.getColumn();
-            }
-        }
-
         public static class AmenityBlockTemplate {
             private final Orientation orientation;
-            private final Offset offset;
+            private final Patch.Offset offset;
             private final Class<? extends Amenity> amenityClass;
             private final boolean attractor;
             private final boolean hasGraphic;
@@ -109,7 +87,7 @@ public class AmenityFootprint {
                     boolean hasGraphic
             ) {
                 this.orientation = orientation;
-                this.offset = new Offset(rowOffset, columnOffset);
+                this.offset = new Patch.Offset(rowOffset, columnOffset);
                 this.amenityClass = amenityClass;
                 this.attractor = attractor;
                 this.hasGraphic = hasGraphic;
@@ -119,7 +97,7 @@ public class AmenityFootprint {
                 return orientation;
             }
 
-            public Offset getOffset() {
+            public Patch.Offset getOffset() {
                 return offset;
             }
 

@@ -213,25 +213,23 @@ public class QueueingFloorField extends HeadfulFloorField {
     // A combination of a passenger's direction, state, and current target, this object is used for the differentiation
     // of floor fields
     public static class FloorFieldState extends AbstractFloorFieldObject {
-        private final PassengerMovement.Disposition disposition;
-        private final PassengerMovement.State state;
+        private final DispositionStatePair dispositionStatePair;
         private final Queueable target;
 
         public FloorFieldState(
                 PassengerMovement.Disposition disposition,
                 PassengerMovement.State state,
                 Queueable target) {
-            this.disposition = disposition;
-            this.state = state;
+            this.dispositionStatePair = new DispositionStatePair(disposition, state);
             this.target = target;
         }
 
         public PassengerMovement.Disposition getDisposition() {
-            return disposition;
+            return dispositionStatePair.getDisposition();
         }
 
         public PassengerMovement.State getState() {
-            return state;
+            return dispositionStatePair.getState();
         }
 
         public Queueable getTarget() {
@@ -240,8 +238,8 @@ public class QueueingFloorField extends HeadfulFloorField {
 
         @Override
         public String toString() {
-            if (disposition != null) {
-                return disposition.toString();
+            if (dispositionStatePair.getDisposition() != null) {
+                return getDisposition().toString();
             } else {
                 return "(any direction)";
             }
@@ -252,12 +250,43 @@ public class QueueingFloorField extends HeadfulFloorField {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             FloorFieldState that = (FloorFieldState) o;
-            return disposition == that.disposition && state == that.state && target.equals(that.target);
+            return Objects.equals(dispositionStatePair, that.dispositionStatePair) && target.equals(that.target);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(disposition, state, target);
+            return Objects.hash(dispositionStatePair, target);
+        }
+
+        public static class DispositionStatePair {
+            private final PassengerMovement.Disposition disposition;
+            private final PassengerMovement.State state;
+
+            public DispositionStatePair(PassengerMovement.Disposition disposition, PassengerMovement.State state) {
+                this.disposition = disposition;
+                this.state = state;
+            }
+
+            public PassengerMovement.Disposition getDisposition() {
+                return disposition;
+            }
+
+            public PassengerMovement.State getState() {
+                return state;
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                DispositionStatePair that = (DispositionStatePair) o;
+                return disposition == that.disposition && state == that.state;
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(disposition, state);
+            }
         }
     }
 

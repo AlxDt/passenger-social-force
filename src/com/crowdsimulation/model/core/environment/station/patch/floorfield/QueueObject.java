@@ -5,9 +5,7 @@ import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 public class QueueObject extends AbstractFloorFieldObject {
     // Denotes the parent queueable of this queue object
@@ -69,4 +67,5 @@ public class QueueObject extends AbstractFloorFieldObject {
     public boolean isFree() {
         return this.getPassengerServiced() == null;
     }
+
 }

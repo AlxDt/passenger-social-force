@@ -34,7 +34,9 @@ public class InitializeNormalFloorFieldService {
             Slider intensitySlider,
             TextField intensityTextField,
             Button validateButton,
-            Button deleteAllButton
+            Button deleteAllButton,
+            Button copyFloorFieldsButton,
+            Button pasteFloorFieldsButton
     ) {
         modeLabel.setLabelFor(modeChoiceBox);
         modeChoiceBox.setItems(FXCollections.observableArrayList(

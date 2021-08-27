@@ -24,6 +24,7 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.Queue
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.PlatformFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.TurnstileFloorField;
+import com.crowdsimulation.model.core.environment.station.patch.floorfield.template.*;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.impenetrable.Obstacle;
@@ -64,7 +65,9 @@ import java.io.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -1950,12 +1953,239 @@ public class MainScreenController extends ScreenController {
         drawInterface(false);
     }
 
-    // Delete a  floor field
+    // Delete a floor field
     private void deleteFloorField() {
         // Clear the floor field of the current target given the current floor field state
         Main.simulator.getCurrentFloorFieldTarget().deleteFloorField(
                 normalFloorFieldController.getFloorFieldState()
         );
+    }
+
+    // Paste a floor field and redraw interface
+    public void pasteFloorFieldAction() {
+        if (Main.simulator.getCurrentAmenity().getClass().equals(
+                normalFloorFieldController.getQueueObjectCopiedClass()
+        )
+        ) {
+            pasteFloorField();
+
+            drawInterface(false);
+        } else {
+            AlertController.showSimpleAlert(
+                    "Floor field pasting failed",
+                    "Incompatible amenity type",
+                    "This floor field is not applicable to this amenity.",
+                    Alert.AlertType.ERROR
+            );
+        }
+    }
+
+    // Paste a floor field template onto the current queueable
+    private void pasteFloorField() {
+        // Using the template copied, apply the floor fields to this queueable
+        QueueableFloorFieldTemplate queueObjectTemplate
+                = MainScreenController.normalFloorFieldController.getQueueObjectTemplateCopied();
+
+        if (queueObjectTemplate instanceof SimpleFloorFieldTemplate) {
+            SimpleFloorFieldTemplate singleQueueObjectTemplate = ((SimpleFloorFieldTemplate) queueObjectTemplate);
+
+            // Add the floor fields for each disposition-state pair
+            for (
+                    Map.Entry<QueueingFloorField.FloorFieldState.DispositionStatePair, QueueingFloorFieldTemplate>
+                            templateEntry : singleQueueObjectTemplate.getFloorFieldsTemplate().entrySet()
+            ) {
+                QueueingFloorField.FloorFieldState.DispositionStatePair dispositionStatePair = templateEntry.getKey();
+                QueueingFloorFieldTemplate queueingFloorFieldTemplate = templateEntry.getValue();
+
+                // Apply all floor fields to the current queueable
+                Queueable currentQueueableTarget = Main.simulator.getCurrentFloorFieldTarget();
+
+                for (
+                        QueueingFloorFieldTemplate.PatchOffsetFloorFieldValuePair patchOffsetFloorFieldValuePair
+                        : queueingFloorFieldTemplate.getAssociatedPatches()
+                ) {
+                    // Assemble the floor field state using the given disposition and the current queueable target
+                    PassengerMovement.Disposition disposition = dispositionStatePair.getDisposition();
+                    PassengerMovement.State state = dispositionStatePair.getState();
+
+                    QueueingFloorField.FloorFieldState floorFieldState
+                            = new QueueingFloorField.FloorFieldState(
+                            disposition,
+                            state,
+                            currentQueueableTarget
+                    );
+
+                    // Get the offset value
+                    Patch.Offset offset = patchOffsetFloorFieldValuePair.getOffset();
+                    double floorFieldValue = patchOffsetFloorFieldValuePair.getFloorFieldValue();
+
+                    // Get the patch given when applying the offset value to the current queueable
+                    QueueObject queueObject = currentQueueableTarget.getQueueObject();
+
+                    Patch referencePatch = queueObject.getPatch();
+                    Patch floorFieldPatch = Patch.Offset.getPatchFromOffset(
+                            Main.simulator.getCurrentFloor(),
+                            referencePatch,
+                            offset
+                    );
+
+                    // If the offset patch was a valid patch, add the floor field value
+                    if (floorFieldPatch != null) {
+                        QueueingFloorField.addFloorFieldValue(
+                                floorFieldPatch,
+                                currentQueueableTarget,
+                                floorFieldState,
+                                floorFieldValue
+                        );
+                    }
+                }
+            }
+        } else if (queueObjectTemplate instanceof TurnstileFloorFieldTemplate) {
+            TurnstileFloorFieldTemplate turnstileFloorFieldTemplate
+                    = ((TurnstileFloorFieldTemplate) queueObjectTemplate);
+
+            // Add the floor fields for each disposition-state pair
+            for (
+                    Map.Entry<
+                            PassengerMovement.Disposition,
+                            HashMap<QueueingFloorField.FloorFieldState.DispositionStatePair,
+                                    QueueingFloorFieldTemplate>
+                            >
+                            dispositionHashMapEntry : turnstileFloorFieldTemplate.getFloorFieldsTemplate().entrySet()
+            ) {
+                PassengerMovement.Disposition disposition = dispositionHashMapEntry.getKey();
+
+                HashMap<
+                        QueueingFloorField.FloorFieldState.DispositionStatePair,
+                        QueueingFloorFieldTemplate>
+                        queueingFloorFieldTemplateHashMap = dispositionHashMapEntry.getValue();
+
+                // Add the floor fields for each disposition-state pair
+                for (
+                        Map.Entry<QueueingFloorField.FloorFieldState.DispositionStatePair, QueueingFloorFieldTemplate>
+                                templateEntry : queueingFloorFieldTemplateHashMap.entrySet()
+                ) {
+                    QueueingFloorField.FloorFieldState.DispositionStatePair dispositionStatePair = templateEntry.getKey();
+                    QueueingFloorFieldTemplate queueingFloorFieldTemplate = templateEntry.getValue();
+
+                    // Apply all floor fields to the current queueable
+                    Queueable currentQueueableTarget = Main.simulator.getCurrentFloorFieldTarget();
+                    Turnstile turnstileTarget = ((Turnstile) currentQueueableTarget);
+
+                    for (
+                            QueueingFloorFieldTemplate.PatchOffsetFloorFieldValuePair patchOffsetFloorFieldValuePair
+                            : queueingFloorFieldTemplate.getAssociatedPatches()
+                    ) {
+                        // Assemble the floor field state using the given disposition and the current queueable target
+                        PassengerMovement.State state = dispositionStatePair.getState();
+
+                        QueueingFloorField.FloorFieldState floorFieldState
+                                = new QueueingFloorField.FloorFieldState(
+                                disposition,
+                                state,
+                                currentQueueableTarget
+                        );
+
+                        // Get the offset value
+                        Patch.Offset offset = patchOffsetFloorFieldValuePair.getOffset();
+                        double floorFieldValue = patchOffsetFloorFieldValuePair.getFloorFieldValue();
+
+                        // Get the patch given when applying the offset value to the current queueable
+                        QueueObject queueObject = turnstileTarget.getQueueObjects().get(disposition);
+
+                        Patch referencePatch = queueObject.getPatch();
+                        Patch floorFieldPatch = Patch.Offset.getPatchFromOffset(
+                                Main.simulator.getCurrentFloor(),
+                                referencePatch,
+                                offset
+                        );
+
+                        // If the offset patch was a valid patch, add the floor field value
+                        if (floorFieldPatch != null) {
+                            QueueingFloorField.addFloorFieldValue(
+                                    floorFieldPatch,
+                                    currentQueueableTarget,
+                                    floorFieldState,
+                                    floorFieldValue
+                            );
+                        }
+                    }
+                }
+            }
+        } else if (queueObjectTemplate instanceof TrainDoorFloorFieldTemplate) {
+            TrainDoorFloorFieldTemplate trainDoorFloorFieldTemplate
+                    = ((TrainDoorFloorFieldTemplate) queueObjectTemplate);
+
+            // Add the floor fields for each disposition-state pair
+            for (
+                    Map.Entry<
+                            TrainDoor.TrainDoorEntranceLocation,
+                            HashMap<PlatformFloorField.PlatformFloorFieldState.DispositionStatePair,
+                                    QueueingFloorFieldTemplate>
+                            >
+                            dispositionHashMapEntry : trainDoorFloorFieldTemplate.getFloorFieldsTemplate().entrySet()
+            ) {
+                TrainDoor.TrainDoorEntranceLocation trainDoorEntranceLocation = dispositionHashMapEntry.getKey();
+
+                HashMap<
+                        PlatformFloorField.PlatformFloorFieldState.DispositionStatePair,
+                        QueueingFloorFieldTemplate>
+                        queueingFloorFieldTemplateHashMap = dispositionHashMapEntry.getValue();
+
+                // Add the floor fields for each disposition-state pair
+                for (
+                        Map.Entry<PlatformFloorField.PlatformFloorFieldState.DispositionStatePair, QueueingFloorFieldTemplate>
+                                templateEntry : queueingFloorFieldTemplateHashMap.entrySet()
+                ) {
+                    PlatformFloorField.PlatformFloorFieldState.DispositionStatePair dispositionStatePair = templateEntry.getKey();
+                    QueueingFloorFieldTemplate queueingFloorFieldTemplate = templateEntry.getValue();
+
+                    // Apply all floor fields to the current queueable
+                    Queueable currentQueueableTarget = Main.simulator.getCurrentFloorFieldTarget();
+                    TrainDoor trainDoorTarget = ((TrainDoor) currentQueueableTarget);
+
+                    for (
+                            QueueingFloorFieldTemplate.PatchOffsetFloorFieldValuePair patchOffsetFloorFieldValuePair
+                            : queueingFloorFieldTemplate.getAssociatedPatches()
+                    ) {
+                        // Assemble the floor field state using the given disposition and the current queueable target
+                        PassengerMovement.State state = dispositionStatePair.getState();
+
+                        PlatformFloorField.PlatformFloorFieldState PlatformFloorFieldState
+                                = new PlatformFloorField.PlatformFloorFieldState(
+                                dispositionStatePair.getDisposition(),
+                                state,
+                                currentQueueableTarget,
+                                trainDoorEntranceLocation
+                        );
+
+                        // Get the offset value
+                        Patch.Offset offset = patchOffsetFloorFieldValuePair.getOffset();
+                        double floorFieldValue = patchOffsetFloorFieldValuePair.getFloorFieldValue();
+
+                        // Get the patch given when applying the offset value to the current queueable
+                        QueueObject queueObject = trainDoorTarget.getQueueObjects().get(trainDoorEntranceLocation);
+
+                        Patch referencePatch = queueObject.getPatch();
+                        Patch floorFieldPatch = Patch.Offset.getPatchFromOffset(
+                                Main.simulator.getCurrentFloor(),
+                                referencePatch,
+                                offset
+                        );
+
+                        // If the offset patch was a valid patch, add the floor field value
+                        if (floorFieldPatch != null) {
+                            PlatformFloorField.addFloorFieldValue(
+                                    floorFieldPatch,
+                                    currentQueueableTarget,
+                                    PlatformFloorFieldState,
+                                    floorFieldValue
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Enable floor fields drawing
