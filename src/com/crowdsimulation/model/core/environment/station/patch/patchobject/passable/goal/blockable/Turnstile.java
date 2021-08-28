@@ -16,6 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Turnstile extends Blockable {
+    public static final long serialVersionUID = 2924559893737226506L;
+
+    public static final double standardDeviation = 0.8;
+
     // Denotes the current mode of this turnstile
     private TurnstileMode turnstileMode;
 

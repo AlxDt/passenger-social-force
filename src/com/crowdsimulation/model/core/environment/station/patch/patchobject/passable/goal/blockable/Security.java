@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Security extends Blockable {
+    public static final long serialVersionUID = -5458621245735102190L;
+
+    public static final double standardDeviation = 3.0;
+
     // Denotes the queueing object associated with this security gate
     private final QueueObject queueObject;
 

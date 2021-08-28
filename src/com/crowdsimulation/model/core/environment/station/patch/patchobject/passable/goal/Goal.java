@@ -5,6 +5,8 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amen
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
 import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.HashMap;
@@ -52,13 +54,24 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
         return this.waitingTimeLeft <= 0;
     }
 
+    // TODO: Use polymorphism
     public void resetWaitingTime() {
         final int minimumWaitingTime = 1;
 
-        // TODO: Calibrate
-        int waitingTimeLeft
-                = (int)
-                (this.waitingTime + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * (this.waitingTime * 0.05));
+        double standardDeviation = 0.0;
+
+        if (this instanceof Security) {
+            standardDeviation = Security.standardDeviation;
+        } else if (this instanceof TicketBooth) {
+            standardDeviation = TicketBooth.standardDeviation;
+        } else if (this instanceof Turnstile) {
+            standardDeviation = Turnstile.standardDeviation;
+        }
+
+        double computedWaitingTime
+                = Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * standardDeviation + this.waitingTime;
+
+        int waitingTimeLeft = (int) Math.round(computedWaitingTime);
 
         if (waitingTimeLeft <= minimumWaitingTime) {
             waitingTimeLeft = minimumWaitingTime;

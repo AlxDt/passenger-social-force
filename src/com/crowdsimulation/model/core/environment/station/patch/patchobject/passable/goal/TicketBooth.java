@@ -16,6 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TicketBooth extends Goal {
+    public static final long serialVersionUID = -4576236425454267953L;
+
+    public static final double standardDeviation = 15.2;
+
     // Denotes the type of tickets the ticket booth dispenses
     private TicketType ticketType;
 
