@@ -832,6 +832,7 @@ public class GraphicsController extends Controller {
 
                         foregroundGraphicsContext.setGlobalAlpha(1.0);
                     }
+
                     // Draw the passenger's current patch
                     foregroundGraphicsContext.setFill(Color.GRAY);
                     foregroundGraphicsContext.setGlobalAlpha(0.25);
@@ -924,7 +925,7 @@ public class GraphicsController extends Controller {
                                 passengerDiameter,
                                 passengerDiameter
                         );
-                    }*/
+                    }
 
                     foregroundGraphicsContext.setGlobalAlpha(1.0);
 
@@ -935,7 +936,7 @@ public class GraphicsController extends Controller {
                                     / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25,
                             patch.getPatchCenterCoordinates().getY()
                                     / Patch.PATCH_SIZE_IN_SQUARE_METERS * tileSize + tileSize * 0.25
-                    );
+                    );*/
 
                     // Draw the passenger sprite
                     foregroundGraphicsContext.drawImage(
@@ -1530,7 +1531,7 @@ public class GraphicsController extends Controller {
                         Main.simulator.getStation(),
                         measurementStartPatch,
                         patchAtMousePosition
-                );
+                ) + Patch.PATCH_SIZE_IN_SQUARE_METERS;
             }
 
             // Retrieve the patch at that location

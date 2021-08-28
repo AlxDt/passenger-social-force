@@ -27,8 +27,8 @@ public class StairShaft extends PortalShaft {
     protected StairShaft(boolean enabled, int moveTime, int capacity) {
         super(null, enabled, moveTime, capacity);
 
-        this.descendingQueue = new ArrayList<>(capacity);
-        this.ascendingQueue = new ArrayList<>(capacity);
+        this.descendingQueue = new ArrayList<>();
+        this.ascendingQueue = new ArrayList<>();
 
         for (int index = 0; index < capacity; index++) {
             this.descendingQueue.add(new ArrayList<>());

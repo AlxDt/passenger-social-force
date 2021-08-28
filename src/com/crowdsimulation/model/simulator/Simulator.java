@@ -978,14 +978,44 @@ public class Simulator {
                                 // Move towards that patch
                                 passengerMovement.moveSocialForce();
 
+                                // Check if the passenger has reached its goal
+                                if (passengerMovement.hasReachedGoal()) {
+                                    // Have the passenger set its current goal
+                                    passengerMovement.reachGoal();
+
+                                    if (passengerMovement.getGoalAmenity() instanceof StationGate) {
+                                        passengerMovement.setState(PassengerMovement.State.WALKING);
+                                        state = PassengerMovement.State.WALKING;
+
+                                        passengerMovement.setAction(PassengerMovement.Action.EXITING_STATION);
+                                        action = PassengerMovement.Action.EXITING_STATION;
+                                    } else {
+                                        passengerMovement.setState(PassengerMovement.State.WALKING);
+                                        state = PassengerMovement.State.WALKING;
+
+                                        passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
+                                        action = PassengerMovement.Action.WILL_QUEUE;
+                                    }
+
+                                    break;
+                                }
+
                                 if (passengerMovement.isReadyToFree()) {
                                     // If the passenger has been moving again for a consistent period of time, free the
                                     // passenger and don't follow the path anymore
-                                    passengerMovement.setState(PassengerMovement.State.WALKING);
-                                    state = PassengerMovement.State.WALKING;
+                                    if (passengerMovement.getGoalAmenity() instanceof StationGate) {
+                                        passengerMovement.setState(PassengerMovement.State.WALKING);
+                                        state = PassengerMovement.State.WALKING;
 
-                                    passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
-                                    action = PassengerMovement.Action.WILL_QUEUE;
+                                        passengerMovement.setAction(PassengerMovement.Action.EXITING_STATION);
+                                        action = PassengerMovement.Action.EXITING_STATION;
+                                    } else {
+                                        passengerMovement.setState(PassengerMovement.State.WALKING);
+                                        state = PassengerMovement.State.WALKING;
+
+                                        passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
+                                        action = PassengerMovement.Action.WILL_QUEUE;
+                                    }
 
                                     // Then this passenger will not be stuck anymore
                                     passengerMovement.free();
@@ -1048,11 +1078,19 @@ public class Simulator {
                                     // Check if there are still patches left in the path
                                     // If there are no more patches left, revert back to the "will queue" action
                                     if (passengerMovement.hasPassengerReachedFinalPatchInPath()) {
-                                        passengerMovement.setState(PassengerMovement.State.WALKING);
-                                        state = PassengerMovement.State.WALKING;
+                                        if (passengerMovement.getGoalAmenity() instanceof StationGate) {
+                                            passengerMovement.setState(PassengerMovement.State.WALKING);
+                                            state = PassengerMovement.State.WALKING;
 
-                                        passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
-                                        action = PassengerMovement.Action.WILL_QUEUE;
+                                            passengerMovement.setAction(PassengerMovement.Action.EXITING_STATION);
+                                            action = PassengerMovement.Action.EXITING_STATION;
+                                        } else {
+                                            passengerMovement.setState(PassengerMovement.State.WALKING);
+                                            state = PassengerMovement.State.WALKING;
+
+                                            passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
+                                            action = PassengerMovement.Action.WILL_QUEUE;
+                                        }
 
                                         // Then this passenger will not be stuck anymore
                                         passengerMovement.free();
@@ -1061,11 +1099,19 @@ public class Simulator {
                                     break;
                                 }
                             } else {
-                                passengerMovement.setState(PassengerMovement.State.WALKING);
-                                state = PassengerMovement.State.WALKING;
+                                if (passengerMovement.getGoalAmenity() instanceof StationGate) {
+                                    passengerMovement.setState(PassengerMovement.State.WALKING);
+                                    state = PassengerMovement.State.WALKING;
 
-                                passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
-                                action = PassengerMovement.Action.WILL_QUEUE;
+                                    passengerMovement.setAction(PassengerMovement.Action.EXITING_STATION);
+                                    action = PassengerMovement.Action.EXITING_STATION;
+                                } else {
+                                    passengerMovement.setState(PassengerMovement.State.WALKING);
+                                    state = PassengerMovement.State.WALKING;
+
+                                    passengerMovement.setAction(PassengerMovement.Action.WILL_QUEUE);
+                                    action = PassengerMovement.Action.WILL_QUEUE;
+                                }
 
                                 // Then this passenger will not be stuck anymore
                                 passengerMovement.free();

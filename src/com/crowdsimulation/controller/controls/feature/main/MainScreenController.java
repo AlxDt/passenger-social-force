@@ -889,6 +889,8 @@ public class MainScreenController extends ScreenController {
             @Override
             public Station.StationValidationResult call() {
                 try {
+                    clearStation(Main.simulator.getStation());
+
                     return Station.validateStationLayoutDeeply(Main.simulator.getStation());
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -1806,6 +1808,11 @@ public class MainScreenController extends ScreenController {
 
     // Clear passengers in a single floor
     public void clearStationFloor(Floor floor) {
+        // Rest station gate backlogs
+        for (StationGate stationGate : floor.getStationGates()) {
+            stationGate.resetBacklogs();
+        }
+
         // Reset all goal waiting times
         for (Security security : floor.getSecurities()) {
             security.resetWaitingTime();

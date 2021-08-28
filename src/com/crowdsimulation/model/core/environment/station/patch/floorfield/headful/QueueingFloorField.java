@@ -1,6 +1,7 @@
 package com.crowdsimulation.model.core.environment.station.patch.floorfield.headful;
 
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.environment.Environment;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.AbstractFloorFieldObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
@@ -258,7 +259,7 @@ public class QueueingFloorField extends HeadfulFloorField {
             return Objects.hash(dispositionStatePair, target);
         }
 
-        public static class DispositionStatePair {
+        public static class DispositionStatePair implements Environment {
             private final PassengerMovement.Disposition disposition;
             private final PassengerMovement.State state;
 

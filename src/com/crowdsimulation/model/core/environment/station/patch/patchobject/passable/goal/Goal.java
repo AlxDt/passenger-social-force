@@ -5,6 +5,7 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amen
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Drawable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.NonObstacle;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,18 @@ public abstract class Goal extends NonObstacle implements Queueable, Drawable {
     }
 
     public void resetWaitingTime() {
-        this.waitingTimeLeft = this.waitingTime;
+        final int minimumWaitingTime = 1;
+
+        // TODO: Calibrate
+        int waitingTimeLeft
+                = (int)
+                (this.waitingTime + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * (this.waitingTime * 0.05));
+
+        if (waitingTimeLeft <= minimumWaitingTime) {
+            waitingTimeLeft = minimumWaitingTime;
+        }
+
+        this.waitingTimeLeft = waitingTimeLeft;
     }
 
     public static boolean isGoal(Amenity amenity) {

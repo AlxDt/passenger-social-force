@@ -1,5 +1,6 @@
 package com.crowdsimulation.model.core.environment.station;
 
+import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
@@ -700,7 +701,7 @@ public class Station extends BaseStationObject implements Environment {
                                     // Furthermore, if this distance is already within the allowed maximum distance from the
                                     // cluster, as cluster has immediately been found
                                     // The maximum distance allowable of an amenity from the other amenities in its cluster
-                                    final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
+                                    final double maximumAllowableDistanceFromCluster = 5.0;
 
                                     if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
                                         hasFoundCluster = true;
@@ -770,7 +771,7 @@ public class Station extends BaseStationObject implements Environment {
                                     // Furthermore, if this distance is already within the allowed maximum distance from the
                                     // cluster, as cluster has immediately been found
                                     // The maximum distance allowable of an amenity from the other amenities in its cluster
-                                    final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
+                                    final double maximumAllowableDistanceFromCluster = 5.0;
 
                                     if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
                                         hasFoundCluster = true;
@@ -840,7 +841,7 @@ public class Station extends BaseStationObject implements Environment {
                                     // Furthermore, if this distance is already within the allowed maximum distance from the
                                     // cluster, as cluster has immediately been found
                                     // The maximum distance allowable of an amenity from the other amenities in its cluster
-                                    final double maximumAllowableDistanceFromCluster = Double.MAX_VALUE;
+                                    final double maximumAllowableDistanceFromCluster = 5.0;
 
                                     if (pathToAmenity.getDistance() < maximumAllowableDistanceFromCluster) {
                                         hasFoundCluster = true;

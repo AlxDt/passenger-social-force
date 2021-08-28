@@ -335,12 +335,12 @@ public class EscalatorPortal extends Portal {
         // Check if all attractors and spawners in this amenity have no passengers
         for (AmenityBlock attractor : this.getAttractors()) {
             patchesToCheck.add(attractor.getPatch());
-            patchesToCheck.addAll(attractor.getPatch().getNeighbors());
+//            patchesToCheck.addAll(attractor.getPatch().getNeighbors());
         }
 
         for (GateBlock spawner : this.getSpawners()) {
             patchesToCheck.add(spawner.getPatch());
-            patchesToCheck.addAll(spawner.getPatch().getNeighbors());
+//            patchesToCheck.addAll(spawner.getPatch().getNeighbors());
         }
 
         for (Patch patchToCheck : patchesToCheck) {

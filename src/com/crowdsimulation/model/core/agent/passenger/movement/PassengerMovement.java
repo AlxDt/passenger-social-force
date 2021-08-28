@@ -986,11 +986,8 @@ public class PassengerMovement {
                 Station.AmenityCluster portalExitCluster = station.getAmenityClusterByAmenity().get(portalToExit);
 
                 if (!visitedClusters.contains(portalExitCluster) && !visitedClusters.contains(portalEntryCluster)) {
-//                    if (!visitedClusters.contains(portalEntryCluster)) {
                     // Then get the new floor served by that portal
                     Floor floorToEnter = portalToExit.getFloorServed();
-
-//                    System.out.println("Entering " + portalToEnter.getAttractors().get(0).getPatch() + ", exiting" + portalToExit.getAttractors().get(0).getPatch() + "(" + (currentFloor.getStation().getFloors().indexOf(floorToEnter) + 1) + ")");
 
                     // See if a path to the goal can be formed when passing through that portal
                     double newDistance = portalDistanceInFloor.getValue();
@@ -1062,24 +1059,8 @@ public class PassengerMovement {
                             }
                         }
                     }
-//                    } else {
-//                        paths.add();
-//                    }
                 }
             }
-
-/*
-            // For each path found, find the one with the shortest distance
-            double shortestDistance = Double.MAX_VALUE;
-            MultipleFloorPassengerPath shortestPath = null;
-
-            for (MultipleFloorPassengerPath multipleFloorPassengerPath : multipleFloorPassengerPaths) {
-                if (multipleFloorPassengerPath.getDistance() < shortestDistance) {
-                    shortestDistance = multipleFloorPassengerPath.getDistance();
-                    shortestPath = multipleFloorPassengerPath;
-                }
-            }
-*/
 
             multipleFloorPatchCache.put(pathCacheKey, paths);
 
@@ -1268,8 +1249,8 @@ public class PassengerMovement {
 
                                 double modifiedCandidateDistance = candidateDistance;
 
-                                final double candidateDistanceLimit = 20.0;
-                                final double distantCandidatePenalty = 25.0;
+                                final double candidateDistanceLimit = 15.0;
+                                final double distantCandidatePenalty = 100.0;
 
                                 if (modifiedCandidateDistance > candidateDistanceLimit) {
                                     modifiedCandidateDistance = candidateDistance * distantCandidatePenalty;
@@ -1374,7 +1355,7 @@ public class PassengerMovement {
 
                                 distanceToTraverse = directoryItemInPortal.getDistance();
 
-                                final double peopleInPortalPenalty = 1.5;
+                                final double peopleInPortalPenalty = 10.0;
                                 peopleInPortalScore
                                         = lowerStairPortal.getStairShaft().getPassengersAscending()
                                         * peopleInPortalPenalty;
@@ -1415,7 +1396,7 @@ public class PassengerMovement {
 
                                 distanceToTraverse = directoryItemInPortal.getDistance();
 
-                                final double peopleInPortalPenalty = 1.5;
+                                final double peopleInPortalPenalty = 10.0;
                                 peopleInPortalScore
                                         = upperStairPortal.getStairShaft().getPassengersDescending()
                                         * peopleInPortalPenalty;
@@ -1472,7 +1453,7 @@ public class PassengerMovement {
 
                                 distanceToTraverse = directoryItemInPortal.getDistance();
 
-                                final double peopleInPortalPenalty = 1.5;
+                                final double peopleInPortalPenalty = 10.0;
                                 peopleInPortalScore
                                         = lowerEscalatorPortal.getEscalatorShaft().getPassengers()
                                         * peopleInPortalPenalty;
@@ -1513,7 +1494,7 @@ public class PassengerMovement {
 
                                 distanceToTraverse = directoryItemInPortal.getDistance();
 
-                                final double peopleInPortalPenalty = 1.5;
+                                final double peopleInPortalPenalty = 10.0;
                                 peopleInPortalScore
                                         = upperEscalatorPortal.getEscalatorShaft().getPassengers()
                                         * peopleInPortalPenalty;
@@ -1630,11 +1611,11 @@ public class PassengerMovement {
 
         // If the passenger has not moved a sufficient distance for more than this number of ticks, the passenger
         // will be considered stuck
-        final int noMovementTicksThreshold = (this.getGoalAmenityAsGoal() != null) ? this.getGoalAmenityAsGoal().getWaitingTime() : 10;
+        final int noMovementTicksThreshold = (this.getGoalAmenityAsGoal() != null) ? this.getGoalAmenityAsGoal().getWaitingTime() : 5;
 
         // If the passenger has not seen new patches for more than this number of ticks, the passenger will be considered
         // stuck
-        final int noNewPatchesSeenTicksThreshold = 10;
+        final int noNewPatchesSeenTicksThreshold = 5;
 
         // If the passenger has been moving a sufficient distance for at least this number of ticks, this passenger will
         // be out of the stuck state, if it was
@@ -2903,7 +2884,14 @@ public class PassengerMovement {
     // Check if this passenger has reached its goal's queueing floor field
     public boolean hasReachedQueueingFloorField() {
         for (Patch patch : this.goalFloorField.getAssociatedPatches()) {
-            if (isOnOrCloseToPatch(patch)) {
+            if (
+                    isOnOrCloseToPatch(patch)
+                            && hasClearLineOfSight(
+                            this.position,
+                            patch.getPatchCenterCoordinates(),
+                            true
+                    )
+            ) {
                 return true;
             }
         }
@@ -3503,7 +3491,13 @@ public class PassengerMovement {
         // Generate a path, if one hasn't been generated yet
         boolean wasPathJustGenerated = false;
 
-        if (this.currentPath == null) {
+        final int recomputeThreshold = 10;
+
+        if (
+                this.currentPath == null
+                        || this.isStuck
+                        && this.noNewPatchesSeenCounter > recomputeThreshold
+        ) {
             PassengerPath passengerPath;
 
             if (this.getGoalAmenityAsQueueable() != null) {

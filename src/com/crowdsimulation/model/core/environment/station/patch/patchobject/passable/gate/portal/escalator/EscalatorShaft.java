@@ -39,7 +39,7 @@ public class EscalatorShaft extends PortalShaft {
         this.escalatorDirection = escalatorDirection;
         this.hasChangedDirection = false;
 
-        this.queue = new ArrayList<>(capacity);
+        this.queue = new ArrayList<>();
 
         for (int index = 0; index < capacity; index++) {
             this.queue.add(new ArrayList<>());

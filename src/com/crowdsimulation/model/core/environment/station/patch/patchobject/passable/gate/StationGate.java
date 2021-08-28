@@ -16,6 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 
 public class StationGate extends Gate {
+    public static final long serialVersionUID = -6190517689755159925L;
+
     // Denotes the chance of generating a passenger per second
     private double chancePerSecond;
 
@@ -327,6 +329,10 @@ public class StationGate extends Gate {
         this.passengerBacklogCount++;
     }
 
+    public void resetBacklogs() {
+        this.passengerBacklogCount = 0;
+    }
+
     @Override
     public String toString() {
         return "Station entrance/exit" + ((this.enabled) ? "" : " (disabled)");
@@ -350,12 +356,12 @@ public class StationGate extends Gate {
         // Check if all attractors and spawners in this amenity have no passengers
         for (AmenityBlock attractor : this.getAttractors()) {
             patchesToCheck.add(attractor.getPatch());
-            patchesToCheck.addAll(attractor.getPatch().getNeighbors());
+//            patchesToCheck.addAll(attractor.getPatch().getNeighbors());
         }
 
         for (GateBlock spawner : this.getSpawners()) {
             patchesToCheck.add(spawner.getPatch());
-            patchesToCheck.addAll(spawner.getPatch().getNeighbors());
+//            patchesToCheck.addAll(spawner.getPatch().getNeighbors());
         }
 
         for (Patch patchToCheck : patchesToCheck) {
