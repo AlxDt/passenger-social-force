@@ -1052,11 +1052,11 @@ public class PassengerMovement {
 
                             paths.add(combinedPath);
 
-                            // If a path is found, add the cluster containing this entry portal to the list of validated
-                            // clusters
-                            if (!visitedClusters.contains(portalEntryCluster)) {
-                                visitedClusters.add(portalEntryCluster);
-                            }
+//                            // If a path is found, add the cluster containing this entry portal to the list of validated
+//                            // clusters
+//                            if (!visitedClusters.contains(portalEntryCluster)) {
+//                                visitedClusters.add(portalEntryCluster);
+//                            }
                         }
                     }
                 }
