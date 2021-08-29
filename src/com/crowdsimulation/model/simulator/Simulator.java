@@ -94,11 +94,14 @@ public class Simulator {
     public static final Random RANDOM_NUMBER_GENERATOR;
 
     // Simulation variables
-    private final List<Passenger> passengersToSwitchFloors;
-    private final List<Passenger> passengersToDespawn;
+//    private static final List<Passenger> passengersToSwitchFloors;
+//    private static final List<Passenger> passengersToDespawn;
 
     static {
         RANDOM_NUMBER_GENERATOR = new Random();
+
+//        passengersToSwitchFloors = Collections.synchronizedList(new ArrayList<>());
+//        passengersToDespawn = Collections.synchronizedList(new ArrayList<>());
     }
 
     public Simulator() {
@@ -140,9 +143,6 @@ public class Simulator {
 
         this.time = new SimulationTime(0, 0, 0);
         this.playSemaphore = new Semaphore(0);
-
-        this.passengersToSwitchFloors = Collections.synchronizedList(new ArrayList<>());
-        this.passengersToDespawn = Collections.synchronizedList(new ArrayList<>());
 
         // Start the simulation thread, but in reality it would be activated much later
         this.start();
@@ -448,7 +448,7 @@ public class Simulator {
 
             // Initialize a thread pool to run floors in parallel
             final int NUM_CPUS = Runtime.getRuntime().availableProcessors();
-            ExecutorService executorService = Executors.newFixedThreadPool(NUM_CPUS);
+            ExecutorService floorExecutorService = Executors.newFixedThreadPool(NUM_CPUS);
 
             while (true) {
                 try {
@@ -458,30 +458,7 @@ public class Simulator {
                     // Keep looping until paused
                     while (this.isRunning()) {
                         // Update the pertinent variables when ticking
-
-                        // For each portal, update its passengers' time spent values
-                        // TODO: portals other than stairs
-                        for (StairShaft stairShaft : Main.simulator.station.getStairShafts()) {
-                            stairShaft.updateQueues();
-                        }
-
-                        for (EscalatorShaft escalatorShaft : Main.simulator.station.getEscalatorShafts()) {
-                            escalatorShaft.updateQueues();
-                        }
-
-                        // Draw all agents in each floor
-                        List<FloorUpdateTask> floorsToUpdate = new ArrayList<>();
-
-                        for (Floor floor : Main.simulator.station.getFloors()) {
-                            spawnPassengersInFloor(floor);
-
-                            floorsToUpdate.add(new FloorUpdateTask(floor));
-                        }
-
-                        executorService.invokeAll(floorsToUpdate);
-
-                        // Manage all passenger floor transfers
-                        manageFloorTransfers();
+                        Simulator.updatePassengersInStation(floorExecutorService, Main.simulator.getStation());
 
                         // Redraw the visualization
                         // If the refreshes are frequent enough, update the visualization in a speed-aware manner
@@ -504,8 +481,60 @@ public class Simulator {
         }).start();
     }
 
-    // Manage the passengers which spawn in the floor
-    private void spawnPassengersInFloor(Floor floor) {
+    // Manage all passenger-related updates
+    public static void updatePassengersInStation(
+            ExecutorService floorExecutorService,
+            Station station
+    ) throws InterruptedException {
+        List<Passenger> passengersToSwitchFloors = Collections.synchronizedList(new ArrayList<>());
+        List<Passenger> passengersToDespawn = Collections.synchronizedList(new ArrayList<>());
+
+        // For each portal, update its passengers' time spent values
+        Simulator.updatePassengersInPortals(station);
+
+        // Update all passengers on the floors
+        Simulator.updatePassengersOnFloors(
+                floorExecutorService,
+                station,
+                passengersToSwitchFloors,
+                passengersToDespawn
+        );
+
+        // Manage all passenger floor transfers
+        Simulator.manageFloorTransfers(passengersToSwitchFloors, passengersToDespawn);
+    }
+
+    // For each portal, update its passengers' time spent values
+    private static void updatePassengersInPortals(Station station) {
+        for (StairShaft stairShaft : /*Main.simulator.station.getStairShafts()*/station.getStairShafts()) {
+            stairShaft.updateQueues();
+        }
+
+        for (EscalatorShaft escalatorShaft : /*Main.simulator.station.getEscalatorShafts()*/station.getEscalatorShafts()) {
+            escalatorShaft.updateQueues();
+        }
+    }
+
+    // Update all passengers on the floors
+    private static void updatePassengersOnFloors(
+            ExecutorService executorService,
+            Station station,
+            List<Passenger> passengersToSwitchFloors,
+            List<Passenger> passengersToDespawn
+    ) throws InterruptedException {
+        List<FloorUpdateTask> floorsToUpdate = new ArrayList<>();
+
+        for (Floor floor : /*Main.simulator.station.getFloors()*/station.getFloors()) {
+            spawnPassengersOnFloor(floor);
+
+            floorsToUpdate.add(new FloorUpdateTask(floor, passengersToSwitchFloors, passengersToDespawn));
+        }
+
+        executorService.invokeAll(floorsToUpdate);
+    }
+
+    // Manage the passengers which spawn on the floor
+    private static void spawnPassengersOnFloor(Floor floor) {
         // Make all station gates in this floor spawn passengers depending on their spawn frequency
         // Generate a number from 0.0 to 1.0
         double boardingRandomNumber;
@@ -545,6 +574,36 @@ public class Simulator {
         }
     }
 
+    // Entertain each passenger marked for switching floors
+    private static void manageFloorTransfers(
+            List<Passenger> passengersToSwitchFloors,
+            List<Passenger> passengersToDespawn
+    ) {
+        try {
+            for (Passenger passengerToSwitchFloors : passengersToSwitchFloors) {
+                // Get the passenger's portal
+                Portal portal = (Portal) passengerToSwitchFloors.getPassengerMovement().getCurrentAmenity();
+
+                // Have the gate absorb that passenger
+                portal.absorb(passengerToSwitchFloors);
+            }
+
+            // Remove all passengers that are marked for removal
+            for (Passenger passengerToDespawn : passengersToDespawn) {
+                // Get the passenger's gate
+                Gate gate = (Gate) passengerToDespawn.getPassengerMovement().getCurrentAmenity();
+
+                // Have the gate despawn that passenger
+                gate.despawnPassenger(passengerToDespawn);
+            }
+
+            passengersToDespawn.clear();
+            passengersToSwitchFloors.clear();
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     // Reset the simulation
     public void reset() {
         // Reset the simulation time
@@ -552,12 +611,20 @@ public class Simulator {
     }
 
     // Make all agents tick (move once in a one-second time frame) in the given floor
-    private void updateFloor(Floor floor) {
+    private static void updateFloor(
+            Floor floor,
+            List<Passenger> passengersToSwitchFloors,
+            List<Passenger> passengersToDespawn
+    ) {
         // Make each passenger move
         synchronized (floor.getPassengersInFloor()) {
             for (Passenger passenger : floor.getPassengersInFloor()) {
                 try {
-                    movePassenger(passenger);
+                    movePassenger(
+                            passenger,
+                            passengersToSwitchFloors,
+                            passengersToDespawn
+                    );
 
                     // Also update the graphic of the passenger
                     passenger.getPassengerGraphic().change();
@@ -568,30 +635,11 @@ public class Simulator {
         }
     }
 
-    // Entertain each passenger marked for switching floors
-    private void manageFloorTransfers() {
-        for (Passenger passengerToSwitchFloors : this.passengersToSwitchFloors) {
-            // Get the passenger's portal
-            Portal portal = (Portal) passengerToSwitchFloors.getPassengerMovement().getCurrentAmenity();
-
-            // Have the gate absorb that passenger
-            portal.absorb(passengerToSwitchFloors);
-        }
-
-        // Remove all passengers that are marked for removal
-        for (Passenger passengerToDespawn : this.passengersToDespawn) {
-            // Get the passenger's gate
-            Gate gate = (Gate) passengerToDespawn.getPassengerMovement().getCurrentAmenity();
-
-            // Have the gate despawn that passenger
-            gate.despawnPassenger(passengerToDespawn);
-        }
-
-        passengersToDespawn.clear();
-        passengersToSwitchFloors.clear();
-    }
-
-    private void movePassenger(Passenger passenger) {
+    private static void movePassenger(
+            Passenger passenger,
+            List<Passenger> passengersToSwitchFloors,
+            List<Passenger> passengersToDespawn
+    ) {
         PassengerMovement passengerMovement = passenger.getPassengerMovement();
 
         // Get the three passenger movement states
@@ -707,7 +755,7 @@ public class Simulator {
                                             passengerMovement.reachGoal();
 
                                             // Then have this passenger marked for despawning
-                                            this.passengersToDespawn.add(passenger);
+                                            passengersToDespawn.add(passenger);
 
                                             break;
                                         }
@@ -854,7 +902,7 @@ public class Simulator {
                                     passengerMovement.resetGoal(false);
 
                                     // Then have this passenger marked for floor switching
-                                    this.passengersToSwitchFloors.add(passenger);
+                                    passengersToSwitchFloors.add(passenger);
                                 } else {
                                     passengerMovement.stop();
                                 }
@@ -948,7 +996,7 @@ public class Simulator {
                                 passengerMovement.reachGoal();
 
                                 // Then have this passenger marked for despawning
-                                this.passengersToDespawn.add(passenger);
+                                passengersToDespawn.add(passenger);
 
                                 break;
                             }
@@ -1057,7 +1105,7 @@ public class Simulator {
                                             passengerMovement.resetGoal(false);
 
                                             // Then have this passenger marked for floor switching
-                                            this.passengersToSwitchFloors.add(passenger);
+                                            passengersToSwitchFloors.add(passenger);
                                         } else {
                                             passengerMovement.stop();
                                         }
@@ -1326,7 +1374,7 @@ public class Simulator {
                             passengerMovement.reachGoal();
 
                             // Then have this passenger marked for despawning
-                            this.passengersToDespawn.add(passenger);
+                            passengersToDespawn.add(passenger);
                         } else if (
                                 action == PassengerMovement.Action.ASCENDING
                                         || action == PassengerMovement.Action.DESCENDING
@@ -1416,7 +1464,7 @@ public class Simulator {
     }
 
     // Spawn a passenger from a gate in the given floor
-    private void spawnPassenger(Floor floor, Gate gate) {
+    private static void spawnPassenger(Floor floor, Gate gate) {
         // Generate the passenger
         Passenger passenger = gate.spawnPassenger();
 
@@ -1440,7 +1488,7 @@ public class Simulator {
     }
 
     // Spawn a passenger from the backlogs of the station gate
-    public void spawnPassengerFromStationGateBacklog(Floor floor, StationGate stationGate) {
+    public static void spawnPassengerFromStationGateBacklog(Floor floor, StationGate stationGate) {
         Passenger passenger = stationGate.spawnPassengerFromBacklogs();
 
         if (passenger != null) {
@@ -1456,16 +1504,20 @@ public class Simulator {
     }
 
     // Represent a floor update task
-    public class FloorUpdateTask implements Callable<Void> {
+    public static class FloorUpdateTask implements Callable<Void> {
         private final Floor floorToUpdate;
+        private final List<Passenger> passengersToSwitchFloors;
+        private final List<Passenger> passengersToDespawn;
 
-        public FloorUpdateTask(Floor floorToUpdate) {
+        public FloorUpdateTask(Floor floorToUpdate, List<Passenger> passengersToSwitchFloors, List<Passenger> passengersToDespawn) {
             this.floorToUpdate = floorToUpdate;
+            this.passengersToSwitchFloors = passengersToSwitchFloors;
+            this.passengersToDespawn = passengersToDespawn;
         }
 
         @Override
         public Void call() throws Exception {
-            updateFloor(floorToUpdate);
+            Simulator.updateFloor(floorToUpdate, passengersToSwitchFloors, passengersToDespawn);
 
             return null;
         }

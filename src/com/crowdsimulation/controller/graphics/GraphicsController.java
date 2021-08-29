@@ -141,7 +141,7 @@ public class GraphicsController extends Controller {
         // If the speed-aware option is true, only perform canvas refreshes after a set interval has elapsed
         // This is done to avoid having too many refreshes within a short period of time
         if (speedAware) {
-            final int millisecondsIntervalBetweenCalls = 500;
+            final int millisecondsIntervalBetweenCalls = 5000;
 
             long currentTimeMilliseconds = System.currentTimeMillis();
 
@@ -279,7 +279,7 @@ public class GraphicsController extends Controller {
                     floor.getRows() * tileSize
             );
 
-            backgroundGraphicsContext.setFill(Color.WHITE);
+            backgroundGraphicsContext.setFill(Color.rgb(244, 244, 244));
             backgroundGraphicsContext.fillRect(
                     0,
                     0,
@@ -409,7 +409,7 @@ public class GraphicsController extends Controller {
                 if (!currentPatchInFirstPortalBlock) {
                     // There isn't an amenity on this patch, so just use the color corresponding to a blank
                     // patch
-                    patchColor = Color.WHITE;
+                    patchColor = Color.rgb(244, 244, 244);
 
                     // Show the floor fields of the current target with the current floor field state
                     Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
