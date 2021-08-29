@@ -132,8 +132,11 @@ public class GraphicsController extends Controller {
     public static void requestDrawStationView(
             StackPane canvases,
             Floor floor,
+            double tileSize,
             boolean background,
-            boolean speedAware
+            boolean speedAware,
+            boolean clearMarkings,
+            boolean runOnly
     ) {
         // If the speed-aware option is true, only perform canvas refreshes after a set interval has elapsed
         // This is done to avoid having too many refreshes within a short period of time
@@ -155,19 +158,7 @@ public class GraphicsController extends Controller {
         }
 
         javafx.application.Platform.runLater(() -> {
-            drawStationView(canvases, floor, background);
-        });
-    }
-
-    // Send a request to draw part of the station view on the canvas
-    public static void requestDrawPartialStationView(
-            StackPane canvases,
-            Floor floor,
-            boolean background
-    ) {
-        javafx.application.Platform.runLater(() -> {
-            // Tell the JavaFX thread that we'd like to draw on the canvas
-            drawStationView(canvases, floor, background);
+            drawStationView(canvases, floor, tileSize, background, clearMarkings, runOnly);
         });
     }
 
@@ -183,16 +174,31 @@ public class GraphicsController extends Controller {
     private static void drawStationView(
             StackPane canvases,
             Floor floor,
-            boolean background
+            double tileSize,
+            boolean background,
+            boolean drawMarkings,
+            boolean runOnly
     ) {
         // Get the canvases and their graphics contexts
         final Canvas backgroundCanvas = (Canvas) canvases.getChildren().get(0);
         final Canvas foregroundCanvas = (Canvas) canvases.getChildren().get(1);
-        final Canvas markingsCanvas = (Canvas) canvases.getChildren().get(2);
+        final Canvas markingsCanvas;
+
+        if (drawMarkings) {
+            markingsCanvas = (Canvas) canvases.getChildren().get(2);
+        } else {
+            markingsCanvas = null;
+        }
 
         final GraphicsContext backgroundGraphicsContext = backgroundCanvas.getGraphicsContext2D();
         final GraphicsContext foregroundGraphicsContext = foregroundCanvas.getGraphicsContext2D();
-        final GraphicsContext markingsGraphicsContext = markingsCanvas.getGraphicsContext2D();
+        final GraphicsContext markingsGraphicsContext;
+
+        if (drawMarkings) {
+            markingsGraphicsContext = markingsCanvas.getGraphicsContext2D();
+        } else {
+            markingsGraphicsContext = null;
+        }
 
         // Get the height and width of the canvases
         final double canvasWidth = backgroundCanvas.getWidth();
@@ -205,31 +211,46 @@ public class GraphicsController extends Controller {
                 backgroundGraphicsContext,
                 foregroundGraphicsContext,
                 markingsGraphicsContext,
+                tileSize,
                 canvasWidth,
                 canvasHeight
         );
 
         // Draw the station objects
-        drawStationObjects(floor, background, backgroundGraphicsContext, foregroundGraphicsContext, false);
+        drawStationObjects(
+                floor,
+                background,
+                backgroundGraphicsContext,
+                foregroundGraphicsContext,
+                tileSize,
+                false,
+                runOnly
+        );
 
         // If set to peek, draw the other floors, but translucently
-        if (GraphicsController.willPeek && !Main.simulator.isRunning()) {
-            List<Floor> allFloorsExceptThis = new ArrayList<>(floor.getStation().getFloors());
-            allFloorsExceptThis.remove(floor);
+        if (!runOnly) {
+            if (GraphicsController.willPeek && !Main.simulator.isRunning()) {
+                List<Floor> allFloorsExceptThis = new ArrayList<>(floor.getStation().getFloors());
+                allFloorsExceptThis.remove(floor);
 
-            for (Floor floorToPeek : allFloorsExceptThis) {
-                drawStationObjects(
-                        floorToPeek,
-                        background,
-                        backgroundGraphicsContext,
-                        foregroundGraphicsContext,
-                        true
-                );
+                for (Floor floorToPeek : allFloorsExceptThis) {
+                    drawStationObjects(
+                            floorToPeek,
+                            background,
+                            backgroundGraphicsContext,
+                            foregroundGraphicsContext,
+                            tileSize,
+                            true,
+                            false
+                    );
+                }
             }
         }
 
         // Draw the current amenity marking
-        drawCurrentAmenityMarking(backgroundGraphicsContext);
+        if (drawMarkings) {
+            drawCurrentAmenityMarking(backgroundGraphicsContext);
+        }
     }
 
     private static void clearCanvases(
@@ -238,6 +259,7 @@ public class GraphicsController extends Controller {
             GraphicsContext backgroundGraphicsContext,
             GraphicsContext foregroundGraphicsContext,
             GraphicsContext markingsGraphicsContext,
+            double tileSize,
             double canvasWidth,
             double canvasHeight
     ) {
@@ -266,12 +288,14 @@ public class GraphicsController extends Controller {
             );
         }
 
-        markingsGraphicsContext.clearRect(
-                0,
-                0,
-                floor.getColumns() * tileSize,
-                floor.getRows() * tileSize
-        );
+        if (markingsGraphicsContext != null) {
+            markingsGraphicsContext.clearRect(
+                    0,
+                    0,
+                    floor.getColumns() * tileSize,
+                    floor.getRows() * tileSize
+            );
+        }
     }
 
     private static void drawStationObjects(
@@ -279,7 +303,9 @@ public class GraphicsController extends Controller {
             boolean background,
             GraphicsContext backgroundGraphicsContext,
             GraphicsContext foregroundGraphicsContext,
-            boolean drawFloorThroughPeek
+            double tileSize,
+            boolean drawFloorThroughPeek,
+            boolean drawFloorRunOnly
     ) {
         // Draw all the patches of this floor
         // If the background is supposed to be drawn, draw from all the patches
@@ -386,31 +412,42 @@ public class GraphicsController extends Controller {
                     patchColor = Color.WHITE;
 
                     // Show the floor fields of the current target with the current floor field state
-                    Queueable target = Main.simulator.getCurrentFloorFieldTarget();
-                    QueueingFloorField.FloorFieldState floorFieldState
-                            = Main.simulator.getCurrentFloorFieldState();
-
                     Map<Queueable, Map<QueueingFloorField.FloorFieldState, Double>> floorFieldValues
                             = currentPatch.getFloorFieldValues();
-                    Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
-                            = floorFieldValues.get(target);
 
-                    // Draw something if there is a target associated with this patch
-                    if (floorFieldStateDoubleMap != null) {
-                        // If the current patch's floor field state matches the current floor field state, draw
-                        // a green or blue patch (depending on direction)
-                        if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
-                            double value = floorFieldStateDoubleMap.get(floorFieldState);
+                    if (!drawFloorRunOnly) {
+                        Queueable target = Main.simulator.getCurrentFloorFieldTarget();
+                        QueueingFloorField.FloorFieldState floorFieldState = Main.simulator.getCurrentFloorFieldState();
 
-                            // Map the colors of this patch to the its field value's intensity
-                            patchColor = Color.hsb(
-                                    FLOOR_FIELD_COLORS.get(floorFieldState.getDisposition()),
-                                    Main.simulator.isFloorFieldDrawing() ? value : 0.0,
-                                    Main.simulator.isFloorFieldDrawing() ? 1.0 : 0.97
-                            );
-                        } else {
-                            // There is a floor field value here with the same target, but it is not of the
-                            // current floor field state
+                        Map<QueueingFloorField.FloorFieldState, Double> floorFieldStateDoubleMap
+                                = floorFieldValues.get(target);
+
+                        // Draw something if there is a target associated with this patch
+                        if (floorFieldStateDoubleMap != null) {
+                            // If the current patch's floor field state matches the current floor field state, draw
+                            // a green or blue patch (depending on direction)
+                            if (floorFieldStateDoubleMap.get(floorFieldState) != null) {
+                                double value = floorFieldStateDoubleMap.get(floorFieldState);
+
+                                // Map the colors of this patch to its field value's intensity
+                                patchColor = Color.hsb(
+                                        FLOOR_FIELD_COLORS.get(floorFieldState.getDisposition()),
+                                        Main.simulator.isFloorFieldDrawing() ? value : 0.0,
+                                        Main.simulator.isFloorFieldDrawing() ? 1.0 : 0.97
+                                );
+                            } else {
+                                // There is a floor field value here with the same target, but it is not of the
+                                // current floor field state
+                                // Hence, just draw an unsaturated patch
+                                patchColor = Color.hsb(
+                                        0,
+                                        0,
+                                        0.97
+                                );
+                            }
+                        } else if (!floorFieldValues.isEmpty()) {
+                            // If there isn't a floor field with the current target, but the list of floor field
+                            // values isn't empty, there are still other floor field values on this patch
                             // Hence, just draw an unsaturated patch
                             patchColor = Color.hsb(
                                     0,
@@ -502,14 +539,16 @@ public class GraphicsController extends Controller {
                     }
                 }
             } else {
-                Amenity patchAmenity = currentPatch.getAmenityBlock().getParent();
+                if (!drawFloorRunOnly) {
+                    Amenity patchAmenity = currentPatch.getAmenityBlock().getParent();
 
-                // There is an amenity on this patch, so draw it according to its corresponding color
-                // If floor field drawing is on, only color amenities which are of the current class
-                if (Main.simulator.isFloorFieldDrawing()) {
-                    // Only color the current amenity - unsaturate the rest
-                    if (!patchAmenity.equals(Main.simulator.getCurrentFloorFieldTarget())) {
-                        drawGraphicTransparently = true;
+                    // There is an amenity on this patch, so draw it according to its corresponding color
+                    // If floor field drawing is on, only color amenities which are of the current class
+                    if (Main.simulator.isFloorFieldDrawing()) {
+                        // Only color the current amenity - unsaturate the rest
+                        if (!patchAmenity.equals(Main.simulator.getCurrentFloorFieldTarget())) {
+                            drawGraphicTransparently = true;
+                        }
                     }
                 }
             }
@@ -1299,7 +1338,7 @@ public class GraphicsController extends Controller {
                             Main.mainScreenController.buildOrEdit(currentPatch);
 
                             // Redraw the station view
-                            drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
+                            drawStationView(canvases, Main.simulator.getCurrentFloor(), GraphicsController.tileSize, true, true, false);
                         } catch (IOException | InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -1312,7 +1351,7 @@ public class GraphicsController extends Controller {
                             // Delete the current obstacle
                             Main.mainScreenController.deleteAmenityAction();
 
-                            drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
+                            drawStationView(canvases, Main.simulator.getCurrentFloor(), GraphicsController.tileSize, true, true, false);
                         }
                     }
                 }
@@ -1349,7 +1388,8 @@ public class GraphicsController extends Controller {
                                 try {
                                     Main.mainScreenController.buildOrEdit(currentPatch);
 
-                                    drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
+                                    drawStationView(canvases, Main.simulator.getCurrentFloor(), GraphicsController.tileSize,
+                                            true, true, false);
                                 } catch (IOException | InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -1363,7 +1403,7 @@ public class GraphicsController extends Controller {
                                 // Delete the current obstacle
                                 Main.mainScreenController.deleteAmenityAction();
 
-                                drawStationView(canvases, Main.simulator.getCurrentFloor(), true);
+                                drawStationView(canvases, Main.simulator.getCurrentFloor(), GraphicsController.tileSize, true, true, false);
                             }
                         }
                     }

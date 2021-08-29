@@ -32,8 +32,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 public class Station extends BaseStationObject implements Environment {
+    public static final long serialVersionUID = -1547427240063646235L;
+
     // Default station name
     private static final String DEFAULT_STATION_NAME = "New station";
+
+    // File extension
+    public static final String STATION_LAYOUT_FILE_EXTENSION = ".stn";
 
     // Contains binding values for the number of floors this station has
     // The name of the station

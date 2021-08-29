@@ -433,7 +433,8 @@ public class MainScreenController extends ScreenController {
 
             // Set the extension for this station file
             FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter(
-                    "Station file (*.stn)", "*.stn"
+                    "Station file (*" + Station.STATION_LAYOUT_FILE_EXTENSION + ")",
+                    "*" + Station.STATION_LAYOUT_FILE_EXTENSION + ""
             );
 
             this.fileChooser.getExtensionFilters().add(extensionFilter);
@@ -748,7 +749,7 @@ public class MainScreenController extends ScreenController {
 
     private void loadAndInitializeStation(File stationFile) {
         try {
-            Station station = loadStation(stationFile);
+            Station station = MainScreenController.loadStation(stationFile);
 
             // Load the station to the simulator
             initializeStation(station, !GraphicsController.listenersDrawn);
@@ -1771,7 +1772,7 @@ public class MainScreenController extends ScreenController {
     }
 
     // Clear all passengers in the station
-    public void clearStation(Station station) {
+    public static void clearStation(Station station) {
         // Clear the station cache
         station.clearCaches();
 
@@ -1807,7 +1808,7 @@ public class MainScreenController extends ScreenController {
     }
 
     // Clear passengers in a single floor
-    public void clearStationFloor(Floor floor) {
+    public static void clearStationFloor(Floor floor) {
         // Rest station gate backlogs
         for (StationGate stationGate : floor.getStationGates()) {
             stationGate.resetBacklogs();
@@ -1913,7 +1914,7 @@ public class MainScreenController extends ScreenController {
     }
 
     // Load station
-    private Station loadStation(File stationFile) throws IOException, ClassNotFoundException {
+    public static Station loadStation(File stationFile) throws IOException, ClassNotFoundException {
         FileInputStream fileInputStream = new FileInputStream(stationFile.getAbsolutePath());
         ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
 
@@ -1925,7 +1926,7 @@ public class MainScreenController extends ScreenController {
     }
 
     // Save station
-    private void saveStation(Station station, File stationFile, boolean runOnly) throws IOException {
+    private static void saveStation(Station station, File stationFile, boolean runOnly) throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream(stationFile.getAbsolutePath());
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
@@ -5182,8 +5183,11 @@ public class MainScreenController extends ScreenController {
         GraphicsController.requestDrawStationView(
                 interfaceStackPane,
                 currentFloor,
+                GraphicsController.tileSize,
                 true,
-                false
+                false,
+                true,
+                Main.simulator.isStationRunOnly()
         );
     }
 
@@ -5192,8 +5196,11 @@ public class MainScreenController extends ScreenController {
         GraphicsController.requestDrawStationView(
                 interfaceStackPane,
                 currentFloor,
+                GraphicsController.tileSize,
                 false,
-                speedAware
+                speedAware,
+                true,
+                Main.simulator.isStationRunOnly()
         );
 
         requestUpdateInterfaceSimulationElements();
