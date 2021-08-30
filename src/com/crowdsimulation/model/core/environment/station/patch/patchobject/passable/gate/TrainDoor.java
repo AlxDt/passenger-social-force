@@ -20,9 +20,10 @@ import com.crowdsimulation.model.simulator.Simulator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TrainDoor extends Gate implements Queueable {
+    public static final long serialVersionUID = 3409867409524074606L;
+
     // Denotes the platform side served by this train door
     private PassengerMovement.TravelDirection platformDirection;
 
@@ -495,7 +496,41 @@ public class TrainDoor extends Gate implements Queueable {
 
         // If that spawner is free from passengers, generate one
         if (spawner.getPatch().getPassengers().isEmpty()) {
-            return Passenger.passengerFactory.create(spawner.getPatch(), travelDirection, false);
+            return Passenger.passengerFactory.create(spawner.getPatch(), /*travelDirection, false*/null);
+        } else {
+            // Else, do nothing, so return null
+            return null;
+        }
+    }
+
+    public Passenger releasePassenger() {
+        // Check if all attractors and spawners in this amenity have no passengers
+        for (AmenityBlock attractor : this.getAttractors()) {
+            if (!attractor.getPatch().getPassengers().isEmpty()) {
+                return null;
+            }
+        }
+
+        for (GateBlock spawner : this.getSpawners()) {
+            if (!spawner.getPatch().getPassengers().isEmpty()) {
+                return null;
+            }
+        }
+
+        // Randomly choose between the spawner locations in the train door
+        int spawnerCount = this.getSpawners().size();
+        int randomSpawnerIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(spawnerCount);
+
+        GateBlock spawner = this.getSpawners().get(randomSpawnerIndex);
+
+        // The direction of the departing passenger will be the direction of this train door
+        PassengerMovement.TravelDirection travelDirection = this.platformDirection;
+
+        // If that spawner is free from passengers, generate one
+        if (spawner.getPatch().getPassengers().isEmpty()) {
+            // TODO: Release passenger from train
+//            return Passenger.passengerFactory.create(spawner.getPatch(), /*travelDirection, false*/null);
+            return null;
         } else {
             // Else, do nothing, so return null
             return null;

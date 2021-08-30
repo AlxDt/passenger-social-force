@@ -8,6 +8,7 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGr
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.StationGateGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.simulator.Simulator;
 
@@ -370,18 +371,41 @@ public class StationGate extends Gate {
             }
         }
 
-        // TODO: Consider if entrance/exit only
         GateBlock spawner = this.getSpawners().get(0);
-
-        // Get the pool of possible travel directions of the passengers to be spawned, depending on the settings of this
-        // passenger gate
-        // From this pool of travel directions, pick a random one
-        int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.stationGatePassengerTravelDirections.size());
-        PassengerMovement.TravelDirection travelDirectionChosen = this.stationGatePassengerTravelDirections.get(randomIndex);
 
         // If that spawner is free from passengers, generate one
         if (spawner.getPatch().getPassengers().isEmpty()) {
-            return Passenger.passengerFactory.create(spawner.getPatch(), travelDirectionChosen, true);
+            return Passenger.passengerFactory.create(spawner.getPatch(), null);
+        } else {
+            // No passengers were generated because the spawner was blocked
+            return null;
+        }
+    }
+
+    // TODO: Use abstraction
+    public Passenger spawnPassenger(RoutePlan.PassengerTripInformation passengerTripInformation) {
+        HashSet<Patch> patchesToCheck = new HashSet<>();
+
+        // Check if all attractors and spawners in this amenity have no passengers
+        for (AmenityBlock attractor : this.getAttractors()) {
+            patchesToCheck.add(attractor.getPatch());
+        }
+
+        for (GateBlock spawner : this.getSpawners()) {
+            patchesToCheck.add(spawner.getPatch());
+        }
+
+        for (Patch patchToCheck : patchesToCheck) {
+            if (!patchToCheck.getPassengers().isEmpty()) {
+                return null;
+            }
+        }
+
+        GateBlock spawner = this.getSpawners().get(0);
+
+        // If that spawner is free from passengers, generate one
+        if (spawner.getPatch().getPassengers().isEmpty()) {
+            return Passenger.passengerFactory.create(spawner.getPatch(), passengerTripInformation);
         } else {
             // No passengers were generated because the spawner was blocked
             return null;
@@ -395,6 +419,26 @@ public class StationGate extends Gate {
 
             if (passengerSpawned != null) {
                 this.passengerBacklogCount--;
+            }
+
+            return passengerSpawned;
+        }
+
+        return null;
+    }
+
+    // Spawn a passenger from the backlogs
+    // TODO: Offload to station gate itself
+    public Passenger spawnPassengerFromBacklogs(List<RoutePlan.PassengerTripInformation> backlogs) {
+        if (this.passengerBacklogCount > 0) {
+            RoutePlan.PassengerTripInformation backlog = backlogs.get(0);
+
+            Passenger passengerSpawned = this.spawnPassenger(backlog);
+
+            if (passengerSpawned != null) {
+                this.passengerBacklogCount--;
+
+                backlogs.remove(backlog);
             }
 
             return passengerSpawned;

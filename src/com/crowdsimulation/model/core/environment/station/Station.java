@@ -1,6 +1,5 @@
 package com.crowdsimulation.model.core.environment.station;
 
-import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
 import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;

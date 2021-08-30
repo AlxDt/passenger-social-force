@@ -3,9 +3,12 @@ package com.crowdsimulation.model.core.agent.passenger;
 import com.crowdsimulation.controller.graphics.amenity.graphic.passenger.PassengerGraphic;
 import com.crowdsimulation.model.core.agent.Agent;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
+import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.PatchObject;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.Gate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.StationGate;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.gate.TrainDoor;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.simulator.Simulator;
 
@@ -16,13 +19,16 @@ public class Passenger extends PatchObject implements Agent {
     private static int passengerCount = 0;
 
     // Denotes the serial number of this passenger
-    private final int identifier;
+    private final int serialNumber;
+
+    // Denotes the card number of this passenger
+    private String cardNumber;
 
     // Denotes the gender of this passenger
     // TODO: Move to passenger information object?
     private final Gender gender;
 
-    // Denotes the demographic of thie passenger
+    // Denotes the demographic of this passenger
     private final Demographic demographic;
 
     // Denotes the ticket type of this passenger
@@ -43,39 +49,105 @@ public class Passenger extends PatchObject implements Agent {
 
     // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
     //  passenger will be boarding
-    private Passenger(Patch spawnPatch, PassengerMovement.TravelDirection travelDirection, boolean isBoarding) {
-        this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
-        this.demographic = Demographic.generateDemographic();
+    private Passenger(
+            Patch spawnPatch,
+            RoutePlan.PassengerTripInformation passengerTripInformation
+    ) {
+        if (passengerTripInformation == null) {
+            Gate gate = ((Gate) spawnPatch.getAmenityBlock().getParent());
 
-        // Given the demographic, get this passenger's walking distance
-        double baseWalkingDistance = Demographic.walkingSpeedsByAgeRange.get(this.demographic.getAgeRange());
+            PassengerMovement.TravelDirection travelDirectionChosen = null;
+            boolean isBoarding = true;
 
-        final double singleJourneyPercentage = 0.5;
+            if (gate instanceof StationGate) {
+                StationGate stationGate = ((StationGate) gate);
 
-        this.ticketType
-                = Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < singleJourneyPercentage
-                ? TicketBooth.TicketType.SINGLE_JOURNEY : TicketBooth.TicketType.STORED_VALUE;
+                // Get the pool of possible travel directions of the passengers to be spawned, depending on the settings of this
+                // passenger gate
+                // From this pool of travel directions, pick a random one
+                int randomIndex
+                        = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(
+                        stationGate.getStationGatePassengerTravelDirections().size()
+                );
 
-        // Set the graphic object of this passenger
-        this.passengerGraphic = new PassengerGraphic(this);
+                travelDirectionChosen = stationGate.getStationGatePassengerTravelDirections().get(randomIndex);
 
-        // The identifier of this passenger is its serial number (based on the number of passengers generated)
-        this.identifier = passengerCount;
+                isBoarding = true;
+            } else if (gate instanceof TrainDoor) {
+                TrainDoor trainDoor = ((TrainDoor) gate);
 
-        // Increment the number of passengers made by one
-        Passenger.passengerCount++;
+                travelDirectionChosen = trainDoor.getPlatformDirection();
 
-        Gate gate = (Gate) spawnPatch.getAmenityBlock().getParent();
+                isBoarding = false;
+            }
 
-        // Instantiate all movement-related fields
-        this.passengerMovement = new PassengerMovement(
-                gate,
-                this,
-                baseWalkingDistance,
-                spawnPatch.getPatchCenterCoordinates(),
-                travelDirection,
-                isBoarding
-        );
+            this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
+            this.demographic = Demographic.generateDemographic();
+
+            // Given the demographic, get this passenger's walking distance
+            double baseWalkingDistance = Demographic.walkingSpeedsByAgeRange.get(this.demographic.getAgeRange());
+
+            // Initialize card-related variables
+            this.cardNumber = null;
+
+            final double singleJourneyPercentage = 0.5;
+
+            this.ticketType
+                    = Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < singleJourneyPercentage
+                    ? TicketBooth.TicketType.SINGLE_JOURNEY : TicketBooth.TicketType.STORED_VALUE;
+
+            // Set the graphic object of this passenger
+            this.passengerGraphic = new PassengerGraphic(this);
+
+            // The identifier of this passenger is its serial number (based on the number of passengers generated)
+            this.serialNumber = passengerCount;
+
+            // Increment the number of passengers made by one
+            Passenger.passengerCount++;
+
+            // Initialize all movement-related fields
+            this.passengerMovement = new PassengerMovement(
+                    gate,
+                    this,
+                    baseWalkingDistance,
+                    spawnPatch.getPatchCenterCoordinates(),
+                    travelDirectionChosen,
+                    isBoarding
+            );
+        } else {
+            Gate gate = ((Gate) spawnPatch.getAmenityBlock().getParent());
+
+            this.gender = Simulator.RANDOM_NUMBER_GENERATOR.nextBoolean() ? Gender.FEMALE : Gender.MALE;
+            this.demographic = Demographic.generateDemographic();
+
+            // Given the demographic, get this passenger's walking distance
+            double baseWalkingDistance = Demographic.walkingSpeedsByAgeRange.get(this.demographic.getAgeRange());
+
+            // Initialize card-related variables
+            this.cardNumber = passengerTripInformation.getCardNumber();
+
+            this.ticketType
+                    = passengerTripInformation.isStoredValueHolder()
+                    ? TicketBooth.TicketType.STORED_VALUE : TicketBooth.TicketType.SINGLE_JOURNEY;
+
+            // Set the graphic object of this passenger
+            this.passengerGraphic = new PassengerGraphic(this);
+
+            // The identifier of this passenger is its serial number (based on the number of passengers generated)
+            this.serialNumber = passengerCount;
+
+            // Increment the number of passengers made by one
+            Passenger.passengerCount++;
+
+            // Initialize all movement-related fields
+            this.passengerMovement = new PassengerMovement(
+                    gate,
+                    this,
+                    baseWalkingDistance,
+                    spawnPatch.getPatchCenterCoordinates(),
+                    passengerTripInformation
+            );
+        }
     }
 
     public Gender getGender() {
@@ -84,6 +156,10 @@ public class Passenger extends PatchObject implements Agent {
 
     public Demographic getDemographic() {
         return demographic;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
     }
 
     public TicketBooth.TicketType getTicketType() {
@@ -98,17 +174,16 @@ public class Passenger extends PatchObject implements Agent {
         return this.passengerMovement;
     }
 
-    public int getIdentifier() {
-        return this.identifier;
+    public int getSerialNumber() {
+        return this.serialNumber;
     }
 
     public static class PassengerFactory extends StationObjectFactory {
         public Passenger create(
                 Patch spawnPatch,
-                PassengerMovement.TravelDirection travelDirection,
-                boolean isBoarding
+                RoutePlan.PassengerTripInformation passengerTripInformation
         ) {
-            return new Passenger(spawnPatch, travelDirection, isBoarding);
+            return new Passenger(spawnPatch, passengerTripInformation);
         }
     }
 
@@ -117,17 +192,17 @@ public class Passenger extends PatchObject implements Agent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Passenger passenger = (Passenger) o;
-        return identifier == passenger.identifier;
+        return serialNumber == passenger.serialNumber;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier);
+        return Objects.hash(serialNumber);
     }
 
     @Override
     public String toString() {
-        return String.valueOf(this.identifier);
+        return String.valueOf(this.serialNumber);
     }
 
     // Denotes the gender of this passenger

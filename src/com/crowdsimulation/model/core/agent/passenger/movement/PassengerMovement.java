@@ -39,6 +39,14 @@ public class PassengerMovement {
     // Denotes the owner of this passenger movement object
     private final Passenger parent;
 
+    // Denotes the origin and destination stations of this passenger, as well as its current passenger
+    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station originStation;
+    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station destinationStation;
+    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station currentStation;
+
+    // Denotes the ticks this passenger has been in the simulation
+    private int ticksAlive;
+
     // Denotes the positional and navigational variables of the current passenger
     // Denotes the position of the passenger
     private final Coordinates position;
@@ -207,11 +215,15 @@ public class PassengerMovement {
             double baseWalkingDistance,
             Coordinates coordinates,
             TravelDirection travelDirection,
-            // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
-            //  passenger will be boarding
             boolean isBoarding
     ) {
         this.parent = parent;
+
+        this.originStation = null;
+        this.destinationStation = null;
+        this.currentStation = null;
+
+        this.ticksAlive = 0;
 
         this.position = new Coordinates(
                 coordinates.getX(),
@@ -219,9 +231,10 @@ public class PassengerMovement {
         );
 
         // The walking speed values shall be in m/s
-        final double walkingSpeedVariation;
+        final double interQuartileRange = 0.12;
 
-        this.baseWalkingDistance = baseWalkingDistance + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * 0.2;
+        this.baseWalkingDistance
+                = baseWalkingDistance + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * interQuartileRange;
 
         this.preferredWalkingDistance = this.baseWalkingDistance;
         this.currentWalkingDistance = preferredWalkingDistance;
@@ -267,6 +280,95 @@ public class PassengerMovement {
         // Assign the initial direction, disposition, state, action of this passenger
         this.travelDirection = travelDirection;
         this.disposition = isBoarding ? Disposition.BOARDING : Disposition.ALIGHTING;
+        this.state = State.WALKING;
+        this.action = Action.WILL_QUEUE;
+
+        this.recentPatches = new HashMap<>();
+
+        this.toExplore = new ArrayList<>();
+
+        repulsiveForceFromPassengers = new ArrayList<>();
+        repulsiveForcesFromObstacles = new ArrayList<>();
+
+        // This passenger will not exit yet
+        this.isReadyToExit = false;
+
+        // Set the passenger goal
+        resetGoal(false);
+    }
+
+    public PassengerMovement(
+            Gate gate,
+            Passenger parent,
+            double baseWalkingDistance,
+            Coordinates coordinates,
+            RoutePlan.PassengerTripInformation passengerTripInformation
+            // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
+            //  passenger will be boarding
+    ) {
+        this.parent = parent;
+
+        this.originStation = passengerTripInformation.getEntryStation();
+        this.destinationStation = passengerTripInformation.getExitStation();
+        this.currentStation = this.originStation;
+
+        this.ticksAlive = 0;
+
+        this.position = new Coordinates(
+                coordinates.getX(),
+                coordinates.getY()
+        );
+
+        // The walking speed values shall be in m/s
+        final double interQuartileRange = 0.12;
+
+        this.baseWalkingDistance
+                = baseWalkingDistance + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * interQuartileRange;
+
+        this.preferredWalkingDistance = this.baseWalkingDistance;
+        this.currentWalkingDistance = preferredWalkingDistance;
+
+        // All newly generated passengers will face the north by default
+        // The heading values shall be in degrees, but have to be converted to radians for the math libraries to process
+        // East: 0 degrees
+        // North: 90 degrees
+        // West: 180 degrees
+        // South: 270 degrees
+        this.proposedHeading = Math.toRadians(90.0);
+        this.heading = Math.toRadians(90.0);
+
+        this.previousHeading = Math.toRadians(90.0);
+
+        // Set the passenger's field of view
+        this.fieldOfViewAngle = Math.toRadians(90.0);
+
+        // Add this passenger to the start patch
+        this.currentPatch
+                = gate.getAmenityBlocks().get(0).getPatch().getFloor().getPatch(coordinates);
+        this.currentPatch.getPassengers().add(parent);
+
+        // Set the passenger's time until it fully accelerates
+        this.ticksUntilFullyAccelerated = 10;
+        this.ticksAcceleratedOrMaintainedSpeed = 0;
+
+        // Take note of the amenity where this passenger was spawned
+        this.currentAmenity = gate;
+
+        // Prepare the list for the passenger's visited portals
+        this.visitedPortals = new ArrayList<>();
+
+        // Assign the route plan of this passenger
+        this.routePlan = new RoutePlan(
+                this.parent.getTicketType() == TicketBooth.TicketType.STORED_VALUE,
+                true
+        );
+
+        // Assign the floor of this passenger
+        this.currentFloor = gate.getAmenityBlocks().get(0).getPatch().getFloor();
+
+        // Assign the initial direction, disposition, state, action of this passenger
+        this.travelDirection = passengerTripInformation.getTravelDirection();
+        this.disposition = Disposition.BOARDING;
         this.state = State.WALKING;
         this.action = Action.WILL_QUEUE;
 
