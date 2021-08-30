@@ -3,7 +3,7 @@ package com.crowdsimulation.model.simulator;
 import com.crowdsimulation.controller.Main;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
-import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerTripInformation;
 import com.crowdsimulation.model.core.environment.station.Floor;
 import com.crowdsimulation.model.core.environment.station.Station;
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
@@ -484,7 +484,7 @@ public class Simulator {
     public static void updatePassengersInStation(
             ExecutorService floorExecutorService,
             Station station,
-            List<RoutePlan.PassengerTripInformation> passengersToSpawn
+            List<PassengerTripInformation> passengersToSpawn
     ) throws InterruptedException {
         List<Passenger> passengersToSwitchFloors = Collections.synchronizedList(new ArrayList<>());
         List<Passenger> passengersToDespawn = Collections.synchronizedList(new ArrayList<>());
@@ -520,13 +520,13 @@ public class Simulator {
     private static void updatePassengersOnFloors(
             ExecutorService executorService,
             Station station,
-            List<RoutePlan.PassengerTripInformation> passengersToSpawn,
+            List<PassengerTripInformation> passengersToSpawn,
             List<Passenger> passengersToSwitchFloors,
             List<Passenger> passengersToDespawn
     ) throws InterruptedException {
         List<FloorUpdateTask> floorsToUpdate = new ArrayList<>();
 
-        HashMap<RoutePlan.PassengerTripInformation, StationGate> spawnMap = new HashMap<>();
+        HashMap<PassengerTripInformation, StationGate> spawnMap = new HashMap<>();
 
         if (passengersToSpawn != null) {
             spawnMap = collectPassengersToSpawn(station.getFloors(), passengersToSpawn);
@@ -619,14 +619,14 @@ public class Simulator {
 //        }
 //    }
 
-    private static HashMap<RoutePlan.PassengerTripInformation, StationGate> collectPassengersToSpawn(
+    private static HashMap<PassengerTripInformation, StationGate> collectPassengersToSpawn(
             List<Floor> floors,
-            List<RoutePlan.PassengerTripInformation> passengersToSpawn
+            List<PassengerTripInformation> passengersToSpawn
     ) {
-        HashMap<RoutePlan.PassengerTripInformation, StationGate> spawnMap = new HashMap<>();
+        HashMap<PassengerTripInformation, StationGate> spawnMap = new HashMap<>();
 
         // For each passenger to spawn, get the station gates it is eligible to spawn from
-        for (RoutePlan.PassengerTripInformation passengerTripInformation : passengersToSpawn) {
+        for (PassengerTripInformation passengerTripInformation : passengersToSpawn) {
             List<StationGate> eligibleStationGates = new ArrayList<>();
 
             // Compile all station gates which are eligible to spawn this passenger
@@ -662,15 +662,15 @@ public class Simulator {
     // Manage the passengers which spawn on the floor
     private static void spawnPassengersOnFloor(
             Floor floor,
-            HashMap<RoutePlan.PassengerTripInformation, StationGate> spawnMap
+            HashMap<PassengerTripInformation, StationGate> spawnMap
     ) {
         // Take note of all station gates which did not spawn passengers this tick
         List<StationGate> stationGatesWithoutSpawn = new ArrayList<>(floor.getStationGates());
 
         if (spawnMap != null) {
             // Spawn all passengers from their chosen station gates
-            for (Map.Entry<RoutePlan.PassengerTripInformation, StationGate> entry : spawnMap.entrySet()) {
-                RoutePlan.PassengerTripInformation passengerTripInformation = entry.getKey();
+            for (Map.Entry<PassengerTripInformation, StationGate> entry : spawnMap.entrySet()) {
+                PassengerTripInformation passengerTripInformation = entry.getKey();
                 StationGate stationGate = entry.getValue();
 
                 if (stationGate.getAmenityBlocks().get(0).getPatch().getFloor().equals(floor)) {
@@ -1628,7 +1628,7 @@ public class Simulator {
     private static void spawnPassenger(
             Floor floor,
             Gate gate,
-            RoutePlan.PassengerTripInformation passengerTripInformation
+            PassengerTripInformation passengerTripInformation
     ) {
         // Generate the passenger
         Passenger passenger;
@@ -1716,7 +1716,7 @@ public class Simulator {
     public static void spawnPassengerFromStationGateBacklog(
             Floor floor,
             StationGate stationGate,
-            List<RoutePlan.PassengerTripInformation> backlogs
+            List<PassengerTripInformation> backlogs
     ) {
         Passenger passenger = stationGate.spawnPassengerFromBacklogs(backlogs);
 

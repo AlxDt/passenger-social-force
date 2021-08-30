@@ -44,9 +44,6 @@ public class PassengerMovement {
     private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station destinationStation;
     private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station currentStation;
 
-    // Denotes the ticks this passenger has been in the simulation
-    private int ticksAlive;
-
     // Denotes the positional and navigational variables of the current passenger
     // Denotes the position of the passenger
     private final Coordinates position;
@@ -223,8 +220,6 @@ public class PassengerMovement {
         this.destinationStation = null;
         this.currentStation = null;
 
-        this.ticksAlive = 0;
-
         this.position = new Coordinates(
                 coordinates.getX(),
                 coordinates.getY()
@@ -302,7 +297,7 @@ public class PassengerMovement {
             Passenger parent,
             double baseWalkingDistance,
             Coordinates coordinates,
-            RoutePlan.PassengerTripInformation passengerTripInformation
+            PassengerTripInformation passengerTripInformation
             // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
             //  passenger will be boarding
     ) {
@@ -311,8 +306,6 @@ public class PassengerMovement {
         this.originStation = passengerTripInformation.getEntryStation();
         this.destinationStation = passengerTripInformation.getExitStation();
         this.currentStation = this.originStation;
-
-        this.ticksAlive = 0;
 
         this.position = new Coordinates(
                 coordinates.getX(),
@@ -1267,7 +1260,7 @@ public class PassengerMovement {
 
                             // Also, if the train door has a female-only restriction, make sure this passenger is also
                             // female
-                            if (trainDoor.isFemaleOnly() && this.parent.getGender() != Passenger.Gender.FEMALE) {
+                            if (trainDoor.isFemaleOnly() && this.parent.getGender() != Passenger.PassengerInformation.Gender.FEMALE) {
                                 continue;
                             }
                         }

@@ -6,10 +6,12 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
+import com.crowdsimulation.model.simulator.Simulator;
 import com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station;
 
 import java.time.Duration;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class RoutePlan {
@@ -85,59 +87,4 @@ public class RoutePlan {
         return currentAmenityClass;
     }
 
-    public static class PassengerTripInformation {
-        private final LocalTime entryTime;
-        private String cardNumber;
-        private final boolean isStoredValueHolder;
-        private final Station entryStation;
-        private final Station exitStation;
-        private final PassengerMovement.TravelDirection travelDirection;
-        private Duration travelTime;
-
-        public PassengerTripInformation(
-                LocalTime entryTime,
-                String cardNumber,
-                boolean isStoredValueHolder,
-                Station entryStation,
-                Station exitStation,
-                PassengerMovement.TravelDirection travelDirection,
-                Duration travelTime
-        ) {
-            this.entryTime = entryTime;
-            this.cardNumber = cardNumber;
-            this.isStoredValueHolder = isStoredValueHolder;
-            this.entryStation = entryStation;
-            this.exitStation = exitStation;
-            this.travelDirection = travelDirection;
-            this.travelTime = travelTime;
-        }
-
-        public LocalTime getEntryTime() {
-            return entryTime;
-        }
-
-        public String getCardNumber() {
-            return cardNumber;
-        }
-
-        public boolean isStoredValueHolder() {
-            return isStoredValueHolder;
-        }
-
-        public Station getEntryStation() {
-            return entryStation;
-        }
-
-        public Station getExitStation() {
-            return exitStation;
-        }
-
-        public PassengerMovement.TravelDirection getTravelDirection() {
-            return travelDirection;
-        }
-
-        public Duration getTravelTime() {
-            return travelTime;
-        }
-    }
 }

@@ -15,7 +15,7 @@ public class PassengerGraphic extends Graphic implements Changeable {
     public static final String PASSENGER_SPRITE_SHEET_URL
             = "com/crowdsimulation/view/image/passenger/passenger_spritesheet.png";
 
-    public static final HashMap<Passenger.Gender, List<List<PassengerGraphicLocation>>> PASSENGER_GRAPHICS
+    public static final HashMap<Passenger.PassengerInformation.Gender, List<List<PassengerGraphicLocation>>> PASSENGER_GRAPHICS
             = new HashMap<>();
 
     static {
@@ -165,8 +165,8 @@ public class PassengerGraphic extends Graphic implements Changeable {
         male10Graphic.add(new PassengerGraphicLocation(19, 3));
         maleGraphics.add(male10Graphic);
 
-        PASSENGER_GRAPHICS.put(Passenger.Gender.FEMALE, femaleGraphics);
-        PASSENGER_GRAPHICS.put(Passenger.Gender.MALE, maleGraphics);
+        PASSENGER_GRAPHICS.put(Passenger.PassengerInformation.Gender.FEMALE, femaleGraphics);
+        PASSENGER_GRAPHICS.put(Passenger.PassengerInformation.Gender.MALE, maleGraphics);
     }
 
     private final Passenger passenger;

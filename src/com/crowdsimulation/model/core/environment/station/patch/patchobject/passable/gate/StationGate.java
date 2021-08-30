@@ -8,9 +8,8 @@ import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.AmenityGr
 import com.crowdsimulation.controller.graphics.amenity.graphic.amenity.StationGateGraphic;
 import com.crowdsimulation.model.core.agent.passenger.Passenger;
 import com.crowdsimulation.model.core.agent.passenger.movement.PassengerMovement;
-import com.crowdsimulation.model.core.agent.passenger.movement.RoutePlan;
+import com.crowdsimulation.model.core.agent.passenger.movement.PassengerTripInformation;
 import com.crowdsimulation.model.core.environment.station.patch.Patch;
-import com.crowdsimulation.model.simulator.Simulator;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -383,7 +382,7 @@ public class StationGate extends Gate {
     }
 
     // TODO: Use abstraction
-    public Passenger spawnPassenger(RoutePlan.PassengerTripInformation passengerTripInformation) {
+    public Passenger spawnPassenger(PassengerTripInformation passengerTripInformation) {
         HashSet<Patch> patchesToCheck = new HashSet<>();
 
         // Check if all attractors and spawners in this amenity have no passengers
@@ -429,9 +428,9 @@ public class StationGate extends Gate {
 
     // Spawn a passenger from the backlogs
     // TODO: Offload to station gate itself
-    public Passenger spawnPassengerFromBacklogs(List<RoutePlan.PassengerTripInformation> backlogs) {
+    public Passenger spawnPassengerFromBacklogs(List<PassengerTripInformation> backlogs) {
         if (this.passengerBacklogCount > 0) {
-            RoutePlan.PassengerTripInformation backlog = backlogs.get(0);
+            PassengerTripInformation backlog = backlogs.get(0);
 
             Passenger passengerSpawned = this.spawnPassenger(backlog);
 
