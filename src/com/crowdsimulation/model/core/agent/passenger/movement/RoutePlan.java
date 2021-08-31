@@ -6,12 +6,8 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
-import com.crowdsimulation.model.simulator.Simulator;
 import com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station;
 
-import java.time.Duration;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class RoutePlan {
@@ -23,6 +19,11 @@ public class RoutePlan {
 
     // Denotes the current class of the amenity in the route plan
     private Class<? extends Amenity> currentAmenityClass;
+
+    // Denotes the origin and destination stations of this passenger, as well as its current station
+    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station originStation;
+    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station destinationStation;
+    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station currentStation;
 
     static {
         // Prepare the structure that maps directions to the plans
@@ -48,7 +49,28 @@ public class RoutePlan {
         DIRECTION_ROUTE_MAP.put(PassengerMovement.Disposition.ALIGHTING, alightingPlanList);
     }
 
-    public RoutePlan(boolean isStoredValueCardHolder, boolean isBoarding) {
+    public RoutePlan(
+            boolean isStoredValueCardHolder,
+            boolean isBoarding
+    ) {
+        initializeRoutePlan(isStoredValueCardHolder, isBoarding);
+    }
+
+    public RoutePlan(
+            boolean isStoredValueCardHolder,
+            boolean isBoarding,
+            Station originStation,
+            Station destinationStation,
+            Station currentStation
+    ) {
+        initializeRoutePlan(isStoredValueCardHolder, isBoarding);
+
+        this.originStation = originStation;
+        this.destinationStation = destinationStation;
+        this.currentStation = currentStation;
+    }
+
+    private void initializeRoutePlan(boolean isStoredValueCardHolder, boolean isBoarding) {
         // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
         //  passenger will be boarding
         // All newly-spawned passengers will have a boarding route plan
@@ -58,20 +80,29 @@ public class RoutePlan {
         );
 
         // Burn off the first amenity class in the route plan, as the passenger will have already spawned there
-        setNextAmenityClass();
-        setNextAmenityClass();
+//        setNextAmenityClass();
+//        setNextAmenityClass();
     }
 
     // Set the next route plan
     public void setNextRoutePlan(PassengerMovement.Disposition disposition, boolean isStoredValueCardHolder) {
-        List<Class<? extends Amenity>> routePlan = new ArrayList<>(DIRECTION_ROUTE_MAP.get(disposition));
+        // Passengers riding the train won't have route plans
+        if (disposition != PassengerMovement.Disposition.RIDING_TRAIN) {
+            List<Class<? extends Amenity>> routePlan = new ArrayList<>(DIRECTION_ROUTE_MAP.get(disposition));
 
-        // If the passenger is a stored value card holder, remove the ticket booth from its route plan
-        if (disposition == PassengerMovement.Disposition.BOARDING && isStoredValueCardHolder) {
-            routePlan.remove(TicketBooth.class);
+            // If the passenger is a stored value card holder, remove the ticket booth from its route plan
+            if (disposition == PassengerMovement.Disposition.BOARDING && isStoredValueCardHolder) {
+                routePlan.remove(TicketBooth.class);
+            }
+
+            this.currentRoutePlan = routePlan.iterator();
+
+            // Burn off the first amenity class in the route plan, as the passenger will have already spawned there
+            setNextAmenityClass();
+            setNextAmenityClass();
+        } else {
+            this.currentRoutePlan = null;
         }
-
-        this.currentRoutePlan = routePlan.iterator();
     }
 
     // Set the next amenity class in the route plan
@@ -87,4 +118,15 @@ public class RoutePlan {
         return currentAmenityClass;
     }
 
+    public Station getOriginStation() {
+        return originStation;
+    }
+
+    public Station getDestinationStation() {
+        return destinationStation;
+    }
+
+    public Station getCurrentStation() {
+        return currentStation;
+    }
 }

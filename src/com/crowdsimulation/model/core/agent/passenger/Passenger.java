@@ -14,6 +14,7 @@ import com.crowdsimulation.model.simulator.Simulator;
 
 import java.time.Duration;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class Passenger extends PatchObject implements Agent {
@@ -100,7 +101,8 @@ public class Passenger extends PatchObject implements Agent {
                     cardNumber,
                     ticketType,
                     gender,
-                    demographic
+                    demographic,
+                    null
             );
 
             // Initialize this passenger's timekeeping
@@ -143,7 +145,8 @@ public class Passenger extends PatchObject implements Agent {
                     cardNumber,
                     ticketType,
                     gender,
-                    demographic
+                    demographic,
+                    passengerTripInformation.getTurnstileTapInTime()
             );
 
             // Initialize this passenger's timekeeping
@@ -164,6 +167,10 @@ public class Passenger extends PatchObject implements Agent {
 
         // Set the graphic object of this passenger
         this.passengerGraphic = new PassengerGraphic(this);
+    }
+
+    public PassengerInformation getPassengerInformation() {
+        return passengerInformation;
     }
 
     public PassengerInformation.Gender getGender() {
@@ -218,10 +225,13 @@ public class Passenger extends PatchObject implements Agent {
 
     @Override
     public String toString() {
-        return String.valueOf(this.getSerialNumber() + "(" + this.passengerInformation.cardNumber + ")");
+        return String.valueOf(this.getSerialNumber() + " (" + this.passengerInformation.cardNumber + ")");
     }
 
     public static class PassengerInformation {
+        // Denotes the unique identifier of this passenger trip
+        private final String identifier;
+
         // Denotes the serial number of this passenger
         private final int serialNumber;
 
@@ -231,7 +241,7 @@ public class Passenger extends PatchObject implements Agent {
         // Denotes the ticket type of this passenger
         private final TicketBooth.TicketType ticketType;
 
-        // Denotes the gender of this passenge
+        // Denotes the gender of this passenger
         private final PassengerInformation.Gender gender;
 
         // Denotes the demographic of this passenger
@@ -242,8 +252,18 @@ public class Passenger extends PatchObject implements Agent {
                 String cardNumber,
                 TicketBooth.TicketType ticketType,
                 Gender gender,
-                Demographic demographic
+                Demographic demographic,
+                LocalTime originalTapInTime
         ) {
+            if (originalTapInTime == null) {
+                this.identifier = String.valueOf(serialNumber);
+            } else {
+                // The identifier is the original entry time plus the card number
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_TIME;
+
+                this.identifier = originalTapInTime.format(dateTimeFormatter) + ":" + cardNumber;
+            }
+
             this.serialNumber = serialNumber;
             this.cardNumber = cardNumber;
             this.ticketType = ticketType;

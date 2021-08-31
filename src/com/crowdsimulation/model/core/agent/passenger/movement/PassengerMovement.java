@@ -32,17 +32,14 @@ import com.crowdsimulation.model.core.environment.station.patch.position.Vector;
 import com.crowdsimulation.model.simulator.Simulator;
 import com.crowdsimulation.model.simulator.cache.MultipleFloorPatchCache;
 import com.crowdsimulation.model.simulator.cache.PathCache;
+import com.trainsimulation.model.core.environment.TrainSystem;
+import com.trainsimulation.model.core.environment.infrastructure.track.Track;
 
 import java.util.*;
 
 public class PassengerMovement {
     // Denotes the owner of this passenger movement object
     private final Passenger parent;
-
-    // Denotes the origin and destination stations of this passenger, as well as its current passenger
-    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station originStation;
-    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station destinationStation;
-    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station currentStation;
 
     // Denotes the positional and navigational variables of the current passenger
     // Denotes the position of the passenger
@@ -194,8 +191,8 @@ public class PassengerMovement {
     private boolean isReadyToExit;
 
     // Denotes the patches to explore for obstacles or passengers
-    private List<Patch> toExplore;
-    private Patch chosenQueueingPatch;
+//    private List<Patch> toExplore;
+//    private Patch chosenQueueingPatch;
 
     // Denotes the recent patches this passenger has been in
     private final HashMap<Patch, Integer> recentPatches;
@@ -215,10 +212,6 @@ public class PassengerMovement {
             boolean isBoarding
     ) {
         this.parent = parent;
-
-        this.originStation = null;
-        this.destinationStation = null;
-        this.currentStation = null;
 
         this.position = new Coordinates(
                 coordinates.getX(),
@@ -280,7 +273,7 @@ public class PassengerMovement {
 
         this.recentPatches = new HashMap<>();
 
-        this.toExplore = new ArrayList<>();
+//        this.toExplore = new ArrayList<>();
 
         repulsiveForceFromPassengers = new ArrayList<>();
         repulsiveForcesFromObstacles = new ArrayList<>();
@@ -302,10 +295,6 @@ public class PassengerMovement {
             //  passenger will be boarding
     ) {
         this.parent = parent;
-
-        this.originStation = passengerTripInformation.getEntryStation();
-        this.destinationStation = passengerTripInformation.getExitStation();
-        this.currentStation = this.originStation;
 
         this.position = new Coordinates(
                 coordinates.getX(),
@@ -353,7 +342,10 @@ public class PassengerMovement {
         // Assign the route plan of this passenger
         this.routePlan = new RoutePlan(
                 this.parent.getTicketType() == TicketBooth.TicketType.STORED_VALUE,
-                true
+                true,
+                passengerTripInformation.getEntryStation(),
+                passengerTripInformation.getExitStation(),
+                passengerTripInformation.getEntryStation()
         );
 
         // Assign the floor of this passenger
@@ -367,7 +359,7 @@ public class PassengerMovement {
 
         this.recentPatches = new HashMap<>();
 
-        this.toExplore = new ArrayList<>();
+//        this.toExplore = new ArrayList<>();
 
         repulsiveForceFromPassengers = new ArrayList<>();
         repulsiveForcesFromObstacles = new ArrayList<>();
@@ -494,11 +486,15 @@ public class PassengerMovement {
         return currentFloor;
     }
 
+    public TravelDirection getTravelDirection() {
+        return travelDirection;
+    }
+
     public Disposition getDisposition() {
         return disposition;
     }
 
-    public void setDirection(Disposition disposition) {
+    public void setDisposition(Disposition disposition) {
         this.disposition = disposition;
     }
 
@@ -538,13 +534,13 @@ public class PassengerMovement {
         return hasEncounteredPortalWaitingPassenger;
     }
 
-    public Patch getChosenQueueingPatch() {
-        return chosenQueueingPatch;
-    }
-
-    public List<Patch> getToExplore() {
-        return toExplore;
-    }
+//    public Patch getChosenQueueingPatch() {
+//        return chosenQueueingPatch;
+//    }
+//
+//    public List<Patch> getToExplore() {
+//        return toExplore;
+//    }
 
     public HashMap<Patch, Integer> getRecentPatches() {
         return recentPatches;
@@ -903,7 +899,7 @@ public class PassengerMovement {
         this.recentPatches.clear();
 
         // Reset debugging variables
-        this.chosenQueueingPatch = null;
+//        this.chosenQueueingPatch = null;
 
         // This passenger is not yet stuck
         this.free();
@@ -1606,8 +1602,10 @@ public class PassengerMovement {
                     }
                 }
 
+                Portal closestPortal;
+
                 // Get the closest portal
-                Portal closestPortal = relevantPortals.firstEntry().getValue();
+                closestPortal = relevantPortals.firstEntry().getValue();
 
                 // Set the closest portal as this passenger's goal
                 this.goalAmenity = closestPortal;
@@ -1966,7 +1964,7 @@ public class PassengerMovement {
                         Patch floorFieldPatch = this.getBestQueueingPatchAroundPassenger(
                                 nearestPassengerEntry.getValue()
                         );
-                        this.chosenQueueingPatch = floorFieldPatch;
+//                        this.chosenQueueingPatch = floorFieldPatch;
 
                         // Check the distance of that nearest passenger to this passenger
                         double distanceToNearestPassenger = nearestPassengerEntry.getKey();
@@ -3210,7 +3208,31 @@ public class PassengerMovement {
         TrainDoor closestTrainDoor = getGoalAmenityAsTrainDoor();
 
         if (closestTrainDoor != null) {
-            return isTrainDoorOpen(closestTrainDoor);
+            // If the goal train door is open, check if the passenger is willing to ride the train
+            if (isTrainDoorOpen(closestTrainDoor)) {
+                // TODO: Get station in a better way
+                com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station
+                        = this.getRoutePlan().getOriginStation();
+
+                final double loadLimit = 0.7;
+                final double carriageLoadLimit = closestTrainDoor.getTrainCarriage(station).getLoadFactor();
+
+                // Carriage full/overfull, don't ride
+                if (carriageLoadLimit >= 1.0) {
+                    return false;
+                } else if (carriageLoadLimit > loadLimit) {
+                    // Carriage almost full, ride (or don't) based on a probability
+                    final double loadLimitLeft = 1.0 - loadLimit;
+                    final double probability = (1 - carriageLoadLimit) / loadLimitLeft;
+
+                    return Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < probability;
+                } else {
+                    // A lot of room in the carriages, ride
+                    return true;
+                }
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
@@ -3332,6 +3354,49 @@ public class PassengerMovement {
             // No passenger emitted, return false
             return false;
         }
+    }
+
+    // Board train
+    public void boardTrain(TrainDoor trainDoor) {
+        // Remove the passenger from its current station
+        trainDoor.despawnPassenger(this.parent);
+
+        // Set the passenger's new disposition, state, and action
+        this.disposition = Disposition.RIDING_TRAIN;
+        this.state = State.IN_TRAIN;
+        this.action = Action.RIDING_TRAIN;
+
+        // The passenger is not at any patch
+        this.currentPatch = null;
+    }
+
+    // Alight train
+    public void alightTrain(Gate.GateBlock spawner) {
+        // Before anything else, reset the passenger movement to avoid residual values from the previous station
+        this.resetGoal(false);
+
+        // Get the patch of the spawner which released this passenger
+        Patch spawnerPatch = spawner.getPatch();
+
+        // Set the new disposition, state, and action of the alighted passenger
+        this.disposition = Disposition.ALIGHTING;
+        this.state = State.WALKING;
+        this.action = Action.WILL_QUEUE;
+
+        // Set the current patch, floor
+        this.currentPatch = spawnerPatch;
+        this.currentFloor = spawnerPatch.getFloor();
+        this.currentAmenity = spawner.getParent();
+
+        // Set the passenger's position
+        this.position.setX(spawner.getPatch().getPatchCenterCoordinates().getX());
+        this.position.setY(spawner.getPatch().getPatchCenterCoordinates().getY());
+
+        // Add the newly created passenger to the list of passengers in the floor
+        this.currentFloor.getPassengersInFloor().add(this.parent);
+
+        // Add the passenger's patch position to its current floor's patch set as well
+        this.currentFloor.getPassengerPatchSet().add(spawner.getPatch());
     }
 
     // Despawn this passenger
@@ -3937,7 +4002,7 @@ public class PassengerMovement {
                 this.fieldOfViewAngle
         );
 
-        this.toExplore = patchesToExplore;
+//        this.toExplore = patchesToExplore;
 
         return this.computeBestQueueingPatch(patchesToExplore);
     }
@@ -4204,6 +4269,33 @@ public class PassengerMovement {
         WESTBOUND("Westbound");
 
         private final String name;
+
+        // Convert the given track direction to the travel direction
+        public static PassengerMovement.TravelDirection convertToTravelDirection(
+                TrainSystem trainSystem,
+                Track.Direction trackDirection
+        ) {
+            switch (trainSystem.getTrainSystemInformation().getName()) {
+                case "LRT-1":
+                case "MRT-3":
+                    if (trackDirection == Track.Direction.NORTHBOUND) {
+                        return TravelDirection.SOUTHBOUND;
+                    } else if (trackDirection == Track.Direction.SOUTHBOUND) {
+                        return TravelDirection.NORTHBOUND;
+                    } else {
+                        return null;
+                    }
+                case "LRT-2":
+                    if (trackDirection == Track.Direction.NORTHBOUND) {
+                        return TravelDirection.EASTBOUND;
+                    } else if (trackDirection == Track.Direction.SOUTHBOUND) {
+                        return TravelDirection.WESTBOUND;
+                    }
+                default:
+                    return null;
+            }
+        }
+
 
         TravelDirection(String name) {
             this.name = name;

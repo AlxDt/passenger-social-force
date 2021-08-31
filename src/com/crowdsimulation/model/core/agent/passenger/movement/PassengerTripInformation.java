@@ -75,16 +75,24 @@ public class PassengerTripInformation {
     private LocalTime approximateStationEntryTime(LocalTime turnstileTapInTime, boolean isStoredValueHolder) {
         // The time to be subtracted from the turnstile tap-in time primarily depends on whether the passenger is
         // a single journey, or a stored value ticket holder
-        final double singleJourneyAverageTime = 132.7;
+        final double singleJourneyAverageTime = 42.7;
         final double singleJourneyStandardDeviation = 15.4;
 
-        final double storedValueAverageTime = 98.6;
+        final double storedValueAverageTime = 8.6;
         final double storedValueStandardDeviation = 2.8;
+
+        final int approximateWalkTimeBase = (isPeakHour(turnstileTapInTime) ? 90 : 60);
+        final double approximateWalkTimeStandardDeviation = 1.0;
+
+        double approximateWalkTime
+                = approximateWalkTimeBase
+                + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * approximateWalkTimeStandardDeviation;
 
         if (!isStoredValueHolder) {
             double singleJourneyApproximateTime
                     = singleJourneyAverageTime
-                    + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * singleJourneyStandardDeviation;
+                    + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * singleJourneyStandardDeviation
+                    + approximateWalkTime;
 
             long singleJourneyApproximateTimeRounded = Math.round(singleJourneyApproximateTime);
 
@@ -94,7 +102,8 @@ public class PassengerTripInformation {
         } else {
             double storedValueApproximateTime
                     = storedValueAverageTime
-                    + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * storedValueStandardDeviation;
+                    + Simulator.RANDOM_NUMBER_GENERATOR.nextGaussian() * storedValueStandardDeviation
+                    + approximateWalkTime;
 
             long storedValueApproximateTimeRounded = Math.round(storedValueApproximateTime);
 
@@ -102,5 +111,24 @@ public class PassengerTripInformation {
                     storedValueApproximateTimeRounded, ChronoUnit.SECONDS
             );
         }
+    }
+
+    // Check if the given time is within the peak hours
+    public boolean isPeakHour(LocalTime time) {
+        LocalTime morningPeakHourStart = LocalTime.of(7, 0);
+        LocalTime morningPeakHourEnd = LocalTime.of(8, 0);
+
+        LocalTime eveningPeakHourStart = LocalTime.of(17, 0);
+        LocalTime eveningPeakHourEnd = LocalTime.of(18, 0);
+
+        if (time.isAfter(morningPeakHourStart) && time.isBefore(morningPeakHourEnd)) {
+            return true;
+        }
+
+        if (time.isAfter(eveningPeakHourStart) && time.isBefore(eveningPeakHourEnd)) {
+            return true;
+        }
+
+        return false;
     }
 }

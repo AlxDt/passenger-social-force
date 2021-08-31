@@ -15,7 +15,11 @@ import com.crowdsimulation.model.core.environment.station.patch.floorfield.headf
 import com.crowdsimulation.model.core.environment.station.patch.floorfield.headful.QueueingFloorField;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amenity;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
+import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.simulator.Simulator;
+import com.trainsimulation.controller.screen.MainScreenController;
+import com.trainsimulation.model.core.environment.trainservice.passengerservice.trainset.Train;
+import com.trainsimulation.model.core.environment.trainservice.passengerservice.trainset.TrainCarriage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -491,49 +495,144 @@ public class TrainDoor extends Gate implements Queueable {
 
         GateBlock spawner = this.getSpawners().get(randomSpawnerIndex);
 
-        // The direction of the departing passenger will be the direction of this train door
-        PassengerMovement.TravelDirection travelDirection = this.platformDirection;
-
         // If that spawner is free from passengers, generate one
         if (spawner.getPatch().getPassengers().isEmpty()) {
-            return Passenger.passengerFactory.create(spawner.getPatch(), /*travelDirection, false*/null);
+            return Passenger.passengerFactory.create(spawner.getPatch(), null);
         } else {
             // Else, do nothing, so return null
             return null;
         }
     }
 
-    public Passenger releasePassenger() {
-        // Check if all attractors and spawners in this amenity have no passengers
-        for (AmenityBlock attractor : this.getAttractors()) {
-            if (!attractor.getPatch().getPassengers().isEmpty()) {
-                return null;
-            }
-        }
+    // TODO: Get station from station layout, not from passenger
+    // Get the train carriage serviced by this train door, if any
+    public TrainCarriage getTrainCarriage(
+            com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station
+    ) {
+        Train trainToBoard = station.getTrains().get(this.platformDirection);
 
-        for (GateBlock spawner : this.getSpawners()) {
-            if (!spawner.getPatch().getPassengers().isEmpty()) {
-                return null;
-            }
-        }
+        if (trainToBoard != null) {
+            // Get the class of the train
+            TrainDoorCarriage trainDoorCarriageClass
+                    = TrainDoorCarriage.getTrainDoorCarriage(trainToBoard.getTrainProperty().getCarriageClassName());
 
-        // Randomly choose between the spawner locations in the train door
-        int spawnerCount = this.getSpawners().size();
-        int randomSpawnerIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(spawnerCount);
+            // Then get the carriage where the passenger is supposed to board
+            int trainCarriageIndex
+                    = station.getTrainDoorCarriageMap().get(this.platformDirection).get(this).get(
+                    trainDoorCarriageClass
+            );
 
-        GateBlock spawner = this.getSpawners().get(randomSpawnerIndex);
-
-        // The direction of the departing passenger will be the direction of this train door
-        PassengerMovement.TravelDirection travelDirection = this.platformDirection;
-
-        // If that spawner is free from passengers, generate one
-        if (spawner.getPatch().getPassengers().isEmpty()) {
-            // TODO: Release passenger from train
-//            return Passenger.passengerFactory.create(spawner.getPatch(), /*travelDirection, false*/null);
-            return null;
+            return trainToBoard.getTrainCarriages().get(trainCarriageIndex);
         } else {
-            // Else, do nothing, so return null
             return null;
+        }
+    }
+
+    // Transfer a passenger from this station to the train carriage
+    public void boardPassenger(Passenger passenger) {
+        // Get the train carriage to board
+        TrainCarriage trainCarriageToBoard = this.getTrainCarriage(
+                passenger.getPassengerMovement().getRoutePlan().getOriginStation()
+        );
+
+        // Add this passenger to the list of passengers on that train carriage
+        trainCarriageToBoard.addPassenger(passenger);
+
+        // Have the passenger board the train
+        passenger.getPassengerMovement().boardTrain(this);
+
+        // Update the route variables of the passenger to reflect the fact that the passenger is now on the train
+        passenger.getPassengerMovement().getRoutePlan().setNextRoutePlan(
+                passenger.getPassengerMovement().getDisposition(),
+                passenger.getPassengerInformation().getTicketType()
+                        == TicketBooth.TicketType.STORED_VALUE
+        );
+    }
+
+    // Transfer a passenger from a train carriage to this station
+    public void releasePassenger() {
+        // Get the train carriage connected to this train door
+        // TODO: Get station in a better way
+        com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station
+                = MainScreenController.getActiveSimulationContext().getTrainSystem().retrieveStation(
+                this.getAmenityBlocks().get(0).getPatch().getFloor().getStation().getName()
+        );
+
+        TrainCarriage trainCarriage = this.getTrainCarriage(station);
+
+        // If there are less than 5 seconds in the train's waiting time, release as many passengers as possible
+        // If there is 1 second left in the train's waiting time, spawn all that is remaining
+        // Else, spawn normally
+        final int spawnAllTime = 1;
+
+        if (trainCarriage.getParentTrain().getTrainMovement().getWaitingTime() == spawnAllTime) {
+            // Get the size of the remaining passengers that have not been spawned
+            int remainingAlightingPassengers = trainCarriage.passengersToAlightLeft();
+
+            // Divide it into the number of spawners
+            int shareOfAlightingPassengersToSpawn = remainingAlightingPassengers / this.getSpawners().size();
+//            int remainderAlightingPassengersToSpawn = remainingAlightingPassengers % this.getSpawners().size();
+
+            // Release passengers from each spawn patch
+            for (GateBlock spawner : this.getSpawners()) {
+                // If there are no more passengers to alight, terminate
+                if (!trainCarriage.hasPassengersToAlight()) {
+                    break;
+                }
+
+                for (int spawned = 0; spawned < shareOfAlightingPassengersToSpawn; spawned++) {
+                    // Take one passenger from the train and then position it onto the spawner patch
+                    Passenger passengerAlighted = trainCarriage.removePassenger();
+
+                    // Set the new route plan of the passenger
+                    passengerAlighted.getPassengerMovement().getRoutePlan().setNextRoutePlan(
+                            PassengerMovement.Disposition.ALIGHTING,
+                            passengerAlighted.getTicketType() == TicketBooth.TicketType.STORED_VALUE
+                    );
+
+                    // Have the passenger alight from the train
+                    passengerAlighted.getPassengerMovement().alightTrain(spawner);
+                }
+            }
+
+            // Then have a random spawner spawn the rest
+            GateBlock spawner
+                    = this.getSpawners().get(Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.getSpawners().size()));
+
+            // Have the remaining passengers alight from the train
+            while (trainCarriage.hasPassengersToAlight()) {
+                // Take one passenger from the train and then position it onto the spawner patch
+                Passenger passengerAlighted = trainCarriage.removePassenger();
+
+                // Set the new route plan of the passenger
+                passengerAlighted.getPassengerMovement().getRoutePlan().setNextRoutePlan(
+                        PassengerMovement.Disposition.ALIGHTING,
+                        passengerAlighted.getTicketType() == TicketBooth.TicketType.STORED_VALUE
+                );
+
+                // Have the passenger alight from the train
+                passengerAlighted.getPassengerMovement().alightTrain(spawner);
+            }
+        } else {
+            // Release passengers from each spawn patch
+            for (GateBlock spawner : this.getSpawners()) {
+                // If there are no more passengers to alight, terminate
+                if (!trainCarriage.hasPassengersToAlight()) {
+                    break;
+                }
+
+                // Take one passenger from the train and then position it onto the spawner patch
+                Passenger passengerAlighted = trainCarriage.removePassenger();
+
+                // Set the new route plan of the passenger
+                passengerAlighted.getPassengerMovement().getRoutePlan().setNextRoutePlan(
+                        PassengerMovement.Disposition.ALIGHTING,
+                        passengerAlighted.getTicketType() == TicketBooth.TicketType.STORED_VALUE
+                );
+
+                // Have the passenger alight from the train
+                passengerAlighted.getPassengerMovement().alightTrain(spawner);
+            }
         }
     }
 
@@ -618,6 +717,25 @@ public class TrainDoor extends Gate implements Queueable {
 
         TrainDoorCarriage(String name) {
             this.name = name;
+        }
+
+        public static TrainDoorCarriage getTrainDoorCarriage(String trainClass) {
+            switch (trainClass) {
+                case "LRTA Class 1000":
+                    return LRT_1_FIRST_GENERATION;
+                case "LRTA Class 1100":
+                    return LRT_1_SECOND_GENERATION;
+                case "LRTA Class 1200":
+                    return LRT_1_THIRD_GENERATION;
+                case "LRTA Class 2000":
+                    return LRT_2_FIRST_GENERATION;
+                case "MRTC Class 3000":
+                    return MRT_3_FIRST_GENERATION;
+                case "MRTC Class 3100":
+                    return MRT_3_SECOND_GENERATION;
+                default:
+                    return null;
+            }
         }
 
         @Override
