@@ -24,7 +24,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.pass
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Security;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.blockable.Turnstile;
-import com.trainsimulation.controller.screen.MainScreenController;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -499,6 +498,7 @@ public class Simulator {
         List<Passenger> passengersToSwitchFloors = Collections.synchronizedList(new ArrayList<>());
         List<Passenger> passengersToDespawn = Collections.synchronizedList(new ArrayList<>());
         List<Passenger> passengersToBoard = Collections.synchronizedList(new ArrayList<>());
+        List<Passenger> passengersToDispose = Collections.synchronizedList(new ArrayList<>());
 
         // For each portal, update its passengers' time spent values
         Simulator.updatePassengersInPortals(station);
@@ -511,11 +511,18 @@ public class Simulator {
                 passengersToSwitchFloors,
                 passengersToDespawn,
                 passengersToBoard,
+                passengersToDispose,
                 willDrawFromPassengerList
         );
 
-        // Manage all passenger floor transfers
-        Simulator.manageFloorTransfers(passengersToSwitchFloors, passengersToDespawn, passengersToBoard);
+        // Manage all passenger despawns
+        Simulator.manageDespawning(
+                passengersToSwitchFloors,
+                passengersToDespawn,
+                passengersToBoard,
+                passengersToDispose,
+                willDrawFromPassengerList
+        );
     }
 
     // For each portal, update its passengers' time spent values
@@ -537,6 +544,7 @@ public class Simulator {
             List<Passenger> passengersToSwitchFloors,
             List<Passenger> passengersToDespawn,
             List<Passenger> passengersToBoard,
+            List<Passenger> passengersToDispose,
             boolean willDrawFromPassengerList
     ) throws InterruptedException {
         List<FloorUpdateTask> floorsToUpdate = new ArrayList<>();
@@ -556,90 +564,14 @@ public class Simulator {
                             willDrawFromPassengerList,
                             passengersToSwitchFloors,
                             passengersToDespawn,
-                            passengersToBoard
+                            passengersToBoard,
+                            passengersToDispose
                     )
             );
         }
 
         executorService.invokeAll(floorsToUpdate);
     }
-
-//    // Manage the passengers which spawn on the floor
-//    private static void spawnPassengersOnFloor(Floor floor) {
-//        // Make all station gates in this floor spawn passengers depending on their spawn frequency
-//        // Generate a number from 0.0 to 1.0
-//        double boardingRandomNumber;
-//        double alightingRandomNumber;
-//
-//        final double alightingChancePerSecond = 0.1;
-//
-////        HashMap<RoutePlan.PassengerTripInformation, StationGate> spawnList = new HashMap<>();
-////
-////        // For each passenger to spawn, get the station gates it is eligible to spawn from
-////        for (RoutePlan.PassengerTripInformation passengerTripInformation : passengersToSpawn) {
-////            List<StationGate> eligibleStationGates = new ArrayList<>();
-////
-////            // Compile all station gates which are eligible to spawn this passenger
-////            for (StationGate stationGate : floor.getStationGates()) {
-////                if (stationGate.isEnabled() && stationGate.getStationGateMode() != StationGate.StationGateMode.EXIT) {
-////                    if (
-////                            stationGate.getStationGatePassengerTravelDirections().contains(
-////                                    passengerTripInformation.getTravelDirection()
-////                            )
-////                    ) {
-////                        eligibleStationGates.add(stationGate);
-////                    }
-////                }
-////            }
-////
-////            // From the station gates compiled, choose one which will actually spawn this passenger
-////            int eligibleStationGatesSize = eligibleStationGates.size();
-////            int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(eligibleStationGatesSize);
-////
-////            StationGate chosenStationGate = eligibleStationGates.get(randomIndex);
-////
-////            spawnList.put(passengerTripInformation, chosenStationGate);
-////        }
-////
-////        // Spawn all passengers from their chosen station gates
-////        for (Map.Entry<RoutePlan.PassengerTripInformation, StationGate> entry : spawnList.entrySet()) {
-////            RoutePlan.PassengerTripInformation passengerTripInformation = entry.getKey();
-////            StationGate stationGate = entry.getValue();
-////
-////            spawnPassenger(floor, stationGate, passengerTripInformation);
-////        }
-//
-//        // Spawn boarding passengers from the station gate
-//        for (StationGate stationGate : floor.getStationGates()) {
-//            boardingRandomNumber = RANDOM_NUMBER_GENERATOR.nextDouble();
-//
-//            // Only deal with station gates which have entrances
-//            if (
-//                    stationGate.isEnabled()
-//                            && stationGate.getStationGateMode() != StationGate.StationGateMode.EXIT
-//            ) {
-//                // Spawn passengers depending on the spawn frequency of the station gate
-//                if (stationGate.getChancePerSecond() > boardingRandomNumber) {
-//                    spawnPassenger(floor, stationGate);
-//                } else {
-//                    // If no passenger happens to spawn this tick, use this free time to spawn a passenger from the
-//                    // backlog, if there are any
-//                    spawnPassengerFromStationGateBacklog(floor, stationGate);
-//                }
-//            }
-//        }
-//
-//        // Spawn alighting passengers from the train doors
-//        for (TrainDoor trainDoor : floor.getTrainDoors()) {
-//            alightingRandomNumber = RANDOM_NUMBER_GENERATOR.nextDouble();
-//
-//            if (trainDoor.isOpen()) {
-//                if (alightingChancePerSecond > alightingRandomNumber) {
-//                    spawnPassenger(floor, trainDoor);
-//                }
-//            }
-//        }
-//    }
 
     private static HashMap<PassengerTripInformation, StationGate> collectPassengersToSpawn(
             List<Floor> floors,
@@ -650,10 +582,9 @@ public class Simulator {
         // For each passenger to spawn, get the station gates it is eligible to spawn from
         // Pick the one with the shortest backlog
         for (PassengerTripInformation passengerTripInformation : passengersToSpawn) {
-//            List<StationGate> eligibleStationGates = new ArrayList<>();
+            List<StationGate> eligibleStationGates = new ArrayList<>();
 
-            int shortestStationGateBacklog = Integer.MAX_VALUE;
-            StationGate bestStationGate = null;
+            int leastBacklogs = Integer.MAX_VALUE;
 
             // Compile all station gates which are eligible to spawn this passenger
             for (Floor floor : floors) {
@@ -667,11 +598,19 @@ public class Simulator {
                                         passengerTripInformation.getTravelDirection()
                                 )
                         ) {
-//                            eligibleStationGates.add(stationGate);
+                            com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station
+                                    station = stationGate.getAmenityBlocks().get(0).getPatch().getFloor().getStation()
+                                    .getStation();
 
-                            if (stationGate.getPassengerBacklogCount() < shortestStationGateBacklog) {
-                                shortestStationGateBacklog = stationGate.getPassengerBacklogCount();
-                                bestStationGate = stationGate;
+                            final int currentBacklogs = station.getPassengerBacklogs().get(stationGate).size();
+
+                            if (currentBacklogs < leastBacklogs) {
+                                eligibleStationGates.clear();
+                                eligibleStationGates.add(stationGate);
+
+                                leastBacklogs = currentBacklogs;
+                            } else if (currentBacklogs == leastBacklogs) {
+                                eligibleStationGates.add(stationGate);
                             }
                         }
                     }
@@ -679,12 +618,12 @@ public class Simulator {
             }
 
             // From the station gates compiled, choose one which will actually spawn this passenger
-//            int eligibleStationGatesSize = eligibleStationGates.size();
-//            int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(eligibleStationGatesSize);
+            int eligibleStationGatesSize = eligibleStationGates.size();
+            int randomIndex = Simulator.RANDOM_NUMBER_GENERATOR.nextInt(eligibleStationGatesSize);
 
-//            StationGate chosenStationGate = eligibleStationGates.get(randomIndex);
+            StationGate chosenStationGate = eligibleStationGates.get(randomIndex);
 
-            spawnMap.put(passengerTripInformation, bestStationGate);
+            spawnMap.put(passengerTripInformation, chosenStationGate);
         }
 
         return spawnMap;
@@ -723,16 +662,16 @@ public class Simulator {
                 spawnPassengerFromStationGateBacklog(
                         floor,
                         stationGate,
-                        MainScreenController.getActiveSimulationContext().getTrainSystem().retrieveStation(
-                                floor.getStation().getName()
-                        ).getPassengerBacklogs().get(stationGate)
+                        willDrawFromPassengerList
                 );
             }
 
             // Spawn from all open train doors
-            for (TrainDoor trainDoor : floor.getTrainDoors()) {
-                if (trainDoor.isOpen()) {
-                    trainDoor.releasePassenger();
+            synchronized (floor.getTrainDoors()) {
+                for (TrainDoor trainDoor : floor.getTrainDoors()) {
+                    if (trainDoor.isOpen()) {
+                        trainDoor.releasePassenger(false);
+                    }
                 }
             }
         } else {
@@ -758,7 +697,7 @@ public class Simulator {
                     } else {
                         // If no passenger happens to spawn this tick, use this free time to spawn a passenger from the
                         // backlog, if there are any
-                        spawnPassengerFromStationGateBacklog(floor, stationGate);
+                        spawnPassengerFromStationGateBacklog(floor, stationGate, false);
                     }
                 }
             }
@@ -777,10 +716,12 @@ public class Simulator {
     }
 
     // Entertain each passenger marked for switching floors
-    private static void manageFloorTransfers(
+    private static void manageDespawning(
             List<Passenger> passengersToSwitchFloors,
             List<Passenger> passengersToDespawn,
-            List<Passenger> passengersToBoard
+            List<Passenger> passengersToBoard,
+            List<Passenger> passengersToDispose,
+            boolean willDrawFromPassengerList
     ) {
         try {
             // Manage passengers to switch floors
@@ -794,11 +735,26 @@ public class Simulator {
 
             // Remove all passengers that are marked for removal
             for (Passenger passengerToDespawn : passengersToDespawn) {
+                // Record the time it took
+                passengerToDespawn.getPassengerTime().exitStation();
+
                 // Get the passenger's gate
                 Gate gate = (Gate) passengerToDespawn.getPassengerMovement().getCurrentAmenity();
 
                 // Have the gate despawn that passenger
                 gate.despawnPassenger(passengerToDespawn);
+
+                // Remove the passenger from the train system
+                // TODO: Have a better way of checking whether this passenger has necessary information, or not
+                //  perhaps insert a different passenger information object to a passenger when at train simulation and
+                //  at station editing?
+                if (willDrawFromPassengerList) {
+                    passengerToDespawn.getPassengerMovement().getRoutePlan().getOriginStation().getTrainSystem()
+                            .getPassengers().remove(passengerToDespawn);
+
+                    // Log the passenger who completed the journey
+                    com.trainsimulation.model.simulator.Simulator.logPassenger(passengerToDespawn);
+                }
             }
 
             // Have passengers board the carriage connected to its train door
@@ -810,9 +766,25 @@ public class Simulator {
                 trainDoor.boardPassenger(passengerToBoard);
             }
 
+            // Simply discard passengers with errors
+            if (willDrawFromPassengerList) {
+                for (Passenger passengerToDispose : passengersToDispose) {
+                    // Get the passenger's gate
+                    Gate gate = (Gate) passengerToDispose.getPassengerMovement().getCurrentAmenity();
+
+                    // Have the gate despawn that passenger
+                    gate.despawnPassenger(passengerToDispose);
+
+                    // Remove the passenger from the train system
+                    passengerToDispose.getPassengerMovement().getRoutePlan().getOriginStation().getTrainSystem()
+                            .getPassengers().remove(passengerToDispose);
+                }
+            }
+
             passengersToDespawn.clear();
             passengersToSwitchFloors.clear();
             passengersToBoard.clear();
+            passengersToDispose.clear();
         } catch (NullPointerException ex) {
             ex.printStackTrace();
         }
@@ -830,8 +802,23 @@ public class Simulator {
             boolean willDrawFromPassengerList,
             List<Passenger> passengersToSwitchFloors,
             List<Passenger> passengersToDespawn,
-            List<Passenger> passengersToBoard
+            List<Passenger> passengersToBoard,
+            List<Passenger> passengersToDispose
     ) {
+//        for (Turnstile turnstile : floor.getTurnstiles()) {
+//            if (
+//                    com.trainsimulation.model.simulator.Simulator.isCrowdControlImplemented.get()
+//            ) {
+//                if (
+//                        com.trainsimulation.model.simulator.Simulator.willBlock.get()
+//                ) {
+//                    turnstile.setBlockEntry(true);
+//                } else {
+//                    turnstile.setBlockEntry(false);
+//                }
+//            }
+//        }
+
         // Make each passenger move
         synchronized (floor.getPassengersInFloor()) {
             for (Passenger passenger : floor.getPassengersInFloor()) {
@@ -847,12 +834,15 @@ public class Simulator {
                     // Also update the graphic of the passenger
                     passenger.getPassengerGraphic().change();
                 } catch (Exception ex) {
-                    // In case of exceptions, dispose of offending passengers
-                    System.out.println("Disposed " + passenger);
+//                    if (willDrawFromPassengerList) {
+//                        // In case of exceptions, dispose of offending passengers
+//                        System.out.println("Disposed " + passenger);
+//
+//                        passengersToDespawn.remove(passenger);
+//                        passengersToDispose.add(passenger);
+//                    }
 
-                    passengersToDespawn.add(passenger);
-
-//                    ex.printStackTrace();
+                    ex.printStackTrace();
                 }
             }
         }
@@ -1621,6 +1611,22 @@ public class Simulator {
                                         || action == PassengerMovement.Action.TRANSACTING_TICKET
                                         || action == PassengerMovement.Action.USING_TICKET
                         ) {
+                            // Record the time it took
+                            switch (action) {
+                                case SECURITY_CHECKING:
+                                    passenger.getPassengerTime().passSecurity();
+
+                                    break;
+                                case USING_TICKET:
+                                    if (passengerMovement.getDisposition() == PassengerMovement.Disposition.BOARDING) {
+                                        passenger.getPassengerTime().tapInTurnstile();
+                                    } else {
+                                        passenger.getPassengerTime().tapOutTurnstile();
+                                    }
+
+                                    break;
+                            }
+
                             // Have the passenger set its current goal
                             passengerMovement.reachGoal();
 
@@ -1715,7 +1721,7 @@ public class Simulator {
             passenger = trainDoor.spawnPassenger();
         }
 
-        if (passenger != null) {
+        if (passenger.getPassengerMovement() != null) {
             // Add the newly created passenger to the list of passengers in the floor, station, and simulation
             floor.getStation().getPassengersInStation().add(passenger);
             floor.getPassengersInFloor().add(passenger);
@@ -1724,19 +1730,40 @@ public class Simulator {
             floor.getPassengerPatchSet().add(
                     passenger.getPassengerMovement().getCurrentPatch()
             );
+
+            // The passenger has entered the station gate
+            passenger.getPassengerTime().passEntrance();
         } else {
-            // No passenger was spawned, so increment the backlog
-            if (gate instanceof StationGate) {
-                StationGate stationGate = ((StationGate) gate);
-
-                stationGate.incrementBacklogs();
-
-                // TODO: Offload to station gate itself
-                passengerTripInformation.getEntryStation().getPassengerBacklogs().get(stationGate).add(
-                        passengerTripInformation
-                );
-            }
+            // The passenger was spawned, but outside, so insert passenger into the station gate's queue
+            com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station = gate.getAmenityBlocks().get(0).getPatch().getFloor().getStation().getStation();
+            station.getPassengerBacklogs().get((StationGate) gate).add(passenger);
         }
+
+//        if (passenger != null) {
+//            // Add the newly created passenger to the list of passengers in the floor, station, and simulation
+//            floor.getStation().getPassengersInStation().add(passenger);
+//            floor.getPassengersInFloor().add(passenger);
+//
+//            // Add the passenger's patch position to its current floor's patch set as well
+//            floor.getPassengerPatchSet().add(
+//                    passenger.getPassengerMovement().getCurrentPatch()
+//            );
+//
+//            // The passenger has entered the station gate
+//            passenger.getPassengerTime().passEntrance();
+//        } else {
+//            // No passenger was spawned, so increment the backlog
+//            if (gate instanceof StationGate) {
+////                StationGate stationGate = ((StationGate) gate);
+////
+////                stationGate.incrementBacklogs();
+////
+////                // TODO: Offload to station gate itself
+////                passengerTripInformation.getEntryStation().getPassengerBacklogs().get(stationGate).add(
+////                        passengerTripInformation
+////                );
+//            }
+//        }
     }
 
     // Spawn a passenger from a gate in the given floor
@@ -1747,61 +1774,104 @@ public class Simulator {
         // Generate the passenger
         Passenger passenger = gate.spawnPassenger();
 
-        if (passenger != null) {
-            // Add the newly created passenger to the list of passengers in the floor, station, and simulation
-            floor.getStation().getPassengersInStation().add(passenger);
-            floor.getPassengersInFloor().add(passenger);
+        if (gate instanceof StationGate) {
+            if (passenger != null) {
+                if (passenger.getPassengerMovement() != null) {
+                    // Add the newly created passenger to the list of passengers in the floor, station, and simulation
+                    floor.getStation().getPassengersInStation().add(passenger);
+                    floor.getPassengersInFloor().add(passenger);
 
-            // Add the passenger's patch position to its current floor's patch set as well
-            floor.getPassengerPatchSet().add(
-                    passenger.getPassengerMovement().getCurrentPatch()
-            );
+                    // Add the passenger's patch position to its current floor's patch set as well
+                    floor.getPassengerPatchSet().add(
+                            passenger.getPassengerMovement().getCurrentPatch()
+                    );
+
+                    // The passenger has entered the station gate
+                    passenger.getPassengerTime().passEntrance();
+                } else {
+                    // The passenger was spawned, but outside, so insert passenger into the station gate's queue
+                    com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station = gate.getAmenityBlocks().get(0).getPatch().getFloor().getStation().getStation();
+                    station.getPassengerBacklogs().get((StationGate) gate).add(passenger);
+                }
+            }
         } else {
-            // No passenger was spawned, so increment the backlog
-            if (gate instanceof StationGate) {
-                StationGate stationGate = ((StationGate) gate);
+            if (passenger != null) {
+                // Add the newly created passenger to the list of passengers in the floor, station, and simulation
+                floor.getStation().getPassengersInStation().add(passenger);
+                floor.getPassengersInFloor().add(passenger);
 
-                stationGate.incrementBacklogs();
+                // Add the passenger's patch position to its current floor's patch set as well
+                floor.getPassengerPatchSet().add(
+                        passenger.getPassengerMovement().getCurrentPatch()
+                );
             }
         }
     }
 
-    // Spawn a passenger from the backlogs of the station gate
-    public static void spawnPassengerFromStationGateBacklog(Floor floor, StationGate stationGate) {
-        Passenger passenger = stationGate.spawnPassengerFromBacklogs();
-
-        if (passenger != null) {
-            // Add the newly created passenger to the list of passengers in the floor, station, and simulation
-            floor.getStation().getPassengersInStation().add(passenger);
-            floor.getPassengersInFloor().add(passenger);
-
-            // Add the passenger's patch position to its current floor's patch set as well
-            floor.getPassengerPatchSet().add(
-                    passenger.getPassengerMovement().getCurrentPatch()
-            );
-        }
-    }
-
-    // Spawn a passenger from the backlogs of the station gate
-    // TODO: Offload to station gate itself
+    // Spawn passengers from the backlogs of the station gate
     public static void spawnPassengerFromStationGateBacklog(
             Floor floor,
             StationGate stationGate,
-            List<PassengerTripInformation> backlogs
+            boolean willDrawFromPassengerList
     ) {
-        Passenger passenger = stationGate.spawnPassengerFromBacklogs(backlogs);
+        List<Passenger> passengersToSpawn = new ArrayList<>();
+
+        final int additionalPassengersToSpawnPerTick = 2;
+
+        // Spawn two more after the first one has already been spawned
+        Passenger passenger = stationGate.spawnPassengerFromBacklogs(willDrawFromPassengerList, false);
 
         if (passenger != null) {
+            passengersToSpawn.add(passenger);
+
+            for (int spawnTimes = 0; spawnTimes < additionalPassengersToSpawnPerTick; spawnTimes++) {
+                // Force the spawning of more passengers, to avoid long backlogs
+                passenger = stationGate.spawnPassengerFromBacklogs(willDrawFromPassengerList, true);
+
+                // No more to spawn, stop iterating
+                if (passenger == null) {
+                    break;
+                } else {
+                    passengersToSpawn.add(passenger);
+                }
+            }
+        }
+
+        for (Passenger passengerToSpawn : passengersToSpawn) {
             // Add the newly created passenger to the list of passengers in the floor, station, and simulation
-            floor.getStation().getPassengersInStation().add(passenger);
-            floor.getPassengersInFloor().add(passenger);
+            floor.getStation().getPassengersInStation().add(passengerToSpawn);
+            floor.getPassengersInFloor().add(passengerToSpawn);
 
             // Add the passenger's patch position to its current floor's patch set as well
             floor.getPassengerPatchSet().add(
-                    passenger.getPassengerMovement().getCurrentPatch()
+                    passengerToSpawn.getPassengerMovement().getCurrentPatch()
             );
+
+            // The passenger has entered the station gate
+            passengerToSpawn.getPassengerTime().passEntrance();
         }
     }
+
+//    // Spawn a passenger from the backlogs of the station gate
+//    // TODO: Offload to station gate itself
+//    public static void spawnPassengerFromStationGateBacklog(
+//            Floor floor,
+//            StationGate stationGate,
+//            List<PassengerTripInformation> backlogs
+//    ) {
+//        Passenger passenger = stationGate.spawnPassengerFromBacklogs(backlogs);
+//
+//        if (passenger != null) {
+//            // Add the newly created passenger to the list of passengers in the floor, station, and simulation
+//            floor.getStationLayout().getPassengersInStation().add(passenger);
+//            floor.getPassengersInFloor().add(passenger);
+//
+//            // Add the passenger's patch position to its current floor's patch set as well
+//            floor.getPassengerPatchSet().add(
+//                    passenger.getPassengerMovement().getCurrentPatch()
+//            );
+//        }
+//    }
 
 
     // Represent a floor update task
@@ -1811,19 +1881,22 @@ public class Simulator {
         private final List<Passenger> passengersToSwitchFloors;
         private final List<Passenger> passengersToDespawn;
         private final List<Passenger> passengersToBoard;
+        private final List<Passenger> passengersToDispose;
 
         public FloorUpdateTask(
                 Floor floorToUpdate,
                 boolean willDrawFromPassengerList,
                 List<Passenger> passengersToSwitchFloors,
                 List<Passenger> passengersToDespawn,
-                List<Passenger> passengersToBoard
+                List<Passenger> passengersToBoard,
+                List<Passenger> passengersToDispose
         ) {
             this.floorToUpdate = floorToUpdate;
             this.willDrawFromPassengerList = willDrawFromPassengerList;
             this.passengersToSwitchFloors = passengersToSwitchFloors;
             this.passengersToDespawn = passengersToDespawn;
             this.passengersToBoard = passengersToBoard;
+            this.passengersToDispose = passengersToDispose;
         }
 
         @Override
@@ -1834,7 +1907,8 @@ public class Simulator {
                         willDrawFromPassengerList,
                         passengersToSwitchFloors,
                         passengersToDespawn,
-                        passengersToBoard
+                        passengersToBoard,
+                        passengersToDispose
                 );
             } catch (Exception ex) {
                 ex.printStackTrace();

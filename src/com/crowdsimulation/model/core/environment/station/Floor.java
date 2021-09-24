@@ -24,6 +24,8 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Floor extends BaseStationObject implements Environment {
+    public static final long serialVersionUID = 8598993020183065442L;
+
     // Denotes the station which contains this floor
     private final Station station;
 

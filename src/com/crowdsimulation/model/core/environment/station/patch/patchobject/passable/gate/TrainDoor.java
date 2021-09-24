@@ -17,7 +17,6 @@ import com.crowdsimulation.model.core.environment.station.patch.patchobject.Amen
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.Queueable;
 import com.crowdsimulation.model.core.environment.station.patch.patchobject.passable.goal.TicketBooth;
 import com.crowdsimulation.model.simulator.Simulator;
-import com.trainsimulation.controller.screen.MainScreenController;
 import com.trainsimulation.model.core.environment.trainservice.passengerservice.trainset.Train;
 import com.trainsimulation.model.core.environment.trainservice.passengerservice.trainset.TrainCarriage;
 
@@ -497,7 +496,7 @@ public class TrainDoor extends Gate implements Queueable {
 
         // If that spawner is free from passengers, generate one
         if (spawner.getPatch().getPassengers().isEmpty()) {
-            return Passenger.passengerFactory.create(spawner.getPatch(), null);
+            return Passenger.passengerFactory.create(spawner.getPatch(), null, false);
         } else {
             // Else, do nothing, so return null
             return null;
@@ -517,12 +516,22 @@ public class TrainDoor extends Gate implements Queueable {
                     = TrainDoorCarriage.getTrainDoorCarriage(trainToBoard.getTrainProperty().getCarriageClassName());
 
             // Then get the carriage where the passenger is supposed to board
-            int trainCarriageIndex
-                    = station.getTrainDoorCarriageMap().get(this.platformDirection).get(this).get(
-                    trainDoorCarriageClass
-            );
+            TrainCarriage trainCarriageToBoard;
 
-            return trainToBoard.getTrainCarriages().get(trainCarriageIndex);
+            try {
+                int trainCarriageIndex
+                        = station.getTrainDoorCarriageMap().get(this.platformDirection).get(this).get(
+                        trainDoorCarriageClass
+                );
+
+                // TODO: Just go ahead and fix the file instead of hacking the code to make it work
+                trainCarriageToBoard = trainToBoard.getTrainCarriages().get(trainCarriageIndex);
+            } catch (IndexOutOfBoundsException | NullPointerException ex) {
+                // Go to the last available carriage in the train
+                trainCarriageToBoard = trainToBoard.getTail();
+            }
+
+            return trainCarriageToBoard;
         } else {
             return null;
         }
@@ -530,6 +539,9 @@ public class TrainDoor extends Gate implements Queueable {
 
     // Transfer a passenger from this station to the train carriage
     public void boardPassenger(Passenger passenger) {
+        // Record the time it took
+        passenger.getPassengerTime().enterTrain();
+
         // Get the train carriage to board
         TrainCarriage trainCarriageToBoard = this.getTrainCarriage(
                 passenger.getPassengerMovement().getRoutePlan().getOriginStation()
@@ -550,51 +562,79 @@ public class TrainDoor extends Gate implements Queueable {
     }
 
     // Transfer a passenger from a train carriage to this station
-    public void releasePassenger() {
+    public void releasePassenger(boolean force) {
         // Get the train carriage connected to this train door
-        // TODO: Get station in a better way
         com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station
-                = MainScreenController.getActiveSimulationContext().getTrainSystem().retrieveStation(
-                this.getAmenityBlocks().get(0).getPatch().getFloor().getStation().getName()
-        );
+                = this.getAmenityBlocks().get(0).getPatch().getFloor().getStation().getStation();
 
         TrainCarriage trainCarriage = this.getTrainCarriage(station);
 
         // If there are less than 5 seconds in the train's waiting time, release as many passengers as possible
         // If there is 1 second left in the train's waiting time, spawn all that is remaining
         // Else, spawn normally
-        final int spawnAllTime = 1;
+//        final int spawnAllTime = 1;
 
-        if (trainCarriage.getParentTrain().getTrainMovement().getWaitingTime() == spawnAllTime) {
-            // Get the size of the remaining passengers that have not been spawned
-            int remainingAlightingPassengers = trainCarriage.passengersToAlightLeft();
+//        System.out.println(trainCarriage.getParentTrain().getTrainMovement().getWaitedTime());
 
-            // Divide it into the number of spawners
-            int shareOfAlightingPassengersToSpawn = remainingAlightingPassengers / this.getSpawners().size();
-//            int remainderAlightingPassengersToSpawn = remainingAlightingPassengers % this.getSpawners().size();
-
-            // Release passengers from each spawn patch
-            for (GateBlock spawner : this.getSpawners()) {
-                // If there are no more passengers to alight, terminate
-                if (!trainCarriage.hasPassengersToAlight()) {
-                    break;
-                }
-
-                for (int spawned = 0; spawned < shareOfAlightingPassengersToSpawn; spawned++) {
-                    // Take one passenger from the train and then position it onto the spawner patch
-                    Passenger passengerAlighted = trainCarriage.removePassenger();
-
-                    // Set the new route plan of the passenger
-                    passengerAlighted.getPassengerMovement().getRoutePlan().setNextRoutePlan(
-                            PassengerMovement.Disposition.ALIGHTING,
-                            passengerAlighted.getTicketType() == TicketBooth.TicketType.STORED_VALUE
-                    );
-
-                    // Have the passenger alight from the train
-                    passengerAlighted.getPassengerMovement().alightTrain(spawner);
-                }
-            }
-
+//        if (
+//                trainCarriage.getParentTrain().getTrainMovement().getWaitedTime()
+//                        >= trainCarriage.getParentTrain().getTrainMovement().getWaitingTime() * 0.9
+//        ) {
+//            // Get the size of the remaining passengers that have not been spawned
+//            int remainingAlightingPassengers = trainCarriage.passengersToAlightLeft();
+//
+//            // Divide it into the number of spawners
+//            int shareOfAlightingPassengersToSpawn = remainingAlightingPassengers / this.getSpawners().size();
+////            int remainderAlightingPassengersToSpawn = remainingAlightingPassengers % this.getSpawners().size();
+//
+//            // Release passengers from each spawn patch
+//            for (GateBlock spawner : this.getSpawners()) {
+//                // If there are no more passengers to alight, terminate
+//                if (!trainCarriage.hasPassengersToAlight()) {
+//                    break;
+//                }
+//
+//                for (int spawned = 0; spawned < shareOfAlightingPassengersToSpawn; spawned++) {
+//                    // Take one passenger from the train and then position it onto the spawner patch
+//                    Passenger passengerAlighted = trainCarriage.removePassenger();
+//
+//                    // Set the new route plan of the passenger
+//                    passengerAlighted.getPassengerMovement().getRoutePlan().setNextRoutePlan(
+//                            PassengerMovement.Disposition.ALIGHTING,
+//                            passengerAlighted.getTicketType() == TicketBooth.TicketType.STORED_VALUE
+//                    );
+//
+//                    // Have the passenger alight from the train
+//                    passengerAlighted.getPassengerMovement().alightTrain(spawner);
+//
+//                    // Record the time it took
+//                    passengerAlighted.getPassengerTime().exitTrain();
+//                }
+//            }
+//
+//            // Then have a random spawner spawn the rest
+//            GateBlock spawner
+//                    = this.getSpawners().get(Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.getSpawners().size()));
+//
+//            // Have the remaining passengers alight from the train
+//            while (trainCarriage.hasPassengersToAlight()) {
+//                // Take one passenger from the train and then position it onto the spawner patch
+//                Passenger passengerAlighted = trainCarriage.removePassenger();
+//
+//                // Set the new route plan of the passenger
+//                passengerAlighted.getPassengerMovement().getRoutePlan().setNextRoutePlan(
+//                        PassengerMovement.Disposition.ALIGHTING,
+//                        passengerAlighted.getTicketType() == TicketBooth.TicketType.STORED_VALUE
+//                );
+//
+//                // Have the passenger alight from the train
+//                passengerAlighted.getPassengerMovement().alightTrain(spawner);
+//
+//                // Record the time it took
+//                passengerAlighted.getPassengerTime().exitTrain();
+//            }
+//        } else {
+        if (force) {
             // Then have a random spawner spawn the rest
             GateBlock spawner
                     = this.getSpawners().get(Simulator.RANDOM_NUMBER_GENERATOR.nextInt(this.getSpawners().size()));
@@ -612,6 +652,9 @@ public class TrainDoor extends Gate implements Queueable {
 
                 // Have the passenger alight from the train
                 passengerAlighted.getPassengerMovement().alightTrain(spawner);
+
+                // Record the time it took
+                passengerAlighted.getPassengerTime().exitTrain();
             }
         } else {
             // Release passengers from each spawn patch
@@ -632,8 +675,12 @@ public class TrainDoor extends Gate implements Queueable {
 
                 // Have the passenger alight from the train
                 passengerAlighted.getPassengerMovement().alightTrain(spawner);
+
+                // Record the time it took
+                passengerAlighted.getPassengerTime().exitTrain();
             }
         }
+//        }
     }
 
     // Train door block

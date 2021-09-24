@@ -39,7 +39,9 @@ public class Station extends BaseStationObject implements Environment {
     // File extension
     public static final String STATION_LAYOUT_FILE_EXTENSION = ".stn";
 
-    // Contains binding values for the number of floors this station has
+    // Denotes the parent station of this layout
+    private com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station;
+
     // The name of the station
     private String name;
 
@@ -81,7 +83,48 @@ public class Station extends BaseStationObject implements Environment {
     // Denotes if this station is supposed to be interpreted as a run-only station
     private boolean isRunOnly;
 
+    public Station(String name, int rows, int columns) {
+        this.station = null;
+
+        this.name = name;
+        this.floors = Collections.synchronizedList(new ArrayList<>());
+
+        this.rows = rows;
+        this.columns = columns;
+
+        this.stairShafts = Collections.synchronizedList(new ArrayList<>());
+        this.escalatorShafts = Collections.synchronizedList(new ArrayList<>());
+        this.elevatorShafts = Collections.synchronizedList(new ArrayList<>());
+
+        this.stairPortalsByFloor = new HashMap<>();
+        this.escalatorPortalsByFloor = new HashMap<>();
+        this.elevatorPortalsByFloor = new HashMap<>();
+
+        this.amenityFloorIndex = new HashMap<>();
+
+        this.amenityClustersByFloor = new HashMap<>();
+        this.amenityClusterByAmenity = new HashMap<>();
+
+        this.amenityClustersByFloorAssorted = new HashMap<>();
+        this.amenityClusterByAmenityAssorted = new HashMap<>();
+
+        this.passengersInStation = new CopyOnWriteArrayList<>();
+
+        int multiFloorPathCacheCapacity = 50;
+        this.multipleFloorPatchCache = new MultipleFloorPatchCache(multiFloorPathCacheCapacity);
+
+        int distanceCacheCapacity = 50;
+        this.distanceCache = new DistanceCache(distanceCacheCapacity);
+
+        this.isRunOnly = false;
+
+        // Initially, the station has one floor
+        Floor.addFloor(this, 0, rows, columns);
+    }
+
     public Station(int rows, int columns) {
+        this.station = null;
+
         this.name = DEFAULT_STATION_NAME;
         this.floors = Collections.synchronizedList(new ArrayList<>());
 
@@ -116,6 +159,14 @@ public class Station extends BaseStationObject implements Environment {
 
         // Initially, the station has one floor
         Floor.addFloor(this, 0, rows, columns);
+    }
+
+    public com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station getStation() {
+        return station;
+    }
+
+    public void setStation(com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station) {
+        this.station = station;
     }
 
     public String getName() {
@@ -1082,8 +1133,10 @@ public class Station extends BaseStationObject implements Environment {
             Patch[][] patchesInFloor = floor.getPatches();
 
             for (Patch patch : nonReachablePatches) {
-                patchesInFloor[patch.getMatrixPosition().getRow()][patch.getMatrixPosition().getColumn()] = null;
-                floor.getAmenityPatchSet().remove(patch);
+                if (patch != null) {
+                    patchesInFloor[patch.getMatrixPosition().getRow()][patch.getMatrixPosition().getColumn()] = null;
+                    floor.getAmenityPatchSet().remove(patch);
+                }
             }
         }
     }

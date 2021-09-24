@@ -141,7 +141,7 @@ public class GraphicsController extends Controller {
         // If the speed-aware option is true, only perform canvas refreshes after a set interval has elapsed
         // This is done to avoid having too many refreshes within a short period of time
         if (speedAware) {
-            final int millisecondsIntervalBetweenCalls = 1000;
+            final int millisecondsIntervalBetweenCalls = 2000;
 
             long currentTimeMilliseconds = System.currentTimeMillis();
 

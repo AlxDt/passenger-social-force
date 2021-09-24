@@ -794,18 +794,69 @@ public class MainScreenController extends ScreenController {
             Task<Void> saveStationTask = new Task<Void>() {
                 @Override
                 public Void call() {
-                    try {
-                        saveStation(station, stationFile, false);
-                    } catch (IOException e) {
-                        AlertController.showSimpleAlert(
-                                "File saving failed",
-                                "Failed to save this station to a file",
-                                "There was an error in saving the station into a file.",
-                                Alert.AlertType.ERROR
-                        );
+                    Platform.runLater(() -> {
+                        try {
+                            saveStation(station, stationFile, false);
 
-                        e.printStackTrace();
-                    }
+//                            List<String> stations = new ArrayList<>();
+
+//                            stations.add("North Avenue");
+//                            stations.add("Quezon Avenue");
+//                            stations.add("GMA-Kamuning");
+//                            stations.add("Cubao");
+//                            stations.add("Santolan-Annapolis");
+//                            stations.add("Ortigas");
+//                            stations.add("Shaw Boulevard");
+//                            stations.add("Boni Avenue");
+//                            stations.add("Guadalupe");
+//                            stations.add("Buendia");
+//                            stations.add("Ayala");
+//                            stations.add("Magallanes");
+//                            stations.add("Taft Avenue");
+
+//                            stations.add("Roosevelt");
+//                            stations.add("Balintawak");
+//                            stations.add("5th Avenue");
+//                            stations.add("R. Papa");
+//                            stations.add("Abad Santos");
+//                            stations.add("Blumentritt");
+//                            stations.add("Tayuman");
+//                            stations.add("Bambang");
+//                            stations.add("D. Jose");
+//                            stations.add("Carriedo");
+//                            stations.add("Central Terminal");
+//                            stations.add("U.N. Avenue");
+//                            stations.add("Pedro Gil");
+//                            stations.add("Quirino");
+//                            stations.add("Vito Cruz");
+//                            stations.add("Gil Puyat");
+//                            stations.add("Libertad");
+//                            stations.add("EDSA");
+//                            stations.add("Baclaran");
+
+//                            // TODO: Do not save station as build, then run-only without reloading the file
+//                            for (String stationName : stations) {
+//                                System.out.println("Saving to " + stationName);
+//
+////                                station.setName(stationName + " (Build)");
+////                                saveStation(station, new File("C:\\Users\\ERDT\\Desktop\\train-simulation\\train-systems\\MRT-3\\stations\\" + stationName + "\\build\\" + stationName + " (Build).stn"), false);
+//
+//                                station.setName(stationName);
+//                                saveStation(station, new File("C:\\Users\\ERDT\\Desktop\\train-simulation\\train-systems\\LRT-1\\stations\\" + stationName + "\\run\\" + stationName + ".stn"), true);
+//
+//                                System.out.println(stationName + " done");
+//                            }
+                        } catch (Exception e) {
+                            AlertController.showSimpleAlert(
+                                    "File saving failed",
+                                    "Failed to save this station to a file",
+                                    "There was an error in saving the station into a file.",
+                                    Alert.AlertType.ERROR
+                            );
+
+                            e.printStackTrace();
+                        }
+                    });
 
                     return null;
                 }
@@ -821,8 +872,13 @@ public class MainScreenController extends ScreenController {
                 disableBuilding(false);
             });
 
+            saveStationTask.setOnFailed(e -> {
+                System.out.println("oop");
+            });
+
             new Thread(saveStationTask).start();
         }
+
     }
 
     @FXML

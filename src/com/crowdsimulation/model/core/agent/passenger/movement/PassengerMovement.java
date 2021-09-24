@@ -36,6 +36,7 @@ import com.trainsimulation.model.core.environment.TrainSystem;
 import com.trainsimulation.model.core.environment.infrastructure.track.Track;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PassengerMovement {
     // Denotes the owner of this passenger movement object
@@ -195,7 +196,7 @@ public class PassengerMovement {
 //    private Patch chosenQueueingPatch;
 
     // Denotes the recent patches this passenger has been in
-    private final HashMap<Patch, Integer> recentPatches;
+    private final ConcurrentHashMap<Patch, Integer> recentPatches;
 
     // The vectors of this passenger
     private final List<Vector> repulsiveForceFromPassengers;
@@ -271,7 +272,7 @@ public class PassengerMovement {
         this.state = State.WALKING;
         this.action = Action.WILL_QUEUE;
 
-        this.recentPatches = new HashMap<>();
+        this.recentPatches = new ConcurrentHashMap<>();
 
 //        this.toExplore = new ArrayList<>();
 
@@ -291,8 +292,6 @@ public class PassengerMovement {
             double baseWalkingDistance,
             Coordinates coordinates,
             PassengerTripInformation passengerTripInformation
-            // TODO: Passengers don't actually despawn until at the destination station, so the only disposition of the
-            //  passenger will be boarding
     ) {
         this.parent = parent;
 
@@ -357,7 +356,7 @@ public class PassengerMovement {
         this.state = State.WALKING;
         this.action = Action.WILL_QUEUE;
 
-        this.recentPatches = new HashMap<>();
+        this.recentPatches = new ConcurrentHashMap<>();
 
 //        this.toExplore = new ArrayList<>();
 
@@ -542,7 +541,7 @@ public class PassengerMovement {
 //        return toExplore;
 //    }
 
-    public HashMap<Patch, Integer> getRecentPatches() {
+    public ConcurrentHashMap<Patch, Integer> getRecentPatches() {
         return recentPatches;
     }
 
@@ -3210,24 +3209,31 @@ public class PassengerMovement {
         if (closestTrainDoor != null) {
             // If the goal train door is open, check if the passenger is willing to ride the train
             if (isTrainDoorOpen(closestTrainDoor)) {
-                // TODO: Get station in a better way
-                com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station
-                        = this.getRoutePlan().getOriginStation();
+                // TODO: Have a better way of checking whether this passenger has necessary information, or not
+                //  perhaps insert a different passenger information object to a passenger when at train simulation and
+                //  at station editing?
+                if (this.getRoutePlan().getOriginStation() != null) {
+                    // TODO: Get station in a better way
+                    com.trainsimulation.model.core.environment.trainservice.passengerservice.stationset.Station station
+                            = this.getRoutePlan().getOriginStation();
 
-                final double loadLimit = 0.7;
-                final double carriageLoadLimit = closestTrainDoor.getTrainCarriage(station).getLoadFactor();
+                    final double loadLimit = 0.7;
+                    final double carriageLoadLimit = closestTrainDoor.getTrainCarriage(station).getLoadFactor();
 
-                // Carriage full/overfull, don't ride
-                if (carriageLoadLimit >= 1.0) {
-                    return false;
-                } else if (carriageLoadLimit > loadLimit) {
-                    // Carriage almost full, ride (or don't) based on a probability
-                    final double loadLimitLeft = 1.0 - loadLimit;
-                    final double probability = (1 - carriageLoadLimit) / loadLimitLeft;
+                    // Carriage full/overfull, don't ride
+                    if (carriageLoadLimit >= 1.0) {
+                        return false;
+                    } else if (carriageLoadLimit > loadLimit) {
+                        // Carriage almost full, ride (or don't) based on a probability
+                        final double loadLimitLeft = 1.0 - loadLimit;
+                        final double probability = (1 - carriageLoadLimit) / loadLimitLeft;
 
-                    return Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < probability;
+                        return Simulator.RANDOM_NUMBER_GENERATOR.nextDouble() < probability;
+                    } else {
+                        // A lot of room in the carriages, ride
+                        return true;
+                    }
                 } else {
-                    // A lot of room in the carriages, ride
                     return true;
                 }
             } else {
@@ -3327,6 +3333,7 @@ public class PassengerMovement {
 
             // Set the current patch, floor
             this.currentPatch = spawnerPatch;
+
             this.currentFloor = portal.getFloorServed();
             this.currentAmenity = portal;
 
@@ -3366,6 +3373,15 @@ public class PassengerMovement {
         this.state = State.IN_TRAIN;
         this.action = Action.RIDING_TRAIN;
 
+        // If this passenger is female and has chosen a female only carriage, mark as such
+        Passenger.PassengerInformation passengerInformation = this.getParent().getPassengerInformation();
+
+        if (passengerInformation.getGender() == Passenger.PassengerInformation.Gender.FEMALE) {
+            if (trainDoor.isFemaleOnly()) {
+                passengerInformation.setChosenFemaleOnlyCarriage(true);
+            }
+        }
+
         // The passenger is not at any patch
         this.currentPatch = null;
     }
@@ -3385,6 +3401,7 @@ public class PassengerMovement {
 
         // Set the current patch, floor
         this.currentPatch = spawnerPatch;
+
         this.currentFloor = spawnerPatch.getFloor();
         this.currentAmenity = spawner.getParent();
 
@@ -3401,20 +3418,22 @@ public class PassengerMovement {
 
     // Despawn this passenger
     public void despawn() {
-        // Remove the passenger from its patch
-        this.currentPatch.getPassengers().remove(this.parent);
+        if (this.currentPatch != null) {
+            // Remove the passenger from its patch
+            this.currentPatch.getPassengers().remove(this.parent);
 
-        // Remove this passenger from this floor
-        this.currentFloor.getPassengersInFloor().remove(this.parent);
+            // Remove this passenger from this floor
+            this.currentFloor.getPassengersInFloor().remove(this.parent);
 
-        // Remove this passenger from this station
-        this.currentFloor.getStation().getPassengersInStation().remove(this.parent);
+            // Remove this passenger from this station
+            this.currentFloor.getStation().getPassengersInStation().remove(this.parent);
 
-        // Remove this passenger from its current floor's patch set, if necessary
-        SortedSet<Patch> currentPatchSet = this.currentPatch.getFloor().getPassengerPatchSet();
+            // Remove this passenger from its current floor's patch set, if necessary
+            SortedSet<Patch> currentPatchSet = this.currentPatch.getFloor().getPassengerPatchSet();
 
-        if (currentPatchSet.contains(this.currentPatch) && hasNoPassenger(this.currentPatch)) {
-            currentPatchSet.remove(this.currentPatch);
+            if (currentPatchSet.contains(this.currentPatch) && hasNoPassenger(this.currentPatch)) {
+                currentPatchSet.remove(this.currentPatch);
+            }
         }
     }
 
